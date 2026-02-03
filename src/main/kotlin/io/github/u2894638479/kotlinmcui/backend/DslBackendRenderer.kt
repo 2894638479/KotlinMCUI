@@ -1,10 +1,12 @@
 package io.github.u2894638479.kotlinmcui.backend
 
+import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Rect
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.scope.DslChild
 import io.github.u2894638479.kotlinmcui.text.DslFont
 import java.io.File
 
@@ -33,4 +35,7 @@ interface DslBackendRenderer<RP> {
     fun renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE)
 
     fun playButtonSound()
+
+    context(ctx: DslContext)
+    fun defaultBackground(id:Any): DslChild
 }

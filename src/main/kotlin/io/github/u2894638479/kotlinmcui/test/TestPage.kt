@@ -12,6 +12,7 @@ import io.github.u2894638479.kotlinmcui.functions.imageResource
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.ui.Box
 import io.github.u2894638479.kotlinmcui.functions.ui.Button
+import io.github.u2894638479.kotlinmcui.functions.ui.DefaultBackground
 import io.github.u2894638479.kotlinmcui.functions.ui.Row
 import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableColumn
 import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
@@ -50,6 +51,5 @@ fun TestPage() = Row {
         }
     }
     Box(Modifier.weight(2.5)) { page.function() }
-}.backGroundImage(
-    imageResource("minecraft:textures/gui/options_background.png", 32.px, 32.px),
-    Color(0.25, 0.25, 0.25), ImageStrategy.repeat(scale = dataStore.scale))
+    DefaultBackground()
+}

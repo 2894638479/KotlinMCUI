@@ -32,8 +32,8 @@ fun Image(
 context(ctx: DslContext)
 fun BackgroundImage(image: ImageHolder) = Image(
     image = image,
-    strategy = ImageStrategy.repeat(scale = dataStore.scale),
     color = Color(0.25, 0.25, 0.25),
+    strategy = ImageStrategy.repeat(scale = dataStore.scale),
     id = image
 )
 
