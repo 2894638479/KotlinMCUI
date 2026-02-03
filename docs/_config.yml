@@ -1,7 +1,2 @@
 remote_theme: pmarsceill/just-the-docs
 title: 我的文档
-nav:
-  - Home: index.md
-  - Guide:
-      - Intro: test1.md
-      - Advanced: guide/test2.md
