@@ -1,4 +1,4 @@
-theme: just-the-docs
+theme: minima
 title: 我的文档
 nav:
   - Home: index.md
