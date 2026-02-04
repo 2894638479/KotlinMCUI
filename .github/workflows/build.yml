@@ -23,3 +23,12 @@ jobs:
         with:
           name: Artifacts
           path: build/libs/
+  publish:
+    if: github.event_name == 'push'
+    needs: build
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: Kir-Antipov/mc-publish@v3.3
+        with:
+          modrinth-id: q8Q5ZFT7
+          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
