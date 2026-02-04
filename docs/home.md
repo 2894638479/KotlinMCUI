@@ -23,4 +23,4 @@ permalink: /
 语法与`Jetpack Compose`类似，但是使用立即模式绘制（更适用于游戏），因此不需要像`Compose`那样需要维护状态。你可以直接把`minecraft`原有的字段传入ui函数并保证ui实时刷新。
 
 ## 开始
-[开始](https://2894638479.github.io/KotlinMCUI/start.index)
+[开始](https://2894638479.github.io/KotlinMCUI/start)
