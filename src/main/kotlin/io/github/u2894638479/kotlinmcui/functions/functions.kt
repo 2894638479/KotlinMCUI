@@ -26,6 +26,9 @@ import kotlin.time.Duration.Companion.seconds
 
 typealias DslFunction = context(DslContext) ()->Unit
 
+context(ctx: DslDataStoreContext)
+fun translate(string: String,vararg args: Any) = ctxBackend.translate(string,*args) ?: string
+
 context(ctx: DslContext)
 fun showScreen(function: DslFunction) = dataStore.backend.showScreen(function)
 

@@ -1,0 +1,11 @@
+{
+    "kotlinmcui.testpage": "测试页面",
+    "kotlinmcui.test_translate": "测试翻译: 字符串:%s, 整数:%d, 浮点数:%f",
+    "kotlinmcui.layout": "布局",
+    "kotlinmcui.text": "文字",
+    "kotlinmcui.image": "图像",
+    "kotlinmcui.scroll": "滚动",
+    "kotlinmcui.slider": "滑条",
+    "kotlinmcui.translation": "翻译",
+    "kotlinmcui.id": "ID"
+}

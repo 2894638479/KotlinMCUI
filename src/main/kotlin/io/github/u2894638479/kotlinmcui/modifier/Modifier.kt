@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.modifier
 
+import io.github.u2894638479.kotlinmcui.context.DslPreventContext
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.align.Alignment
 import io.github.u2894638479.kotlinmcui.math.px
@@ -48,8 +49,8 @@ fun Modifier.minSize(minWidth: Measure, minHeight: Measure) = object : Modifier 
 fun Modifier.weight(weight: Double) = object : Modifier by this {
     override val weight get() = weight
 }
-fun Modifier.align(alignment: Alignment.()-> Alignment) = object : Modifier by this {
-    override val alignment = Alignment().alignment()
+fun Modifier.align(alignment: context(DslPreventContext) Alignment.()-> Alignment) = object : Modifier by this {
+    override val alignment = context(DslPreventContext) { Alignment().alignment() }
 }
 fun Modifier.padding(value: Measure) = object : Modifier by this {
     override val paddingLeft get() = this@padding.paddingLeft + value

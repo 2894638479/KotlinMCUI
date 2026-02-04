@@ -1,0 +1,11 @@
+{
+    "kotlinmcui.testpage": "Test Page",
+    "kotlinmcui.test_translate": "Test Translate: string:%s, int:%d, float:%f",
+    "kotlinmcui.layout": "Layout",
+    "kotlinmcui.text": "Text",
+    "kotlinmcui.image": "Image",
+    "kotlinmcui.scroll": "Scroll",
+    "kotlinmcui.slider": "Slider",
+    "kotlinmcui.translation": "translation",
+    "kotlinmcui.id": "ID"
+}

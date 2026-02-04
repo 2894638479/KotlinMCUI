@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.math.align
 
 import io.github.u2894638479.kotlinmcui.math.Measure
+import io.github.u2894638479.kotlinmcui.math.Measure.Companion.AUTO_MIN
 import io.github.u2894638479.kotlinmcui.math.px
 
 interface Alignable {
@@ -13,4 +14,8 @@ interface Alignable {
 }
 
 val Alignable.defaultSize get() = size.ifNan { minSize.ifNan { 0.px } }
-val Alignable.defaultSizePx get() = size.pixelsOrElse { minSize.pixelsOrElse { 0.0 } }
+fun Alignable.autoSize(full:Measure): Measure {
+    val size = size
+    return if(size.isAutoMin) minSize.ifNan { 0.px }
+    else size.ifNan { full.ifNan { 0.px } }
+}

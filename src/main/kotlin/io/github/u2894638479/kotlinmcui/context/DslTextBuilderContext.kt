@@ -6,7 +6,7 @@ import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 import io.github.u2894638479.kotlinmcui.text.DslRenderableChar
 
 @DslContextMarker
-class DslTextBuilderContext(val ctx: DslScaleContext): DslScaleContext by ctx {
+class DslTextBuilderContext(private val ctx: DslContext): DslScaleContext by ctx, DslDataStoreContext by ctx {
     private val chars = mutableListOf(mutableListOf<DslRenderableChar>())
 
     fun String.emit(
