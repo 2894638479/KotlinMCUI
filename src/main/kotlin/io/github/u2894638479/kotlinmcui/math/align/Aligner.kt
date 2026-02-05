@@ -12,7 +12,7 @@ fun interface Aligner {
     companion object {
         val equalSpacing = Aligner { low,high,alignable ->
             alignable.ifEmpty { return@Aligner }
-            val sum = alignable.sumOf { it.defaultSize }
+            val sum = alignable.sumOf { it.autoSizeMin }
             val space = (high - low - sum) / alignable.size
             var current = low + space/2
             alignable.forEach {
@@ -26,12 +26,12 @@ fun interface Aligner {
         fun close(align: Align) = Aligner { low, high, alignable ->
             var current = when (align) {
                 Align.LOW -> low
-                Align.MID -> (high + low - alignable.sumOf { it.defaultSize }) / 2
-                Align.HIGH -> high - alignable.sumOf { it.defaultSize }
+                Align.MID -> (high + low - alignable.sumOf { it.autoSizeMin }) / 2
+                Align.HIGH -> high - alignable.sumOf { it.autoSizeMin }
             }
             alignable.forEach {
                 it.low = current
-                current += it.defaultSize
+                current += it.autoSizeMin
                 it.high = current
             }
         }
@@ -81,11 +81,7 @@ fun interface Aligner {
             var remainWeightSum : Double
             var remainCount : Int
             val result = MeasureArray(alignable.size) {
-                val size = alignable[it].size
-                if (size.isNumber) {
-                    val minSize = alignable[it].minSize.ifNan { 0.px }
-                    Measure.max(minSize, size)
-                } else Measure.AUTO
+                alignable[it].autoSize(Measure.AUTO)
             }
             while (true) {
                 remainSpace = high - low
@@ -135,7 +131,7 @@ fun interface Aligner {
         }
 
         val weightedExtend = Aligner { low,high,alignable ->
-            val sum = alignable.sumOf { it.defaultSize }
+            val sum = alignable.sumOf { it.autoSizeMin }
             val remain = high - low - sum
             fun Alignable.exactWeight() = if(size.isNumber) 0.0 else weight
             val sumWeight = alignable.sumOf { it.exactWeight() }
@@ -150,7 +146,7 @@ fun interface Aligner {
         }
 
         val equalWeightedExtend = Aligner { low,high,alignable ->
-            val sum = alignable.sumOf { it.defaultSize }
+            val sum = alignable.sumOf { it.autoSizeMin }
             val remain = high - low - sum
             val weightCount = alignable.count { !it.size.isNumber }
             val space = if (weightCount == 0) 0.px else remain / weightCount
