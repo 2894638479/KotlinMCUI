@@ -9,22 +9,15 @@ interface LocalROProperty<out T> {
     fun getValue(property: DslProperty<*>):T
 }
 
-operator fun <T> LocalROProperty<T>.getValue(thisRef:Any?, property: KProperty<*>) = getValue(
-    DslProperty(
-        property,
-        identity
-    )
-)
+operator fun <T> LocalROProperty<T>.getValue(thisRef:Any?, property: KProperty<*>)
+= getValue(DslProperty(property, identity))
 
 interface LocalRWProperty<T> : LocalROProperty<T> {
     fun setValue(property: DslProperty<*>, value:T)
 }
 
-operator fun <T> LocalRWProperty<T>.setValue(thisRef: Any?,property: KProperty<*>,value:T) = setValue(
-    DslProperty(
-        property,
-        identity
-    ),value)
+operator fun <T> LocalRWProperty<T>.setValue(thisRef: Any?,property: KProperty<*>,value:T)
+= setValue(DslProperty(property, identity),value)
 
 
 private fun <T> DslProperty<T>.typed(value:Any) = DslProperty(kProp, identity + value::class)

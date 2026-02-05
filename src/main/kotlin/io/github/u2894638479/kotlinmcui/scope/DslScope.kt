@@ -28,7 +28,7 @@ interface DslScope : DslComponent {
         children.forEach { it.run { layoutVertical() } }
     }
 
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) =
         children.asReversed().forEach { it.run { render(mouse) } }
 

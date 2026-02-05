@@ -7,7 +7,7 @@ import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Position
 
 interface DslComponentEvent {
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     fun <RP> render(mouse: Position) {}
 
     context(instance: DslComponent)

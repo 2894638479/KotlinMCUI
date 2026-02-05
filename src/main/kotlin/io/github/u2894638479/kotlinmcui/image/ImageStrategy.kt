@@ -10,7 +10,7 @@ import io.github.u2894638479.kotlinmcui.math.px
 fun interface ImageStrategy {
     fun uvRect(rect: Rect, image: ImageHolder): Rect
 
-    context(backend: DslBackendRenderer<RP>, renderPara: RP)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP)
     fun <RP> render(rect: Rect, image: ImageHolder, color: Color) {
         backend.renderImage(image,rect,uvRect(rect,image),color)
     }
@@ -49,7 +49,7 @@ fun interface ImageStrategy {
 
         fun fitIn(alignment: Alignment, fillColor: Color = Color.TRANSPARENT_WHITE) = object : ImageStrategy {
             override fun uvRect(rect: Rect, image: ImageHolder) = Rect()
-            context(backend: DslBackendRenderer<RP>, renderPara: RP)
+            context(backend: DslBackendRenderer<RP>, renderParam: RP)
             override fun <RP> render(rect: Rect, image: ImageHolder, color: Color) {
                 backend.fillRect(rect,fillColor)
                 val ratio = rect.width / rect.height

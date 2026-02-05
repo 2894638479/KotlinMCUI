@@ -38,7 +38,7 @@ import kotlin.time.Duration.Companion.seconds
 
 context(ctx: DslContext)
 fun DslChild.editBoxBackground(color: Color = Color.WHITE) = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         backend.renderEditBox(instance.rect, isHighlighted,color)
         it.render(mouse)
@@ -265,7 +265,7 @@ fun EditableText(
                 }
             }
 
-            context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+            context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
             override fun <RP> render(mouse: Position) {
                 addUndo()
                 val font = backend.getFont(fontName)

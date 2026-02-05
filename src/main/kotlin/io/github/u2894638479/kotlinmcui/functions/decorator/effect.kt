@@ -5,7 +5,6 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
-import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslPreventContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.autoAnimate
@@ -28,7 +27,7 @@ import kotlin.time.Duration.Companion.seconds
 context(ctx: DslContext)
 fun DslChild.mask(color: context(DslPreventContext, DslDataStoreContext) DslComponent.() -> Color)
 = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         it.render(mouse)
         backend.fillRect(instance.rect,color(DslPreventContext,ctx,instance))
@@ -40,7 +39,7 @@ fun DslChild.mask(color: Color) = mask { color }
 context(ctx: DslContext)
 fun DslChild.backGround(color: context(DslPreventContext, DslDataStoreContext) DslComponent.() -> Color)
 = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         backend.fillRect(instance.rect,color(DslPreventContext,ctx,instance))
         it.render(mouse)
@@ -57,14 +56,14 @@ fun DslChild.backGroundImage(
     color: Color = Color.WHITE,
     strategy: ImageStrategy = ImageStrategy.clip,
 ) = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         strategy.render(instance.rect,image,color)
         it.render(mouse)
     }
 }}
 
-context(backend: DslBackendRenderer<RP>, renderPara: RP)
+context(backend: DslBackendRenderer<RP>, renderParam: RP)
 private fun <RP> renderOutline(rect: Rect, widthIn: Measure, widthOut: Measure, color: Color) {
     backend.fillRect(Rect(rect.left - widthOut, rect.top - widthOut, rect.left + widthIn, rect.bottom + widthOut),color)
     backend.fillRect(Rect(rect.right - widthIn, rect.top - widthOut, rect.right + widthOut, rect.bottom + widthOut),color)
@@ -79,7 +78,7 @@ fun DslChild.highlightBox(widthIn: Measure = 0.5.scaled, widthOut: Measure = 0.5
 
     override val modifier get() = it.modifier.padding(widthOut)
 
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         if(isHighlighted) renderOutline(instance.rect, widthIn, widthOut, color)
         it.render(mouse)
@@ -88,7 +87,7 @@ fun DslChild.highlightBox(widthIn: Measure = 0.5.scaled, widthOut: Measure = 0.5
 
 context(ctx: DslContext)
 fun DslChild.outline(widthIn: Measure = 0.5.scaled, widthOut: Measure = 0.5.scaled, color: Color = Color.WHITE) = change { object : DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         renderOutline(instance.rect, widthIn, widthOut, color)
         it.render(mouse)
@@ -97,7 +96,7 @@ fun DslChild.outline(widthIn: Measure = 0.5.scaled, widthOut: Measure = 0.5.scal
 
 context(ctx: DslContext)
 fun DslChild.hoverHighlight(highlightColor: Color = Color(255, 255, 255, 80)) = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         it.render(mouse)
         if(dataStore.hovered == instance.identity) backend.fillRect(instance.rect,highlightColor)

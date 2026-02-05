@@ -11,7 +11,7 @@ fun DefaultBackground(id:Any = object{}::class) = Spacer(id = id).defaultBackgro
 
 context(ctx: DslContext)
 fun DslChild.defaultBackground() = change { object:DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         backend.renderDefaultBackground(instance.rect)
         it.render(mouse)

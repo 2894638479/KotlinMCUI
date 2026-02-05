@@ -26,7 +26,7 @@ class DslTextLine(
         }
     }.also { horizontalAlign.align(rect.left,rect.right,it) }
 
-    context(renderPara:RP)
+    context(renderParam:RP)
     fun <RP> renderChars(font: DslFont<RP>,chars:List<AlignableChar>) {
         if(this.font !== font) dslLogger.warn("using different font for layout and render")
         chars.forEach { font.renderChar(it.char,(it.low+it.high-it.minSize)/2,rect.top,it.low,it.high) }

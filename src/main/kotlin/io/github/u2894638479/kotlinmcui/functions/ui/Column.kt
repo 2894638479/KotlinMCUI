@@ -15,26 +15,30 @@ import io.github.u2894638479.kotlinmcui.scope.childrenMaxWidth
 import io.github.u2894638479.kotlinmcui.scope.childrenSumHeight
 
 context(ctx: DslContext)
-fun Column(modifier: Modifier = Modifier, alignerVertical: Aligner = Aligner.weightedStrictByMin, id:Any? = null, function: DslFunction) =
-    collect(
-        object : DslScope by DslScopeImpl(
-            newChildId(id ?: function::class),
-            modifier,
-            ctx,
-            function,
-            alignerVertical = alignerVertical
-        ) {
-            val lazyWidth by lazy { childrenMaxWidth }
+fun Column(
+    modifier: Modifier = Modifier,
+    alignerVertical: Aligner = Aligner.weightedStrictByMin,
+    id:Any? = null,
+    function: DslFunction
+) = collect(
+    object : DslScope by DslScopeImpl(
+        newChildId(id ?: function::class),
+        modifier,
+        ctx,
+        function,
+        alignerVertical = alignerVertical
+    ) {
+        val lazyWidth by lazy { childrenMaxWidth }
 
-            context(instance: DslComponent)
-            override val contentMinWidth get() = Measure.max(lazyWidth, super.contentMinWidth)
+        context(instance: DslComponent)
+        override val contentMinWidth get() = Measure.max(lazyWidth, super.contentMinWidth)
 
-            val lazyHeight by lazy { childrenSumHeight }
+        val lazyHeight by lazy { childrenSumHeight }
 
-            context(instance: DslComponent)
-            override val contentMinHeight get() = Measure.max(lazyHeight, super.contentMinHeight)
+        context(instance: DslComponent)
+        override val contentMinHeight get() = Measure.max(lazyHeight, super.contentMinHeight)
 
-            override val viewHorizontal get() = listOf(children)
-            override val viewVertical get() = children.mapView { listOf(it) }
-        }
-    )
+        override val viewHorizontal get() = listOf(children)
+        override val viewVertical get() = children.mapView { listOf(it) }
+    }
+)

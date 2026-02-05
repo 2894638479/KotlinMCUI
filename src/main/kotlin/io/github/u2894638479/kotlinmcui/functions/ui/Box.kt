@@ -15,18 +15,21 @@ import io.github.u2894638479.kotlinmcui.scope.childrenMaxHeight
 import io.github.u2894638479.kotlinmcui.scope.childrenMaxWidth
 
 context(ctx: DslContext)
-fun Box(modifier: Modifier = Modifier, id:Any? = null, function: DslFunction) =
-    collect(object : DslScope by DslScopeImpl(newChildId(id ?: function::class), modifier, ctx, function) {
-        val lazyWidth by lazy { childrenMaxWidth }
+fun Box(
+    modifier: Modifier = Modifier,
+    id:Any? = null,
+    function: DslFunction
+) = collect(object : DslScope by DslScopeImpl(newChildId(id ?: function::class), modifier, ctx, function) {
+    val lazyWidth by lazy { childrenMaxWidth }
 
-        context(instance: DslComponent)
-        override val contentMinWidth get() = Measure.max(lazyWidth, super.contentMinWidth)
+    context(instance: DslComponent)
+    override val contentMinWidth get() = Measure.max(lazyWidth, super.contentMinWidth)
 
-        val lazyHeight by lazy { childrenMaxHeight }
+    val lazyHeight by lazy { childrenMaxHeight }
 
-        context(instance: DslComponent)
-        override val contentMinHeight get() = Measure.max(lazyHeight, super.contentMinHeight)
-    })
+    context(instance: DslComponent)
+    override val contentMinHeight get() = Measure.max(lazyHeight, super.contentMinHeight)
+})
 
 
 context(ctx: DslContext)

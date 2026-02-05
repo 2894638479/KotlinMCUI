@@ -2,7 +2,6 @@ package io.github.u2894638479.kotlinmcui.functions.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
-import io.github.u2894638479.kotlinmcui.component.DslComponentAlign
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
@@ -104,7 +103,7 @@ fun LazyColumn(
             this.scroller = scroller
         }
 
-        context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
         override fun <RP> render(mouse: Position) = backend.withScissor(instance.rect) {
             visibleChildren.asReversed().forEach { it.run { render(mouse) } }
         }

@@ -32,27 +32,25 @@ import io.github.u2894638479.kotlinmcui.prop.setValue
 
 context(ctx: DslContext)
 fun TestPage() = Row {
-    class Page(val name: String, val function: DslFunction)
-
     val pages by remember {
-        listOf(
-            Page(translate("kotlinmcui.layout")) { TestLayoutPage() },
-            Page(translate("kotlinmcui.scroll")) { TestScrollPage() },
-            Page(translate("kotlinmcui.text")) { TestTextPage() },
-            Page(translate("kotlinmcui.slider")) { TestSliderPage() },
-            Page(translate("kotlinmcui.id")) { TestIdPage() },
-            Page(translate("kotlinmcui.image")) { TestImagePage() },
-            Page(translate("kotlinmcui.translation")) { TestTranslationPage() }
-        )
+        mapOf<String, DslFunction>(
+            "layout" to { TestLayoutPage() },
+            "scroll" to { TestScrollPage() },
+            "text" to { TestTextPage() },
+            "slider" to { TestSliderPage() },
+            "id" to { TestIdPage() },
+            "image" to { TestImagePage() },
+            "translation" to { TestTranslationPage() }
+        ).mapKeys { translate("kotlinmcui.${it.key}") }
     }
-    var page by remember(pages.first())
+    var page by remember(pages.entries.first())
     ScrollableColumn(Modifier.weight(1.0).minWidth(100.scaled)) {
         TextFlatten(Modifier.padding(5.scaled)) { translate("kotlinmcui.testpage").emit() }
-        pages.forEachWithId {
+        pages.entries.forEachWithId {
             val h by autoAnimate(if (page == it) 40.scaled else 20.scaled)
-            Button(Modifier.height(h).padding(2.scaled)) { TextFlatten { it.name.emit() } }
+            Button(Modifier.height(h).padding(2.scaled)) { TextFlatten { it.key.emit() } }
                 .clickable(page != it) { page = it }
         }
     }
-    Box(Modifier.weight(2.5)) { page.function() }
+    Box(Modifier.weight(2.5)) { page.value() }
 }.defaultBackground()

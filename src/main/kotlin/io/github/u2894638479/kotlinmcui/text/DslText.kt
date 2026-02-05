@@ -21,7 +21,7 @@ open class DslText(
     val verticalAligner: Aligner,
     override val rect: Rect = Rect()
 ) : DslComponent {
-    context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         val font = backend.getFont(fontName)
         lines().forEach { it.renderChars(font,it.alignedChars(font)) }

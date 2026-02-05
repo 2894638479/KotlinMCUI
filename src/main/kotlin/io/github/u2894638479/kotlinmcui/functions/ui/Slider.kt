@@ -61,7 +61,7 @@ fun Slider(
     var alreadyDown by dataStore.remember<Unit?>(identity,null)
     val delegate = DslScopeImpl(identity, modifier, ctx, function)
     collect(object : DslComponent by delegate {
-        context(backend: DslBackendRenderer<RP>, renderPara: RP, instance: DslComponent)
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
         override fun <RP> render(mouse: Position) {
             val rect = instance.rect
             val progress = progress

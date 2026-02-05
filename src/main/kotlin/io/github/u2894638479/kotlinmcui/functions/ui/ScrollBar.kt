@@ -18,13 +18,26 @@ import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 
 context(ctx: DslContext)
-fun ScrollBarVertical(modifier: Modifier = Modifier, scrollerProp: StableROProperty<Scroller>, id:Any?) = ScrollBar(modifier,scrollerProp,false,id)
+fun ScrollBarVertical(
+    modifier: Modifier = Modifier,
+    scrollerProp: StableROProperty<Scroller>,
+    id:Any?
+) = ScrollBar(modifier,scrollerProp,false,id)
 
 context(ctx: DslContext)
-fun ScrollBarHorizontal(modifier: Modifier = Modifier, scrollerProp: StableROProperty<Scroller>, id:Any?) = ScrollBar(modifier,scrollerProp,true,id)
+fun ScrollBarHorizontal(
+    modifier: Modifier = Modifier,
+    scrollerProp: StableROProperty<Scroller>,
+    id:Any?
+) = ScrollBar(modifier,scrollerProp,true,id)
 
 context(ctx: DslContext)
-fun ScrollBar(modifier: Modifier = Modifier, scrollerProp: StableROProperty<Scroller>, horizontal:Boolean = false, id:Any?) = Button(modifier,id = id) {
+fun ScrollBar(
+    modifier: Modifier = Modifier,
+    scrollerProp: StableROProperty<Scroller>,
+    horizontal:Boolean = false,
+    id:Any?
+) = Button(modifier,id = id) {
     var lastDown by remember<Position?>(null)
     val scroller by scrollerProp
     val before = scroller.spaceBefore()

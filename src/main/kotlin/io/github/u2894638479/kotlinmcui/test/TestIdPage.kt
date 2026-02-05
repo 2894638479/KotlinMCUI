@@ -53,20 +53,20 @@ fun TestIdPage() = Row {
             Button { TextFlatten { "Column\$Column$2".emit() } }.clickId()
         }
         Box {
-            Button(
-                Modifier.height(20.scaled)
-                    .align { bottom() }) { TextFlatten { "Column\$Box$1".emit() } }.clickId()
-            Button(
-                Modifier.height(20.scaled)
-                    .align { top() }) { TextFlatten { "Column\$Box$2".emit() } }.clickId()
+            Button(Modifier.height(20.scaled).align { bottom() }) {
+                TextFlatten { "Column\$Box$1".emit() }
+            }.clickId()
+            Button(Modifier.height(20.scaled).align { top() }) {
+                TextFlatten { "Column\$Box$2".emit() }
+            }.clickId()
         }
         Slider {}.Box {
-            Button(
-                Modifier.height(20.scaled).padding(5.scaled)
-                    .align { bottom() }) { TextFlatten { "Column\$Slider.Box$1".emit() } }.clickId()
-            Button(
-                Modifier.height(20.scaled).padding(5.scaled)
-                    .align { top() }) { TextFlatten { "Column\$Slider.Box$2".emit() } }.clickId()
+            Button(Modifier.height(20.scaled).padding(5.scaled).align { bottom() }) {
+                TextFlatten { "Column\$Slider.Box$1".emit() }
+            }.clickId()
+            Button(Modifier.height(20.scaled).padding(5.scaled).align { top() }) {
+                TextFlatten { "Column\$Slider.Box$2".emit() }
+            }.clickId()
         }
     }
 }
