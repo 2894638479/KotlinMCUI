@@ -49,5 +49,5 @@ open class DslText(
     override val contentMinHeight get() = Measure.max(lazyHeight.value, super.contentMinHeight)
 
     context(instance: DslComponent)
-    override val contentMinWidth get() = Measure.max(lazyWidth.value, super.contentMinHeight)
+    override val contentMinWidth get() = Measure.max(lazyWidth.value, super.contentMinWidth)
 }
