@@ -1,8 +1,8 @@
-import org.gradle.kotlin.dsl.provideDelegate
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "2.3.0"
+    id("me.modmuss50.mod-publish-plugin") version "0.8.1"
 }
 
 val maven_group: String by project
@@ -78,4 +78,23 @@ tasks.processResources {
     )
     inputs.properties(map)
     filesMatching("fabric.mod.json") { expand(map) }
+}
+
+
+publishMods {
+    file = tasks.jar.get().archiveFile
+    additionalFiles = files(sourcesJar.archiveFile)
+    changelog = ""
+    type = ALPHA
+    displayName = "KotlinMCUI ${project.version}"
+    modLoaders.add("fabric")
+
+    modrinth {
+        accessToken = providers.environmentVariable("MODRINTH_TOKEN")
+        projectId = "q8Q5ZFT7"
+        minecraftVersionRange {
+            start = "1.14"
+            end = "latest"
+        }
+    }
 }

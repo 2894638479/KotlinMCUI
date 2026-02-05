@@ -1,0 +1,12 @@
+name: jitpack
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v4
+      - name: Trigger JitPack Build
+        run: |
+          curl -s https://jitpack.io/api/builds/com.github.${{ github.repository }}/${{ github.ref_name }}-SNAPSHOT

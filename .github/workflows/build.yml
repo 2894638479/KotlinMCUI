@@ -7,10 +7,6 @@ jobs:
     steps:
       - name: checkout repository
         uses: actions/checkout@v4
-      - name: Trigger JitPack Build
-        run: |
-          curl -s https://jitpack.io/api/builds/com.github.${{ github.repository }}/${{ github.ref_name }}-SNAPSHOT
-        continue-on-error: true
       - name: validate gradle wrapper
         uses: gradle/actions/wrapper-validation@v4
       - name: setup jdk
@@ -28,8 +24,7 @@ jobs:
           name: Artifacts
           path: build/libs/
       - name: publish
-        if: github.event_name == 'push'
-        uses: Kir-Antipov/mc-publish@v3.3
-        with:
-          modrinth-id: q8Q5ZFT7
-          modrinth-token: ${{ secrets.MODRINTH_TOKEN }}
+        if: github.event_name == 'push' && github.ref_type == 'tag'
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+        run: ./gradlew publishMods
