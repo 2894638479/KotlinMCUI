@@ -8,7 +8,7 @@ nav_order: 3
 ```kotlin
 var i by remember(0)
 
-Button(Modifier.weight(0.0)) {
+Button(Modifier.size(Measure.AUTO_MIN,Measure.AUTO_MIN)) {
     TextFlatten(Modifier.padding(7.scaled)) { "counter: $i".emit() }
 }.clickable { i++ }
 
@@ -45,4 +45,4 @@ DefaultBackground()
 ```
 按照行、列布局，并增加了一些动画效果，具体请自行运行查看
 
-如果要查看更多控件的示例，可以浏览`TestPage()`相关源码。
+如果要查看更多组件的示例，可以浏览`TestPage()`相关源码。

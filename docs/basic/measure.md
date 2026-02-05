@@ -5,7 +5,7 @@ parent: Basic
 ---
 
 # `Measure`
-`Measure`是表示长度的统一类型。控件的长宽、边距，字体的大小，都应该用`Measure`表示。底层使用`value class`包装了`Double`，几乎没有开销。
+`Measure`是表示长度的统一类型。组件的长宽、边距，字体的大小，都应该用`Measure`表示。底层使用`value class`包装了`Double`，几乎没有开销。
 
 ## 如何创建一个Measure
 ```kotlin

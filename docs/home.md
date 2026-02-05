@@ -5,6 +5,10 @@ nav_order: 1
 permalink: /
 ---
 # 主页
+项目处于测试阶段，任何api有可能变动。
+
+[source](https://github.com/2894638479/KotlinMCUI/)
+[default backend](https://github.com/2894638479/KotlinMCUI-backend/)
 ## 简介
 `KotlinMCUI`是使用`Kotlin DSL`制作的ui框架。设计目标：
 - 轻量
