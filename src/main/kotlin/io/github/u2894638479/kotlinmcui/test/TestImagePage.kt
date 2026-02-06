@@ -7,25 +7,13 @@ import io.github.u2894638479.kotlinmcui.functions.imageFile
 import io.github.u2894638479.kotlinmcui.functions.imageResource
 import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
-import io.github.u2894638479.kotlinmcui.functions.ui.ColorRect
-import io.github.u2894638479.kotlinmcui.functions.ui.Column
-import io.github.u2894638479.kotlinmcui.functions.ui.EditableText
-import io.github.u2894638479.kotlinmcui.functions.ui.Image
-import io.github.u2894638479.kotlinmcui.functions.ui.Row
-import io.github.u2894638479.kotlinmcui.functions.ui.Slider
-import io.github.u2894638479.kotlinmcui.functions.ui.Spacer
-import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
-import io.github.u2894638479.kotlinmcui.functions.ui.editBoxBackground
+import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.px
-import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.modifier.height
-import io.github.u2894638479.kotlinmcui.modifier.padding
-import io.github.u2894638479.kotlinmcui.modifier.size
-import io.github.u2894638479.kotlinmcui.modifier.weight
-import io.github.u2894638479.kotlinmcui.prop.remap
+import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
+import io.github.u2894638479.kotlinmcui.prop.remap
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import java.io.File
 
@@ -54,8 +42,8 @@ fun TestImagePage() = Column {
     val width by widthProp
     val height by heightProp
     Row(Modifier.height(20.scaled)) {
-        Slider(progress = widthProp.remap({ it / 500.0 }, { (it * 500).toInt() })) { TextFlatten { "width:$width".emit() } }
-        Slider(progress = heightProp.remap({ it / 500.0 }, { (it * 500).toInt() })) { TextFlatten { "height:$height".emit() } }
+        SliderHorizontal(Modifier,0..500,widthProp) { TextFlatten { "width:$width".emit() } }
+        SliderHorizontal(Modifier,0..500,heightProp) { TextFlatten { "height:$height".emit() } }
     }
     val localImageProp by "".remember.property
     val localImage by localImageProp.remap { imageFile(File(it)) }.remember

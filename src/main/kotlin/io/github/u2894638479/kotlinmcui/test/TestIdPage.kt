@@ -4,24 +4,13 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
 import io.github.u2894638479.kotlinmcui.functions.remember
-import io.github.u2894638479.kotlinmcui.functions.ui.Box
-import io.github.u2894638479.kotlinmcui.functions.ui.Button
-import io.github.u2894638479.kotlinmcui.functions.ui.Column
-import io.github.u2894638479.kotlinmcui.functions.ui.Row
-import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableColumn
-import io.github.u2894638479.kotlinmcui.functions.ui.Slider
-import io.github.u2894638479.kotlinmcui.functions.ui.TextAutoFold
-import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
+import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Color
-import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.modifier.align
-import io.github.u2894638479.kotlinmcui.modifier.height
-import io.github.u2894638479.kotlinmcui.modifier.padding
-import io.github.u2894638479.kotlinmcui.modifier.weight
-import io.github.u2894638479.kotlinmcui.scope.DslChild
+import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.scope.DslChild
 
 context(ctx: DslContext)
 fun TestIdPage() = Row {
@@ -60,7 +49,7 @@ fun TestIdPage() = Row {
                 TextFlatten { "Column\$Box$2".emit() }
             }.clickId()
         }
-        Slider {}.Box {
+        SliderHorizontal {}.Box {
             Button(Modifier.height(20.scaled).padding(5.scaled).align { bottom() }) {
                 TextFlatten { "Column\$Slider.Box$1".emit() }
             }.clickId()
