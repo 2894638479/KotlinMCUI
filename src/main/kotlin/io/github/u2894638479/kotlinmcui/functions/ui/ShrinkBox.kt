@@ -9,6 +9,7 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
 
 context(ctx: DslContext)
 fun ShrinkBox(
-    modifier: Modifier, id:Any? = null,
+    modifier: Modifier,
+    id:Any? = null,
     function: DslFunction
 ) = Box(modifier,id,function).shrink()

@@ -41,7 +41,7 @@ interface DslComponentEvent {
     fun focusChanged(newFocus: DslId?) {}
 
     context(instance: DslComponent)
-    fun onHover(hovered: Boolean) {}
+    fun hoverChanged(newHover: DslId?) {}
 
     context(instance: DslComponent)
     fun onScrolledInScrollable(percentage: Double) {}

@@ -102,6 +102,10 @@ class DslDataStore(val backend: DslBackend<*, *>, val onClose:()-> Unit, dslFunc
         }
     var tooltip: DslComponent? = null
     var hovered: DslId? = null
+        set(value) {
+            field = value
+            dslScreen.run { hoverChanged(value) }
+        }
     var narration: String? = null
         set(value) {
             if(value != field) {

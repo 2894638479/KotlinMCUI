@@ -49,3 +49,16 @@ context(ctx: DslContext)
 fun DslChild.forceId(id: DslId) = change { object: DslComponent by it {
     override val identity = id
 }}
+
+context(ctx: DslContext)
+fun DslChild.onHovered(
+    action: context(DslPreventContext) (Boolean) -> Unit
+) = change {
+    object : DslComponent by it {
+        context(instance: DslComponent)
+        override fun hoverChanged(newHover: DslId?) {
+            super.hoverChanged(newHover)
+            action(DslPreventContext,instance.identity == newHover)
+        }
+    }
+}

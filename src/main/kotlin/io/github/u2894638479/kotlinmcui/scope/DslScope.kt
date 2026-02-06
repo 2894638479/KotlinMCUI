@@ -77,6 +77,9 @@ interface DslScope : DslComponent {
     context(instance: DslComponent)
     override fun focusChanged(newFocus: DslId?) = children.forEach { it.run { focusChanged(newFocus) } }
 
+    context(instance: DslComponent)
+    override fun hoverChanged(newHover: DslId?) = children.forEach { it.run { hoverChanged(newHover) } }
+
     override val viewHorizontal: List<List<DslComponent>> get() = children.groupBy { it.rect.run { left + right } }.toSortedMap().values.toList()
     override val viewVertical: List<List<DslComponent>> get() = children.groupBy { it.rect.run { top + bottom } }.toSortedMap().values.toList()
     override val viewSequential: List<DslComponent> get() = children

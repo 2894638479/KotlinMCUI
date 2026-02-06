@@ -3,9 +3,8 @@ package io.github.u2894638479.kotlinmcui.test
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
-import io.github.u2894638479.kotlinmcui.functions.decorator.backGround
+import io.github.u2894638479.kotlinmcui.functions.decorator.background
 import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
-import io.github.u2894638479.kotlinmcui.functions.decorator.shrink
 import io.github.u2894638479.kotlinmcui.functions.forEachWithId
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.ui.Button
@@ -33,61 +32,61 @@ fun TestLayoutPage() = Column {
         "general" to {
             Row {
                 Column {
-                    TextFlatten(Modifier.weight(0.0)) { "weight:0.0".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.weight(1.0)) { "weight:1.0".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(2.0)) { "weight:2.0".emit() }.backGround(Color.GREEN)
-                    TextFlatten(Modifier.weight(3.0)) { "weight:3.0".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.weight(0.0)) { "weight:0.0".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.weight(1.0)) { "weight:1.0".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(2.0)) { "weight:2.0".emit() }.background(Color.GREEN)
+                    TextFlatten(Modifier.weight(3.0)) { "weight:3.0".emit() }.background(Color.BLUE)
                 }
                 Column {
                     Row {
-                        TextFlatten(Modifier.weight(0.0)) { "weight:0.0".emit() }.backGround(Color(100, 100, 100))
-                        TextFlatten(Modifier.weight(1.0)) { "weight:1.0".emit() }.backGround(Color.RED)
-                        TextFlatten(Modifier.weight(2.0)) { "weight:2.0".emit() }.backGround(Color.GREEN)
-                        TextFlatten(Modifier.weight(3.0)) { "weight:3.0".emit() }.backGround(Color.BLUE)
+                        TextFlatten(Modifier.weight(0.0)) { "weight:0.0".emit() }.background(Color(100, 100, 100))
+                        TextFlatten(Modifier.weight(1.0)) { "weight:1.0".emit() }.background(Color.RED)
+                        TextFlatten(Modifier.weight(2.0)) { "weight:2.0".emit() }.background(Color.GREEN)
+                        TextFlatten(Modifier.weight(3.0)) { "weight:3.0".emit() }.background(Color.BLUE)
                     }
-                    TextFlatten(Modifier.padding(10.scaled)) { "padding:10.scaled".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.padding(20.scaled)) { "padding:20.scaled".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.padding(10.px)) { "padding:10.px".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.padding(20.px)) { "padding:20.px".emit() }.backGround(Color(100, 100, 100))
+                    TextFlatten(Modifier.padding(10.scaled)) { "padding:10.scaled".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.padding(20.scaled)) { "padding:20.scaled".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.padding(10.px)) { "padding:10.px".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.padding(20.px)) { "padding:20.px".emit() }.background(Color(100, 100, 100))
                 }
                 Column {
-                    TextFlatten { "weight:1.0".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(Double.MAX_VALUE)) { "weight:Double.MAX_VALUE".emit() }.backGround(Color.GREEN)
+                    TextFlatten { "weight:1.0".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(Double.MAX_VALUE)) { "weight:Double.MAX_VALUE".emit() }.background(Color.GREEN)
                 }
             }
         },
         "row" to {
             Column {
                 Row {
-                    TextFlatten(Modifier.width(Measure.AUTO_MIN)) { "min".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.backGround(Color.GREEN)
-                    TextFlatten(Modifier.weight(2.0)) { "2.0".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.width(Measure.AUTO_MIN)) { "min".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.background(Color.GREEN)
+                    TextFlatten(Modifier.weight(2.0)) { "2.0".emit() }.background(Color.BLUE)
                 }
                 Row {
-                    TextFlatten(Modifier.width(Measure.AUTO_MIN)) { "min".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.backGround(Color.GREEN)
-                    TextFlatten(Modifier.weight(Double.MAX_VALUE)) { "Double.MAX_VALUE".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.width(Measure.AUTO_MIN)) { "min".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.background(Color.GREEN)
+                    TextFlatten(Modifier.weight(Double.MAX_VALUE)) { "Double.MAX_VALUE".emit() }.background(Color.BLUE)
                 }
                 Row {
-                    TextFlatten(Modifier.weight(Double.MAX_VALUE)) { "Double.MAX_VALUE".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.width(Measure.AUTO_MIN)) { "min".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.backGround(Color.GREEN)
-                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.weight(Double.MAX_VALUE)) { "Double.MAX_VALUE".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.width(Measure.AUTO_MIN)) { "min".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.background(Color.GREEN)
+                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.background(Color.BLUE)
                 }
                 Row {
-                    TextFlatten(Modifier.width(Measure.AUTO_MIN)) { "min".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.backGround(Color.GREEN)
-                    TextFlatten(Modifier.width(100.scaled)) { "width(100.scaled)....................".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.width(Measure.AUTO_MIN)) { "min".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.background(Color.GREEN)
+                    TextFlatten(Modifier.width(100.scaled)) { "width(100.scaled)....................".emit() }.background(Color.BLUE)
                     TextFlatten(Modifier.minWidth(100.scaled)) { "minW(100.scaled)".emit() }
                 }
                 Row {
-                    TextFlatten(Modifier.width(Measure.AUTO_MIN)) { "min".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.backGround(Color.GREEN)
-                    TextFlatten(Modifier.width(100.scaled)) { "width(100.scaled)".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.width(Measure.AUTO_MIN)) { "min".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.background(Color.GREEN)
+                    TextFlatten(Modifier.width(100.scaled)) { "width(100.scaled)".emit() }.background(Color.BLUE)
                     TextFlatten(Modifier.minWidth(100.scaled)) { "minW(100.scaled)....................".emit() }
                 }
             }
@@ -95,35 +94,35 @@ fun TestLayoutPage() = Column {
         "column" to {
             Row {
                 Column {
-                    TextFlatten(Modifier.height(Measure.AUTO_MIN)) { "min".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.backGround(Color.GREEN)
-                    TextFlatten(Modifier.weight(2.0)) { "2.0".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.height(Measure.AUTO_MIN)) { "min".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.background(Color.GREEN)
+                    TextFlatten(Modifier.weight(2.0)) { "2.0".emit() }.background(Color.BLUE)
                 }
                 Column {
-                    TextFlatten(Modifier.height(Measure.AUTO_MIN)) { "min".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.backGround(Color.GREEN)
-                    TextFlatten(Modifier.weight(Double.MAX_VALUE)) { "Double.MAX_VALUE".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.height(Measure.AUTO_MIN)) { "min".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.background(Color.GREEN)
+                    TextFlatten(Modifier.weight(Double.MAX_VALUE)) { "Double.MAX_VALUE".emit() }.background(Color.BLUE)
                 }
                 Column {
-                    TextFlatten(Modifier.weight(Double.MAX_VALUE)) { "Double.MAX_VALUE".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.height(Measure.AUTO_MIN)) { "min".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.backGround(Color.GREEN)
-                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.weight(Double.MAX_VALUE)) { "Double.MAX_VALUE".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.height(Measure.AUTO_MIN)) { "min".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.background(Color.GREEN)
+                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.background(Color.BLUE)
                 }
                 Column {
-                    TextFlatten(Modifier.height(Measure.AUTO_MIN)) { "min".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.backGround(Color.GREEN)
-                    TextFoldable(Modifier.height(100.scaled)) { "height(100.scaled)\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n......".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.height(Measure.AUTO_MIN)) { "min".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.background(Color.GREEN)
+                    TextFoldable(Modifier.height(100.scaled)) { "height(100.scaled)\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n......".emit() }.background(Color.BLUE)
                     TextFlatten(Modifier.minHeight(100.scaled)) { "minH(100.scaled)".emit() }
                 }
                 Column {
-                    TextFlatten(Modifier.height(Measure.AUTO_MIN)) { "min".emit() }.backGround(Color(100, 100, 100))
-                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.backGround(Color.RED)
-                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.backGround(Color.GREEN)
-                    TextFlatten(Modifier.height(100.scaled)) { "height(100.scaled)".emit() }.backGround(Color.BLUE)
+                    TextFlatten(Modifier.height(Measure.AUTO_MIN)) { "min".emit() }.background(Color(100, 100, 100))
+                    TextFlatten(Modifier.weight(0.0)) { "0.0".emit() }.background(Color.RED)
+                    TextFlatten(Modifier.weight(1.0)) { "1.0".emit() }.background(Color.GREEN)
+                    TextFlatten(Modifier.height(100.scaled)) { "height(100.scaled)".emit() }.background(Color.BLUE)
                     TextFoldable(Modifier.minHeight(100.scaled)) { "minH(100.scaled)\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n......".emit() }
                 }
             }
