@@ -51,6 +51,8 @@ class DslScreen private constructor(
             GLFW.GLFW_KEY_DOWN -> instance.nextFocusableList(dataStore.focused) { it.run { viewVertical } }?.identity
             GLFW.GLFW_KEY_TAB -> if(eventModifier.shift) instance.nextFocusable(dataStore.focused) { it.run { viewSequential.asReversed() } }?.identity
                 else instance.nextFocusable(dataStore.focused) { it.run { viewSequential } }?.identity
+            GLFW.GLFW_KEY_HOME -> instance.nextFocusable(null) { it.run { viewSequential } }?.identity
+            GLFW.GLFW_KEY_END -> instance.nextFocusable(null) { it.run { viewSequential.asReversed() } }?.identity
             else -> return false
         }
         return true

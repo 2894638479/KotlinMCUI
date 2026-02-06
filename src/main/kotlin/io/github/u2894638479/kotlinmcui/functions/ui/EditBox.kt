@@ -5,12 +5,10 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslTextBuilderContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.collect
-import io.github.u2894638479.kotlinmcui.functions.dataStore
-import io.github.u2894638479.kotlinmcui.functions.newChildId
-import io.github.u2894638479.kotlinmcui.functions.property
+import io.github.u2894638479.kotlinmcui.functions.*
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Color
@@ -22,15 +20,15 @@ import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
+import io.github.u2894638479.kotlinmcui.prop.getValue
+import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.prop.value
 import io.github.u2894638479.kotlinmcui.scope.DslChild
 import io.github.u2894638479.kotlinmcui.text.AlignableChar
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 import io.github.u2894638479.kotlinmcui.text.DslText
 import io.github.u2894638479.kotlinmcui.text.DslTextLine
-import io.github.u2894638479.kotlinmcui.prop.getValue
-import io.github.u2894638479.kotlinmcui.prop.setValue
 import org.lwjgl.glfw.GLFW
-import kotlin.collections.plus
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration
@@ -47,6 +45,135 @@ fun DslChild.editBoxBackground(color: Color = Color.WHITE) = change { object: Ds
     override val modifier get() = it.modifier.padding(1.scaled)
 }}
 
+@JvmInline
+private value class CodePoints(val arr: IntArray) {
+    constructor(str:String):this(str.codePoints().toArray())
+    operator fun get(index: Int) = arr[index]
+    operator fun get(range: IntRange) = arr.sliceArray(range)
+    val string get() = String(arr,0,arr.size)
+    val size get() = arr.size
+    // [first,end)
+    fun replace(first: Int, end: Int, value: IntArray): CodePoints {
+        val arr0 = arr.sliceArray(0..<first)
+        val arr1 = arr.sliceArray(end..<size)
+        return CodePoints(arr0 + value + arr1)
+    }
+    fun replace(range: IntRange, value: IntArray): CodePoints {
+        require(!range.isEmpty())
+        return replace(range.first,range.last + 1,value)
+    }
+    fun insert(index: Int, value: IntArray) = replace(index,index,value)
+    fun contentEquals(other: CodePoints) = arr.contentEquals(other.arr)
+}
+
+private class UndoInfo(val codePoints: CodePoints, val cursor: Int, val cursor2: Int?)
+
+private class EditableString(private val stringProp: StableRWProperty<String>) {
+    var codePoints get() = CodePoints(stringProp.value)
+        set(value) { stringProp.value = value.string }
+    var cursor = codePoints.size
+    var cursor2:Int? = null
+    var undoDepth = 0
+    val undoList = mutableListOf<UndoInfo>()
+    var redo: UndoInfo? = null
+
+    fun insert(value: IntArray = IntArray(0)) {
+        check()
+        val max = max(cursor,cursor2?:cursor)
+        val min = min(cursor,cursor2?:cursor)
+        val countToEnd = codePoints.size - max
+        codePoints = codePoints.replace(min,max,value)
+        cursor = codePoints.size - countToEnd
+        cursor2 = null
+    }
+    fun insert(c:Char) = insert(IntArray(1){ c.code })
+    fun insert(s:String) = insert(CodePoints(s).arr)
+
+    fun delete() {
+        check()
+        if(cursor2 != null) return insert()
+        if(cursor == codePoints.size) return
+        codePoints = codePoints.replace(cursor..cursor, IntArray(0))
+    }
+
+    fun backspace() {
+        check()
+        if(cursor2 != null) return insert()
+        if(cursor == 0) return
+        val countToEnd = codePoints.size - max(cursor, cursor2 ?: cursor)
+        codePoints = codePoints.replace(cursor-1..cursor-1, IntArray(0))
+        cursor = codePoints.size - countToEnd
+    }
+
+    private var undo get() = UndoInfo(codePoints,cursor,cursor2)
+        set(value) {
+            redo = undo
+            codePoints = value.codePoints
+            cursor = value.cursor
+            cursor2 = value.cursor2
+        }
+
+    fun check() {
+        codePoints = CodePoints(stringProp.value)
+        val indices = 0..codePoints.size
+        cursor = cursor.coerceIn(indices)
+        cursor2?.let { cursor2 = it.coerceIn(indices) }
+    }
+
+    inline fun ifCursorUnChanged(action:()->Unit,block: EditableString.()->Unit) {
+        val origCursor = cursor
+        val origCursor2 = cursor2
+        block()
+        if(origCursor == cursor && origCursor2 == cursor2) action()
+    }
+
+    inline fun ifStringUnChanged(action:()->Unit,block: EditableString.()->Unit) {
+        val origStr = codePoints
+        block()
+        if(origStr == codePoints) action()
+    }
+
+    inline fun ifNothingChanged(action: () -> Unit,block: EditableString.() -> Unit) {
+        var changed = false
+        ifCursorUnChanged({changed = true}) {
+            ifStringUnChanged({changed = true},block)
+        }
+        if(changed) action()
+    }
+
+    fun addUndo() {
+        check()
+        val list = undoList
+        if(undoDepth <= 0) return list.clear()
+        if (list.firstOrNull()?.codePoints?.contentEquals(codePoints) == true) {
+            list[0] = undo
+            return
+        }
+        list.add(0, undo)
+        if (list.size > undoDepth) list.removeAt(list.size - 1)
+        redo = null
+    }
+
+    fun redo() {
+        check()
+        redo?.let {
+            undo = it
+            redo = null
+        }
+    }
+
+    fun undo() {
+        check()
+        redo = undoList.removeFirstOrNull()
+        undo = undoList.firstOrNull() ?: return
+    }
+
+    val range get() = cursor2?.let {
+        min(it,cursor)..<max(it,cursor)
+    }
+    inline val maxCursor get() = codePoints.size
+}
+
 context(ctx: DslContext)
 fun EditableText(
     modifier: Modifier = Modifier,
@@ -61,92 +188,40 @@ fun EditableText(
     blinkCycle: Duration = 0.5.seconds,
     undoDepth:Int = 10,
     id:Any
-) = run {
-    val id = newChildId(id)
-    var string by string ?: run {
-        val prop by dataStore.remember(id,"").property
+) = context(object : DslIdContext {
+    override val identity = newChildId(id)
+}) {
+    val stringProp = string ?: run {
+        val prop by remember("").property
         prop
     }
-    class UndoInfo(val string: String, val cursor: Int, val cursor2: Int?)
-    val info by dataStore.remember(id) {object{
-        var cursor = string.codePoints().count().toInt()
-        var cursor2: Int? = null
+    var string by stringProp
+    val editable by remember { EditableString(stringProp) }
+    editable.undoDepth = undoDepth
+    val info by remember {object{
         var blinkBeginNano = ctx.dataStore.frameTimeNano
         var alignedLines = listOf<Pair<DslTextLine, List<AlignableChar>>>()
-        val undoList = mutableListOf<UndoInfo>()
-        var redo: UndoInfo? = null
         var mouseDown: Unit? = null
-        fun check() {
-            val indices = 0..string.length
-            if(indices.isEmpty()) return
-            cursor = cursor.coerceIn(indices)
-            cursor2?.let { cursor2 = it.coerceIn(indices) }
-        }
-        inline fun ifCursorUnChanged(action:()->Unit,block:()->Unit) {
-            val origCursor = cursor
-            val origCursor2 = cursor2
-            block()
-            if(origCursor == cursor && origCursor2 == cursor2) action()
-        }
-        inline fun ifStringUnChanged(action:()->Unit,block:()->Unit) {
-            val origStr = string
-            block()
-            if(origStr == string) action()
-        }
     }}
     val font = ctx.dataStore.backend.getFont(fontName)
     val blink = (((ctx.dataStore.frameTimeNano - info.blinkBeginNano) / blinkCycle.inWholeNanoseconds) % 2L) == 0L
     class CursorPos(val line:Int,val index:Int)
     val delegate = DslText(
-        id, modifier, fontName, font,
+        identity, modifier, fontName, font,
         DslTextBuilderContext(ctx).apply { string.emit(color, size, style) }.toChars(),
         size, horizontalAligner, verticalAligner
     )
     info.run {
         collect(object : DslComponent by delegate {
-            inline val String.codeCount get() = codePoints().count().toInt()
-            inline val maxCursor get() = string.codeCount
 
             context(instance: DslComponent)
             override val focusable get() = true
-
-            fun addUndo() {
-                check()
-                val list = undoList
-                if (list.firstOrNull()?.string == string) {
-                    list[0] = UndoInfo(string, cursor, cursor2)
-                    return
-                }
-                list.add(0, UndoInfo(string, cursor, cursor2))
-                if (list.size > undoDepth) list.removeAt(list.size - 1)
-                redo = null
-            }
-
-            fun undo() {
-                check()
-                redo = undoList.removeFirstOrNull()
-                undoList.firstOrNull()?.let {
-                    string = it.string
-                    cursor = it.cursor
-                    cursor2 = it.cursor2
-                }
-            }
-
-            fun redo() {
-                check()
-                redo?.let {
-                    string = it.string
-                    cursor = it.cursor
-                    cursor2 = it.cursor2
-                    redo = null
-                }
-            }
 
             fun getPos(cursor: Int?): CursorPos? {
                 var count = 0
                 val cursor = cursor ?: return null
                 string.lines().forEachIndexed { i, chars ->
-                    val codePointCount = chars.codePoints().count().toInt()
+                    val codePointCount = CodePoints(chars).size
                     if (cursor > count + codePointCount) {
                         count += (codePointCount + 1)
                         return@forEachIndexed
@@ -160,23 +235,16 @@ fun EditableText(
                 if (value == null) return null
                 val lines = string.lines()
                 if (value.line < 0) return 0
-                if (value.line >= lines.size) return maxCursor
+                if (value.line >= lines.size) return editable.maxCursor
                 if (value.line !in lines.indices) return null
-                val prevLinesCount = lines.take(value.line).sumOf { it.codeCount + 1 }
-                val lastLineCount = min(lines[value.line].codeCount, value.index)
+                val prevLinesCount = lines.take(value.line).sumOf { CodePoints(it).size + 1 }
+                val lastLineCount = min(CodePoints(lines[value.line]).size, value.index)
                 return prevLinesCount + lastLineCount
             }
 
             var cursorPos: CursorPos?
-                get() = getPos(cursor)
-                set(value) {
-                    cursor = setPos(value) ?: return
-                }
-            var cursor2Pos: CursorPos?
-                get() = getPos(cursor2)
-                set(value) {
-                    cursor2 = setPos(value) ?: return
-                }
+                get() = getPos(editable.cursor)
+                set(value) { editable.cursor = setPos(value) ?: return }
 
             context(instance: DslComponent)
             fun cursorRect(): Rect? {
@@ -187,90 +255,13 @@ fun EditableText(
                 return Rect(x - 0.5.scaled, line.low, x + 0.5.scaled, line.high)
             }
 
-            inline val hasRange get() = cursor2 != null && cursor != cursor2
-            inline val range: IntRange?
-                get() {
-                    val c1 = cursor
-                    val c2 = cursor2 ?: return null
-                    if (c1 == c2) return null
-                    return if (c1 < c2) c1..<c2 else c2..<c1
-                }
-
-            fun delRange() {
-                if (!hasRange) return
-                val lastCursor2 = cursor2 ?: return
-                addUndo()
-                string = string.let {
-                    val index2 = it.offsetByCodePoints(0, lastCursor2)
-                    val index = it.offsetByCodePoints(0, cursor)
-                    if (index > index2) it.substring(0, index2) + it.substring(index)
-                    else it.substring(0, index) + it.substring(index2)
-                }
-                cursor = min(cursor, lastCursor2)
-                cursor2 = null
-            }
-
-            fun insertChar(c: Char) {
-                addUndo()
-                if (c == '\r') return
-                string = string.let {
-                    val index = it.offsetByCodePoints(0, cursor++)
-                    cursor2?.let { cursor2 ->
-                        info.cursor2 = null
-                        val index2 = it.offsetByCodePoints(0, cursor2)
-                        if (index > index2) it.substring(0, index2) + c + it.substring(index)
-                        else it.substring(0, index) + c + it.substring(index2)
-                    } ?: (it.substring(0, index) + c + it.substring(index))
-                }
-            }
-
-            fun insertString(s: String) {
-                addUndo()
-                val s = s.filter { it != '\r' }
-                string = string.let {
-                    val index = it.offsetByCodePoints(0, cursor)
-                    cursor += s.codeCount
-                    cursor2?.let { cursor2 ->
-                        info.cursor2 = null
-                        val index2 = it.offsetByCodePoints(0, cursor2)
-                        if (index > index2) it.substring(0, index2) + s + it.substring(index)
-                        else it.substring(0, index) + s + it.substring(index2)
-                    } ?: (it.substring(0, index) + s + it.substring(index))
-                }
-            }
-
-            fun backChar() {
-                addUndo()
-                if (hasRange) return delRange()
-                if (cursor == 0) return
-                string = string.let {
-                    val index = it.offsetByCodePoints(0, cursor--)
-                    val index1 = it.offsetByCodePoints(0, cursor)
-                    it.substring(0, index1) + it.substring(index)
-                }
-            }
-
-            fun delChar() {
-                addUndo()
-                if (hasRange) return delRange()
-                if (cursor == maxCursor) return
-                string = string.let {
-                    val cursor = cursor
-                    it.substring(0, it.offsetByCodePoints(0, cursor)) + it.substring(
-                        it.offsetByCodePoints(
-                            0,
-                            cursor + 1
-                        )
-                    )
-                }
-            }
-
             context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
             override fun <RP> render(mouse: Position) {
-                addUndo()
+                editable.addUndo()
                 val font = backend.getFont(fontName)
                 alignedLines = delegate.lines().map { it to it.alignedChars(font) }.apply {
-                    if (isFocused) range?.let { range ->
+                    val range = editable.range
+                    if (isFocused && range != null) {
                         var index = 0
                         forEach { (line, chars) ->
                             chars.forEach {
@@ -293,8 +284,7 @@ fun EditableText(
             context(instance: DslComponent)
             override fun charTyped(c: Char, eventModifier: EventModifier): Boolean {
                 if (!isFocused) return false
-                check()
-                insertChar(c)
+                editable.insert(c)
                 return true
             }
 
@@ -302,23 +292,23 @@ fun EditableText(
             override fun keyDown(key: Int, scanCode: Int, eventModifier: EventModifier): Boolean {
                 fun default() = delegate.keyDown(key, scanCode, eventModifier)
                 if (!isFocused) return default()
-                check()
+                editable.check()
                 blinkBeginNano = System.nanoTime()
-                fun checkCursor2() {
+                fun EditableString.checkCursor2() {
                     if (eventModifier.shift) {
                         if (cursor2 == null) cursor2 = cursor
                     } else cursor2 = null
                 }
                 when (key) {
-                    GLFW.GLFW_KEY_BACKSPACE -> ifStringUnChanged({ return default() }) {
-                        backChar()
+                    GLFW.GLFW_KEY_BACKSPACE -> editable.ifNothingChanged({ return default() }) {
+                        backspace()
                     }
 
-                    GLFW.GLFW_KEY_DELETE -> ifStringUnChanged({ return default() }) {
-                        delChar()
+                    GLFW.GLFW_KEY_DELETE -> editable.ifNothingChanged({ return default() }) {
+                        delete()
                     }
 
-                    GLFW.GLFW_KEY_LEFT -> ifCursorUnChanged({ return default() }) {
+                    GLFW.GLFW_KEY_LEFT -> editable.ifCursorUnChanged({ return default() }) {
                         if (eventModifier.shift) {
                             if (cursor2 == null) cursor2 = cursor
                             cursor = max(0, cursor - 1)
@@ -328,7 +318,7 @@ fun EditableText(
                         }
                     }
 
-                    GLFW.GLFW_KEY_RIGHT -> ifCursorUnChanged({ return default() }) {
+                    GLFW.GLFW_KEY_RIGHT -> editable.ifCursorUnChanged({ return default() }) {
                         if (eventModifier.shift) {
                             if (cursor2 == null) cursor2 = cursor
                             cursor = min(maxCursor, cursor + 1)
@@ -338,44 +328,44 @@ fun EditableText(
                         }
                     }
 
-                    GLFW.GLFW_KEY_UP -> ifCursorUnChanged({ return default() }) {
+                    GLFW.GLFW_KEY_UP -> editable.ifCursorUnChanged({ return default() }) {
                         checkCursor2()
                         cursorPos = cursorPos?.let { CursorPos(it.line - 1, it.index) }
                     }
 
-                    GLFW.GLFW_KEY_DOWN -> ifCursorUnChanged({ return default() }) {
+                    GLFW.GLFW_KEY_DOWN -> editable.ifCursorUnChanged({ return default() }) {
                         checkCursor2()
                         cursorPos = cursorPos?.let { CursorPos(it.line + 1, it.index) }
                     }
 
-                    GLFW.GLFW_KEY_HOME -> ifCursorUnChanged({ return default() }) {
+                    GLFW.GLFW_KEY_HOME -> editable.ifCursorUnChanged({ return default() }) {
                         checkCursor2()
                         cursorPos = cursorPos?.let { CursorPos(it.line, 0) }
                     }
 
-                    GLFW.GLFW_KEY_END -> ifCursorUnChanged({ return default() }) {
+                    GLFW.GLFW_KEY_END -> editable.ifCursorUnChanged({ return default() }) {
                         checkCursor2()
                         cursorPos = cursorPos?.let { CursorPos(it.line, Int.MAX_VALUE) }
                     }
 
-                    GLFW.GLFW_KEY_ENTER -> insertChar('\n')
-                    GLFW.GLFW_KEY_V -> if (eventModifier.ctrl) insertString(ctx.dataStore.backend.clipBoard)
-                    GLFW.GLFW_KEY_C -> if (eventModifier.ctrl) range?.let {
+                    GLFW.GLFW_KEY_ENTER -> editable.insert('\n')
+                    GLFW.GLFW_KEY_V -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.backend.clipBoard)
+                    GLFW.GLFW_KEY_C -> if (eventModifier.ctrl) editable.range?.let {
                         ctx.dataStore.backend.clipBoard = string.substring(it)
                     }
 
                     GLFW.GLFW_KEY_Z -> if (eventModifier.ctrl) {
-                        if (eventModifier.shift) redo() else undo()
+                        if (eventModifier.shift) editable.redo() else editable.undo()
                     }
 
                     GLFW.GLFW_KEY_X -> if (eventModifier.ctrl) {
-                        range?.let { ctx.dataStore.backend.clipBoard = string.substring(it) }
-                        delRange()
+                        editable.range?.let { ctx.dataStore.backend.clipBoard = string.substring(it) }
+                        editable.insert()
                     }
 
                     GLFW.GLFW_KEY_A -> if (eventModifier.ctrl) {
-                        cursor = maxCursor
-                        cursor2 = 0
+                        editable.cursor = editable.maxCursor
+                        editable.cursor2 = 0
                     }
 
                     else -> return default()
@@ -402,11 +392,11 @@ fun EditableText(
             context(instance: DslComponent)
             override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
                 if (mouse !in instance.rect) return delegate.mouseDown(mouse, mouseButton)
-                check()
+                editable.check()
                 blinkBeginNano = System.nanoTime()
                 mouseDown = Unit
                 cursorPos = mouseHitPos(mouse)
-                cursor2 = null
+                editable.cursor2 = null
                 return true
             }
 
@@ -418,9 +408,9 @@ fun EditableText(
             context(instance: DslComponent)
             override fun mouseMove(mouse: Position) {
                 mouseDown ?: return
-                check()
+                editable.check()
                 blinkBeginNano = System.nanoTime()
-                if (cursor2 == null) cursor2 = cursor
+                editable.run { if (cursor2 == null) cursor2 = cursor }
                 cursorPos = mouseHitPos(mouse)
                 delegate.mouseMove(mouse)
             }
