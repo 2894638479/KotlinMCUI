@@ -7,5 +7,6 @@
     "kotlinmcui.scroll": "滚动",
     "kotlinmcui.slider": "滑条",
     "kotlinmcui.translation": "翻译",
-    "kotlinmcui.id": "ID"
+    "kotlinmcui.id": "ID",
+    "kotlinmcui.container": "容器"
 }

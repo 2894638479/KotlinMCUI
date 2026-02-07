@@ -7,5 +7,6 @@
     "kotlinmcui.scroll": "Scroll",
     "kotlinmcui.slider": "Slider",
     "kotlinmcui.translation": "translation",
-    "kotlinmcui.id": "ID"
+    "kotlinmcui.id": "ID",
+    "kotlinmcui.container": "Container"
 }

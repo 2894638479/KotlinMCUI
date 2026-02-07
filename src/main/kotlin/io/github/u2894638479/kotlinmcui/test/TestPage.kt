@@ -32,7 +32,8 @@ fun TestPage() = Row {
             "slider" to { TestSliderPage() },
             "id" to { TestIdPage() },
             "image" to { TestImagePage() },
-            "translation" to { TestTranslationPage() }
+            "translation" to { TestTranslationPage() },
+            "container" to { TestContainerPage() }
         ).mapKeys { translate("kotlinmcui.${it.key}") }
     }
     var page by remember(pages.entries.first())

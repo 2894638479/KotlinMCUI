@@ -9,15 +9,11 @@ import io.github.u2894638479.kotlinmcui.functions.autoAnimate
 import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
-import io.github.u2894638479.kotlinmcui.math.Color
-import io.github.u2894638479.kotlinmcui.math.Measure
-import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.Rect
+import io.github.u2894638479.kotlinmcui.math.*
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
-import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.padding
-import io.github.u2894638479.kotlinmcui.scope.DslChild
 import io.github.u2894638479.kotlinmcui.prop.getValue
+import io.github.u2894638479.kotlinmcui.scope.DslChild
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -120,3 +116,27 @@ fun DslChild.animateWidth(duration: Duration = 0.5.seconds, interpolator: Interp
         return value
     }
 }}
+
+context(ctx: DslContext)
+fun DslChild.containerBackground(padding: Measure = 3.scaled)
+= change { object : DslComponent by it {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
+    override fun <RP> render(mouse: Position) {
+        backend.renderContainer(rect.expand(padding))
+        it.render(mouse)
+    }
+
+    override val modifier get() = it.modifier.padding(padding)
+} }
+
+context(ctx: DslContext)
+fun DslChild.slotBackground(padding: Measure = 0.px)
+= change { object: DslComponent by it {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
+    override fun <RP> render(mouse: Position) {
+        backend.renderSlot(rect.expand(padding))
+        it.render(mouse)
+    }
+
+    override val modifier get() = it.modifier.padding(padding)
+} }

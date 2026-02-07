@@ -10,6 +10,7 @@ import io.github.u2894638479.kotlinmcui.functions.ui.ColorRect
 import io.github.u2894638479.kotlinmcui.functions.ui.Column
 import io.github.u2894638479.kotlinmcui.functions.ui.EditableText
 import io.github.u2894638479.kotlinmcui.functions.ui.Row
+import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableColumn
 import io.github.u2894638479.kotlinmcui.functions.ui.Spacer
 import io.github.u2894638479.kotlinmcui.functions.ui.TextAutoFold
 import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
@@ -19,6 +20,7 @@ import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
+import io.github.u2894638479.kotlinmcui.modifier.minHeight
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.size
 import io.github.u2894638479.kotlinmcui.modifier.weight
@@ -31,7 +33,7 @@ import kotlin.reflect.KProperty
 private enum class Page{TEXT_LAYOUT,TEXT_STYLE}
 
 context(ctx: DslContext)
-fun TestTextPage() = Column {
+fun TestTextPage() = ScrollableColumn {
     var currentPage by Page.TEXT_LAYOUT.remember
     Row(Modifier.height(20.scaled)) {
         Page.entries.forEach {
@@ -78,7 +80,7 @@ fun TestTextPage() = Column {
                 prop: KProperty<Boolean>,
                 value: Boolean,
                 change: DslCharStyle.(Boolean) -> DslCharStyle
-            ) = Button(id = prop) {
+            ) = Button(Modifier.minHeight(20.scaled),id = prop) {
                 TextFlatten {
                     prop.name.emit()
                     ": ".emit()
