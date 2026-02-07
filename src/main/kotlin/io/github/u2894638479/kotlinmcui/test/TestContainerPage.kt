@@ -18,9 +18,12 @@ import io.github.u2894638479.kotlinmcui.prop.value
 
 context(ctx: DslContext)
 fun TestContainerPage() = ScrollableColumn {
-    var mouseHold by remember<String?>(null)
+    class ItemInfo(val id:String,val count: Int,val damage: Double? = null,val enchanted:Boolean = false)
+    var mouseHold by remember<ItemInfo?>(null)
     MouseTip {
-        Item(Modifier.size(16.scaled,16.scaled),mouseHold ?: return@MouseTip,10) {}
+        mouseHold?.run {
+            Item(Modifier.size(16.scaled,16.scaled),id,count,damage,enchanted) {}
+        }
     }
     Row {
         val size by 10.remember.property
@@ -43,10 +46,11 @@ fun TestContainerPage() = ScrollableColumn {
         Spacer(Modifier.size(width.value.scaled,height.value.scaled)) {}.containerBackground()
     }
     val items by remember {
-        Array<String?>(4 * 9) { null }.also {
-            it[3] = "placeholder"
-            it[13] = "minecraft:grass_block"
-            it[20] = "minecraft:redstone"
+        Array<ItemInfo?>(4 * 9) { null }.also {
+            it[3] = ItemInfo("placeholder",3,0.5,true)
+            it[13] = ItemInfo("minecraft:grass_block",35,0.4,true)
+            it[20] = ItemInfo("minecraft:redstone",8,0.4,true)
+            it[22] = ItemInfo("minecraft:diamond_axe",1,0.2,true)
         }
     }
 
@@ -57,9 +61,9 @@ fun TestContainerPage() = ScrollableColumn {
             Row {
                 (0..<9).forEachWithId { col ->
                     val index = row*9+col
-                    items[index].let {
-                        if(it == null) Spacer(Modifier.size(18.scaled,18.scaled)) {}.slotBackground()
-                        else Item(Modifier.size(16.scaled,16.scaled),it,10) {}.slotBackground(1.scaled)
+                    items[index].run {
+                        if(this == null) Spacer(Modifier.size(18.scaled,18.scaled)) {}.slotBackground()
+                        else Item(Modifier.size(16.scaled,16.scaled),id,count,damage,enchanted) {}.slotBackground(1.scaled)
                     }.clickable {
                         val item = mouseHold
                         mouseHold = items[index]

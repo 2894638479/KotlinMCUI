@@ -6,10 +6,13 @@ import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.decorator.background
 import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
 import io.github.u2894638479.kotlinmcui.functions.forEachWithId
+import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.ui.Box
 import io.github.u2894638479.kotlinmcui.functions.ui.Button
 import io.github.u2894638479.kotlinmcui.functions.ui.Column
 import io.github.u2894638479.kotlinmcui.functions.ui.Row
+import io.github.u2894638479.kotlinmcui.functions.ui.SliderHorizontal
 import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
 import io.github.u2894638479.kotlinmcui.functions.ui.TextFoldable
 import io.github.u2894638479.kotlinmcui.math.Color
@@ -24,6 +27,7 @@ import io.github.u2894638479.kotlinmcui.modifier.weight
 import io.github.u2894638479.kotlinmcui.modifier.width
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.prop.value
 import kotlin.collections.mapOf
 
 context(ctx: DslContext)
@@ -126,6 +130,31 @@ fun TestLayoutPage() = Column {
                     TextFoldable(Modifier.minHeight(100.scaled)) { "minH(100.scaled)\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n.\n......".emit() }
                 }
             }
+        },
+        "recursion" to {
+            val n by remember(10).property
+            SliderHorizontal(Modifier.height(20.scaled),0..100,n) {
+                TextFlatten { "n=${n.value}".emit() }
+            }
+            fun color(n:Int) = when(n % 5) {
+                0 -> Color.RED
+                1 -> Color.BLUE
+                2 -> Color.GREEN
+                3 -> Color.WHITE
+                else -> Color.BLACK
+            }
+            fun Modifier.padding(n:Int):Modifier {
+                fun value(a:Int,b:Int) = if((n%4) == a || (n%4) == b) 5.px else 0.px
+                return padding(value(0,1),value(1,2),value(2,3),value(3,0))
+            }
+            context(ctx:DslContext)
+            fun func(n: Int) {
+                if(n <= 0) return
+                Box(Modifier.padding(n)) {
+                    func(n-1)
+                }.background(color(n))
+            }
+            func(n.value)
         }
     ) }
     var chosen by remember(map.entries.first())
