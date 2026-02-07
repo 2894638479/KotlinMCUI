@@ -6,12 +6,13 @@ import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.identity.DslProperty
+import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.animate.Animator
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
+import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.prop.LocalROProperty
 import io.github.u2894638479.kotlinmcui.prop.LocalRWProperty
-import io.github.u2894638479.kotlinmcui.scope.DslScope
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlin.time.Duration
 
@@ -113,6 +114,7 @@ class DslDataStore(val backend: DslBackend<*, *>, val onClose:()-> Unit, dslFunc
                 //TODO
             }
         }
+    var mouse = Position(-1.px,-1.px)
 
     val dslScreen = DslScreen(this,dslFunction)
 }

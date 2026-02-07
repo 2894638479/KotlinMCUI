@@ -6,6 +6,7 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslPreventContext
+import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.identity.DslProperty
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.math.Measure
@@ -38,6 +39,12 @@ fun newChildId(id:Any?) = ctx.identity + id
 context(ctx: DslContext)
 inline fun <T> withId(obj:Any?, block: context(DslContext) ()->T) =
     context(ctx.change(dslIdentity = identity + obj),block)
+
+context(ctx: DslContext)
+inline fun <T> withScale(scale: Double, block: context(DslContext) ()->T) =
+    context(ctx.change(scaleScope = object : DslScaleContext {
+        override val scale = scale
+    }),block)
 
 context(ctx: DslContext)
 inline fun <T> Iterable<T>.forEachWithId(block:context(DslContext) (T) -> Unit) = forEach { withId(it) { block(it) } }

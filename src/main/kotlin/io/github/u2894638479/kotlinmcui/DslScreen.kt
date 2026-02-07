@@ -6,6 +6,7 @@ import io.github.u2894638479.kotlinmcui.component.nextFocusable
 import io.github.u2894638479.kotlinmcui.component.nextFocusableList
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
+import io.github.u2894638479.kotlinmcui.functions.ui.MouseTipComponent
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
@@ -42,6 +43,12 @@ class DslScreen private constructor(
     }
 
     context(instance: DslComponent)
+    override fun mouseMove(mouse: Position) {
+        dataStore.mouse = mouse
+        return delegate.mouseMove(mouse)
+    }
+
+    context(instance: DslComponent)
     override fun keyDown(key: Int, scanCode: Int, eventModifier: EventModifier): Boolean {
         if(delegate.keyDown(key, scanCode, eventModifier)) return true
         dataStore.focused = when(key) {
@@ -56,6 +63,12 @@ class DslScreen private constructor(
             else -> return false
         }
         return true
+    }
+
+    context(instance: DslComponent)
+    override fun build() {
+        delegate.build()
+        children.sortBy { it !is MouseTipComponent }
     }
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)

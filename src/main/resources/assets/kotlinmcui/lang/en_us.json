@@ -8,5 +8,6 @@
     "kotlinmcui.slider": "Slider",
     "kotlinmcui.translation": "translation",
     "kotlinmcui.id": "ID",
-    "kotlinmcui.container": "Container"
+    "kotlinmcui.container": "Container",
+    "kotlinmcui.mousetip": "Mouse Tip"
 }

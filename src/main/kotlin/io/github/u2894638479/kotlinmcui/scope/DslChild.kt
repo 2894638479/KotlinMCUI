@@ -12,8 +12,6 @@ class DslChild(private var component: DslComponent) {
     class List private constructor(private val mutList: MutableList<DslChild>):kotlin.collections.List<DslComponent> by mutList.mapView({it.component}){
         @Deprecated("")
         override fun <T> toArray(generator: IntFunction<Array<out T?>?>): Array<out T?>? = super.toArray(generator)
-
-
         constructor():this(mutableListOf())
 
         fun collect(child: DslComponent) = DslChild(child).also { mutList += it }
@@ -24,6 +22,7 @@ class DslChild(private var component: DslComponent) {
 
         fun clear() = mutList.clear()
 
-        fun forEachContext(action:context(DslComponent) (DslComponent) -> Unit) = forEach { context(it) { action(it) } }
+        fun <R : Comparable<R>> sortBy(selector: (DslComponent) -> R?) =
+            mutList.sortBy { selector(it.component) }
     }
 }

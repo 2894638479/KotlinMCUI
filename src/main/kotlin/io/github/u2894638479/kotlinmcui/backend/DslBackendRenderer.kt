@@ -17,6 +17,8 @@ interface DslBackendRenderer<RP> {
     fun renderSlot(rect: Rect)
     context(renderParam: RP, ctx: DslScaleContext)
     fun renderContainer(rect: Rect)
+    context(renderParam: RP, ctx: DslScaleContext)
+    fun renderItem(rect: Rect, item: String, count:Int)
 
     context(renderParam:RP)
     fun renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE)

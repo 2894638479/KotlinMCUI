@@ -11,12 +11,15 @@ value class Alignment private constructor(private val value:Int){
         val value2 = this.value and (0xFF shl offset).inv()
         return Alignment(value1 or value2)
     }
+    
+    fun horizontal(align: Align) = changeByte(0,align.ordinal)
+    fun vertical(align: Align) = changeByte(8,align.ordinal)
 
-    fun left() = changeByte(0,Align.LOW.ordinal)
-    fun top() = changeByte(8,Align.LOW.ordinal)
-    fun right() = changeByte(0,Align.HIGH.ordinal)
-    fun bottom() = changeByte(8,Align.HIGH.ordinal)
-    fun middleX() = changeByte(0,Align.MID.ordinal)
-    fun middleY() = changeByte(8,Align.MID.ordinal)
+    fun left() = horizontal(Align.LOW)
+    fun top() = vertical(Align.LOW)
+    fun right() = horizontal(Align.HIGH)
+    fun bottom() = vertical(Align.HIGH)
+    fun middleX() = horizontal(Align.MID)
+    fun middleY() = vertical(Align.MID)
     fun middle() = middleX().middleY()
 }

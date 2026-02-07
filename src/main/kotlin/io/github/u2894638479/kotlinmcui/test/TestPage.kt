@@ -33,7 +33,8 @@ fun TestPage() = Row {
             "id" to { TestIdPage() },
             "image" to { TestImagePage() },
             "translation" to { TestTranslationPage() },
-            "container" to { TestContainerPage() }
+            "container" to { TestContainerPage() },
+            "mousetip" to { TestMouseTipPage() }
         ).mapKeys { translate("kotlinmcui.${it.key}") }
     }
     var page by remember(pages.entries.first())
