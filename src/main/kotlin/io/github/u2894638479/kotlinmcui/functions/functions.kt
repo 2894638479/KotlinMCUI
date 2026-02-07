@@ -5,7 +5,6 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
-import io.github.u2894638479.kotlinmcui.context.DslPreventContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.identity.DslProperty
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
@@ -13,13 +12,7 @@ import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
 import io.github.u2894638479.kotlinmcui.math.animate.toInterpolatable
-import io.github.u2894638479.kotlinmcui.prop.LocalROProperty
-import io.github.u2894638479.kotlinmcui.prop.LocalRWProperty
-import io.github.u2894638479.kotlinmcui.prop.StableROProperty
-import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
-import io.github.u2894638479.kotlinmcui.prop.getValue
-import io.github.u2894638479.kotlinmcui.prop.remap
-import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.prop.*
 import io.github.u2894638479.kotlinmcui.scope.DslChild
 import java.io.File
 import kotlin.time.Duration
@@ -115,33 +108,5 @@ fun collect(component: DslComponent) = ctx.children.collect(component)
 
 context(ctx: DslContext)
 fun remove(child: DslChild) = ctx.children.remove(child)
-
-context(ctx: DslContext)
-inline fun init(block: context(DslPreventContext) () -> Unit){
-    var frameIndex by remember<ULong?>(ULong.MAX_VALUE)
-    when(frameIndex) {
-        ULong.MAX_VALUE -> {
-            frameIndex = dataStore.frameIndex
-            context(DslPreventContext) { block() }
-        }
-        null -> {}
-        dataStore.frameIndex -> context(DslPreventContext) { block() }
-        else -> frameIndex = null
-    }
-}
-
-context(ctx: DslContext)
-inline fun launchedEffect(block: context(DslPreventContext) () -> Unit){
-    var frameIndex by remember(0uL)
-    val currentFrame = dataStore.frameIndex
-    when(frameIndex) {
-        currentFrame -> context(DslPreventContext,block)
-        currentFrame - 1uL -> frameIndex = currentFrame
-        else -> {
-            context(DslPreventContext,block)
-            frameIndex = currentFrame
-        }
-    }
-}
 
 
