@@ -35,14 +35,17 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 context(ctx: DslContext)
-fun DslChild.editBoxBackground(color: Color = Color.WHITE) = change { object: DslComponent by it {
+fun DslChild.editBoxBackground(width: Measure = 1.scaled, padding: Measure = width + 1.scaled)
+= change { object: DslComponent by it {
     context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
-        backend.renderEditBox(instance.rect, isHighlighted,color)
+        backend.fillRect(instance.rect.expand(padding),
+            if(isHighlighted) Color(255,255,255) else Color(0xA0,0xA0,0xA0))
+        backend.fillRect(instance.rect.expand(padding - width),Color.BLACK)
         it.render(mouse)
     }
 
-    override val modifier get() = it.modifier.padding(1.scaled)
+    override val modifier get() = it.modifier.padding(padding)
 }}
 
 @JvmInline

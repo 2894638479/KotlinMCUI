@@ -13,8 +13,6 @@ interface DslBackendRenderer<RP> {
     fun fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color)
     context(renderParam: RP)
     fun renderButton(rect: Rect, highlighted: Boolean, active: Boolean, color: Color = Color.WHITE)
-    context(renderParam: RP)
-    fun renderEditBox(rect: Rect, highlighted: Boolean, color: Color = Color.WHITE)
 
     context(renderParam:RP)
     fun renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE)
