@@ -11,6 +11,7 @@ import io.github.u2894638479.kotlinmcui.functions.ui.LazyColumn
 import io.github.u2894638479.kotlinmcui.functions.ui.Row
 import io.github.u2894638479.kotlinmcui.functions.ui.ScrollBar
 import io.github.u2894638479.kotlinmcui.functions.ui.ScrollBarHorizontal
+import io.github.u2894638479.kotlinmcui.functions.ui.ScrollBarVertical
 import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableColumn
 import io.github.u2894638479.kotlinmcui.functions.ui.TextAutoFold
 import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
@@ -54,11 +55,11 @@ fun TestScrollPage() = Row {
                         ) { TextFlatten { "item$i".emit() } }.clickable { lastClick = i }
                     }
                 }
-                ScrollBar(Modifier.width(10.scaled), scrollerPropNested) {}
+                ScrollBarVertical(Modifier.width(10.scaled), scrollerPropNested) {}
             }
         }
     }
-    ScrollBar(Modifier.width(10.scaled), scrollerProp1) {}
+    ScrollBarVertical(Modifier.width(10.scaled), scrollerProp1) {}
 
 
     val scrollerProp2 by Scroller.empty.remember.property
@@ -75,7 +76,7 @@ fun TestScrollPage() = Row {
             }
         }
     }
-    ScrollBar(Modifier.width(10.scaled), scrollerProp2) {}
+    ScrollBarVertical(Modifier.width(10.scaled), scrollerProp2) {}
 
     val scrollerProp3 by Scroller.empty.remember.property
     Column {
@@ -91,5 +92,5 @@ fun TestScrollPage() = Row {
         }
         ScrollBarHorizontal(Modifier.height(10.scaled), scrollerProp3) {}
     }
-    ScrollBar(Modifier.width(10.scaled), scrollerProp3) {}
+    ScrollBarVertical(Modifier.width(10.scaled), scrollerProp3) {}
 }

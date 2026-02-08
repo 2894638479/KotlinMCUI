@@ -35,7 +35,7 @@ context(ctx: DslContext)
 fun ScrollBar(
     modifier: Modifier = Modifier,
     scrollerProp: StableROProperty<Scroller>,
-    horizontal:Boolean = false,
+    horizontal:Boolean,
     id:Any?
 ) = Button(modifier,id = id) {
     var lastDown by remember<Position?>(null)
