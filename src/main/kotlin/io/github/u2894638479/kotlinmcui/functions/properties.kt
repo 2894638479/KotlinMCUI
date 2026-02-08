@@ -11,3 +11,6 @@ val identity get() = ctx.identity
 
 context(ctx: DslDataStoreContext)
 val ctxBackend get() = ctx.dataStore.backend
+
+context(ctx: DslDataStoreContext)
+val screenTitle get() = dataStore.title

@@ -4,8 +4,10 @@ import io.github.u2894638479.kotlinmcui.backend.showScreen
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
+import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
+import io.github.u2894638479.kotlinmcui.context.DslTopContext
 import io.github.u2894638479.kotlinmcui.identity.DslProperty
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.math.Measure
@@ -19,12 +21,13 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 typealias DslFunction = context(DslContext) ()->Unit
+typealias DslTopFunction = context(DslTopContext) ()->Unit
 
 context(ctx: DslDataStoreContext)
 fun translate(string: String,vararg args: Any) = ctxBackend.translate(string,*args) ?: string
 
-context(ctx: DslContext)
-fun showScreen(function: DslFunction) = dataStore.backend.showScreen(function)
+context(_: DslExecuteContext,_: DslDataStoreContext)
+fun showScreen(title:String = "DSL Screen",function: DslTopFunction) = dataStore.backend.showScreen(title,function)
 
 context(ctx: DslContext)
 fun newChildId(id:Any?) = ctx.identity + id

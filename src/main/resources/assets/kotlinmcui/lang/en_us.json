@@ -9,5 +9,6 @@
     "kotlinmcui.translation": "translation",
     "kotlinmcui.id": "ID",
     "kotlinmcui.container": "Container",
-    "kotlinmcui.mousetip": "Mouse Tip"
+    "kotlinmcui.mousetip": "Mouse Tip",
+    "kotlinmcui.screen": "Screen"
 }

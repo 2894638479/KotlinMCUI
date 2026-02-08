@@ -5,7 +5,7 @@ import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.scope.DslChild
 
 @DslContextMarker
-class DslContext(
+open class DslContext(
     override val identity: DslId,
     override val dataStore: DslDataStore,
     override val children: DslChild.List,

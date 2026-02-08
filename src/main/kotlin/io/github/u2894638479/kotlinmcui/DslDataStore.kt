@@ -3,7 +3,7 @@ package io.github.u2894638479.kotlinmcui
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
+import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.identity.DslProperty
 import io.github.u2894638479.kotlinmcui.math.Position
@@ -16,7 +16,7 @@ import io.github.u2894638479.kotlinmcui.prop.LocalRWProperty
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlin.time.Duration
 
-class DslDataStore(val backend: DslBackend<*, *>, val onClose:()-> Unit, dslFunction: DslFunction): DslScaleContext {
+class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultOnClose:()-> Unit, dslFunction: DslTopFunction): DslScaleContext {
     override val scale get() = backend.guiScale
     private val extraData = object: Object2ObjectOpenHashMap<DslProperty<*>, Any?>(){
         val empty = object{}
@@ -37,6 +37,9 @@ class DslDataStore(val backend: DslBackend<*, *>, val onClose:()-> Unit, dslFunc
         private set
     var frameTimeNano = 0L
         private set
+
+    var onClose:()-> Unit = defaultOnClose
+        internal set
 
     internal fun newFrame() {
         frameIndex++

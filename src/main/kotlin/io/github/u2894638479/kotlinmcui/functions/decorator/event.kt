@@ -4,7 +4,7 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
-import io.github.u2894638479.kotlinmcui.context.DslPreventContext
+import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
 import io.github.u2894638479.kotlinmcui.functions.ctxBackend
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
@@ -14,13 +14,13 @@ import io.github.u2894638479.kotlinmcui.scope.DslChild
 import org.lwjgl.glfw.GLFW
 
 context(ctx: DslContext)
-fun DslChild.clickable(enabled:Boolean = true, block: context(DslPreventContext, DslDataStoreContext) DslComponent.()->Unit)
+fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext, DslDataStoreContext) DslComponent.()->Unit)
 = change { if(!enabled) it else object : DslComponent by it {
 
     context(instance: DslComponent)
     fun click() {
         ctxBackend.playButtonSound()
-        block(DslPreventContext,ctx,instance)
+        block(DslExecuteContext,ctx,instance)
     }
 
     context(instance: DslComponent)
@@ -52,13 +52,13 @@ fun DslChild.forceId(id: DslId) = change { object: DslComponent by it {
 
 context(ctx: DslContext)
 fun DslChild.onHovered(
-    action: context(DslPreventContext) (Boolean) -> Unit
+    action: context(DslExecuteContext) (Boolean) -> Unit
 ) = change {
     object : DslComponent by it {
         context(instance: DslComponent)
         override fun hoverChanged(newHover: DslId?) {
             super.hoverChanged(newHover)
-            action(DslPreventContext,instance.identity == newHover)
+            action(DslExecuteContext,instance.identity == newHover)
         }
     }
 }

@@ -5,7 +5,8 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.nextFocusable
 import io.github.u2894638479.kotlinmcui.component.nextFocusableList
 import io.github.u2894638479.kotlinmcui.context.DslContext
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
+import io.github.u2894638479.kotlinmcui.context.DslTopContext
+import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
 import io.github.u2894638479.kotlinmcui.functions.ui.MouseTipComponent
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
@@ -22,13 +23,25 @@ class DslScreen private constructor(
     val delegate: DslScope,
     val dataStore: DslDataStore,
 ) : DslScope by delegate {
-    constructor(dataStore: DslDataStore,dslFunction: DslFunction):this(
-        DslScopeImpl(
-            DslId(null),
-            Modifier,
-            DslContext(DslId(null), dataStore, DslChild.List(), dataStore),
-            dslFunction,
-        ),dataStore
+    constructor(dataStore: DslDataStore,dslFunction: DslTopFunction):this(
+        Unit.run {
+            val id = DslId(dataStore.title)
+            val ctx = DslContext(id, dataStore, DslChild.List(), dataStore)
+            val delegate = DslScopeImpl(id, Modifier, ctx,{})
+            object: DslScope by delegate {
+                context(instance: DslComponent)
+                override fun build() {
+                    dataStore.onClose = dataStore.defaultOnClose
+                    context(
+                        DslTopContext(instance.identity, dataStore, delegate.children, dataStore){
+                            val onClose = dataStore.onClose
+                            dataStore.onClose = { it(ctx) { onClose() } }
+                        }, dslFunction
+                    )
+                    children.forEach { it.run { build() } }
+                }
+            }
+        },dataStore
     )
 
     fun close() { dataStore.onClose() }

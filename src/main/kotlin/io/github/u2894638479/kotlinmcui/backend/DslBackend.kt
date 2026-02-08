@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.backend
 
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
+import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
 
 interface DslBackend<RP,SC>:
     DslBackendRenderer<RP>,
@@ -8,5 +8,5 @@ interface DslBackend<RP,SC>:
     DslBackendUtils
 
 
-fun <RP,SC> DslBackend<RP,SC>.createScreen(dslFunction: DslFunction) = create(dslFunction)
-fun <RP,SC> DslBackend<RP,SC>.showScreen(dslFunction: DslFunction) = createScreen(dslFunction).show()
+fun <RP,SC> DslBackend<RP,SC>.createScreen(title: String = "DSL Screen", dslFunction: DslTopFunction) = create(title,dslFunction)
+fun <RP,SC> DslBackend<RP,SC>.showScreen(title: String = "DSL Screen", dslFunction: DslTopFunction) = createScreen(title,dslFunction).show()

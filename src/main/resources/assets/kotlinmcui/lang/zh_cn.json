@@ -9,5 +9,6 @@
     "kotlinmcui.translation": "翻译",
     "kotlinmcui.id": "ID",
     "kotlinmcui.container": "容器",
-    "kotlinmcui.mousetip": "鼠标指尖"
+    "kotlinmcui.mousetip": "鼠标指尖",
+    "kotlinmcui.screen": "Screen"
 }

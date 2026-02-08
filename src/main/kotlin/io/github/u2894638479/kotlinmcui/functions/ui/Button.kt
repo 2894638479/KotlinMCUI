@@ -8,6 +8,18 @@ import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
+import io.github.u2894638479.kotlinmcui.scope.DslChild
+
+context(ctx: DslContext)
+fun DslChild.buttonBackground(color: Color = Color.WHITE) = change {
+    object:DslComponent by it {
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
+        override fun <RP> render(mouse: Position) {
+            backend.renderButton(instance.rect, isHighlighted,instance.highlightable,color)
+            it.render(mouse)
+        }
+    }
+}
 
 context(ctx: DslContext)
 fun Button(
@@ -15,10 +27,4 @@ fun Button(
     color: Color = Color.WHITE,
     id:Any? = null,
     function: DslFunction
-) = Box(modifier,id,function).change { object : DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
-        backend.renderButton(instance.rect, isHighlighted,instance.highlightable,color)
-        it.render(mouse)
-    }
-}}
+) = Box(modifier,id,function).buttonBackground(color)
