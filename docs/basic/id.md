@@ -44,6 +44,8 @@ Row {
 我没找到任何`kotlin`官方关于这个行为的保证，所以这是一个比较激进的缩简。
 
 所以，at your own risk。我倾向更简单的写法。
+
+`Iterable<T>.forEachWithId`在每个循环，会在`ID`后面加上被迭代的元素。
 ### 传递ID
 ```kotlin
 context(ctx: DslContext)

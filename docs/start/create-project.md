@@ -1,6 +1,6 @@
 ---
 title: Create a Project
-nav_order: 2
+nav_order: 1
 parent: Start
 ---
 
@@ -12,10 +12,7 @@ parent: Start
 以`gradle`构建系统（`groovy dsl`）为示例。在`repositories`块中添加：
 ```groovy
 repositories {
-    maven {
-        name "Modrinth"
-        url "https://api.modrinth.com/maven"
-    }
+    maven { url "https://jitpack.io" }
 }
 ```
 
