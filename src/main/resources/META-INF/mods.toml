@@ -11,12 +11,12 @@ authors = "${mod_authors}"
 description = '''
 ${mod_description}
 '''
-logoFile = "icon.png"
+logoFile = "${icon}"
 
 
-#[[dependencies.${mod_id}]]
-#modId = "kotlinmcuibackend"
-#mandatory = true
-#versionRange = "[${mod_version},)"
-#ordering = "NONE"
-#side = "CLIENT"
+[[dependencies.${mod_id}]]
+modId = "kotlinmcuibackend"
+mandatory = true
+versionRange = "[0,)"
+ordering = "NONE"
+side = "CLIENT"
