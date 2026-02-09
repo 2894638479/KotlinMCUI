@@ -21,6 +21,7 @@
         "fabricloader": "*",
         "minecraft": "*",
         "java": "*",
-        "fabric-language-kotlin": "*"
+        "fabric-language-kotlin": "*",
+        "kotlinmcuibackend": "^${mod_version}"
     }
 }

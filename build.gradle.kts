@@ -49,6 +49,7 @@ java {
 
 val sourcesJar: org.gradle.jvm.tasks.Jar by tasks
 sourcesJar.exclude("fabric.mod.json")
+sourcesJar.exclude("META-INF/mods.toml")
 sourcesJar.from("LICENSE")
 
 tasks.jar {
@@ -78,6 +79,8 @@ tasks.processResources {
     )
     inputs.properties(map)
     filesMatching("fabric.mod.json") { expand(map) }
+    filesMatching("META-INF/mods.toml") { expand(map) }
+    filesMatching("pack.mcmeta") { expand(map) }
 }
 
 
