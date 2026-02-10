@@ -33,10 +33,10 @@ fun Box(
 
 
 context(ctx: DslContext)
-fun DslChild.Box(function: DslFunction) {
+fun DslChild.Box(id:Any? = null,function: DslFunction) {
     val component = currentComponent()
     remove(this)
-    Box(component.modifier,id = function::class) {
+    Box(component.modifier,id = id ?: function::class) {
         function()
         collect(component)
     }

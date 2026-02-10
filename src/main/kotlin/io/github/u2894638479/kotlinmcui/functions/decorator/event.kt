@@ -52,13 +52,13 @@ fun DslChild.forceId(id: DslId) = change { object: DslComponent by it {
 
 context(ctx: DslContext)
 fun DslChild.onHovered(
-    action: context(DslExecuteContext) (Boolean) -> Unit
+    action: context(DslExecuteContext, DslDataStoreContext) (Boolean) -> Unit
 ) = change {
     object : DslComponent by it {
         context(instance: DslComponent)
         override fun hoverChanged(newHover: DslId?) {
-            super.hoverChanged(newHover)
-            action(DslExecuteContext,instance.identity == newHover)
+            it.hoverChanged(newHover)
+            action(DslExecuteContext,ctx,instance.identity == newHover)
         }
     }
 }
@@ -70,5 +70,31 @@ fun DslChild.narrate(string: String) = change {
         override val narration get() = string
         context(instance: DslComponent)
         override val narratable get() = true
+    }
+}
+
+context(ctx: DslContext)
+fun DslChild.onFocused(
+    action: context(DslExecuteContext, DslDataStoreContext) (Boolean) -> Unit
+) = change {
+    object: DslComponent by it {
+        context(instance: DslComponent)
+        override fun focusChanged(newFocus: DslId?) {
+            it.hoverChanged(newFocus)
+            action(DslExecuteContext,ctx,instance.identity == newFocus)
+        }
+    }
+}
+
+context(ctx: DslContext)
+fun DslChild.globalFocusChanged(
+    action: context(DslExecuteContext, DslDataStoreContext) (DslId?) -> Unit
+) = change {
+    object: DslComponent by it {
+        context(instance: DslComponent)
+        override fun focusChanged(newFocus: DslId?) {
+            it.hoverChanged(newFocus)
+            action(DslExecuteContext,ctx,newFocus)
+        }
     }
 }

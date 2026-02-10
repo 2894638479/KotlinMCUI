@@ -38,7 +38,6 @@ fun ScrollableColumn(
     scrollerProp: StableRWProperty<Scroller>? = null,
     scrollProp: StableRWProperty<Double>? = null,
     sensitivity: Double = 30.0,
-    scrollToFocused: Boolean = false,
     id:Any? = null,
     function: DslFunction
 ) = withId(id ?: function::class) {
@@ -134,13 +133,6 @@ fun ScrollableColumn(
             override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
                 if (mouse !in instance.rect) return false
                 return delegate.mouseDown(mouse, mouseButton)
-            }
-
-            context(instance: DslComponent)
-            override fun focusChanged(newFocus: DslId?) {
-                if (!scrollToFocused) return
-                newFocus ?: return
-                scroller.scrollTo(scroller.items.indexOfFirst { it.identity in newFocus }, Align.MID)
             }
 
             override val viewHorizontal get() = listOf(children)
