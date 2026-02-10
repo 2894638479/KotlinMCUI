@@ -1,0 +1,22 @@
+modLoader = "lowcodefml"
+loaderVersion = "[0,)"
+issueTrackerURL = "${mod_issues}"
+license = "${license}"
+
+[[mods]]
+modId = "${mod_id}"
+version = "${mod_version}"
+displayName = "${mod_name}"
+authors = "${mod_authors}"
+description = '''
+${mod_description}
+'''
+logoFile = "${icon}"
+
+
+[[dependencies.${mod_id}]]
+modId = "kotlinmcuibackend"
+mandatory = true
+versionRange = "[0,)"
+ordering = "NONE"
+side = "CLIENT"
