@@ -92,7 +92,7 @@ publishMods {
     changelog = ""
     type = ALPHA
     displayName = "KotlinMCUI ${project.version}"
-    modLoaders.add("fabric")
+    modLoaders.addAll("fabric","forge","neoforge")
 
     modrinth {
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")

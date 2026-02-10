@@ -81,5 +81,5 @@ Row {
     MyUIComponent("counter2")
 }
 ```
-两个counter会变得无法区分。在读写`counter`时，会调用`remember`返回的对象的`getValue(thisRef:Any?, property: KProperty<*>)`和`setValue(thisRef: Any?,property: KProperty<*>,value:T)`。
-每一次在代码中使用`by`委托属性，对应一个`KProperty`对象。通过比较`KProperty`，能区分这个属性在源码中的位置是否相同，但是没法区分同一个函数多次调用。
+两个counter会变得无法区分。在读写`counter`时，`kotlin`会调用`remember`返回的对象的`getValue(thisRef:Any?, property: KProperty<*>)`和`setValue(thisRef: Any?,property: KProperty<*>,value:T)`。
+每一次在代码中声明`by`委托属性，对应一个`KProperty`对象。通过比较`KProperty`，能区分这个属性在源码中的位置是否相同，但是没法区分同一个函数多次调用。
