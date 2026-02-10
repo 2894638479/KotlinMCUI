@@ -10,5 +10,13 @@
     "kotlinmcui.id": "ID",
     "kotlinmcui.container": "Container",
     "kotlinmcui.mousetip": "Mouse Tip",
-    "kotlinmcui.screen": "Screen"
+    "kotlinmcui.screen": "Screen",
+    "kotlinmcui.narration.button": "Button",
+    "kotlinmcui.narration.row": "Row",
+    "kotlinmcui.narration.column": "Column",
+    "kotlinmcui.narration.scrollablecolumn": "Scrollable column",
+    "kotlinmcui.narration.slider": "Slider",
+    "kotlinmcui.narration.scroller": "Scroller",
+    "kotlinmcui.narration.text": "Text",
+    "kotlinmcui.narration.editabletext": "Editable text"
 }

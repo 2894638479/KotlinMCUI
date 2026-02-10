@@ -22,6 +22,7 @@ import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 import org.lwjgl.glfw.GLFW
 import kotlin.math.roundToInt
+import kotlin.run
 
 context(ctx: DslContext)
 fun SliderVertical(
@@ -87,6 +88,11 @@ fun Slider(
     val identity = newChildId(id ?: function::class)
     val delegate = DslScopeImpl(identity, modifier, ctx, function)
     collect(object : DslComponent by delegate {
+        context(instance: DslComponent)
+        override val narratable get() = true
+        context(instance: DslComponent)
+        override val narration get() = "${delegate.run { narration }} ${translate("kotlinmcui.narration.slider")}"
+
         var progress by progress ?: run {
             val prop by 0.5.remember.property
             prop
@@ -121,7 +127,7 @@ fun Slider(
             this.progress = value.coerceIn(0.0..1.0)
         }
 
-        context(instance: DslComponent)
+        context(instance: DslComponent, eventModifier: EventModifier)
         override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
             if (delegate.mouseDown(mouse, mouseButton)) return true
             if (mouse in instance.rect) {
@@ -140,7 +146,7 @@ fun Slider(
             setProgress(mouse)
         }
 
-        context(instance: DslComponent)
+        context(instance: DslComponent, eventModifier: EventModifier)
         override fun mouseUp(mouse: Position, mouseButton: MouseButton): Boolean {
             alreadyDown = null
             return delegate.mouseUp(mouse, mouseButton)
@@ -157,9 +163,9 @@ fun Slider(
             }
         }
 
-        context(instance: DslComponent)
-        override fun keyDown(key: Int, scanCode: Int, eventModifier: EventModifier): Boolean {
-            if(!isFocused) return super.keyDown(key, scanCode, eventModifier)
+        context(instance: DslComponent, eventModifier: EventModifier)
+        override fun keyDown(key: Int, scanCode: Int): Boolean {
+            if(!isFocused) return super.keyDown(key, scanCode)
             when(key) {
                 GLFW.GLFW_KEY_LEFT -> if(horizontal && keyFocused != null) {
                     this.progress = (this.progress - step).coerceIn(0.0..1.0)
@@ -190,7 +196,7 @@ fun Slider(
                     return true
                 }
             }
-            return super.keyDown(key, scanCode, eventModifier)
+            return super.keyDown(key, scanCode)
         }
     })
 }

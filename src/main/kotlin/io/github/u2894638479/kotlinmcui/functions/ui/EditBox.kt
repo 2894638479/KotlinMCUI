@@ -210,12 +210,16 @@ fun EditableText(
     val blink = (((ctx.dataStore.frameTimeNano - info.blinkBeginNano) / blinkCycle.inWholeNanoseconds) % 2L) == 0L
     class CursorPos(val line:Int,val index:Int)
     val delegate = DslText(
-        identity, modifier, fontName, font,
+        identity, modifier, fontName, font, ctx,
         DslTextBuilderContext(ctx).apply { string.emit(color, size, style) }.toChars(),
         size, horizontalAligner, verticalAligner
     )
     info.run {
         collect(object : DslComponent by delegate {
+            context(instance: DslComponent)
+            override val narratable get() = true
+            context(instance: DslComponent)
+            override val narration get() = "${translate("kotlinmcui.narration.editabletext")} $string"
 
             context(instance: DslComponent)
             override val focusable get() = true
@@ -291,9 +295,9 @@ fun EditableText(
                 return true
             }
 
-            context(instance: DslComponent)
-            override fun keyDown(key: Int, scanCode: Int, eventModifier: EventModifier): Boolean {
-                fun default() = delegate.keyDown(key, scanCode, eventModifier)
+            context(instance: DslComponent, eventModifier: EventModifier)
+            override fun keyDown(key: Int, scanCode: Int): Boolean {
+                fun default() = delegate.keyDown(key, scanCode)
                 if (!isFocused) return default()
                 editable.check()
                 blinkBeginNano = System.nanoTime()
@@ -376,9 +380,9 @@ fun EditableText(
                 return true
             }
 
-            context(instance: DslComponent)
-            override fun keyUp(key: Int, scanCode: Int, eventModifier: EventModifier): Boolean {
-                return delegate.keyUp(key, scanCode, eventModifier)
+            context(instance: DslComponent, eventModifier: EventModifier)
+            override fun keyUp(key: Int, scanCode: Int): Boolean {
+                return delegate.keyUp(key, scanCode)
             }
 
             fun mouseHitPos(mouse: Position): CursorPos {
@@ -392,7 +396,7 @@ fun EditableText(
                 return CursorPos(alignedLines.indexOf(selectedLine), xValues.indexOf(selected))
             }
 
-            context(instance: DslComponent)
+            context(instance: DslComponent, eventModifier: EventModifier)
             override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
                 if (mouse !in instance.rect) return delegate.mouseDown(mouse, mouseButton)
                 editable.check()
@@ -403,7 +407,7 @@ fun EditableText(
                 return true
             }
 
-            context(instance: DslComponent)
+            context(instance: DslComponent, eventModifier: EventModifier)
             override fun mouseUp(mouse: Position, mouseButton: MouseButton): Boolean {
                 return delegate.mouseUp(mouse, mouseButton) || mouseDown == Unit.also { mouseDown = null }
             }

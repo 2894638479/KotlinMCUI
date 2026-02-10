@@ -1,10 +1,14 @@
 package io.github.u2894638479.kotlinmcui.functions.ui
 
+import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.translate
+import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.Scroller
@@ -47,10 +51,10 @@ fun ScrollBar(
     fun Bar(function: DslFunction) = if(horizontal) Row(function = function) else Column(function = function)
     Bar {
         Spacer(Modifier.weight(before)) {}
-        Button(Modifier.weight(mid).run { if(horizontal) minHeight(10.scaled) else minWidth(10.scaled) }) {}.change { object: DslComponent by it {
+        Box(Modifier.weight(mid).run { if(horizontal) minHeight(10.scaled) else minWidth(10.scaled) }) {}.change { object: DslComponent by it {
             context(instance: DslComponent)
             override val focusable get() = true
-            context(instance: DslComponent)
+            context(instance: DslComponent, eventModifier: EventModifier)
             override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
                 if(it.mouseDown(mouse, mouseButton)) return true
                 if(mouse !in instance.rect) return false
@@ -58,9 +62,18 @@ fun ScrollBar(
                 return true
             }
             context(instance: DslComponent)
+            override val narratable get() = true
+            context(instance: DslComponent)
+            override val narration get() = "${it.run { narration ?: "" }} ${translate("kotlinmcui.narration.scroller")}"
+            context(instance: DslComponent, eventModifier: EventModifier)
             override fun mouseUp(mouse: Position, mouseButton: MouseButton): Boolean {
                 if(it.mouseUp(mouse, mouseButton)) return true
                 return lastDown?.let { lastDown = null } != null
+            }
+            context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
+            override fun <RP> render(mouse: Position) {
+                backend.renderButton(instance.rect, isHighlighted,instance.highlightable)
+                it.render(mouse)
             }
         } }
         Spacer(Modifier.weight(after)) {}

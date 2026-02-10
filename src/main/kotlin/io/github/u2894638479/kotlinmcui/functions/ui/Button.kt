@@ -5,6 +5,7 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
+import io.github.u2894638479.kotlinmcui.functions.translate
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
@@ -18,6 +19,11 @@ fun DslChild.buttonBackground(color: Color = Color.WHITE) = change {
             backend.renderButton(instance.rect, isHighlighted,instance.highlightable,color)
             it.render(mouse)
         }
+
+        context(instance: DslComponent)
+        override val narratable get() = true
+        context(instance: DslComponent)
+        override val narration get() = "${it.run { narration ?: "" }} ${translate("kotlinmcui.narration.button")}"
     }
 }
 

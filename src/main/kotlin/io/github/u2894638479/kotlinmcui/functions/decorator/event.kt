@@ -26,7 +26,7 @@ fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext,
     context(instance: DslComponent)
     override val focusable get() = true
 
-    context(instance: DslComponent)
+    context(instance: DslComponent, eventModifier: EventModifier)
     override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
         if(it.mouseDown(mouse, mouseButton)) return true
         if(mouse !in instance.rect) return false
@@ -34,9 +34,9 @@ fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext,
         return true
     }
 
-    context(instance: DslComponent)
-    override fun keyDown(key: Int, scanCode: Int, eventModifier: EventModifier): Boolean {
-        if(it.keyDown(key, scanCode, eventModifier)) return true
+    context(instance: DslComponent, eventModifier: EventModifier)
+    override fun keyDown(key: Int, scanCode: Int): Boolean {
+        if(it.keyDown(key, scanCode)) return true
         if(key == GLFW.GLFW_KEY_ENTER && isFocused) {
             click()
             return true
@@ -60,5 +60,15 @@ fun DslChild.onHovered(
             super.hoverChanged(newHover)
             action(DslExecuteContext,instance.identity == newHover)
         }
+    }
+}
+
+context(ctx: DslContext)
+fun DslChild.narrate(string: String) = change {
+    object : DslComponent by it {
+        context(instance: DslComponent)
+        override val narration get() = string
+        context(instance: DslComponent)
+        override val narratable get() = true
     }
 }

@@ -10,23 +10,26 @@ interface DslComponentEvent {
     context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     fun <RP> render(mouse: Position) {}
 
-    context(instance: DslComponent)
-    fun keyDown(key: Int, scanCode: Int, eventModifier: EventModifier) = false
+    context(instance: DslComponent, eventModifier: EventModifier)
+    fun keyDown(key: Int, scanCode: Int) = false
 
-    context(instance: DslComponent)
-    fun keyUp(key: Int, scanCode: Int, eventModifier: EventModifier) = false
+    context(instance: DslComponent, eventModifier: EventModifier)
+    fun keyUp(key: Int, scanCode: Int) = false
 
-    context(instance: DslComponent)
+    context(instance: DslComponent, eventModifier: EventModifier)
     fun mouseDown(mouse: Position, mouseButton: MouseButton) = false
 
-    context(instance: DslComponent)
+    context(instance: DslComponent, eventModifier: EventModifier)
     fun mouseUp(mouse: Position, mouseButton: MouseButton) = false
 
     context(instance: DslComponent)
     fun mouseMove(mouse: Position) {}
 
     context(instance: DslComponent)
-    fun mouseScroll(mouse: Position, amount: Double) = amount
+    fun mouseScrollVertical(mouse: Position, amount: Double) = amount
+
+    context(instance: DslComponent)
+    fun mouseScrollHorizontal(mouse: Position, amount: Double) = amount
 
     context(instance: DslComponent)
     fun charTyped(c: Char, eventModifier: EventModifier) = false
@@ -42,7 +45,4 @@ interface DslComponentEvent {
 
     context(instance: DslComponent)
     fun hoverChanged(newHover: DslId?) {}
-
-    context(instance: DslComponent)
-    fun onScrolledInScrollable(percentage: Double) {}
 }

@@ -14,5 +14,7 @@ interface DslComponentMetadata {
     context(instance: DslComponent)
     val narration: String? get() = null
     context(instance: DslComponent)
-    val highlightable: Boolean get() = instance.focusable || instance.tooltip != null || instance.narration != null
+    val narratable: Boolean get() = false
+    context(instance: DslComponent)
+    val highlightable: Boolean get() = instance.focusable || instance.tooltip != null
 }

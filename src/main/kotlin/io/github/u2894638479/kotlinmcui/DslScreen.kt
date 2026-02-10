@@ -49,7 +49,7 @@ class DslScreen private constructor(
         this.rect.copyFrom(rect)
     }
 
-    context(instance: DslComponent)
+    context(instance: DslComponent, eventModifier: EventModifier)
     override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
         dataStore.focused = testHit(mouse) { it.takeIf { it.focusable } }?.identity
         return delegate.mouseDown(mouse, mouseButton)
@@ -61,20 +61,22 @@ class DslScreen private constructor(
         return delegate.mouseMove(mouse)
     }
 
-    context(instance: DslComponent)
-    override fun keyDown(key: Int, scanCode: Int, eventModifier: EventModifier): Boolean {
-        if(delegate.keyDown(key, scanCode, eventModifier)) return true
-        dataStore.focused = when(key) {
-            GLFW.GLFW_KEY_LEFT -> instance.nextFocusableList(dataStore.focused,true) { it.run { viewHorizontal } }?.identity
-            GLFW.GLFW_KEY_RIGHT -> instance.nextFocusableList(dataStore.focused) { it.run { viewHorizontal } }?.identity
-            GLFW.GLFW_KEY_UP -> instance.nextFocusableList(dataStore.focused,true) { it.run { viewVertical } }?.identity
-            GLFW.GLFW_KEY_DOWN -> instance.nextFocusableList(dataStore.focused) { it.run { viewVertical } }?.identity
-            GLFW.GLFW_KEY_TAB -> if(eventModifier.shift) instance.nextFocusable(dataStore.focused) { it.run { viewSequential.asReversed() } }?.identity
-                else instance.nextFocusable(dataStore.focused) { it.run { viewSequential } }?.identity
-            GLFW.GLFW_KEY_HOME -> instance.nextFocusable(null) { it.run { viewSequential } }?.identity
-            GLFW.GLFW_KEY_END -> instance.nextFocusable(null) { it.run { viewSequential.asReversed() } }?.identity
+    context(instance: DslComponent, eventModifier: EventModifier)
+    override fun keyDown(key: Int, scanCode: Int): Boolean {
+        if(delegate.keyDown(key, scanCode)) return true
+        val focused = when(key) {
+            GLFW.GLFW_KEY_LEFT -> instance.nextFocusableList(dataStore.focused,true) { it.run { viewHorizontal } }
+            GLFW.GLFW_KEY_RIGHT -> instance.nextFocusableList(dataStore.focused) { it.run { viewHorizontal } }
+            GLFW.GLFW_KEY_UP -> instance.nextFocusableList(dataStore.focused,true) { it.run { viewVertical } }
+            GLFW.GLFW_KEY_DOWN -> instance.nextFocusableList(dataStore.focused) { it.run { viewVertical } }
+            GLFW.GLFW_KEY_TAB -> if(eventModifier.shift) instance.nextFocusable(dataStore.focused) { it.run { viewSequential.asReversed() } }
+                else instance.nextFocusable(dataStore.focused) { it.run { viewSequential } }
+            GLFW.GLFW_KEY_HOME -> instance.nextFocusable(null) { it.run { viewSequential } }
+            GLFW.GLFW_KEY_END -> instance.nextFocusable(null) { it.run { viewSequential.asReversed() } }
             else -> return false
         }
+        dataStore.focused = focused?.run { identity }
+        dataStore.keyboardNarration = focused?.run { narration }
         return true
     }
 
@@ -92,8 +94,9 @@ class DslScreen private constructor(
         layoutHorizontal()
         layoutVertical()
         dataStore.tooltip = testHit(mouse) { it.tooltip }
-        dataStore.hovered = testHit(mouse) { it.takeIf { it.highlightable } }?.identity
-        dataStore.narration = testHit(mouse) { it.narration }
+        val hovered = testHit(mouse) { it.takeIf { it.highlightable } }
+        dataStore.hovered = hovered?.identity
+        dataStore.mouseNarration = hovered?.narration ?: testHit(mouse) { it.takeIf { it.narratable } }?.narration
         delegate.render(mouse)
     }
 }

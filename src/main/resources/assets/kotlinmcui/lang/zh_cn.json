@@ -10,5 +10,13 @@
     "kotlinmcui.id": "ID",
     "kotlinmcui.container": "容器",
     "kotlinmcui.mousetip": "鼠标指尖",
-    "kotlinmcui.screen": "Screen"
+    "kotlinmcui.screen": "Screen",
+    "kotlinmcui.narration.button": "按钮",
+    "kotlinmcui.narration.row": "行",
+    "kotlinmcui.narration.column": "列",
+    "kotlinmcui.narration.scrollablecolumn": "滚动列",
+    "kotlinmcui.narration.slider": "滑条",
+    "kotlinmcui.narration.scroller": "滚动条",
+    "kotlinmcui.narration.text": "文字",
+    "kotlinmcui.narration.editabletext": "可编辑文字"
 }

@@ -12,6 +12,7 @@ import io.github.u2894638479.kotlinmcui.functions.identity
 import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.withId
+import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Measure
@@ -110,9 +111,9 @@ fun ScrollableColumn(
             }
 
             context(instance: DslComponent)
-            override fun mouseScroll(mouse: Position, amount: Double): Double {
+            override fun mouseScrollVertical(mouse: Position, amount: Double): Double {
                 if (mouse !in instance.rect) return amount
-                val remain = delegate.mouseScroll(mouse, amount) * -sensitivity
+                val remain = delegate.mouseScrollVertical(mouse, amount) * -sensitivity
                 scroller.run {
                     updateScroll()
                     val before = rawScroll
@@ -129,7 +130,7 @@ fun ScrollableColumn(
                 return delegate.testHit(mouse, get)
             }
 
-            context(instance: DslComponent)
+            context(instance: DslComponent, eventModifier: EventModifier)
             override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
                 if (mouse !in instance.rect) return false
                 return delegate.mouseDown(mouse, mouseButton)

@@ -110,11 +110,18 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
             field = value
             dslScreen.run { hoverChanged(value) }
         }
-    var narration: String? = null
+    var keyboardNarration: String? = null
         set(value) {
             if(value != field) {
                 field = value
-                //TODO
+                value?.let { backend.narrate(it) }
+            }
+        }
+    var mouseNarration: String? = null
+        set(value) {
+            if(value != field) {
+                field = value
+                value?.let { backend.narrate(it) }
             }
         }
     var mouse = Position(-1.px,-1.px)

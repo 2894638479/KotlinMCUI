@@ -32,19 +32,19 @@ interface DslScope : DslComponent {
     override fun <RP> render(mouse: Position) =
         children.asReversed().forEach { it.run { render(mouse) } }
 
-    context(instance: DslComponent)
-    override fun keyDown(key: Int, scanCode: Int, eventModifier: EventModifier) =
-        children.firstOrNull { it.run { keyDown(key, scanCode, eventModifier) } } != null
+    context(instance: DslComponent, eventModifier: EventModifier)
+    override fun keyDown(key: Int, scanCode: Int) =
+        children.firstOrNull { it.run { keyDown(key, scanCode) } } != null
 
-    context(instance: DslComponent)
-    override fun keyUp(key: Int, scanCode: Int, eventModifier: EventModifier) =
-        children.firstOrNull { it.run { keyUp(key, scanCode, eventModifier) } } != null
+    context(instance: DslComponent, eventModifier: EventModifier)
+    override fun keyUp(key: Int, scanCode: Int) =
+        children.firstOrNull { it.run { keyUp(key, scanCode) } } != null
 
-    context(instance: DslComponent)
+    context(instance: DslComponent, eventModifier: EventModifier)
     override fun mouseDown(mouse: Position, mouseButton: MouseButton) =
         children.firstOrNull { it.run { mouseDown(mouse, mouseButton) } } != null
 
-    context(instance: DslComponent)
+    context(instance: DslComponent, eventModifier: EventModifier)
     override fun mouseUp(mouse: Position, mouseButton: MouseButton) =
         children.firstOrNull { it.run { mouseUp(mouse, mouseButton) } } != null
 
@@ -53,11 +53,21 @@ interface DslScope : DslComponent {
         children.forEach { it.run { mouseMove(mouse) } }
 
     context(instance: DslComponent)
-    override fun mouseScroll(mouse: Position, amount: Double): Double {
+    override fun mouseScrollVertical(mouse: Position, amount: Double): Double {
         var remain = amount
         children.forEach {
             if(remain == 0.0) return 0.0
-            remain = it.run { mouseScroll(mouse, remain) }
+            remain = it.run { mouseScrollVertical(mouse, remain) }
+        }
+        return remain
+    }
+
+    context(instance: DslComponent)
+    override fun mouseScrollHorizontal(mouse: Position, amount: Double): Double {
+        var remain = amount
+        children.forEach {
+            if(remain == 0.0) return 0.0
+            remain = it.run { mouseScrollHorizontal(mouse, remain) }
         }
         return remain
     }
@@ -83,6 +93,9 @@ interface DslScope : DslComponent {
     override val viewHorizontal: List<List<DslComponent>> get() = children.groupBy { it.rect.run { left + right } }.toSortedMap().values.toList()
     override val viewVertical: List<List<DslComponent>> get() = children.groupBy { it.rect.run { top + bottom } }.toSortedMap().values.toList()
     override val viewSequential: List<DslComponent> get() = children
+
+    context(instance: DslComponent)
+    override val narration get() = children.mapNotNull { it.narration }.joinToString()
 }
 
 val DslScope.childrenSumWidth get() = children.sumOf { it.run { outerMinWidth.pixelsOrElse { 0.0 } } }.px

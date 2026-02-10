@@ -26,7 +26,7 @@ fun TextFlatten(
 ) = collect(
     DslText(
         newChildId(id ?: build::class), modifier, fontName,
-        ctx.dataStore.backend.getFont(fontName),
+        ctx.dataStore.backend.getFont(fontName), ctx,
         listOf(DslTextBuilderContext(ctx).apply { build() }.toChars().flatten()),
         defaultLineHeight, horizontalAligner, verticalAligner
     )
@@ -45,7 +45,7 @@ fun TextFoldable(
 ) = collect(
     DslText(
         newChildId(id ?: build::class), modifier, fontName,
-        ctx.dataStore.backend.getFont(fontName),
+        ctx.dataStore.backend.getFont(fontName), ctx,
         DslTextBuilderContext(ctx).apply { build() }.toChars(),
         defaultLineHeight, horizontalAligner, verticalAligner
     )
@@ -63,7 +63,7 @@ fun TextAutoFold(
     build: DslTextBuilderContext.()->Unit
 ) = collect(object : DslText(
     newChildId(id ?: build::class), modifier, fontName,
-    ctx.dataStore.backend.getFont(fontName),
+    ctx.dataStore.backend.getFont(fontName), ctx,
     DslTextBuilderContext(ctx).apply { build() }.toChars(),
     defaultLineHeight, horizontalAligner, verticalAligner
 ) {

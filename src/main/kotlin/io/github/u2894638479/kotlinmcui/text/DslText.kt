@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.text
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
@@ -15,12 +16,21 @@ open class DslText(
     override val modifier: Modifier,
     val fontName: String?,
     val font: DslFont<*>,
+    val ctx: DslContext,
     val chars:List<List<DslRenderableChar>>,
     val defaultLineHeight: Measure,
     val horizontalAligner: Aligner,
-    val verticalAligner: Aligner,
-    override val rect: Rect = Rect()
+    val verticalAligner: Aligner
 ) : DslComponent {
+    override val rect = Rect()
+
+    context(instance: DslComponent)
+    override val narratable get() = true
+    context(instance: DslComponent)
+    override val narration get() = chars.joinToString {
+        val arr = IntArray(it.size) { i -> it[i].code }
+        String(arr,0,arr.size)
+    }
     context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         val font = backend.getFont(fontName)
@@ -50,4 +60,5 @@ open class DslText(
 
     context(instance: DslComponent)
     override val contentMinWidth get() = Measure.max(lazyWidth.value, super.contentMinWidth)
+
 }
