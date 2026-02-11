@@ -31,6 +31,11 @@ interface Scroller: DslScaleContext {
     val items: List<Item>
     val low: Measure
     val high: Measure
+    /*
+    rawScroll: 实时滚动值。为了和scroll（可为animatable）做区分
+    offset、scrollIndex: 显示4~6元素时，防止元素0~3的大小变化导致漂移。另lazy时无法检测0~3的大小。
+    所以按照可见的首个元素的位置作为offset，不依赖前面的元素。
+     */
     var offset: Double
     var rawScroll: Double
     var scroll: Double
@@ -100,6 +105,7 @@ interface Scroller: DslScaleContext {
         return beginIndex..<endIndex
     }
 
+    // 把滚轮值限制到正确的范围，防止滚到画面外
     fun updateScroll() {
         val (index,offset) = calculateIndex(rawScroll)
         val size = size

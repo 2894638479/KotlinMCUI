@@ -71,3 +71,12 @@ override val focusable get() = true
 `instance`由事件分发者传入，必须是已经加上全部装饰后的最终`DslComponent`对象。向下分发事件时要注意`it.run { mouseDown() }`来确保`instance`传入。
 
 `delegate`访问的是前一级装饰后的对象。这个名称不是固定的，比如上一个例子里是`it`。`this`访问的是当前装饰产生的对象。`super`访问的是接口，调用的是接口中的默认实现。`instance`是最终装饰完成的对象。
+
+## 布局过程
+`build()`，`layoutHorizontal()`，`layoutVertical()`，`render()`这四个函数会依次被调用。
+
+构建一个组件时需要保证调用顺序，但是不需要一一对应。例如：`LazyColumn`在自身的`layoutVertical()`中才开始调用子组件的`build()`，因为此时才知道有哪些组件需要构建。
+
+子控件需要实现`outerMinHeight`和`outerMinWidth`供外部读取，让父控件在layout时给它分配至少这么多空间（不一定遵循）。
+
+先水平布局再竖直布局的原因是`TextAutoFold`需要先确定宽度，才知道高度。如果反过来调用，会导致`outerMinHeight`不能正确计算。。

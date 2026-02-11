@@ -27,16 +27,37 @@ import kotlin.run
 context(ctx: DslContext)
 fun SliderVertical(
     modifier: Modifier = Modifier,
+    range: ClosedFloatingPointRange<Double>,
+    progress: StableRWProperty<Double>? = null,
+    step: Double = 1.0/16, // for keyboard
+    color: Color = Color.WHITE,
+    buttonSize: Measure = 8.scaled,
+    id:Any? = null,
+    function: DslFunction
+) = Slider(modifier,false,range,progress,step,color,buttonSize,id,function)
+
+context(ctx: DslContext)
+fun SliderHorizontal(
+    modifier: Modifier = Modifier,
+    range: ClosedFloatingPointRange<Double>,
+    progress: StableRWProperty<Double>? = null,
+    step: Double = 1.0/16, // for keyboard
+    color: Color = Color.WHITE,
+    buttonSize: Measure = 8.scaled,
+    id:Any? = null,
+    function: DslFunction
+) = Slider(modifier,true,range,progress,step,color,buttonSize,id,function)
+
+context(ctx: DslContext)
+fun SliderVertical(
+    modifier: Modifier = Modifier,
     range: IntProgression,
     progress: StableRWProperty<Int>? = null,
     color: Color = Color.WHITE,
     buttonSize: Measure = 8.scaled,
     id:Any? = null,
     function: DslFunction
-) = Slider(modifier,false,progress?.remap(
-    { (it - range.first).toDouble() / (range.last - range.first) },
-    { range.first() + range.step * (it * (range.last - range.first) / range.step).roundToInt() }
-), range.step.toDouble() / (range.last - range.first),color,buttonSize,id,function)
+) = Slider(modifier,false,range,progress,color,buttonSize,id,function)
 
 context(ctx: DslContext)
 fun SliderHorizontal(
@@ -47,10 +68,7 @@ fun SliderHorizontal(
     buttonSize: Measure = 8.scaled,
     id:Any? = null,
     function: DslFunction
-) = Slider(modifier,true,progress?.remap(
-    { (it - range.first).toDouble() / (range.last - range.first) },
-    { range.first() + range.step * (it * (range.last - range.first) / range.step).roundToInt() }
-), range.step.toDouble() / (range.last - range.first),color,buttonSize,id,function)
+) = Slider(modifier,true,range,progress,color,buttonSize,id,function)
 
 context(ctx: DslContext)
 fun SliderVertical(
@@ -73,6 +91,37 @@ fun SliderHorizontal(
     id:Any? = null,
     function: DslFunction
 ) = Slider(modifier,true,progress,step,color,buttonSize,id,function)
+
+context(ctx: DslContext)
+fun Slider(
+    modifier: Modifier = Modifier,
+    horizontal:Boolean,
+    range: ClosedFloatingPointRange<Double>,
+    progress: StableRWProperty<Double>? = null,
+    step: Double = 1.0/16, // for keyboard
+    color: Color = Color.WHITE,
+    buttonSize: Measure = 8.scaled,
+    id:Any? = null,
+    function: DslFunction
+) = Slider(modifier,horizontal,progress?.remap(
+    { (it - range.start) / (range.endInclusive - range.start) },
+    { range.start + it * (range.endInclusive - range.start) }
+),step,color,buttonSize,id,function)
+
+context(ctx: DslContext)
+fun Slider(
+    modifier: Modifier = Modifier,
+    horizontal:Boolean,
+    range: IntProgression,
+    progress: StableRWProperty<Int>? = null,
+    color: Color = Color.WHITE,
+    buttonSize: Measure = 8.scaled,
+    id:Any? = null,
+    function: DslFunction
+) = Slider(modifier,horizontal,progress?.remap(
+    { (it - range.first).toDouble() / (range.last - range.first) },
+    { range.first() + range.step * (it * (range.last - range.first) / range.step).roundToInt() }
+), range.step.toDouble() / (range.last - range.first),color,buttonSize,id,function)
 
 context(ctx: DslContext)
 fun Slider(

@@ -15,10 +15,10 @@ import io.github.u2894638479.kotlinmcui.prop.remap
 context(ctx: DslContext)
 fun TestSliderPage() = Row {
     Column {
-        val valueProp by remember(30).property
+        val valueProp by remember(30.0).property
         val value by valueProp
         TextFlatten { "current slider value:$value".emit() }
-        SliderHorizontal(Modifier.height(20.scaled),0..100,valueProp) {
+        SliderHorizontal(Modifier.height(20.scaled),0.0..100.0,valueProp) {
             TextFlatten { "value:$value".emit() }
         }
 

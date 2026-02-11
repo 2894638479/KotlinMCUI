@@ -18,6 +18,7 @@ parent: Basic
 
 `.scaled`表示尺寸随着`minecraft`的ui缩放倍率缩放。只能在有`DslScaleContext`的环境使用。你也可以把缩放倍率换成一个自定义的倍率。
 
+大多数情况下，建议使用`scaled`而不是`px`。
 ## 特殊值
 ```kotlin
 Measure.AUTO
