@@ -5,6 +5,7 @@ import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
+import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.ctxBackend
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
@@ -96,5 +97,13 @@ fun DslChild.globalFocusChanged(
             it.hoverChanged(newFocus)
             action(DslExecuteContext,ctx,newFocus)
         }
+    }
+}
+
+context(ctx: DslContext)
+fun DslChild.tooltip(function: DslFunction) = change {
+    object : DslComponent by it {
+        context(instance: DslComponent)
+        override val tooltip get() = function
     }
 }

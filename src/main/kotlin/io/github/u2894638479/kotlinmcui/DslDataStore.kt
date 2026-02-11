@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
 import io.github.u2894638479.kotlinmcui.identity.DslId
@@ -104,7 +103,6 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
             field = value
             dslScreen.run { focusChanged(value) }
         }
-    var tooltip: DslComponent? = null
     var hovered: DslId? = null
         set(value) {
             field = value

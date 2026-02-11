@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.component
 
+import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 
@@ -10,11 +11,11 @@ interface DslComponentMetadata {
     context(instance: DslComponent)
     val focusable: Boolean get() = false
     context(instance: DslComponent)
-    val tooltip: DslComponent? get() = null
+    val tooltip: DslFunction? get() = null
     context(instance: DslComponent)
     val narration: String? get() = null
     context(instance: DslComponent)
     val narratable: Boolean get() = false
     context(instance: DslComponent)
-    val highlightable: Boolean get() = instance.focusable || instance.tooltip != null
+    val highlightable: Boolean get() = instance.focusable
 }

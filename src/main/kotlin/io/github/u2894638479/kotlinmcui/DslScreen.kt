@@ -49,6 +49,8 @@ class DslScreen private constructor(
         this.rect.copyFrom(rect)
     }
 
+    fun child(id: DslId) = testHit { it.takeIf { it.identity == id } }
+
     context(instance: DslComponent, eventModifier: EventModifier)
     override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
         dataStore.focused = testHit(mouse) { it.takeIf { it.focusable } }?.identity
@@ -93,7 +95,6 @@ class DslScreen private constructor(
         build()
         layoutHorizontal()
         layoutVertical()
-        dataStore.tooltip = testHit(mouse) { it.tooltip }
         val hovered = testHit(mouse) { it.takeIf { it.highlightable } }
         dataStore.hovered = hovered?.identity
         dataStore.mouseNarration = hovered?.narration ?: testHit(mouse) { it.takeIf { it.narratable } }?.narration
