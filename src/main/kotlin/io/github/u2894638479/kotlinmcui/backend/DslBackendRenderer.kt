@@ -18,6 +18,8 @@ interface DslBackendRenderer<RP> {
     context(renderParam: RP, ctx: DslScaleContext)
     fun renderContainer(rect: Rect)
     context(renderParam: RP, ctx: DslScaleContext)
+    fun renderTooltip(rect: Rect)
+    context(renderParam: RP, ctx: DslScaleContext)
     fun renderItem(rect: Rect, item: String, count: Int, damage: Double?, enchanted: Boolean)
 
     context(renderParam:RP)

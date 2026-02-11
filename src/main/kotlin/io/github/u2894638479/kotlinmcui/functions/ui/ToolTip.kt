@@ -3,7 +3,6 @@ package io.github.u2894638479.kotlinmcui.functions.ui
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.collect
 import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.functions.newChildId
@@ -11,16 +10,31 @@ import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.Rect
+import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
+import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.width
+import io.github.u2894638479.kotlinmcui.scope.DslChild
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 import io.github.u2894638479.kotlinmcui.scope.childrenMaxHeight
 import io.github.u2894638479.kotlinmcui.scope.childrenMaxWidth
-import kotlin.run
 
 context(ctx: DslContext)
-fun ToolTip(id: Any) {
+fun DslChild.tooltipBackground(padding: Measure = 3.px) = change {
+    object : DslComponent by it {
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
+        override fun <RP> render(mouse: Position) {
+            backend.renderTooltip(instance.rect.expand(padding))
+            it.render(mouse)
+        }
+
+        override val modifier = it.modifier.padding(3.px)
+    }
+}
+
+context(ctx: DslContext)
+fun Tooltip(id: Any) {
     val ctx = ctx.change(dslChildren = dataStore.dslScreen.children)
     val modifier = Modifier.width(Measure.AUTO_MIN).height(Measure.AUTO_MIN)
     context(ctx) {
@@ -36,27 +50,22 @@ fun ToolTip(id: Any) {
 
                 context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
                 override fun <RP> render(mouse: Position) {
-                    val focused = dataStore.focused?.let { dataStore.dslScreen.child(it) }
-                    val focusedTooltip = focused?.tooltip?.takeIf { focused.focusable }
-                    val rect: Rect
-                    val func: DslFunction
-                    if(focusedTooltip != null) {
-                        func = focusedTooltip
-                        context(ctx.change(dslIdentity = instance.identity, dslChildren = delegate.children),func)
-                        delegate.children.forEach { it.run { build() } }
-                        rect = layoutFocus(focused.rect,dataStore.dslScreen.rect,delegate.childrenMaxWidth,delegate.childrenMaxHeight)
-                    } else {
-                        func = dataStore.dslScreen.testHit { it.takeIf { mouse in it.rect }?.tooltip } ?: return
-                        context(ctx.change(dslIdentity = instance.identity, dslChildren = delegate.children),func)
-                        delegate.children.forEach { it.run { build() } }
-                        rect = layoutMouse(mouse,dataStore.dslScreen.rect,delegate.childrenMaxWidth,delegate.childrenMaxHeight)
+                    val focused = dataStore.focused?.let { id ->
+                        dataStore.dslScreen.testHit { it.takeIf { it.identity == id } }?.takeIf { it.focusable }
                     }
+                    val hovered = dataStore.dslScreen.testHit { it.takeIf { mouse in it.rect }?.tooltip }
+                    val func = focused?.tooltip ?: hovered ?: return
+
+                    context(ctx.change(dslIdentity = instance.identity, dslChildren = delegate.children),func)
                     delegate.children.forEach { it.run { build() } }
+
+                    val rect = if(focused?.tooltip != null && focused.tooltip != hovered)
+                        layoutFocus(focused.rect,dataStore.dslScreen.rect,delegate.childrenMaxWidth,delegate.childrenMaxHeight)
+                    else layoutMouse(mouse,dataStore.dslScreen.rect,delegate.childrenMaxWidth,delegate.childrenMaxHeight)
                     this.rect.copyFrom(rect)
 
                     delegate.alignerHorizontal.align(rect.left,rect.right,delegate.children.map { it.run { alignableHorizontal } })
                     delegate.children.forEach { it.run { layoutHorizontal() } }
-
                     delegate.alignerVertical.align(rect.top,rect.bottom,delegate.children.map { it.run { alignableVertical } })
                     delegate.children.forEach { it.run { layoutVertical() } }
                     delegate.render(mouse)

@@ -49,8 +49,6 @@ class DslScreen private constructor(
         this.rect.copyFrom(rect)
     }
 
-    fun child(id: DslId) = testHit { it.takeIf { it.identity == id } }
-
     context(instance: DslComponent, eventModifier: EventModifier)
     override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
         dataStore.focused = testHit(mouse) { it.takeIf { it.focusable } }?.identity

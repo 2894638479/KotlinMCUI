@@ -4,6 +4,7 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
 import io.github.u2894638479.kotlinmcui.functions.decorator.containerBackground
+import io.github.u2894638479.kotlinmcui.functions.decorator.tooltip
 import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.ui.*
@@ -18,6 +19,7 @@ import io.github.u2894638479.kotlinmcui.modifier.weight
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
+import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 
 
 context(ctx: DslContext)
@@ -52,5 +54,16 @@ fun TestMouseTipPage() = Column {
         TextFlatten { "height:${height.value}".emit() }
     }
     Button(Modifier.height(20.scaled)) { TextFlatten { "tip2:$tip2".emit() } }.clickable { tip2 = !tip2 }
+    var tooltipCounter by remember(2)
+    Button(Modifier.height(20.scaled)) {
+        TextFlatten { "this button has a tooltip".emit() }
+    }.clickable { tooltipCounter++ }.tooltip {
+        Column(Modifier.padding(10.scaled)) {
+            TextFlatten { "Tooltip Test: $tooltipCounter".emit(Color.BLUE,18.scaled, DslCharStyle().shadowed.italic.underlined) }
+            ColorRect(Modifier.height(1.scaled).padding(3.scaled),Color(180,180,180)) {}
+            Button(Modifier.height(20.scaled)) {  }
+            TextFlatten { "123123123".emit() }
+        }.tooltipBackground()
+    }
     Spacer(Modifier.weight(Double.MAX_VALUE)) {}
 }
