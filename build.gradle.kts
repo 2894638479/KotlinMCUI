@@ -96,7 +96,7 @@ publishMods {
         mod_version.contains("beta",true) -> BETA
         else -> STABLE
     }
-    displayName = "KotlinMCUI ${mod_version}"
+    displayName = "KotlinMCUI $mod_version"
     modLoaders.addAll("fabric","forge","neoforge")
 
     modrinth {
@@ -123,5 +123,6 @@ publishMods {
         accessToken = providers.environmentVariable("GITHUB_TOKEN")
         repository = "2894638479/KotlinMCUI"
         commitish = "master"
+        tagName = "v$mod_version"
     }
 }
