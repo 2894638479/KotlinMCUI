@@ -27,13 +27,15 @@ dependencies {
 
 适配情况查看：
 
-[kotlinmcui source](https://github.com/2894638479/KotlinMCUI/)
+[KotlinMCUI source](https://github.com/2894638479/KotlinMCUI/)
 
-[kotlinmcui jitpack](https://jitpack.io/#2894638479/KotlinMCUI)
+[![KotlinMCUI JitPack Status](https://jitpack.io/v/2894638479/KotlinMCUI.svg)](https://jitpack.io/#2894638479/KotlinMCUI)
 
-[kotlinmcui-backend source](https://github.com/2894638479/KotlinMCUI-backend/)
+[![KotlinMCUI JitPack Status](https://jitpack.io/v/2894638479/KotlinMCUI/master-SNAPSHOT.svg)](https://jitpack.io/#2894638479/KotlinMCUI)
 
-[kotlinmcui-backend jitpack](https://jitpack.io/#2894638479/KotlinMCUI-backend)
+[KotlinMCUI backend source](https://github.com/2894638479/KotlinMCUI-backend/)
+
+[![KotlinMCUI JitPack Status](https://jitpack.io/v/2894638479/KotlinMCUI.svg)](https://jitpack.io/#2894638479/KotlinMCUI)
 ## 开启`context parameters`
 这可能需要比较高的`kotlin`版本。
 ```groovy
