@@ -89,9 +89,14 @@ tasks.processResources {
 publishMods {
     file = tasks.jar.get().archiveFile
     additionalFiles = files(sourcesJar.archiveFile)
-    changelog = ""
-    type = ALPHA
-    displayName = "KotlinMCUI ${project.version}"
+    changelog = "no changelog."
+    type = when {
+        mod_version.contains("SNAPSHOT",true) -> ALPHA
+        mod_version.contains("alpha",true) -> ALPHA
+        mod_version.contains("beta",true) -> BETA
+        else -> STABLE
+    }
+    displayName = "KotlinMCUI ${mod_version}"
     modLoaders.addAll("fabric","forge","neoforge")
 
     modrinth {
@@ -101,5 +106,19 @@ publishMods {
             start = "1.14"
             end = "latest"
         }
+    }
+    curseforge {
+        accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
+        projectId = "1460598"
+        minecraftVersionRange {
+            start = "1.14"
+            end = "latest"
+        }
+    }
+    github {
+        accessToken = providers.environmentVariable("GITHUB_TOKEN")
+        repository = "2894638479/KotlinMCUI"
+        accessToken = providers.environmentVariable("GITHUB_TOKEN")
+        commitish = "master"
     }
 }
