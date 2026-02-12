@@ -102,6 +102,8 @@ publishMods {
     modrinth {
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
         projectId = "q8Q5ZFT7"
+        optional("ordsPcFz", "Ha28R6CL")
+        requires("FjVgWB2Y")
         minecraftVersionRange {
             start = "1.14"
             end = "latest"
@@ -110,6 +112,8 @@ publishMods {
     curseforge {
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
         projectId = "1460598"
+        optional("351264","308769")
+        requires("1460645")
         minecraftVersionRange {
             start = "1.14"
             end = "latest"
@@ -118,7 +122,6 @@ publishMods {
     github {
         accessToken = providers.environmentVariable("GITHUB_TOKEN")
         repository = "2894638479/KotlinMCUI"
-        accessToken = providers.environmentVariable("GITHUB_TOKEN")
         commitish = "master"
     }
 }
