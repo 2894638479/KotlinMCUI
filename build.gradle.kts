@@ -102,8 +102,8 @@ publishMods {
     modrinth {
         accessToken = providers.environmentVariable("MODRINTH_TOKEN")
         projectId = "q8Q5ZFT7"
-        optional("ordsPcFz", "Ha28R6CL")
-        requires("FjVgWB2Y")
+        optional("fabric-language-kotlin","kotlin-for-forge")
+        requires("kotlinmcui-backend")
         minecraftVersionRange {
             start = "1.14"
             end = "latest"
