@@ -113,7 +113,7 @@ publishMods {
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
         projectId = "1460598"
         optional("fabric-language-kotlin","kotlin-for-forge")
-        requires("kotlinmcui-backend")
+//        requires("kotlinmcui-backend")
         clientRequired = true
         serverRequired = false
         minecraftVersionRange {
