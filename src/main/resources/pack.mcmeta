@@ -1,7 +1,7 @@
 {
     "pack": {
         "description": {
-            "text": "${mod_name}"
+            "text": "${mod_name} ${mod_version}"
         },
         "pack_format": 15
     }
