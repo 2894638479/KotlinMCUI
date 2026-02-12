@@ -40,8 +40,8 @@ fun TestTextPage() = ScrollableColumn {
             Button(id = it) {
                 TextFlatten {
                     when (it) {
-                        Page.TEXT_LAYOUT -> "文字布局"
-                        Page.TEXT_STYLE -> "文字样式"
+                        Page.TEXT_LAYOUT -> "Text Layout"
+                        Page.TEXT_STYLE -> "Text Style"
                     }.emit()
                 }
             }.clickable(currentPage != it) { currentPage = it }

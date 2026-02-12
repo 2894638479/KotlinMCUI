@@ -15,27 +15,27 @@ repositories {
     maven { url "https://jitpack.io" }
 }
 ```
-
 ## 添加依赖
-然后，在`dependencies`中添加本模组作为依赖：
+在`dependencies`中添加本模组作为依赖：
 ```groovy
 dependencies {
-    modImplementation "com.github.2894638479:KotlinMCUI:master-SNAPSHOT"
+    implementation "com.github.2894638479:KotlinMCUI:master-SNAPSHOT"
+    modImplementation "com.github.2894638479:KotlinMCUI-backend:fabric-1.20.1-SNAPSHOT"
 }
 ```
-如果不是`fabric`，可能要用`implementation`代替`modImplementation`。
-## 添加后端（开发环境中）
-可以用同样的方式从`maven`中添加后端模组。这里也可以替换成其它第三方`backend`。
-```groovy
-dependencies {
-    modImplementation "com.github.2894638479:KotlinMCUI-backend:master-SNAPSHOT"
-}
-```
-还可以直接把模组放在运行目录`run/mods`中。但是这种方式不方便`git`追踪，所以只建议临时使用。
+`fabric-1.20.1`替换成你需要的分支。如果不是`fabric`，要用`implementation`代替`modImplementation`。
 
-后端模组要区分`minecraft`版本和加载器。如果没有所需版本的后端，需要额外制作对应的后端。
+适配情况查看：
 
+[kotlinmcui source](https://github.com/2894638479/KotlinMCUI/)
+
+[kotlinmcui jitpack](https://jitpack.io/#2894638479/KotlinMCUI)
+
+[kotlinmcui-backend source](https://github.com/2894638479/KotlinMCUI-backend/)
+
+[kotlinmcui-backend jitpack](https://jitpack.io/#2894638479/KotlinMCUI-backend)
 ## 开启`context parameters`
+这可能需要比较高的`kotlin`版本。
 ```groovy
 tasks.withType(KotlinCompile).configureEach {
     compilerOptions.freeCompilerArgs.add('-Xcontext-parameters')
