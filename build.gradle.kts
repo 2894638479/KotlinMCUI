@@ -114,6 +114,8 @@ publishMods {
         projectId = "1460598"
         optional("fabric-language-kotlin","kotlin-for-forge")
         requires("kotlinmcui-backend")
+        clientRequired = true
+        serverRequired = false
         minecraftVersionRange {
             start = "1.14"
             end = "latest"
