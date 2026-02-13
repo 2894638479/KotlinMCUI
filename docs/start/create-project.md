@@ -19,8 +19,8 @@ repositories {
 在`dependencies`中添加本模组作为依赖：
 ```groovy
 dependencies {
-    implementation "com.github.2894638479:KotlinMCUI:master-SNAPSHOT"
-    modImplementation "com.github.2894638479:KotlinMCUI-backend:fabric-1.20.1-SNAPSHOT"
+    implementation "com.github.2894638479:KotlinMCUI:v1.0.0-alpha.5"
+    modImplementation "com.github.2894638479:KotlinMCUI-backend:v1.0.0-alpha.3-fabric-1.20.1"
 }
 ```
 `fabric-1.20.1`替换成你需要的分支。如果不是`fabric`，要用`implementation`代替`modImplementation`。
@@ -31,11 +31,14 @@ dependencies {
 
 [![KotlinMCUI JitPack Status](https://jitpack.io/v/2894638479/KotlinMCUI.svg)](https://jitpack.io/#2894638479/KotlinMCUI)
 
-[![KotlinMCUI JitPack Status](https://jitpack.io/v/2894638479/KotlinMCUI/master-SNAPSHOT.svg)](https://jitpack.io/#2894638479/KotlinMCUI)
-
 [KotlinMCUI backend source](https://github.com/2894638479/KotlinMCUI-backend/)
 
-[![KotlinMCUI JitPack Status](https://jitpack.io/v/2894638479/KotlinMCUI.svg)](https://jitpack.io/#2894638479/KotlinMCUI)
+[![KotlinMCUI JitPack Status](https://jitpack.io/v/2894638479/KotlinMCUI-backend.svg)](https://jitpack.io/#2894638479/KotlinMCUI-backend)
+## loader中的依赖
+在`fabric.mod.json`或`mods.toml`等文件中添加依赖。具体到对应加载器官网了解。
+
+你只需要依赖`kotlinmcui`，因为`kotlinmcui`会依赖`kotlinmcuibackend`。
+
 ## 开启`context parameters`
 这可能需要比较高的`kotlin`版本。
 ```groovy
