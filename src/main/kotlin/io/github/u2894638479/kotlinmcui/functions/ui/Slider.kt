@@ -19,7 +19,6 @@ import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.remap
 import io.github.u2894638479.kotlinmcui.prop.setValue
-import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 import org.lwjgl.glfw.GLFW
 import kotlin.math.roundToInt
 import kotlin.run
@@ -133,10 +132,8 @@ fun Slider(
     buttonSize: Measure = 8.scaled,
     id:Any? = null,
     function: DslFunction
-) = run {
-    val identity = newChildId(id ?: function::class)
-    val delegate = DslScopeImpl(identity, modifier, ctx, function)
-    collect(object : DslComponent by delegate {
+) = Box(modifier,id,function).change { delegate ->
+    object : DslComponent by delegate {
         context(instance: DslComponent)
         override val narratable get() = true
         context(instance: DslComponent)
@@ -247,5 +244,5 @@ fun Slider(
             }
             return super.keyDown(key, scanCode)
         }
-    })
+    }
 }
