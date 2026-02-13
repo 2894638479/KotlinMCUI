@@ -1,6 +1,8 @@
 package io.github.u2894638479.kotlinmcui.prop
 
+import kotlin.reflect.KMutableProperty0
 import kotlin.reflect.KProperty
+import kotlin.reflect.KProperty0
 
 
 fun interface StableROProperty<out T> {
@@ -47,4 +49,9 @@ fun <T,K> StableRWProperty<T>.remap(get:(T)->K,set:(K)->T) = object : StableRWPr
 }
 fun <T,K> StableROProperty<T>.remap(get:(T)->K) = StableROProperty { get(this@remap.getValue()) }
 
+val <V> KMutableProperty0<V>.property get() = object : StableRWProperty<V> {
+    override fun getValue() = get()
+    override fun setValue(value: V) = set(value)
+}
 
+val <V> KProperty0<V>.property get() = StableROProperty { get() }
