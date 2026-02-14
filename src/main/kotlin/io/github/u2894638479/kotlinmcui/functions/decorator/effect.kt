@@ -58,7 +58,7 @@ private fun <RP> renderOutline(rect: Rect, widthIn: Measure, widthOut: Measure, 
 }
 
 context(ctx: DslContext)
-fun DslChild.highlightBox(widthIn: Measure = 0.5.scaled, widthOut: Measure = 0.5.scaled, color: Color = Color.WHITE) = change { object : DslComponent by it {
+fun DslChild.highlightBox(widthIn: Measure = 0.px, widthOut: Measure = 1.scaled, color: Color = Color.WHITE) = change { object : DslComponent by it {
     context(instance: DslComponent)
     override val highlightable get() = true
 
@@ -72,7 +72,9 @@ fun DslChild.highlightBox(widthIn: Measure = 0.5.scaled, widthOut: Measure = 0.5
 }}
 
 context(ctx: DslContext)
-fun DslChild.outline(widthIn: Measure = 0.5.scaled, widthOut: Measure = 0.5.scaled, color: Color = Color.WHITE) = change { object : DslComponent by it {
+fun DslChild.outline(widthIn: Measure = 0.px, widthOut: Measure = 1.scaled, color: Color = Color.WHITE) = change { object : DslComponent by it {
+    override val modifier get() = it.modifier.padding(widthOut)
+
     context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         renderOutline(instance.rect, widthIn, widthOut, color)
@@ -142,7 +144,7 @@ fun DslChild.containerBackground(padding: Measure = 3.scaled)
 } }
 
 context(ctx: DslContext)
-fun DslChild.slotBackground(padding: Measure = 0.px)
+fun DslChild.slotBackground(padding: Measure = 1.scaled)
 = change { object: DslComponent by it {
     context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
@@ -152,3 +154,13 @@ fun DslChild.slotBackground(padding: Measure = 0.px)
 
     override val modifier get() = it.modifier.padding(padding)
 } }
+
+context(ctx: DslContext)
+fun DslChild.renderScissor() = change {
+    object : DslComponent by it {
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
+        override fun <RP> render(mouse: Position) = backend.withScissor(instance.rect) {
+            it.render(mouse)
+        }
+    }
+}

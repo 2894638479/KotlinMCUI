@@ -62,8 +62,8 @@ fun TestContainerPage() = ScrollableColumn {
                 (0..<9).forEachWithId { col ->
                     val index = row*9+col
                     items[index].run {
-                        if(this == null) Spacer(Modifier.size(18.scaled,18.scaled)) {}.slotBackground()
-                        else Item(Modifier.size(16.scaled,16.scaled),id,count,damage,enchanted) {}.slotBackground(1.scaled)
+                        if(this == null) Spacer(Modifier.size(16.scaled,16.scaled)) {}.slotBackground()
+                        else Item(Modifier.size(16.scaled,16.scaled),id,count,damage,enchanted) {}.slotBackground()
                     }.clickable {
                         val item = mouseHold
                         mouseHold = items[index]
