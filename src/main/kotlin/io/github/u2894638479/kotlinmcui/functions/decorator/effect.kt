@@ -98,6 +98,18 @@ fun DslChild.shrink() = change { object: DslComponent by it {
 }}
 
 context(ctx: DslContext)
+fun DslChild.widthRate(rate: Double) = change { object: DslComponent by it {
+    context(instance: DslComponent)
+    override val contentMinWidth get() = it.contentMinWidth * rate
+}}
+
+context(ctx: DslContext)
+fun DslChild.heightRate(rate: Double) = change { object: DslComponent by it {
+    context(instance: DslComponent)
+    override val contentMinHeight get() = it.contentMinHeight * rate
+}}
+
+context(ctx: DslContext)
 fun DslChild.animateHeight(duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default)
 = change { object: DslComponent by it {
     context(instance: DslComponent)
