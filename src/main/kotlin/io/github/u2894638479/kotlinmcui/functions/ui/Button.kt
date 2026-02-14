@@ -10,6 +10,7 @@ import io.github.u2894638479.kotlinmcui.functions.translate
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.scope.DslChild
@@ -37,4 +38,4 @@ fun Button(
     color: Color = Color.WHITE,
     id:Any? = null,
     function: DslFunction
-) = Box(modifier,id,function).buttonBackground(color)
+) = Box(modifier,id,function).buttonBackground(color,0.px)
