@@ -86,6 +86,17 @@ tasks.processResources {
 }
 
 
+val tag = "v$mod_version"
+
+val shouldPublish by lazy {
+    providers.exec {
+        commandLine("git", "ls-remote", "--tags", "origin", "refs/tags/$tag")
+    }.standardOutput.asText.get().isBlank()
+}
+tasks.configureEach {
+    if(group == "publishing") enabled = shouldPublish
+}
+
 publishMods {
     file = tasks.jar.get().archiveFile
     additionalFiles = files(sourcesJar.archiveFile)
@@ -113,7 +124,7 @@ publishMods {
         accessToken = providers.environmentVariable("CURSEFORGE_TOKEN")
         projectId = "1460598"
         optional("fabric-language-kotlin","kotlin-for-forge")
-//        requires("kotlinmcui-backend")
+        requires("kotlinmcui-backend")
         clientRequired = true
         serverRequired = false
         minecraftVersionRange {
@@ -125,6 +136,6 @@ publishMods {
         accessToken = providers.environmentVariable("GITHUB_TOKEN")
         repository = "2894638479/KotlinMCUI"
         commitish = "master"
-        tagName = "v$mod_version"
+        tagName = tag
     }
 }
