@@ -40,6 +40,8 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
     var onClose:()-> Unit = defaultOnClose
         internal set
 
+    var pauseGame = true
+
     internal fun newFrame() {
         frameIndex++
         frameTimeNano = System.nanoTime()
