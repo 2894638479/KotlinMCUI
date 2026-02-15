@@ -1,7 +1,8 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    kotlin("jvm") version "2.3.0"
+    kotlin("jvm")
+    id("org.jetbrains.kotlin.plugin.serialization")
     id("me.modmuss50.mod-publish-plugin") version "0.8.1"
 }
 
@@ -32,6 +33,7 @@ dependencies {
     implementation("org.slf4j:slf4j-api:2.0.1")
     implementation("it.unimi.dsi:fastutil:8.5.18")
     implementation("org.lwjgl:lwjgl-glfw:3.3.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
 }
 
 kotlin {

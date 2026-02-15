@@ -1,5 +1,8 @@
 package io.github.u2894638479.kotlinmcui.math
 
+import kotlinx.serialization.Serializable
+
+@Serializable
 data class Rect(
     var left: Measure = 0.px,
     var top: Measure = 0.px,

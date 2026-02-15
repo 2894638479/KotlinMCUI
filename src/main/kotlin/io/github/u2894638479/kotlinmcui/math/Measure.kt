@@ -2,16 +2,24 @@ package io.github.u2894638479.kotlinmcui.math
 
 import io.github.u2894638479.kotlinmcui.dslLogger
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlin.experimental.ExperimentalTypeInference
 import kotlin.math.*
 import kotlin.collections.sumOf
 
 @JvmInline
+@Serializable(with = Measure.Serializer::class)
 value class Measure private constructor(val raw: Double):Comparable<Measure>, Interpolatable<Measure> {
     companion object {
         val AUTO = Measure(Double.fromBits(0x7FF1000000000000L))
         val AUTO_MIN = Measure(Double.fromBits(0x7FF2000000000000L))
         fun ofRaw(raw: Double) = Measure(raw)
+        fun ofBits(bits: Long) = Measure(Double.fromBits(bits))
         fun max(a: Measure,b: Measure) = Measure(max(a.raw,b.raw))
         fun min(a: Measure,b: Measure) = Measure(min(a.raw,b.raw))
     }
@@ -64,6 +72,12 @@ value class Measure private constructor(val raw: Double):Comparable<Measure>, In
 
     operator fun unaryMinus() = ifNum { Measure(-raw) }
     override operator fun compareTo(other: Measure) = raw.compareTo(other.raw)
+
+    object Serializer : KSerializer<Measure> {
+        override val descriptor = PrimitiveSerialDescriptor("RawDouble", PrimitiveKind.LONG)
+        override fun serialize(encoder: Encoder, value: Measure) = encoder.encodeLong(value.bits)
+        override fun deserialize(decoder: Decoder) = ofBits(decoder.decodeLong())
+    }
 }
 
 val Double.px get() = Measure.ofRaw(this)

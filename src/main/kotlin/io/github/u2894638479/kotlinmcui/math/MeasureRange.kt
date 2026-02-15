@@ -1,5 +1,7 @@
 package io.github.u2894638479.kotlinmcui.math
+import kotlinx.serialization.Serializable
 
+@Serializable
 class MeasureRange(
     override val start: Measure,
     override val endInclusive: Measure

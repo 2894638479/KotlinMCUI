@@ -1,8 +1,9 @@
 package io.github.u2894638479.kotlinmcui.math
 
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
+import kotlinx.serialization.Serializable
 
-
+@Serializable
 @JvmInline
 value class Color(val rgbaInt:Int): Interpolatable<Color> {
     constructor(r: UByte, g: UByte, b: UByte, a: UByte = 255u):this(combineUBytes(r,g,b,a))
