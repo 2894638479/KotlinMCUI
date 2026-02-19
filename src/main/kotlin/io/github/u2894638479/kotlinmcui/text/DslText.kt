@@ -6,8 +6,8 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.Rect
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
+import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.prop.ContextLazy
 
@@ -22,7 +22,7 @@ open class DslText(
     val horizontalAligner: Aligner,
     val verticalAligner: Aligner
 ) : DslComponent {
-    override val rect = Rect()
+    override val rect = MutRect()
 
     context(instance: DslComponent)
     override val narratable get() = true
@@ -47,7 +47,7 @@ open class DslText(
     fun lines(): List<DslTextLine> {
         val rect = instance.rect
         return processedChars.map {
-            val rect = Rect(left = rect.left, right = rect.right)
+            val rect = MutRect(left = rect.left, right = rect.right)
             DslTextLine(font,rect , it, horizontalAligner,defaultLineHeight)
         }.also { verticalAligner.align(rect.top, rect.bottom,it) }
     }

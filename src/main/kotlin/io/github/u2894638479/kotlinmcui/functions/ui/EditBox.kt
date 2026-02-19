@@ -14,9 +14,12 @@ import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.Rect
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
+import io.github.u2894638479.kotlinmcui.math.rect.Rect
+import io.github.u2894638479.kotlinmcui.math.rect.RectImpl
+import io.github.u2894638479.kotlinmcui.math.rect.contains
+import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
@@ -273,7 +276,7 @@ fun EditableText(
                         forEach { (line, chars) ->
                             chars.forEach {
                                 if (index in range) backend.fillRect(
-                                    Rect(it.low, line.low, it.high, line.high),
+                                    Rect(it,line),
                                     selectedColor
                                 )
                                 index++

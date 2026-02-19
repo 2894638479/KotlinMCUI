@@ -12,6 +12,9 @@ import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.Scroller
+import io.github.u2894638479.kotlinmcui.math.rect.contains
+import io.github.u2894638479.kotlinmcui.math.rect.height
+import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.math.size
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.minHeight

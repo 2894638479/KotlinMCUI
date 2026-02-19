@@ -4,6 +4,7 @@ import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.rect.contains
 
 
 interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEvent, DslComponentMetadata,

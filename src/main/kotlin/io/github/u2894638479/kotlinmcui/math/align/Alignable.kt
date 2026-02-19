@@ -2,13 +2,14 @@ package io.github.u2894638479.kotlinmcui.math.align
 
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.rect.MutBound
 
-interface Alignable {
+interface Alignable: MutBound {
     val minSize: Measure
     val size: Measure
     val weight: Double
-    var low: Measure
-    var high: Measure
+    override var low: Measure
+    override var high: Measure
     val align: Align
 }
 

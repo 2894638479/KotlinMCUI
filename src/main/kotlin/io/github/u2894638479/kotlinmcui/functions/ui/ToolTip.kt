@@ -9,8 +9,13 @@ import io.github.u2894638479.kotlinmcui.functions.newChildId
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.Rect
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.rect.MutRect
+import io.github.u2894638479.kotlinmcui.math.rect.Rect
+import io.github.u2894638479.kotlinmcui.math.rect.RectImpl
+import io.github.u2894638479.kotlinmcui.math.rect.contains
+import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
+import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
 import io.github.u2894638479.kotlinmcui.modifier.padding
@@ -71,17 +76,17 @@ fun Tooltip(id: Any) {
                     delegate.render(mouse)
                 }
 
-                fun layoutMouse(mouse: Position, screen: Rect, width: Measure, height: Measure) = Rect().also {
+                fun layoutMouse(mouse: Position, screen: Rect, width: Measure, height: Measure) = MutRect().also {
                     it.left = if(screen.right - mouse.x >= width) mouse.x else screen.right - width
-                    it.width = width
+                    it.right = it.left + width
                     it.top = if(mouse.y - screen.top >= height) mouse.y - height else screen.top
-                    it.height = height
+                    it.bottom = it.top + height
                 }
-                fun layoutFocus(focused: Rect, screen: Rect, width: Measure, height: Measure) = Rect().also {
+                fun layoutFocus(focused: Rect, screen: Rect, width: Measure, height: Measure) = MutRect().also {
                     it.top = if(screen.bottom - focused.bottom >= height) focused.bottom else max(screen.top,focused.top - height)
-                    it.height = height
+                    it.bottom = it.top + height
                     it.left = if(screen.right - focused.left >= width) focused.left else max(screen.left,focused.right - width)
-                    it.width = width
+                    it.right = it.left + width
                 }
             }
         )

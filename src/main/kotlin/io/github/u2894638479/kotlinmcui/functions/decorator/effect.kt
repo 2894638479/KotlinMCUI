@@ -11,6 +11,9 @@ import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.*
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
+import io.github.u2894638479.kotlinmcui.math.rect.Rect
+import io.github.u2894638479.kotlinmcui.math.rect.RectImpl
+import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.scope.DslChild

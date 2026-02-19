@@ -6,14 +6,21 @@ import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.*
+import io.github.u2894638479.kotlinmcui.functions.DslFunction
+import io.github.u2894638479.kotlinmcui.functions.property
+import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.translate
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.Rect
+import io.github.u2894638479.kotlinmcui.math.rect.Rect
+import io.github.u2894638479.kotlinmcui.math.rect.RectImpl
+import io.github.u2894638479.kotlinmcui.math.rect.contains
+import io.github.u2894638479.kotlinmcui.math.rect.height
+import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
 import io.github.u2894638479.kotlinmcui.prop.getValue
@@ -21,7 +28,6 @@ import io.github.u2894638479.kotlinmcui.prop.remap
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import org.lwjgl.glfw.GLFW
 import kotlin.math.roundToInt
-import kotlin.run
 
 context(ctx: DslContext)
 fun SliderVertical(

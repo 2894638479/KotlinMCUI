@@ -2,15 +2,15 @@ package io.github.u2894638479.kotlinmcui.text
 
 import io.github.u2894638479.kotlinmcui.dslLogger
 import io.github.u2894638479.kotlinmcui.math.Measure
-import io.github.u2894638479.kotlinmcui.math.Rect
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Alignable
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 
 class DslTextLine(
     val font: DslFont<*>,
-    val rect: Rect,
+    val rect: MutRect,
     val chars: List<DslRenderableChar>,
     val horizontalAlign: Aligner,
     val defaultLineHeight: Measure

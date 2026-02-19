@@ -1,14 +1,14 @@
 package io.github.u2894638479.kotlinmcui.component
 
-import io.github.u2894638479.kotlinmcui.math.Rect
 import io.github.u2894638479.kotlinmcui.math.align.Alignable
+import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.modifier.contentMinHeight
 import io.github.u2894638479.kotlinmcui.modifier.contentMinWidth
 import io.github.u2894638479.kotlinmcui.modifier.paddingHeight
 import io.github.u2894638479.kotlinmcui.modifier.paddingWidth
 
 interface DslComponentAlign {
-    val rect: Rect
+    val rect: MutRect
 
     context(instance: DslComponent)
     val contentMinWidth get() = instance.modifier.contentMinWidth

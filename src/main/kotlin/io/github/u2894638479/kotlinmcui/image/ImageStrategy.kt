@@ -3,11 +3,14 @@ package io.github.u2894638479.kotlinmcui.image
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
-import io.github.u2894638479.kotlinmcui.math.Rect
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Align.*
 import io.github.u2894638479.kotlinmcui.math.align.Alignment
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.rect.Rect
+import io.github.u2894638479.kotlinmcui.math.rect.height
+import io.github.u2894638479.kotlinmcui.math.rect.isEmpty
+import io.github.u2894638479.kotlinmcui.math.rect.width
 import kotlin.math.min
 
 interface ImageStrategy {
@@ -82,7 +85,7 @@ interface ImageStrategy {
                     iter(rect.top,rect.bottom,renderH) { t, b, bl2 ->
                         val w = if(bl1) uv.width else uv.width * ((r-l) / renderW)
                         val h = if(bl2) uv.height else uv.height * ((b-t) / renderH)
-                        backend.renderImage(image,Rect(l,t,r,b),Rect(uv.left,uv.top,uv.left + w,uv.top + h),color)
+                        backend.renderImage(image, Rect(l,t,r,b), Rect(uv.left,uv.top,uv.left + w,uv.top + h),color)
                     }
                 }
             }

@@ -4,8 +4,8 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.identity.DslId
-import io.github.u2894638479.kotlinmcui.math.Rect
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
+import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 
 class DslScopeImpl(
@@ -16,7 +16,7 @@ class DslScopeImpl(
     override val alignerHorizontal: Aligner = Aligner.simplePlace,
     override val alignerVertical: Aligner = Aligner.simplePlace,
 ) : DslScope {
-    override val rect = Rect()
+    override val rect = MutRect()
     override val children = DslChild.List()
 
     context(instance: DslComponent)

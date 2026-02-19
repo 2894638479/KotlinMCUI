@@ -6,6 +6,8 @@ import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.align.Align.*
+import io.github.u2894638479.kotlinmcui.math.rect.height
+import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
 import io.github.u2894638479.kotlinmcui.modifier.width
