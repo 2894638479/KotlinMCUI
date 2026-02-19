@@ -8,6 +8,7 @@ import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.translate
 import io.github.u2894638479.kotlinmcui.functions.ui.*
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
 import io.github.u2894638479.kotlinmcui.modifier.padding
@@ -30,7 +31,7 @@ fun TestTranslationPage() = ScrollableColumn {
     Spacer(Modifier.height(10.scaled)) {}
     EditableText(Modifier.height(25.scaled),stringProp) {}.editBoxBackground()
     Spacer(Modifier.height(10.scaled)) {}
-    SliderHorizontal(Modifier.height(25.scaled),doubleProp) { TextFlatten { double.toString().emit() } }
+    Slider(Modifier.height(25.scaled),Axis.Horizontal,doubleProp) { TextFlatten { double.toString().emit() } }
     Spacer(Modifier.height(30.scaled)) {}
     val customTranslationId by "kotlinmcui.testpage".remember.property
     val keys by remember(mutableListOf(""))

@@ -10,6 +10,7 @@ import io.github.u2894638479.kotlinmcui.functions.forEachWithId
 import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.ui.*
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
@@ -27,7 +28,7 @@ fun TestContainerPage() = ScrollableColumn {
     }
     Row {
         val size by 10.remember.property
-        SliderHorizontal(Modifier.height(20.scaled),0..100,size) {
+        Slider(Modifier.height(20.scaled),Axis.Horizontal,0..100,size) {
             TextFlatten { "slot size:${size.value}".emit() }
         }
         Spacer(Modifier.size(size.value.scaled,size.value.scaled)) {}.slotBackground()
@@ -36,10 +37,10 @@ fun TestContainerPage() = ScrollableColumn {
         val width by 80.remember.property
         val height by 50.remember.property
         Column {
-            SliderHorizontal(Modifier.height(20.scaled),0..200,width) {
+            Slider(Modifier.height(20.scaled),Axis.Horizontal,0..200,width) {
                 TextFlatten { "container width:${width.value}".emit() }
             }
-            SliderHorizontal(Modifier.height(20.scaled),0..100,height) {
+            Slider(Modifier.height(20.scaled),Axis.Horizontal,0..100,height) {
                 TextFlatten { "container height:${height.value}".emit() }
             }
         }

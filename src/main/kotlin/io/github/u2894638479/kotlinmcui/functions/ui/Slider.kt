@@ -13,6 +13,7 @@ import io.github.u2894638479.kotlinmcui.functions.translate
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
@@ -30,77 +31,9 @@ import org.lwjgl.glfw.GLFW
 import kotlin.math.roundToInt
 
 context(ctx: DslContext)
-fun SliderVertical(
-    modifier: Modifier = Modifier,
-    range: ClosedFloatingPointRange<Double>,
-    progress: StableRWProperty<Double>? = null,
-    step: Double = 1.0/16, // for keyboard
-    color: Color = Color.WHITE,
-    buttonSize: Measure = 8.scaled,
-    id:Any? = null,
-    function: DslFunction
-) = Slider(modifier,false,range,progress,step,color,buttonSize,id,function)
-
-context(ctx: DslContext)
-fun SliderHorizontal(
-    modifier: Modifier = Modifier,
-    range: ClosedFloatingPointRange<Double>,
-    progress: StableRWProperty<Double>? = null,
-    step: Double = 1.0/16, // for keyboard
-    color: Color = Color.WHITE,
-    buttonSize: Measure = 8.scaled,
-    id:Any? = null,
-    function: DslFunction
-) = Slider(modifier,true,range,progress,step,color,buttonSize,id,function)
-
-context(ctx: DslContext)
-fun SliderVertical(
-    modifier: Modifier = Modifier,
-    range: IntProgression,
-    progress: StableRWProperty<Int>? = null,
-    color: Color = Color.WHITE,
-    buttonSize: Measure = 8.scaled,
-    id:Any? = null,
-    function: DslFunction
-) = Slider(modifier,false,range,progress,color,buttonSize,id,function)
-
-context(ctx: DslContext)
-fun SliderHorizontal(
-    modifier: Modifier = Modifier,
-    range: IntProgression,
-    progress: StableRWProperty<Int>? = null,
-    color: Color = Color.WHITE,
-    buttonSize: Measure = 8.scaled,
-    id:Any? = null,
-    function: DslFunction
-) = Slider(modifier,true,range,progress,color,buttonSize,id,function)
-
-context(ctx: DslContext)
-fun SliderVertical(
-    modifier: Modifier = Modifier,
-    progress: StableRWProperty<Double>? = null,
-    step: Double = 1.0/16,
-    color: Color = Color.WHITE,
-    buttonSize: Measure = 8.scaled,
-    id:Any? = null,
-    function: DslFunction
-) = Slider(modifier,false,progress,step,color,buttonSize,id,function)
-
-context(ctx: DslContext)
-fun SliderHorizontal(
-    modifier: Modifier = Modifier,
-    progress: StableRWProperty<Double>? = null,
-    step: Double = 1.0/16,
-    color: Color = Color.WHITE,
-    buttonSize: Measure = 8.scaled,
-    id:Any? = null,
-    function: DslFunction
-) = Slider(modifier,true,progress,step,color,buttonSize,id,function)
-
-context(ctx: DslContext)
 fun Slider(
     modifier: Modifier = Modifier,
-    horizontal:Boolean,
+    axis: Axis,
     range: ClosedFloatingPointRange<Double>,
     progress: StableRWProperty<Double>? = null,
     step: Double = 1.0/16, // for keyboard
@@ -108,7 +41,7 @@ fun Slider(
     buttonSize: Measure = 8.scaled,
     id:Any? = null,
     function: DslFunction
-) = Slider(modifier,horizontal,progress?.remap(
+) = Slider(modifier,axis,progress?.remap(
     { (it - range.start) / (range.endInclusive - range.start) },
     { range.start + it * (range.endInclusive - range.start) }
 ),step,color,buttonSize,id,function)
@@ -116,14 +49,14 @@ fun Slider(
 context(ctx: DslContext)
 fun Slider(
     modifier: Modifier = Modifier,
-    horizontal:Boolean,
+    axis: Axis,
     range: IntProgression,
     progress: StableRWProperty<Int>? = null,
     color: Color = Color.WHITE,
     buttonSize: Measure = 8.scaled,
     id:Any? = null,
     function: DslFunction
-) = Slider(modifier,horizontal,progress?.remap(
+) = Slider(modifier,axis,progress?.remap(
     { (it - range.first).toDouble() / (range.last - range.first) },
     { range.first() + range.step * (it * (range.last - range.first) / range.step).roundToInt() }
 ), range.step.toDouble() / (range.last - range.first),color,buttonSize,id,function)
@@ -131,7 +64,7 @@ fun Slider(
 context(ctx: DslContext)
 fun Slider(
     modifier: Modifier = Modifier,
-    horizontal: Boolean,
+    axis: Axis,
     progress: StableRWProperty<Double>? = null,
     step: Double = 1.0/16, // for keyboard
     color: Color = Color.WHITE,
@@ -156,17 +89,20 @@ fun Slider(
             val rect = instance.rect
             val progress = this.progress
             backend.renderButton(rect, keyFocused != null, false, color)
-            val buttonRect = if (horizontal) Rect(
-                rect.left + (rect.width - buttonSize) * progress,
-                rect.top,
-                rect.right - (rect.width - buttonSize) * (1 - progress),
-                rect.bottom
-            ) else Rect(
-                rect.left,
-                rect.top + (rect.height - buttonSize) * progress,
-                rect.right,
-                rect.bottom - (rect.height - buttonSize) * (1 - progress)
-            )
+            val buttonRect = when(axis) {
+                Axis.Horizontal -> Rect(
+                    rect.left + (rect.width - buttonSize) * progress,
+                    rect.top,
+                    rect.right - (rect.width - buttonSize) * (1 - progress),
+                    rect.bottom
+                )
+                Axis.Vertical -> Rect(
+                    rect.left,
+                    rect.top + (rect.height - buttonSize) * progress,
+                    rect.right,
+                    rect.bottom - (rect.height - buttonSize) * (1 - progress)
+                )
+            }
             backend.renderButton(buttonRect, isHighlighted, true, color)
             delegate.render(mouse)
         }
@@ -174,8 +110,10 @@ fun Slider(
         context(instance: DslComponent)
         fun setProgress(mouse: Position) {
             val rect = instance.rect
-            val value = if (horizontal) (mouse.x - rect.left - buttonSize / 2) / (rect.width - buttonSize)
-            else (mouse.y - rect.top - buttonSize / 2) / (rect.height - buttonSize)
+            val value = when (axis) {
+                Axis.Horizontal -> (mouse.x - rect.left - buttonSize / 2) / (rect.width - buttonSize)
+                Axis.Vertical -> (mouse.y - rect.top - buttonSize / 2) / (rect.height - buttonSize)
+            }
             this.progress = value.coerceIn(0.0..1.0)
         }
 
@@ -219,19 +157,19 @@ fun Slider(
         override fun keyDown(key: Int, scanCode: Int): Boolean {
             if(!isFocused) return super.keyDown(key, scanCode)
             when(key) {
-                GLFW.GLFW_KEY_LEFT -> if(horizontal && keyFocused != null) {
+                GLFW.GLFW_KEY_LEFT -> if(axis == Axis.Horizontal && keyFocused != null) {
                     this.progress = (this.progress - step).coerceIn(0.0..1.0)
                     return true
                 }
-                GLFW.GLFW_KEY_RIGHT -> if(horizontal && keyFocused != null) {
+                GLFW.GLFW_KEY_RIGHT -> if(axis == Axis.Horizontal && keyFocused != null) {
                     this.progress = (this.progress + step).coerceIn(0.0..1.0)
                     return true
                 }
-                GLFW.GLFW_KEY_UP -> if(!horizontal && keyFocused != null) {
+                GLFW.GLFW_KEY_UP -> if(axis == Axis.Vertical && keyFocused != null) {
                     this.progress = (this.progress - step).coerceIn(0.0..1.0)
                     return true
                 }
-                GLFW.GLFW_KEY_DOWN -> if(!horizontal && keyFocused != null) {
+                GLFW.GLFW_KEY_DOWN -> if(axis == Axis.Vertical && keyFocused != null) {
                     this.progress = (this.progress + step).coerceIn(0.0..1.0)
                     return true
                 }

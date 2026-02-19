@@ -6,6 +6,7 @@ import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
@@ -49,7 +50,7 @@ fun TestIdPage() = Row {
                 TextFlatten { "Column\$Box$2".emit() }
             }.clickId()
         }
-        SliderHorizontal {}.Box {
+        Slider(Modifier,Axis.Horizontal) {}.Box {
             Button(Modifier.height(20.scaled).padding(5.scaled).align { bottom() }) {
                 TextFlatten { "Column\$Slider.Box$1".emit() }
             }.clickId()

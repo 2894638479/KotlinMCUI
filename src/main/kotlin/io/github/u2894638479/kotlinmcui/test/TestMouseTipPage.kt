@@ -8,6 +8,7 @@ import io.github.u2894638479.kotlinmcui.functions.decorator.tooltip
 import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.ui.*
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
@@ -47,10 +48,10 @@ fun TestMouseTipPage() = Column {
             TextFlatten { alignV.name.emit() }
         }.clickable { alignV = Align.entries.run { get((alignV.ordinal + 1) % size) } }
     }
-    SliderHorizontal(Modifier.height(20.scaled).padding(5.scaled),0..200,width) {
+    Slider(Modifier.height(20.scaled).padding(5.scaled),Axis.Horizontal,0..200,width) {
         TextFlatten { "width:${width.value}".emit() }
     }
-    SliderHorizontal(Modifier.height(20.scaled).padding(5.scaled),0..200,height) {
+    Slider(Modifier.height(20.scaled).padding(5.scaled),Axis.Horizontal,0..200,height) {
         TextFlatten { "height:${height.value}".emit() }
     }
     Button(Modifier.height(20.scaled)) { TextFlatten { "tip2:$tip2".emit() } }.clickable { tip2 = !tip2 }

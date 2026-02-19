@@ -12,9 +12,10 @@ import io.github.u2894638479.kotlinmcui.functions.ui.Box
 import io.github.u2894638479.kotlinmcui.functions.ui.Button
 import io.github.u2894638479.kotlinmcui.functions.ui.Column
 import io.github.u2894638479.kotlinmcui.functions.ui.Row
-import io.github.u2894638479.kotlinmcui.functions.ui.SliderHorizontal
+import io.github.u2894638479.kotlinmcui.functions.ui.Slider
 import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
 import io.github.u2894638479.kotlinmcui.functions.ui.TextFoldable
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.px
@@ -133,7 +134,7 @@ fun TestLayoutPage() = Column {
         },
         "recursion" to {
             val n by remember(10).property
-            SliderHorizontal(Modifier.height(20.scaled),0..100,n) {
+            Slider(Modifier.height(20.scaled),Axis.Horizontal,0..100,n) {
                 TextFlatten { "n=${n.value}".emit() }
             }
             fun color(n:Int) = when(n % 5) {

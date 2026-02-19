@@ -9,6 +9,7 @@ import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.*
@@ -42,8 +43,8 @@ fun TestImagePage() = Column {
     val width by widthProp
     val height by heightProp
     Row(Modifier.height(20.scaled)) {
-        SliderHorizontal(Modifier,0..500,widthProp) { TextFlatten { "width:$width".emit() } }
-        SliderHorizontal(Modifier,0..500,heightProp) { TextFlatten { "height:$height".emit() } }
+        Slider(Modifier,Axis.Horizontal,0..500,widthProp) { TextFlatten { "width:$width".emit() } }
+        Slider(Modifier,Axis.Horizontal,0..500,heightProp) { TextFlatten { "height:$height".emit() } }
     }
     val localImageProp by "".remember.property
     val localImage by localImageProp.remap { imageFile(File(it)) }.remember
