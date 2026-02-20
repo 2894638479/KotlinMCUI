@@ -13,12 +13,14 @@ import io.github.u2894638479.kotlinmcui.functions.ui.ScrollBar
 import io.github.u2894638479.kotlinmcui.functions.ui.ScrollBarHorizontal
 import io.github.u2894638479.kotlinmcui.functions.ui.ScrollBarVertical
 import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableColumn
+import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableRow
 import io.github.u2894638479.kotlinmcui.functions.ui.TextAutoFold
 import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
 import io.github.u2894638479.kotlinmcui.modifier.minHeight
+import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.weight
 import io.github.u2894638479.kotlinmcui.modifier.width
 import io.github.u2894638479.kotlinmcui.prop.getValue
@@ -37,6 +39,18 @@ fun TestScrollPage() = Row {
             }
         }
         ScrollableColumn(scrollerProp = scrollerProp1) {
+            TextFlatten { "Scrollable Row:".emit() }
+            val scrollerProp by Scroller.empty.remember.property
+            ScrollableRow(Modifier.height(50.scaled),scrollerProp) {
+                for(i in 1..20) {
+                    Button(id = i) {
+                        TextFlatten(Modifier.padding(3.scaled)) {
+                            "item$i".emit()
+                        }
+                    }.clickable {  }
+                }
+            }
+            ScrollBarHorizontal(Modifier.height(10.scaled),scrollerProp) {}
             for (i in 1..20) {
                 if (i % 3 == 1) TextFlatten { "item$i".emit() }
                 else Button(
@@ -89,6 +103,18 @@ fun TestScrollPage() = Row {
                     TextFlatten { "item$i".emit() }
                 }.clickable { toggle = !toggle }
             }
+            val scrollerProp4 by Scroller.empty.remember.property
+            TextAutoFold(Modifier.weight(0.0)) { "nested lazy column".emit() }
+            LazyColumn(Modifier.height(150.scaled), scrollerProp4) {
+                var toggle by false.remember
+                for (i in 1..20) {
+                    if (i % 3 == 0) TextFlatten(id = i) { "item$i".emit() }
+                    else Button(Modifier.height(if (toggle) 20.scaled else 40.scaled), id = i) {
+                        TextFlatten { "item$i".emit() }
+                    }.clickable { toggle = !toggle }
+                }
+            }
+            ScrollBarHorizontal(Modifier.height(10.scaled), scrollerProp4) {}
         }
         ScrollBarHorizontal(Modifier.height(10.scaled), scrollerProp3) {}
     }

@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.component
 
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.align.Alignable
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.modifier.contentMinHeight
@@ -47,4 +48,22 @@ interface DslComponentAlign {
             override val align get() = modifier.alignment.vertical
         }
     }
+}
+
+context(instance: DslComponent)
+fun contentMinSize(axis: Axis) = when(axis) {
+    Axis.Horizontal -> instance.contentMinWidth
+    Axis.Vertical -> instance.contentMinHeight
+}
+
+context(instance: DslComponent)
+fun outerMinSize(axis: Axis) = when(axis) {
+    Axis.Horizontal -> instance.outerMinWidth
+    Axis.Vertical -> instance.outerMinHeight
+}
+
+context(instance: DslComponent)
+fun alignable(axis: Axis) = when(axis) {
+    Axis.Horizontal -> instance.alignableHorizontal
+    Axis.Vertical -> instance.alignableVertical
 }

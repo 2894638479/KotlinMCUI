@@ -2,41 +2,72 @@ package io.github.u2894638479.kotlinmcui.functions.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.alignable
+import io.github.u2894638479.kotlinmcui.component.outerMinSize
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
-import io.github.u2894638479.kotlinmcui.functions.animatable
 import io.github.u2894638479.kotlinmcui.functions.collect
+import io.github.u2894638479.kotlinmcui.functions.ctxBackend
 import io.github.u2894638479.kotlinmcui.functions.identity
 import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.withId
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
-import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
+import io.github.u2894638479.kotlinmcui.math.align.align
+import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.math.rect.contains
+import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.math.rect.overlap
-import io.github.u2894638479.kotlinmcui.math.size
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
 import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.scope.DslScope
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 import io.github.u2894638479.kotlinmcui.scope.childrenMaxWidth
+import io.github.u2894638479.kotlinmcui.scope.childrenMaxHeight
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
+import org.lwjgl.glfw.GLFW
 import kotlin.collections.forEach
 import kotlin.run
+
 
 context(ctx: DslContext)
 fun ScrollableColumn(
     modifier: Modifier = Modifier,
+    scrollerProp: StableRWProperty<Scroller>? = null,
+    scrollProp: StableRWProperty<Double>? = null,
+    sensitivity: Double = 30.0,
+    id:Any? = null,
+    function: DslFunction
+) = Scrollable(modifier,Axis.Vertical,scrollerProp,scrollProp,sensitivity,id,function)
+
+
+context(ctx: DslContext)
+fun ScrollableRow(
+    modifier: Modifier = Modifier,
+    scrollerProp: StableRWProperty<Scroller>? = null,
+    scrollProp: StableRWProperty<Double>? = null,
+    sensitivity: Double = 30.0,
+    id:Any? = null,
+    function: DslFunction
+) = Scrollable(modifier,Axis.Horizontal,scrollerProp,scrollProp,sensitivity,id,function)
+
+
+context(ctx: DslContext)
+fun Scrollable(
+    modifier: Modifier = Modifier,
+    axis: Axis,
     scrollerProp: StableRWProperty<Scroller>? = null,
     scrollProp: StableRWProperty<Double>? = null,
     sensitivity: Double = 30.0,
@@ -51,52 +82,38 @@ fun ScrollableColumn(
                 prop
             }
 
-            val lazyWidth by lazy { childrenMaxWidth }
-
+            val lazyWidth by lazy { if(axis == Axis.Horizontal) 0.px else childrenMaxWidth }
             context(instance: DslComponent)
             override val contentMinWidth get() = Measure.max(lazyWidth, super.contentMinWidth)
 
+            val lazyHeight by lazy { if(axis == Axis.Vertical) 0.px else childrenMaxHeight }
+            context(instance: DslComponent)
+            override val contentMinHeight get() = Measure.max(lazyHeight, super.contentMinHeight)
+
 
             context(instance: DslComponent)
-            override fun layoutVertical() {
-                val scroller = object : Scroller {
-                    override val scale get() = ctx.scale
-                    override val items = children.mapView {
-                        object : Scroller.Item {
-                            override val identity get() = it.identity
-                            override val size get() = it.run { outerMinHeight }
-                        }
-                    }
-                    override val low by instance.rect::top
-                    override val high by instance.rect::bottom
-                    override var offset by 0.0.remember
-                    override var rawScroll by 0.0.remember
-                    override var scroll by scrollProp ?: run {
-                        val prop by animatable(0.0).property
-                        prop
-                    }
-                    override var scrollIndex by 0.remember
-                    override fun spaceBefore(): Double {
-                        items.ifEmpty { return 0.0 }
-                        val scroll = scroll
-                        val (beginIndex, offset) = calculateIndex(scroll)
-                        return items.subList(0, beginIndex).sumOf { it.size.unscaled } + scroll - offset
-                    }
-
-                    override fun spaceAfter(): Double {
-                        items.ifEmpty { return 0.0 }
-                        val scroll = scroll
-                        val (endIndex, offset) = calculateIndex(scroll + size)
-                        return items.subList(endIndex, items.size).sumOf { it.size.unscaled } - (scroll + size - offset)
-                    }
-                }
+            private fun layoutAxis() {
+                val scroller = Scroller.scroller(children,axis,scrollProp)
                 scroller.updateScroll()
                 scroller.updateIndex()
                 val rect = instance.rect
-                val move = scroller.run { scroll - offset + children.take(scrollIndex).sumOf { it.run { outerMinHeight }.unscaled } }
-                Aligner.close(Align.LOW).align(rect.top - move.scaled, rect.bottom, children.map { it.run { alignableVertical } })
-                children.forEach { it.run { layoutVertical() } }
+                val move = scroller.run { scroll - offset + children.take(scrollIndex).sumOf { it.run { outerMinSize(axis) }.unscaled } }
+                Aligner.close(Align.LOW).align(rect.bound(axis).expand(low = move.scaled), children.map { it.run { alignable(axis) } })
                 this.scroller = scroller
+            }
+
+            context(instance: DslComponent)
+            override fun layoutVertical() {
+                if(axis != Axis.Vertical) return delegate.layoutVertical()
+                layoutAxis()
+                children.forEach { it.run { layoutVertical() } }
+            }
+
+            context(instance: DslComponent)
+            override fun layoutHorizontal() {
+                if(axis != Axis.Horizontal) return delegate.layoutHorizontal()
+                layoutAxis()
+                children.forEach { it.run { layoutHorizontal() } }
             }
 
             context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
@@ -113,16 +130,16 @@ fun ScrollableColumn(
 
             context(instance: DslComponent)
             override fun mouseScrollVertical(mouse: Position, amount: Double): Double {
-                if (mouse !in instance.rect) return amount
-                val remain = delegate.mouseScrollVertical(mouse, amount) * -sensitivity
-                scroller.run {
-                    updateScroll()
-                    val before = rawScroll
-                    scroll(remain)
-                    updateScroll()
-                    val after = rawScroll
-                    return (remain - (after - before)) / -sensitivity
-                }
+                val remain = delegate.mouseScrollVertical(mouse,amount)
+                if((axis != Axis.Vertical && !ctxBackend.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)) || mouse !in instance.rect) return remain
+                return scroller.scroll(remain * -sensitivity) / -sensitivity
+            }
+
+            context(instance: DslComponent)
+            override fun mouseScrollHorizontal(mouse: Position, amount: Double): Double {
+                val remain = delegate.mouseScrollHorizontal(mouse,amount)
+                if(axis != Axis.Horizontal || mouse !in instance.rect) return remain
+                return scroller.scroll(remain * -sensitivity) / -sensitivity
             }
 
             context(instance: DslComponent)

@@ -1,13 +1,31 @@
 package io.github.u2894638479.kotlinmcui.math
 
+import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.outerMinSize
+import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
+import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.context.unscaled
+import io.github.u2894638479.kotlinmcui.functions.animatable
+import io.github.u2894638479.kotlinmcui.functions.property
+import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.align.Align
+import io.github.u2894638479.kotlinmcui.math.rect.Bound
+import io.github.u2894638479.kotlinmcui.math.rect.bound
+import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
+import io.github.u2894638479.kotlinmcui.prop.getValue
+import io.github.u2894638479.kotlinmcui.prop.mapView
+import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.scope.DslChild
+import io.github.u2894638479.kotlinmcui.scope.DslScope
+import kotlin.collections.ifEmpty
 import kotlin.collections.sumOf
+import kotlin.getValue
 import kotlin.math.sign
+import kotlin.run
 
-interface Scroller: DslScaleContext {
+interface Scroller: DslScaleContext, Bound {
     companion object {
         val empty = object : Scroller {
             override val items: List<Item> = emptyList()
@@ -23,14 +41,43 @@ interface Scroller: DslScaleContext {
                 set(value) {}
             override val scale get() = 1.0
         }
+        context(ctx: DslScaleContext,_: DslDataStoreContext,instance: DslComponent)
+        fun scroller(children: DslChild.List, axis: Axis, scrollProp: StableRWProperty<Double>?):Scroller
+        = object : Scroller, Bound by instance.rect.bound(axis) {
+            override val scale get() = ctx.scale
+            override val items = children.mapView {
+                object : Item {
+                    override val identity get() = it.identity
+                    override val size get() = it.run { outerMinSize(axis) }
+                }
+            }
+            override var offset by 0.0.remember
+            override var rawScroll by 0.0.remember
+            override var scroll by scrollProp ?: run {
+                val prop by animatable(0.0).property
+                prop
+            }
+            override var scrollIndex by 0.remember
+            override fun spaceBefore(): Double {
+                items.ifEmpty { return 0.0 }
+                val scroll = scroll
+                val (beginIndex, offset) = calculateIndex(scroll)
+                return items.subList(0, beginIndex).sumOf { it.size.unscaled } + scroll - offset
+            }
+
+            override fun spaceAfter(): Double {
+                items.ifEmpty { return 0.0 }
+                val scroll = scroll
+                val (endIndex, offset) = calculateIndex(scroll + size)
+                return items.subList(endIndex, items.size).sumOf { it.size.unscaled } - (scroll + size - offset)
+            }
+        }
     }
     interface Item {
         val size: Measure
         val identity: DslId
     }
     val items: List<Item>
-    val low: Measure
-    val high: Measure
     /*
     rawScroll: 实时滚动值。为了和scroll（可为animatable）做区分
     offset、scrollIndex: 显示4~6元素时，防止元素0~3的大小变化导致漂移。另lazy时无法检测0~3的大小。
@@ -128,7 +175,14 @@ interface Scroller: DslScaleContext {
     }
 
 
-    fun scroll(value: Double) { rawScroll += value }
+    fun scroll(value: Double): Double {
+        updateScroll()
+        val before = rawScroll
+        rawScroll += value
+        updateScroll()
+        val after = rawScroll
+        return (value - (after - before))
+    }
 
     fun scrollTo(align: Align) {
         var scrollIndex = scrollIndex

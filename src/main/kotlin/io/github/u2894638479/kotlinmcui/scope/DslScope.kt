@@ -5,9 +5,11 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.sumOf
 
 interface DslScope : DslComponent {
     val children: DslChild.List
@@ -98,8 +100,13 @@ interface DslScope : DslComponent {
     override val narration get() = children.mapNotNull { it.narration }.joinToString()
 }
 
-val DslScope.childrenSumWidth get() = children.sumOf { it.run { outerMinWidth.pixelsOrElse { 0.0 } } }.px
-val DslScope.childrenSumHeight get() = children.sumOf { it.run { outerMinHeight.pixelsOrElse { 0.0 } } }.px
+fun DslScope.aligner(axis: Axis) = when(axis) {
+    Axis.Horizontal -> alignerHorizontal
+    Axis.Vertical -> alignerVertical
+}
+
+val DslScope.childrenSumWidth get() = children.sumOf { it.run { outerMinWidth } }
+val DslScope.childrenSumHeight get() = children.sumOf { it.run { outerMinHeight } }
 
 val DslScope.childrenMaxWidth get() = children.maxOfOrNull { it.run { outerMinWidth } } ?: 0.px
 val DslScope.childrenMaxHeight get() = children.maxOfOrNull { it.run { outerMinHeight } } ?: 0.px

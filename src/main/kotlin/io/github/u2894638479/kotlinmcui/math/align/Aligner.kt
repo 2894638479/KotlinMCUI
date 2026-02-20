@@ -3,8 +3,11 @@ package io.github.u2894638479.kotlinmcui.math.align
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.MeasureArray
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.rect.Bound
 import io.github.u2894638479.kotlinmcui.math.sumOf
 import kotlin.collections.sumOf
+
+fun Aligner.align(bound: Bound,alignable: List<Alignable>) = align(bound.low,bound.high,alignable)
 
 fun interface Aligner {
     fun align(low: Measure, high: Measure, alignable: List<Alignable>)
