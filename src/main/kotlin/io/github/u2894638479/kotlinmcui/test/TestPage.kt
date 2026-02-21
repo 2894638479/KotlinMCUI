@@ -32,8 +32,8 @@ fun TestPage() = Row {
     ScrollableColumn(Modifier.weight(1.0).minWidth(100.scaled)) {
         TextFlatten(Modifier.padding(5.scaled)) { translate("kotlinmcui.testpage").emit() }
         pages.entries.forEachWithId {
-            val h by autoAnimate(if (page == it) 40.scaled else 20.scaled)
-            Button(Modifier.height(h).padding(2.scaled)) { TextFlatten { it.key.emit() } }
+            val h by autoAnimate(if (page == it) 40.0 else 20.0)
+            Button(Modifier.height(h.scaled).padding(2.scaled)) { TextFlatten { it.key.emit() } }
                 .clickable(page != it) { page = it }.tooltip {
                     TextFlatten(Modifier.padding(10.scaled)) { it.key.emit() }.tooltipBackground()
                 }

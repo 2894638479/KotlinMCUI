@@ -72,6 +72,10 @@ value class Color(val rgbaInt:Int): Interpolatable<Color> {
     val sFloat get() = sDouble.toFloat()
     val vFloat get() = vDouble.toFloat()
 
+    val h get() = hFloat
+    val s get() = sFloat
+    val v get() = vFloat
+
 
     fun change(r: UByte = this.r,g: UByte = this.g,b:UByte = this.b,a:UByte = this.a) = Color(r,g,b,a)
     fun change(r: Int = this.rInt,g: Int = this.gInt,b:Int = this.bInt,a:Int = this.aInt) = Color(r,g,b,a)

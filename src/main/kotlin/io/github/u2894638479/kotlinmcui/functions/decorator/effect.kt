@@ -5,6 +5,7 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
+import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.functions.autoAnimate
 import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
@@ -119,8 +120,8 @@ fun DslChild.animateHeight(duration: Duration = 0.5.seconds, interpolator: Inter
 = change { object: DslComponent by it {
     context(instance: DslComponent)
     override val contentMinHeight: Measure get() {
-        val value by autoAnimate(it.contentMinHeight, duration, interpolator)
-        return value
+        val value by autoAnimate(it.contentMinHeight.unscaled, duration, interpolator)
+        return value.scaled
     }
 }}
 
@@ -129,8 +130,8 @@ fun DslChild.animateWidth(duration: Duration = 0.5.seconds, interpolator: Interp
 = change { object: DslComponent by it {
     context(instance: DslComponent)
     override val contentMinWidth: Measure get() {
-        val value by autoAnimate(it.contentMinWidth, duration, interpolator)
-        return value
+        val value by autoAnimate(it.contentMinWidth.unscaled, duration, interpolator)
+        return value.scaled
     }
 }}
 
