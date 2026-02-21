@@ -104,7 +104,9 @@ value class Color(val rgbaInt:Int): Interpolatable<Color> {
         fun ofABGR(value: Int) = Color(value.uByte(0),value.uByte(8),value.uByte(16),value.uByte(24))
         fun ofHSV(h: Double,s: Double,v: Double,a: Double = 1.0) = ofHSV(h.toFloat(),s.toFloat(),v.toFloat(),a.toFloat())
         fun ofHSV(h: Float,s: Float,v: Float,a: Float = 1f): Color {
-            val h = h * 360f
+            val h = h.mod(1f) * 360f
+            val s = s.coerceIn(0f,1f)
+            val v = v.coerceIn(0f,1f)
             val c = v * s
             val x = c * (1f - abs((h / 60f) % 2f - 1f))
             val m = v - c
