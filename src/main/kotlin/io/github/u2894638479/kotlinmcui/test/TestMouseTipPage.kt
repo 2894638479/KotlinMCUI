@@ -62,8 +62,8 @@ fun TestMouseTipPage() = Column {
         Column(Modifier.padding(10.scaled)) {
             TextFlatten { "Tooltip Test: $tooltipCounter".emit(Color.BLUE,18.scaled, DslCharStyle().shadowed.italic.underlined) }
             ColorRect(Modifier.height(1.scaled).padding(3.scaled),Color(180,180,180)) {}
-            Button(Modifier.height(20.scaled)) {  }
-            TextFlatten { "123123123".emit() }
+            Button(Modifier.height(20.scaled)) {  }.clickable { tooltipCounter-- }
+            TextAutoFold { "123123123afdssssssssssssssssssdsaff".emit() }
         }.tooltipBackground()
     }
     Spacer(Modifier.weight(Double.MAX_VALUE)) {}

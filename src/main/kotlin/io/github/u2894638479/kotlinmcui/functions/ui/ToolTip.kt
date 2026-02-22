@@ -9,10 +9,10 @@ import io.github.u2894638479.kotlinmcui.functions.newChildId
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.align.align
 import io.github.u2894638479.kotlinmcui.math.px
-import io.github.u2894638479.kotlinmcui.math.rect.MutRect
+import io.github.u2894638479.kotlinmcui.math.rect.MutBound
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
-import io.github.u2894638479.kotlinmcui.math.rect.RectImpl
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
 import io.github.u2894638479.kotlinmcui.math.rect.expand
@@ -64,29 +64,40 @@ fun Tooltip(id: Any) {
                     context(ctx.change(dslIdentity = instance.identity, dslChildren = delegate.children),func)
                     delegate.children.forEach { it.run { build() } }
 
-                    val rect = if(focused?.tooltip != null && focused.tooltip != hovered)
-                        layoutFocus(focused.rect,dataStore.dslScreen.rect,delegate.childrenMaxWidth,delegate.childrenMaxHeight)
-                    else layoutMouse(mouse,dataStore.dslScreen.rect,delegate.childrenMaxWidth,delegate.childrenMaxHeight)
-                    this.rect.copyFrom(rect)
+                    val useFocus = focused?.tooltip != null && focused.tooltip != hovered
 
-                    delegate.alignerHorizontal.align(rect.left,rect.right,delegate.children.map { it.run { alignableHorizontal } })
+                    val boundH = if(useFocus) layoutFocusH(focused.rect,dataStore.dslScreen.rect,delegate.childrenMaxWidth)
+                        else layoutMouseH(mouse,dataStore.dslScreen.rect,delegate.childrenMaxWidth)
+
+                    delegate.alignerHorizontal.align(boundH,delegate.children.map { it.run { alignableHorizontal } })
                     delegate.children.forEach { it.run { layoutHorizontal() } }
-                    delegate.alignerVertical.align(rect.top,rect.bottom,delegate.children.map { it.run { alignableVertical } })
+
+                    val boundV = if(useFocus) layoutFocusV(focused.rect,dataStore.dslScreen.rect,delegate.childrenMaxHeight)
+                        else layoutMouseV(mouse,dataStore.dslScreen.rect,delegate.childrenMaxHeight)
+
+                    delegate.alignerVertical.align(boundV,delegate.children.map { it.run { alignableVertical } })
                     delegate.children.forEach { it.run { layoutVertical() } }
+
+                    instance.rect.copyFrom(Rect(boundH,boundV))
                     delegate.render(mouse)
                 }
 
-                fun layoutMouse(mouse: Position, screen: Rect, width: Measure, height: Measure) = MutRect().also {
-                    it.left = if(screen.right - mouse.x >= width) mouse.x else screen.right - width
-                    it.right = it.left + width
-                    it.top = if(mouse.y - screen.top >= height) mouse.y - height else screen.top
-                    it.bottom = it.top + height
+                fun layoutMouseH(mouse: Position, screen: Rect, width: Measure) = MutBound(0.px,0.px).also {
+                    it.low = if(screen.right - mouse.x >= width) mouse.x else screen.right - width
+                    it.high = it.low + width
                 }
-                fun layoutFocus(focused: Rect, screen: Rect, width: Measure, height: Measure) = MutRect().also {
-                    it.top = if(screen.bottom - focused.bottom >= height) focused.bottom else max(screen.top,focused.top - height)
-                    it.bottom = it.top + height
-                    it.left = if(screen.right - focused.left >= width) focused.left else max(screen.left,focused.right - width)
-                    it.right = it.left + width
+                fun layoutMouseV(mouse: Position, screen: Rect, height: Measure) = MutBound(0.px,0.px).also {
+                    it.low = if(mouse.y - screen.top >= height) mouse.y - height else screen.top
+                    it.high = it.low + height
+                }
+
+                fun layoutFocusH(focused: Rect, screen: Rect, width: Measure) = MutBound(0.px,0.px).also {
+                    it.low = if(screen.right - focused.left >= width) focused.left else max(screen.left,focused.right - width)
+                    it.high = it.low + width
+                }
+                fun layoutFocusV(focused: Rect, screen: Rect, height: Measure) = MutBound(0.px,0.px).also {
+                    it.low = if(screen.bottom - focused.bottom >= height) focused.bottom else max(screen.top,focused.top - height)
+                    it.high = it.low + height
                 }
             }
         )

@@ -8,3 +8,5 @@ interface MutBound: Bound {
     override var high: Measure
 }
 
+fun MutBound(low: Measure,high: Measure): MutBound = BoundImpl(low,high)
+

@@ -9,6 +9,7 @@ interface Bound {
     val high: Measure
 }
 
+fun Bound(low: Measure,high: Measure):Bound = BoundImpl(low,high)
 
 inline val Bound.range get() = low..high
 fun Bound.contains(value: Measure) = value in range
