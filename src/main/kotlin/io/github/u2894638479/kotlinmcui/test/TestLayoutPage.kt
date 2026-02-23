@@ -8,28 +8,17 @@ import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
 import io.github.u2894638479.kotlinmcui.functions.forEachWithId
 import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
-import io.github.u2894638479.kotlinmcui.functions.ui.Box
-import io.github.u2894638479.kotlinmcui.functions.ui.Button
-import io.github.u2894638479.kotlinmcui.functions.ui.Column
-import io.github.u2894638479.kotlinmcui.functions.ui.Row
-import io.github.u2894638479.kotlinmcui.functions.ui.Slider
-import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
-import io.github.u2894638479.kotlinmcui.functions.ui.TextFoldable
+import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.px
-import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.modifier.height
-import io.github.u2894638479.kotlinmcui.modifier.minHeight
-import io.github.u2894638479.kotlinmcui.modifier.minWidth
-import io.github.u2894638479.kotlinmcui.modifier.padding
-import io.github.u2894638479.kotlinmcui.modifier.weight
-import io.github.u2894638479.kotlinmcui.modifier.width
+import io.github.u2894638479.kotlinmcui.math.rect.height
+import io.github.u2894638479.kotlinmcui.math.rect.width
+import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import kotlin.collections.mapOf
 
 context(ctx: DslContext)
 fun TestLayoutPage() = Column {
@@ -156,6 +145,19 @@ fun TestLayoutPage() = Column {
                 }.background(color(n))
             }
             func(n.value)
+        },
+        "LateBox" to {
+            LateBox {
+                if(width > height) TextFlatten { "W>H".emit() }
+                else TextFlatten { "H>W".emit() }
+                if(width > height) Row {
+                    ColorRect(color = Color.RED) {}
+                    ColorRect(color = Color.BLUE) {}
+                } else Column {
+                    ColorRect(color = Color.RED) {}
+                    ColorRect(color = Color.BLUE) {}
+                }
+            }
         }
     ) }
     var chosen by remember(map.entries.first())

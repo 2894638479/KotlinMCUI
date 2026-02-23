@@ -6,13 +6,16 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.functions.collect
 import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.functions.newChildId
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.align.align
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.rect.Bound
 import io.github.u2894638479.kotlinmcui.math.rect.MutBound
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
+import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
 import io.github.u2894638479.kotlinmcui.math.rect.expand
@@ -69,16 +72,15 @@ fun Tooltip(id: Any) {
                     val boundH = if(useFocus) layoutFocusH(focused.rect,dataStore.dslScreen.rect,delegate.childrenMaxWidth)
                         else layoutMouseH(mouse,dataStore.dslScreen.rect,delegate.childrenMaxWidth)
 
-                    delegate.alignerHorizontal.align(boundH,delegate.children.map { it.run { alignableHorizontal } })
-                    delegate.children.forEach { it.run { layoutHorizontal() } }
+                    instance.rect.bound(Axis.Horizontal) copyFrom boundH
+                    delegate.layoutHorizontal()
 
                     val boundV = if(useFocus) layoutFocusV(focused.rect,dataStore.dslScreen.rect,delegate.childrenMaxHeight)
                         else layoutMouseV(mouse,dataStore.dslScreen.rect,delegate.childrenMaxHeight)
 
-                    delegate.alignerVertical.align(boundV,delegate.children.map { it.run { alignableVertical } })
-                    delegate.children.forEach { it.run { layoutVertical() } }
+                    instance.rect.bound(Axis.Vertical) copyFrom boundV
+                    delegate.layoutVertical()
 
-                    instance.rect.copyFrom(Rect(boundH,boundV))
                     delegate.render(mouse)
                 }
 

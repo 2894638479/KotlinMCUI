@@ -11,6 +11,14 @@ interface Rect {
     val top: Measure
     val right: Measure
     val bottom: Measure
+    companion object {
+        val empty = object : Rect {
+            override val left get() = 0.px
+            override val top get() = 0.px
+            override val right get() = 0.px
+            override val bottom get() = 0.px
+        }
+    }
 }
 
 fun Rect(

@@ -10,3 +10,7 @@ interface MutBound: Bound {
 
 fun MutBound(low: Measure,high: Measure): MutBound = BoundImpl(low,high)
 
+infix fun MutBound.copyFrom(other: Bound) {
+    low = other.low
+    high = other.high
+}

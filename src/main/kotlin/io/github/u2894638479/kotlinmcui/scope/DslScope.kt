@@ -14,22 +14,6 @@ import io.github.u2894638479.kotlinmcui.math.sumOf
 interface DslScope : DslComponent {
     val children: DslChild.List
 
-    val alignerHorizontal: Aligner
-    val alignerVertical: Aligner
-    context(instance: DslComponent)
-    override fun layoutHorizontal() {
-        val rect = instance.rect
-        alignerHorizontal.align(rect.left,rect.right,children.map { it.run { alignableHorizontal } })
-        children.forEach { it.run { layoutHorizontal() } }
-    }
-
-    context(instance: DslComponent)
-    override fun layoutVertical() {
-        val rect = instance.rect
-        alignerVertical.align(rect.top,rect.bottom,children.map { it.run { alignableVertical } })
-        children.forEach { it.run { layoutVertical() } }
-    }
-
     context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) =
         children.asReversed().forEach { it.run { render(mouse) } }
@@ -98,11 +82,6 @@ interface DslScope : DslComponent {
 
     context(instance: DslComponent)
     override val narration get() = children.mapNotNull { it.narration }.joinToString()
-}
-
-fun DslScope.aligner(axis: Axis) = when(axis) {
-    Axis.Horizontal -> alignerHorizontal
-    Axis.Vertical -> alignerVertical
 }
 
 val DslScope.childrenSumWidth get() = children.sumOf { it.run { outerMinWidth } }

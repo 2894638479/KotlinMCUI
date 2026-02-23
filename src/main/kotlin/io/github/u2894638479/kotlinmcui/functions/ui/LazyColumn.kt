@@ -14,11 +14,14 @@ import io.github.u2894638479.kotlinmcui.functions.withId
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
+import io.github.u2894638479.kotlinmcui.math.align.align
+import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
@@ -38,7 +41,7 @@ fun LazyColumn(
     id:Any? = null,
     function: DslFunction
 ) = withId(id ?: function::class) {
-    val delegate = DslScopeImpl(identity, modifier, ctx, function, alignerVertical = Aligner.close(Align.LOW))
+    val delegate = DslScopeImpl(identity, modifier, ctx, function)
     collect(object : DslScope by delegate {
         var scroller by scrollerProp ?: run {
             val prop by Scroller.empty.remember.property
@@ -67,8 +70,7 @@ fun LazyColumn(
                         override val size: Measure
                             get() = children[index].run {
                                 build()
-                                val rect = instance.rect
-                                alignerHorizontal.align(rect.left, rect.right, listOf(alignableHorizontal))
+                                Aligner.simplePlace.align(rect.bound(Axis.Horizontal), listOf(alignableHorizontal))
                                 layoutHorizontal()
                                 outerMinHeight
                             }.also {
@@ -96,7 +98,7 @@ fun LazyColumn(
                 else children.subList(it.first, it.last + 1)
             }
             val rect = instance.rect
-            alignerVertical.align(
+            Aligner.close(Align.LOW).align(
                 rect.top - (scroller.scroll - scroller.offset).scaled,
                 rect.bottom,
                 visibleChildren.map { it.run { alignableVertical } })

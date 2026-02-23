@@ -31,7 +31,7 @@ fun MutRect.bound(axis: Axis) = when(axis) {
         override var low by ::left
         override var high by ::right
     }
-    Axis.Vertical -> object : Bound {
+    Axis.Vertical -> object : MutBound {
         override var low by ::top
         override var high by ::bottom
     }
@@ -61,7 +61,7 @@ fun MutRect.expand(expand: Measure) = object: Rect {
         set(value) { this@expand.bottom = value - expand }
 }
 
-fun MutRect.copyFrom(other: Rect) {
+infix fun MutRect.copyFrom(other: Rect) {
     left = other.left
     top = other.top
     right = other.right
