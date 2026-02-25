@@ -6,11 +6,9 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.collect
 import io.github.u2894638479.kotlinmcui.functions.newChildId
-import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.prop.lazy
 import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.scope.DslScope
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
@@ -29,13 +27,11 @@ fun Row(
         function,
         alignerHorizontal = alignerHorizontal
     ) {
-        var lazyWidth = Measure.AUTO
-        override val contentMinWidth get() = ::lazyWidth.lazy {
+        override val contentMinWidth by lazy {
             max(instance.childrenSumWidth,super.contentMinWidth)
         }
 
-        var lazyHeight = Measure.AUTO
-        override val contentMinHeight get() = ::lazyHeight.lazy {
+        override val contentMinHeight by lazy {
             max(instance.childrenMaxHeight,super.contentMinHeight)
         }
 

@@ -1,6 +1,5 @@
 package io.github.u2894638479.kotlinmcui.functions.ui
 
-import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslTextBuilderContext
 import io.github.u2894638479.kotlinmcui.context.scaled
@@ -70,7 +69,6 @@ fun TextAutoFold(
 ) {
     override val contentMinWidth get() = 0.px
 
-    context(instance: DslComponent)
     override fun processChars(chars: List<List<DslRenderableChar>>): List<List<DslRenderableChar>> {
         val font = ctx.dataStore.backend.getFont(fontName)
         val result = mutableListOf<MutableList<DslRenderableChar>>()

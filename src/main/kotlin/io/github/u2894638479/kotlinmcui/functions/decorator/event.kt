@@ -19,7 +19,6 @@ context(ctx: DslContext)
 fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext, DslDataStoreContext) DslComponent.()->Unit)
 = change { if(!enabled) it else object : DslComponent by it {
 
-    context(instance: DslComponent)
     fun click() {
         ctxBackend.playButtonSound()
         block(DslExecuteContext,ctx,instance)

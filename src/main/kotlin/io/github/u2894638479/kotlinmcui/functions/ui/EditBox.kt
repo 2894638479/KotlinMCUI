@@ -252,7 +252,6 @@ fun EditableText(
                 get() = getPos(editable.cursor)
                 set(value) { editable.cursor = setPos(value) ?: return }
 
-            context(instance: DslComponent)
             fun cursorRect(): Rect? {
                 val cursorPos = cursorPos ?: return null
                 val (line, chars) = alignedLines.getOrNull(cursorPos.line) ?: return null

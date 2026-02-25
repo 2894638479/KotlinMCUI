@@ -10,7 +10,6 @@ import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.prop.lazy
 
 open class DslText(
     override val identity: DslId,
@@ -36,14 +35,10 @@ open class DslText(
         val font = backend.getFont(fontName)
         lines().forEach { it.renderChars(font,it.alignedChars(font)) }
     }
-    context(instance: DslComponent)
     open fun processChars(chars:List<List<DslRenderableChar>>) = chars
 
-    private var lazyChars: List<List<DslRenderableChar>>? = null
-    context(instance: DslComponent)
-    val processedChars get() = ::lazyChars.lazy { processChars(chars) }
+    val processedChars by lazy { processChars(chars) }
 
-    context(instance: DslComponent)
     fun lines(): List<DslTextLine> {
         val rect = instance.rect
         return processedChars.map {
@@ -52,12 +47,10 @@ open class DslText(
         }.also { verticalAligner.align(rect.top, rect.bottom,it) }
     }
 
-    private var lazyHeight = Measure.AUTO
-    private var lazyWidth = Measure.AUTO
-    override val contentMinHeight get() = ::lazyHeight.lazy {
+    override val contentMinHeight by lazy {
         max(processedChars.totalHeight(font, defaultLineHeight),super.contentMinHeight)
     }
-    override val contentMinWidth get() = ::lazyWidth.lazy {
+    override val contentMinWidth by lazy {
         max(processedChars.totalWidth(font),super.contentMinHeight)
     }
 }

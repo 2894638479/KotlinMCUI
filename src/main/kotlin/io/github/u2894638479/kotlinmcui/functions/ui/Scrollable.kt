@@ -9,7 +9,6 @@ import io.github.u2894638479.kotlinmcui.functions.*
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Axis
-import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.Scroller
@@ -22,16 +21,13 @@ import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.math.rect.overlap
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.prop.*
+import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
+import io.github.u2894638479.kotlinmcui.prop.getValue
+import io.github.u2894638479.kotlinmcui.prop.mapView
+import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.scope.DslScope
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 import org.lwjgl.glfw.GLFW
-import kotlin.collections.asReversed
-import kotlin.collections.forEach
-import kotlin.collections.listOf
-import kotlin.collections.map
-import kotlin.collections.sumOf
-import kotlin.collections.take
 
 
 context(ctx: DslContext)
@@ -74,17 +70,14 @@ fun Scrollable(
                 prop
             }
 
-            var lazyWidth = Measure.AUTO
-            override val contentMinWidth get() = ::lazyWidth.lazy {
+            override val contentMinWidth by lazy {
                 max(if(axis == Axis.Horizontal) 0.px else instance.childrenMaxWidth,super.contentMinWidth)
             }
 
-            var lazyHeight = Measure.AUTO
-            override val contentMinHeight get() = ::lazyHeight.lazy {
+            override val contentMinHeight by lazy {
                 max(if(axis == Axis.Vertical) 0.px else instance.childrenMaxHeight,super.contentMinHeight)
             }
 
-            context(instance: DslComponent)
             private fun layoutAxis() {
                 val scroller = Scroller.scroller(children,axis,scrollProp)
                 scroller.updateScroll()

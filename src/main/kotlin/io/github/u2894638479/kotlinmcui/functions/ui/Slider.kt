@@ -104,7 +104,6 @@ fun Slider(
             delegate.render()
         }
 
-        context(instance: DslComponent)
         fun setProgress(mouse: Position) {
             val rect = instance.rect
             val value = when (axis) {
