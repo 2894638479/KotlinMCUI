@@ -1,18 +1,20 @@
 package io.github.u2894638479.kotlinmcui.functions.ui
 
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.childrenMaxWidth
+import io.github.u2894638479.kotlinmcui.component.childrenSumHeight
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.collect
 import io.github.u2894638479.kotlinmcui.functions.newChildId
 import io.github.u2894638479.kotlinmcui.math.Measure
+import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
+import io.github.u2894638479.kotlinmcui.prop.lazy
 import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.scope.DslScope
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
-import io.github.u2894638479.kotlinmcui.scope.childrenMaxWidth
-import io.github.u2894638479.kotlinmcui.scope.childrenSumHeight
 
 context(ctx: DslContext)
 fun Column(
@@ -28,15 +30,17 @@ fun Column(
         function,
         alignerVertical = alignerVertical
     ) {
-        val lazyWidth by lazy { childrenMaxWidth }
-
+        var lazyWidth = Measure.AUTO
         context(instance: DslComponent)
-        override val contentMinWidth get() = Measure.max(lazyWidth, super.contentMinWidth)
+        override val contentMinWidth get() = ::lazyWidth.lazy {
+            max(instance.childrenMaxWidth,super.contentMinWidth)
+        }
 
-        val lazyHeight by lazy { childrenSumHeight }
-
+        var lazyHeight = Measure.AUTO
         context(instance: DslComponent)
-        override val contentMinHeight get() = Measure.max(lazyHeight, super.contentMinHeight)
+        override val contentMinHeight get() = ::lazyHeight.lazy {
+            max(instance.childrenSumHeight,super.contentMinHeight)
+        }
 
         override val viewHorizontal get() = listOf(children)
         override val viewVertical get() = children.mapView { listOf(it) }

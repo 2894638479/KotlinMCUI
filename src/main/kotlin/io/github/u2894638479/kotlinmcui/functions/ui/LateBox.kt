@@ -32,8 +32,5 @@ fun LateBox(modifier: Modifier = Modifier,id:Any? = null,content:context(DslCont
             Aligner.simplePlace.align(rect.bound(Axis.Vertical),children.map { it.run { alignable(Axis.Vertical) } })
             children.forEach { it.run { layoutVertical() } }
         }
-
-        context(instance: DslComponent)
-        override fun clear() = children.clear()
     }
 )

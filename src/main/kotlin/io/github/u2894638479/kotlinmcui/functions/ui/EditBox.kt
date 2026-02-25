@@ -43,7 +43,7 @@ fun DslChild.editBoxBackground(width: Measure = 1.scaled, padding: Measure = wid
     context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         backend.fillRect(instance.rect.expand(padding),
-            if(isHighlighted) Color(255,255,255) else Color(0xA0,0xA0,0xA0))
+            if(instance.isHighlighted) Color(255,255,255) else Color(0xA0,0xA0,0xA0))
         backend.fillRect(instance.rect.expand(padding - width),Color.BLACK)
         it.render(mouse)
     }
@@ -271,7 +271,7 @@ fun EditableText(
                 val font = backend.getFont(fontName)
                 alignedLines = delegate.lines().map { it to it.alignedChars(font) }.apply {
                     val range = editable.range
-                    if (isFocused && range != null) {
+                    if (instance.isFocused && range != null) {
                         var index = 0
                         forEach { (line, chars) ->
                             chars.forEach {
@@ -287,13 +287,13 @@ fun EditableText(
                     forEach { (line, chars) -> line.renderChars(font, chars) }
                 }
 
-                if (!isFocused) return
+                if (!instance.isFocused) return
                 if (blink) backend.fillRect(cursorRect() ?: return, color)
             }
 
             context(instance: DslComponent)
             override fun charTyped(c: Char, eventModifier: EventModifier): Boolean {
-                if (!isFocused) return false
+                if (!instance.isFocused) return false
                 editable.insert(c)
                 return true
             }
@@ -301,7 +301,7 @@ fun EditableText(
             context(instance: DslComponent, eventModifier: EventModifier)
             override fun keyDown(key: Int, scanCode: Int): Boolean {
                 fun default() = delegate.keyDown(key, scanCode)
-                if (!isFocused) return default()
+                if (!instance.isFocused) return default()
                 editable.check()
                 blinkBeginNano = System.nanoTime()
                 fun EditableString.checkCursor2() {

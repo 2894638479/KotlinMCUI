@@ -5,14 +5,14 @@ import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.contains
+import io.github.u2894638479.kotlinmcui.scope.DslChild
 
 
 interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEvent, DslComponentMetadata,
     DslIdContext {
+    val children: DslChild.List? get() = null
     context(instance: DslComponent)
     fun build() {}
-    context(instance: DslComponent)
-    fun clear() {}
     context(instance: DslComponent)
     fun layoutHorizontal() {}
     context(instance: DslComponent)
@@ -30,11 +30,11 @@ interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEv
     override val viewSequential get() = listOf<DslComponent>()
 }
 
-context(ctx: DslDataStoreContext, instance: DslComponent)
-val isFocused get() = instance.focusable && dataStore.focused == instance.identity
+context(ctx: DslDataStoreContext)
+val DslComponent.isFocused get() = focusable && dataStore.focused == identity
 
-context(ctx: DslDataStoreContext, instance: DslComponent)
-val isHovered get() = dataStore.hovered == instance.identity
+context(ctx: DslDataStoreContext)
+val DslComponent.isHovered get() = dataStore.hovered == identity
 
-context(ctx: DslDataStoreContext, instance: DslComponent)
-val isHighlighted get() = instance.highlightable && (isFocused || isHovered)
+context(ctx: DslDataStoreContext)
+val DslComponent.isHighlighted get() = highlightable && (isFocused || isHovered)

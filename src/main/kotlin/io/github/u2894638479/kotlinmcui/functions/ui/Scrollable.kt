@@ -1,23 +1,16 @@
 package io.github.u2894638479.kotlinmcui.functions.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
-import io.github.u2894638479.kotlinmcui.component.DslComponent
-import io.github.u2894638479.kotlinmcui.component.alignable
-import io.github.u2894638479.kotlinmcui.component.outerMinSize
+import io.github.u2894638479.kotlinmcui.component.*
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.context.unscaled
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
-import io.github.u2894638479.kotlinmcui.functions.collect
-import io.github.u2894638479.kotlinmcui.functions.ctxBackend
-import io.github.u2894638479.kotlinmcui.functions.identity
-import io.github.u2894638479.kotlinmcui.functions.property
-import io.github.u2894638479.kotlinmcui.functions.remember
-import io.github.u2894638479.kotlinmcui.functions.withId
+import io.github.u2894638479.kotlinmcui.functions.*
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
+import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.math.align.Align
@@ -29,17 +22,16 @@ import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.math.rect.overlap
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
-import io.github.u2894638479.kotlinmcui.prop.mapView
+import io.github.u2894638479.kotlinmcui.prop.*
 import io.github.u2894638479.kotlinmcui.scope.DslScope
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
-import io.github.u2894638479.kotlinmcui.scope.childrenMaxWidth
-import io.github.u2894638479.kotlinmcui.scope.childrenMaxHeight
-import io.github.u2894638479.kotlinmcui.prop.getValue
-import io.github.u2894638479.kotlinmcui.prop.setValue
 import org.lwjgl.glfw.GLFW
+import kotlin.collections.asReversed
 import kotlin.collections.forEach
-import kotlin.run
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.sumOf
+import kotlin.collections.take
 
 
 context(ctx: DslContext)
@@ -82,14 +74,17 @@ fun Scrollable(
                 prop
             }
 
-            val lazyWidth by lazy { if(axis == Axis.Horizontal) 0.px else childrenMaxWidth }
+            var lazyWidth = Measure.AUTO
             context(instance: DslComponent)
-            override val contentMinWidth get() = Measure.max(lazyWidth, super.contentMinWidth)
+            override val contentMinWidth get() = ::lazyWidth.lazy {
+                max(if(axis == Axis.Horizontal) 0.px else instance.childrenMaxWidth,super.contentMinWidth)
+            }
 
-            val lazyHeight by lazy { if(axis == Axis.Vertical) 0.px else childrenMaxHeight }
+            var lazyHeight = Measure.AUTO
             context(instance: DslComponent)
-            override val contentMinHeight get() = Measure.max(lazyHeight, super.contentMinHeight)
-
+            override val contentMinHeight get() = ::lazyHeight.lazy {
+                max(if(axis == Axis.Vertical) 0.px else instance.childrenMaxHeight,super.contentMinHeight)
+            }
 
             context(instance: DslComponent)
             private fun layoutAxis() {

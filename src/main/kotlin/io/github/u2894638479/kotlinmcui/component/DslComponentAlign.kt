@@ -2,11 +2,14 @@ package io.github.u2894638479.kotlinmcui.component
 
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.align.Alignable
+import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
+import io.github.u2894638479.kotlinmcui.math.sumOf
 import io.github.u2894638479.kotlinmcui.modifier.contentMinHeight
 import io.github.u2894638479.kotlinmcui.modifier.contentMinWidth
 import io.github.u2894638479.kotlinmcui.modifier.paddingHeight
 import io.github.u2894638479.kotlinmcui.modifier.paddingWidth
+import kotlin.run
 
 interface DslComponentAlign {
     val rect: MutRect
@@ -15,11 +18,6 @@ interface DslComponentAlign {
     val contentMinWidth get() = instance.modifier.contentMinWidth
     context(instance: DslComponent)
     val contentMinHeight get() = instance.modifier.contentMinHeight
-
-    context(instance: DslComponent)
-    val outerMinWidth get() = instance.contentMinWidth + instance.modifier.paddingWidth
-    context(instance: DslComponent)
-    val outerMinHeight get() = instance.contentMinHeight + instance.modifier.paddingHeight
 
     context(instance: DslComponent)
     val alignableHorizontal get() = instance.run {
@@ -50,20 +48,26 @@ interface DslComponentAlign {
     }
 }
 
-context(instance: DslComponent)
-fun contentMinSize(axis: Axis) = when(axis) {
-    Axis.Horizontal -> instance.contentMinWidth
-    Axis.Vertical -> instance.contentMinHeight
+val DslComponent.outerMinWidth get() = contentMinWidth + modifier.paddingWidth
+val DslComponent.outerMinHeight get() = contentMinHeight + modifier.paddingHeight
+
+val DslComponent.childrenSumWidth get() = children?.sumOf { it.outerMinWidth } ?: 0.px
+val DslComponent.childrenSumHeight get() = children?.sumOf { it.outerMinHeight } ?: 0.px
+
+val DslComponent.childrenMaxWidth get() = children?.maxOfOrNull { it.outerMinWidth } ?: 0.px
+val DslComponent.childrenMaxHeight get() = children?.maxOfOrNull { it.outerMinHeight } ?: 0.px
+
+fun DslComponent.contentMinSize(axis: Axis) = when(axis) {
+    Axis.Horizontal -> contentMinWidth
+    Axis.Vertical -> contentMinHeight
 }
 
-context(instance: DslComponent)
-fun outerMinSize(axis: Axis) = when(axis) {
-    Axis.Horizontal -> instance.outerMinWidth
-    Axis.Vertical -> instance.outerMinHeight
+fun DslComponent.outerMinSize(axis: Axis) = when(axis) {
+    Axis.Horizontal -> outerMinWidth
+    Axis.Vertical -> outerMinHeight
 }
 
-context(instance: DslComponent)
-fun alignable(axis: Axis) = when(axis) {
-    Axis.Horizontal -> instance.alignableHorizontal
-    Axis.Vertical -> instance.alignableVertical
+fun DslComponent.alignable(axis: Axis) = when(axis) {
+    Axis.Horizontal -> alignableHorizontal
+    Axis.Vertical -> alignableVertical
 }

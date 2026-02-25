@@ -21,7 +21,7 @@ fun DslChild.buttonBackground(color: Color = Color.WHITE,padding: Measure = 2.sc
     object:DslComponent by it {
         context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
         override fun <RP> render(mouse: Position) {
-            backend.renderButton(instance.rect.expand(padding), isHighlighted,instance.highlightable,color)
+            backend.renderButton(instance.rect.expand(padding), instance.isHighlighted,instance.highlightable,color)
             it.render(mouse)
         }
 

@@ -24,22 +24,22 @@ class DslScopeImpl(
 
     context(instance: DslComponent)
     override fun layoutHorizontal() {
-        alignerHorizontal.align(rect.bound(Axis.Horizontal),children.map { it.run { alignableHorizontal } })
+        val children = instance.children ?: return
+        alignerHorizontal.align(instance.rect.bound(Axis.Horizontal),children.map { it.run { alignableHorizontal } })
         children.forEach { it.run { layoutHorizontal() } }
     }
 
     context(instance: DslComponent)
     override fun layoutVertical() {
-        alignerVertical.align(rect.bound(Axis.Vertical),children.map { it.run { alignableVertical } })
+        val children = instance.children ?: return
+        alignerVertical.align(instance.rect.bound(Axis.Vertical),children.map { it.run { alignableVertical } })
         children.forEach { it.run { layoutVertical() } }
     }
 
     context(instance: DslComponent)
     override fun build() {
+        val children = instance.children ?: return
         context(ctx.change(dslIdentity = instance.identity, dslChildren = children),dslFunction)
         children.forEach { it.run { build() } }
     }
-
-    context(instance: DslComponent)
-    override fun clear() { children.clear() }
 }

@@ -70,7 +70,7 @@ fun DslChild.highlightBox(widthIn: Measure = 0.px, widthOut: Measure = 1.scaled,
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
-        if(isHighlighted) renderOutline(instance.rect, widthIn, widthOut, color)
+        if(instance.isHighlighted) renderOutline(instance.rect, widthIn, widthOut, color)
         it.render(mouse)
     }
 }}

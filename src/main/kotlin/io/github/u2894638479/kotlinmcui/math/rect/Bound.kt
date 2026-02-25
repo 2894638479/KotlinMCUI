@@ -18,8 +18,9 @@ interface Bound {
 fun Bound(low: Measure,high: Measure):Bound = BoundImpl(low,high)
 
 inline val Bound.range get() = low..high
+inline val Bound.isEmpty get() = high <= low
+inline fun Bound.ifEmpty(action: () -> Bound) = if(isEmpty) action() else this
 fun Bound.contains(value: Measure) = value in range
-
 fun Bound.expand(low: Measure = 0.px,high: Measure = 0.px) = object :Bound {
     override val low get() = this@expand.low - low
     override val high get() = this@expand.high + high

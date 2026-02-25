@@ -5,11 +5,12 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Measure
+import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.prop.ContextLazy
+import io.github.u2894638479.kotlinmcui.prop.lazy
 
 open class DslText(
     override val identity: DslId,
@@ -38,10 +39,10 @@ open class DslText(
     }
     context(instance: DslComponent)
     open fun processChars(chars:List<List<DslRenderableChar>>) = chars
-    private val lazyChars = ContextLazy<DslComponent, List<List<DslRenderableChar>>> { processChars(chars) }
 
+    private var lazyChars: List<List<DslRenderableChar>>? = null
     context(instance: DslComponent)
-    val processedChars get() = lazyChars.value
+    val processedChars get() = ::lazyChars.lazy { processChars(chars) }
 
     context(instance: DslComponent)
     fun lines(): List<DslTextLine> {
@@ -52,13 +53,14 @@ open class DslText(
         }.also { verticalAligner.align(rect.top, rect.bottom,it) }
     }
 
-    private val lazyHeight = ContextLazy<DslComponent, Measure> { processedChars.totalHeight(font, defaultLineHeight) }
-    private val lazyWidth = ContextLazy<DslComponent, Measure> { processedChars.totalWidth(font) }
-
+    private var lazyHeight = Measure.AUTO
+    private var lazyWidth = Measure.AUTO
     context(instance: DslComponent)
-    override val contentMinHeight get() = Measure.max(lazyHeight.value, super.contentMinHeight)
-
+    override val contentMinHeight get() = ::lazyHeight.lazy {
+        max(processedChars.totalHeight(font, defaultLineHeight),super.contentMinHeight)
+    }
     context(instance: DslComponent)
-    override val contentMinWidth get() = Measure.max(lazyWidth.value, super.contentMinWidth)
-
+    override val contentMinWidth get() = ::lazyWidth.lazy {
+        max(processedChars.totalWidth(font),super.contentMinHeight)
+    }
 }

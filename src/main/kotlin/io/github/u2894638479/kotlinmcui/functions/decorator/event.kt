@@ -39,7 +39,7 @@ fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext,
     context(instance: DslComponent, eventModifier: EventModifier)
     override fun keyDown(key: Int, scanCode: Int): Boolean {
         if(it.keyDown(key, scanCode)) return true
-        if(key == GLFW.GLFW_KEY_ENTER && isFocused) {
+        if(key == GLFW.GLFW_KEY_ENTER && instance.isFocused) {
             click()
             return true
         }

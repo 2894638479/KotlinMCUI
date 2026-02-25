@@ -2,6 +2,8 @@ package io.github.u2894638479.kotlinmcui.functions.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.childrenMaxHeight
+import io.github.u2894638479.kotlinmcui.component.childrenMaxWidth
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.functions.collect
 import io.github.u2894638479.kotlinmcui.functions.dataStore
@@ -10,23 +12,14 @@ import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.align.align
 import io.github.u2894638479.kotlinmcui.math.px
-import io.github.u2894638479.kotlinmcui.math.rect.Bound
-import io.github.u2894638479.kotlinmcui.math.rect.MutBound
-import io.github.u2894638479.kotlinmcui.math.rect.Rect
-import io.github.u2894638479.kotlinmcui.math.rect.bound
-import io.github.u2894638479.kotlinmcui.math.rect.contains
-import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
-import io.github.u2894638479.kotlinmcui.math.rect.expand
+import io.github.u2894638479.kotlinmcui.math.rect.*
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.width
 import io.github.u2894638479.kotlinmcui.scope.DslChild
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
-import io.github.u2894638479.kotlinmcui.scope.childrenMaxHeight
-import io.github.u2894638479.kotlinmcui.scope.childrenMaxWidth
 
 context(ctx: DslContext)
 fun DslChild.tooltipBackground(padding: Measure = 3.px) = change {
@@ -59,24 +52,29 @@ fun Tooltip(id: Any) {
                 context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
                 override fun <RP> render(mouse: Position) {
                     val focused = dataStore.focused?.let { id ->
-                        dataStore.dslScreen.testHit { it.takeIf { it.identity == id } }?.takeIf { it.focusable }
+                        dataStore.dslScreen.run {
+                            testHit { it.takeIf { it.identity == id } }?.takeIf { it.focusable }
+                        }
                     }
-                    val hovered = dataStore.dslScreen.testHit { it.takeIf { mouse in it.rect }?.tooltip }
+                    val hovered = dataStore.dslScreen.run {
+                        testHit { it.takeIf { mouse in it.rect }?.tooltip }
+                    }
                     val func = focused?.tooltip ?: hovered ?: return
 
-                    context(ctx.change(dslIdentity = instance.identity, dslChildren = delegate.children),func)
-                    delegate.children.forEach { it.run { build() } }
+                    val children = instance.children ?: return
+                    context(ctx.change(dslIdentity = instance.identity, dslChildren = children),func)
+                    children.forEach { it.run { build() } }
 
                     val useFocus = focused?.tooltip != null && focused.tooltip != hovered
 
-                    val boundH = if(useFocus) layoutFocusH(focused.rect,dataStore.dslScreen.rect,delegate.childrenMaxWidth)
-                        else layoutMouseH(mouse,dataStore.dslScreen.rect,delegate.childrenMaxWidth)
+                    val boundH = if(useFocus) layoutFocusH(focused.rect,dataStore.dslScreen.rect,instance.childrenMaxWidth)
+                        else layoutMouseH(mouse,dataStore.dslScreen.rect,instance.childrenMaxWidth)
 
                     instance.rect.bound(Axis.Horizontal) copyFrom boundH
                     delegate.layoutHorizontal()
 
-                    val boundV = if(useFocus) layoutFocusV(focused.rect,dataStore.dslScreen.rect,delegate.childrenMaxHeight)
-                        else layoutMouseV(mouse,dataStore.dslScreen.rect,delegate.childrenMaxHeight)
+                    val boundV = if(useFocus) layoutFocusV(focused.rect,dataStore.dslScreen.rect,instance.childrenMaxHeight)
+                        else layoutMouseV(mouse,dataStore.dslScreen.rect,instance.childrenMaxHeight)
 
                     instance.rect.bound(Axis.Vertical) copyFrom boundV
                     delegate.layoutVertical()

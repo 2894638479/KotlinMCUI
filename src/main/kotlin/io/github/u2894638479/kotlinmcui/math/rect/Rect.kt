@@ -38,7 +38,7 @@ fun Rect(horizontal: Bound,vertical: Bound) = object: Rect {
 inline val Rect.width get() = right - left
 inline val Rect.height get() = bottom - top
 inline val Rect.isEmpty get() = width <= 0.px || height <= 0.px
-inline fun Rect.ifEmpty(action: ()-> Unit) = apply { if (isEmpty) action() }
+inline fun Rect.ifEmpty(action: ()-> Rect) = if (isEmpty) action() else this
 
 fun Rect.bound(axis: Axis) = when(axis) {
     Axis.Horizontal -> object : Bound {

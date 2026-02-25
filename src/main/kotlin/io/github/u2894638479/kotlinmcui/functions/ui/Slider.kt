@@ -103,7 +103,7 @@ fun Slider(
                     rect.bottom - (rect.height - buttonSize) * (1 - progress)
                 )
             }
-            backend.renderButton(buttonRect, isHighlighted, true, color)
+            backend.renderButton(buttonRect, instance.isHighlighted, true, color)
             delegate.render(mouse)
         }
 
@@ -155,7 +155,7 @@ fun Slider(
 
         context(instance: DslComponent, eventModifier: EventModifier)
         override fun keyDown(key: Int, scanCode: Int): Boolean {
-            if(!isFocused) return super.keyDown(key, scanCode)
+            if(!instance.isFocused) return super.keyDown(key, scanCode)
             when(key) {
                 GLFW.GLFW_KEY_LEFT -> if(axis == Axis.Horizontal && keyFocused != null) {
                     this.progress = (this.progress - step).coerceIn(0.0..1.0)

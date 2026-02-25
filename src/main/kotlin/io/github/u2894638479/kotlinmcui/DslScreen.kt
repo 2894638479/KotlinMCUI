@@ -33,8 +33,9 @@ class DslScreen private constructor(
                 context(instance: DslComponent)
                 override fun build() {
                     dataStore.onClose = dataStore.defaultOnClose
+                    val children = instance.children ?: return
                     context(
-                        DslTopContext(instance.identity, dataStore, delegate.children, dataStore){
+                        DslTopContext(instance.identity, dataStore, children, dataStore){
                             val onClose = dataStore.onClose
                             dataStore.onClose = { it(ctx) { onClose() } }
                         }, dslFunction
@@ -52,7 +53,7 @@ class DslScreen private constructor(
 
     context(instance: DslComponent, eventModifier: EventModifier)
     override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
-        dataStore.focused = testHit(mouse) { it.takeIf { it.focusable } }?.identity
+        dataStore.focused = instance.testHit(mouse) { it.takeIf { it.focusable } }?.identity
         return delegate.mouseDown(mouse, mouseButton)
     }
 
@@ -84,19 +85,19 @@ class DslScreen private constructor(
     context(instance: DslComponent)
     override fun build() {
         delegate.build()
-        children.sortBy { it !is MouseTipComponent }
+        instance.children?.sortBy { it !is MouseTipComponent }
     }
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
     override fun <RP> render(mouse: Position) {
         dataStore.newFrame()
-        clear()
+        instance.children?.clear()
         build()
         layoutHorizontal()
         layoutVertical()
-        val hovered = testHit(mouse) { it.takeIf { it.highlightable } }
+        val hovered = instance.testHit(mouse) { it.takeIf { it.highlightable } }
         dataStore.hovered = hovered?.identity
-        dataStore.mouseNarration = hovered?.narration ?: testHit(mouse) { it.takeIf { it.narratable } }?.narration
+        dataStore.mouseNarration = hovered?.narration ?: instance.testHit(mouse) { it.takeIf { it.narratable } }?.narration
         delegate.render(mouse)
     }
 }
