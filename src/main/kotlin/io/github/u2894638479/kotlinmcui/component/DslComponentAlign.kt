@@ -11,15 +11,12 @@ import io.github.u2894638479.kotlinmcui.modifier.paddingHeight
 import io.github.u2894638479.kotlinmcui.modifier.paddingWidth
 import kotlin.run
 
-interface DslComponentAlign {
+interface DslComponentAlign: DslComponentMetadata {
     val rect: MutRect
 
-    context(instance: DslComponent)
     val contentMinWidth get() = instance.modifier.contentMinWidth
-    context(instance: DslComponent)
     val contentMinHeight get() = instance.modifier.contentMinHeight
 
-    context(instance: DslComponent)
     val alignableHorizontal get() = instance.run {
         object : Alignable {
             override val minSize get() = outerMinWidth
@@ -33,7 +30,6 @@ interface DslComponentAlign {
         }
     }
 
-    context(instance: DslComponent)
     val alignableVertical get() = instance.run {
         object : Alignable {
             override val minSize get() = outerMinHeight
@@ -51,11 +47,11 @@ interface DslComponentAlign {
 val DslComponent.outerMinWidth get() = contentMinWidth + modifier.paddingWidth
 val DslComponent.outerMinHeight get() = contentMinHeight + modifier.paddingHeight
 
-val DslComponent.childrenSumWidth get() = children?.sumOf { it.outerMinWidth } ?: 0.px
-val DslComponent.childrenSumHeight get() = children?.sumOf { it.outerMinHeight } ?: 0.px
+val DslComponent.childrenSumWidth get() = children.sumOf { it.outerMinWidth }
+val DslComponent.childrenSumHeight get() = children.sumOf { it.outerMinHeight }
 
-val DslComponent.childrenMaxWidth get() = children?.maxOfOrNull { it.outerMinWidth } ?: 0.px
-val DslComponent.childrenMaxHeight get() = children?.maxOfOrNull { it.outerMinHeight } ?: 0.px
+val DslComponent.childrenMaxWidth get() = children.maxOfOrNull { it.outerMinWidth } ?: 0.px
+val DslComponent.childrenMaxHeight get() = children.maxOfOrNull { it.outerMinHeight } ?: 0.px
 
 fun DslComponent.contentMinSize(axis: Axis) = when(axis) {
     Axis.Horizontal -> contentMinWidth

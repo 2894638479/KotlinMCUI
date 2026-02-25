@@ -19,15 +19,13 @@ import io.github.u2894638479.kotlinmcui.scope.DslChild
 context(ctx: DslContext)
 fun DslChild.buttonBackground(color: Color = Color.WHITE,padding: Measure = 2.scaled) = change {
     object:DslComponent by it {
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-        override fun <RP> render(mouse: Position) {
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() {
             backend.renderButton(instance.rect.expand(padding), instance.isHighlighted,instance.highlightable,color)
-            it.render(mouse)
+            it.render()
         }
 
-        context(instance: DslComponent)
         override val narratable get() = true
-        context(instance: DslComponent)
         override val narration get() = "${it.run { narration ?: "" }} ${translate("kotlinmcui.narration.button")}"
         override val modifier = it.modifier.padding(padding)
     }

@@ -17,7 +17,6 @@ import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
-import io.github.u2894638479.kotlinmcui.math.rect.RectImpl
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
@@ -40,12 +39,12 @@ import kotlin.time.Duration.Companion.seconds
 context(ctx: DslContext)
 fun DslChild.editBoxBackground(width: Measure = 1.scaled, padding: Measure = width + 1.scaled)
 = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
         backend.fillRect(instance.rect.expand(padding),
             if(instance.isHighlighted) Color(255,255,255) else Color(0xA0,0xA0,0xA0))
         backend.fillRect(instance.rect.expand(padding - width),Color.BLACK)
-        it.render(mouse)
+        it.render()
     }
 
     override val modifier get() = it.modifier.padding(padding)
@@ -219,12 +218,9 @@ fun EditableText(
     )
     info.run {
         collect(object : DslComponent by delegate {
-            context(instance: DslComponent)
             override val narratable get() = true
-            context(instance: DslComponent)
             override val narration get() = "${translate("kotlinmcui.narration.editabletext")} $string"
 
-            context(instance: DslComponent)
             override val focusable get() = true
 
             fun getPos(cursor: Int?): CursorPos? {
@@ -265,8 +261,8 @@ fun EditableText(
                 return Rect(x - 0.5.scaled, line.low, x + 0.5.scaled, line.high)
             }
 
-            context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-            override fun <RP> render(mouse: Position) {
+            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            override fun <RP> render() {
                 editable.addUndo()
                 val font = backend.getFont(fontName)
                 alignedLines = delegate.lines().map { it to it.alignedChars(font) }.apply {
@@ -291,14 +287,14 @@ fun EditableText(
                 if (blink) backend.fillRect(cursorRect() ?: return, color)
             }
 
-            context(instance: DslComponent)
-            override fun charTyped(c: Char, eventModifier: EventModifier): Boolean {
+            context(eventModifier: EventModifier)
+            override fun charTyped(c: Char): Boolean {
                 if (!instance.isFocused) return false
                 editable.insert(c)
                 return true
             }
 
-            context(instance: DslComponent, eventModifier: EventModifier)
+            context(eventModifier: EventModifier)
             override fun keyDown(key: Int, scanCode: Int): Boolean {
                 fun default() = delegate.keyDown(key, scanCode)
                 if (!instance.isFocused) return default()
@@ -383,7 +379,7 @@ fun EditableText(
                 return true
             }
 
-            context(instance: DslComponent, eventModifier: EventModifier)
+            context(eventModifier: EventModifier)
             override fun keyUp(key: Int, scanCode: Int): Boolean {
                 return delegate.keyUp(key, scanCode)
             }
@@ -399,9 +395,9 @@ fun EditableText(
                 return CursorPos(alignedLines.indexOf(selectedLine), xValues.indexOf(selected))
             }
 
-            context(instance: DslComponent, eventModifier: EventModifier)
-            override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
-                if (mouse !in instance.rect) return delegate.mouseDown(mouse, mouseButton)
+            context(eventModifier: EventModifier, mouse: Position)
+            override fun mouseDown(mouseButton: MouseButton): Boolean {
+                if (mouse !in instance.rect) return delegate.mouseDown(mouseButton)
                 editable.check()
                 blinkBeginNano = System.nanoTime()
                 mouseDown = Unit
@@ -410,19 +406,19 @@ fun EditableText(
                 return true
             }
 
-            context(instance: DslComponent, eventModifier: EventModifier)
-            override fun mouseUp(mouse: Position, mouseButton: MouseButton): Boolean {
-                return delegate.mouseUp(mouse, mouseButton) || mouseDown == Unit.also { mouseDown = null }
+            context(eventModifier: EventModifier, mouse: Position)
+            override fun mouseUp(mouseButton: MouseButton): Boolean {
+                return delegate.mouseUp(mouseButton) || mouseDown == Unit.also { mouseDown = null }
             }
 
-            context(instance: DslComponent)
-            override fun mouseMove(mouse: Position) {
+            context(mouse: Position)
+            override fun mouseMove() {
                 mouseDown ?: return
                 editable.check()
                 blinkBeginNano = System.nanoTime()
                 editable.run { if (cursor2 == null) cursor2 = cursor }
                 cursorPos = mouseHitPos(mouse)
-                delegate.mouseMove(mouse)
+                delegate.mouseMove()
             }
         })
     }

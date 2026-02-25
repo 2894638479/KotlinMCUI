@@ -22,11 +22,11 @@ fun LateBox(modifier: Modifier = Modifier,id:Any? = null,content:context(DslCont
         override val rect = MutRect()
         override val identity = newChildId(id ?: content::class)
         override val modifier = modifier
+        override var instance: DslComponent = this
 
-        context(instance: DslComponent)
         override fun layoutVertical() {
             context(ctx.change(dslIdentity = identity, dslChildren = children)) { instance.rect.content() }
-            children.forEach { it.run { build() } }
+            children.forEach { it.run { build(this) } }
             Aligner.simplePlace.align(rect.bound(Axis.Horizontal),children.map { it.run { alignable(Axis.Horizontal) } })
             children.forEach { it.run { layoutHorizontal() } }
             Aligner.simplePlace.align(rect.bound(Axis.Vertical),children.map { it.run { alignable(Axis.Vertical) } })

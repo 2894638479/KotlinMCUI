@@ -18,7 +18,6 @@ import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
-import io.github.u2894638479.kotlinmcui.math.rect.RectImpl
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.height
 import io.github.u2894638479.kotlinmcui.math.rect.width
@@ -73,9 +72,7 @@ fun Slider(
     function: DslFunction
 ) = Box(modifier,id,function).change { delegate ->
     object : DslComponent by delegate {
-        context(instance: DslComponent)
         override val narratable get() = true
-        context(instance: DslComponent)
         override val narration get() = "${delegate.run { narration }} ${translate("kotlinmcui.narration.slider")}"
 
         var progress by progress ?: run {
@@ -84,8 +81,8 @@ fun Slider(
         }
         var alreadyDown by remember<Unit?>(null)
         var keyFocused by remember<Unit?>(null)
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-        override fun <RP> render(mouse: Position) {
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() {
             val rect = instance.rect
             val progress = this.progress
             backend.renderButton(rect, keyFocused != null, false, color)
@@ -104,7 +101,7 @@ fun Slider(
                 )
             }
             backend.renderButton(buttonRect, instance.isHighlighted, true, color)
-            delegate.render(mouse)
+            delegate.render()
         }
 
         context(instance: DslComponent)
@@ -117,9 +114,9 @@ fun Slider(
             this.progress = value.coerceIn(0.0..1.0)
         }
 
-        context(instance: DslComponent, eventModifier: EventModifier)
-        override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
-            if (delegate.mouseDown(mouse, mouseButton)) return true
+        context(eventModifier: EventModifier, mouse: Position)
+        override fun mouseDown(mouseButton: MouseButton): Boolean {
+            if (delegate.mouseDown(mouseButton)) return true
             if (mouse in instance.rect) {
                 ctx.dataStore.backend.playButtonSound()
                 alreadyDown = Unit
@@ -129,23 +126,21 @@ fun Slider(
             return false
         }
 
-        context(instance: DslComponent)
-        override fun mouseMove(mouse: Position) {
-            delegate.mouseMove(mouse)
+        context(mouse: Position)
+        override fun mouseMove() {
+            delegate.mouseMove()
             alreadyDown ?: return
             setProgress(mouse)
         }
 
-        context(instance: DslComponent, eventModifier: EventModifier)
-        override fun mouseUp(mouse: Position, mouseButton: MouseButton): Boolean {
+        context(eventModifier: EventModifier, mouse: Position)
+        override fun mouseUp(mouseButton: MouseButton): Boolean {
             alreadyDown = null
-            return delegate.mouseUp(mouse, mouseButton)
+            return delegate.mouseUp(mouseButton)
         }
 
-        context(instance: DslComponent)
         override val focusable get() = true
 
-        context(instance: DslComponent)
         override fun focusChanged(newFocus: DslId?) {
             super.focusChanged(newFocus)
             if(keyFocused != null && newFocus != instance.identity) {
@@ -153,7 +148,7 @@ fun Slider(
             }
         }
 
-        context(instance: DslComponent, eventModifier: EventModifier)
+        context(eventModifier: EventModifier)
         override fun keyDown(key: Int, scanCode: Int): Boolean {
             if(!instance.isFocused) return super.keyDown(key, scanCode)
             when(key) {

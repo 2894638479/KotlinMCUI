@@ -68,7 +68,6 @@ fun TextAutoFold(
     DslTextBuilderContext(ctx).apply { build() }.toChars(),
     defaultLineHeight, horizontalAligner, verticalAligner
 ) {
-    context(instance: DslComponent)
     override val contentMinWidth get() = 0.px
 
     context(instance: DslComponent)

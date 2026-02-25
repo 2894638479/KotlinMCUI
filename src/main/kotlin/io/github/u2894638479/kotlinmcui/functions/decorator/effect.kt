@@ -13,7 +13,6 @@ import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.*
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
-import io.github.u2894638479.kotlinmcui.math.rect.RectImpl
 import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.prop.getValue
@@ -24,19 +23,19 @@ import kotlin.time.Duration.Companion.seconds
 
 context(ctx: DslContext)
 fun DslChild.mask(color: Color) = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
-        it.render(mouse)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
+        it.render()
         backend.fillRect(instance.rect,color)
     }
 }}
 
 context(ctx: DslContext)
 fun DslChild.background(color: Color) = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
         backend.fillRect(instance.rect,color)
-        it.render(mouse)
+        it.render()
     }
 } }
 
@@ -46,10 +45,10 @@ fun DslChild.backgroundImage(
     color: Color = Color.WHITE,
     strategy: ImageStrategy = ImageStrategy.clip,
 ) = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
         strategy.render(instance.rect,image,color)
-        it.render(mouse)
+        it.render()
     }
 }}
 
@@ -63,15 +62,14 @@ private fun <RP> renderOutline(rect: Rect, widthIn: Measure, widthOut: Measure, 
 
 context(ctx: DslContext)
 fun DslChild.highlightBox(widthIn: Measure = 0.px, widthOut: Measure = 1.scaled, color: Color = Color.WHITE) = change { object : DslComponent by it {
-    context(instance: DslComponent)
     override val highlightable get() = true
 
     override val modifier get() = it.modifier.padding(widthOut)
 
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
         if(instance.isHighlighted) renderOutline(instance.rect, widthIn, widthOut, color)
-        it.render(mouse)
+        it.render()
     }
 }}
 
@@ -79,46 +77,41 @@ context(ctx: DslContext)
 fun DslChild.outline(widthIn: Measure = 0.px, widthOut: Measure = 1.scaled, color: Color = Color.WHITE) = change { object : DslComponent by it {
     override val modifier get() = it.modifier.padding(widthOut)
 
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
         renderOutline(instance.rect, widthIn, widthOut, color)
-        it.render(mouse)
+        it.render()
     }
 }}
 
 context(ctx: DslContext)
 fun DslChild.hoverMask(highlightColor: Color = Color(255, 255, 255, 80)) = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
-        it.render(mouse)
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
+        it.render()
         if(dataStore.hovered == instance.identity) backend.fillRect(instance.rect,highlightColor)
     }
 }}
 
 context(ctx: DslContext)
 fun DslChild.shrink() = change { object: DslComponent by it {
-    context(instance: DslComponent)
     override val contentMinWidth get() = 0.px
-    context(instance: DslComponent)
     override val contentMinHeight get() = 0.px
 }}
 
 context(ctx: DslContext)
 fun DslChild.widthRate(rate: Double) = change { object: DslComponent by it {
-    context(instance: DslComponent)
     override val contentMinWidth get() = it.contentMinWidth * rate
 }}
 
 context(ctx: DslContext)
 fun DslChild.heightRate(rate: Double) = change { object: DslComponent by it {
-    context(instance: DslComponent)
     override val contentMinHeight get() = it.contentMinHeight * rate
 }}
 
 context(ctx: DslContext)
 fun DslChild.animateHeight(duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default)
 = change { object: DslComponent by it {
-    context(instance: DslComponent)
     override val contentMinHeight: Measure get() {
         val value by autoAnimate(it.contentMinHeight.unscaled, duration, interpolator)
         return value.scaled
@@ -128,7 +121,6 @@ fun DslChild.animateHeight(duration: Duration = 0.5.seconds, interpolator: Inter
 context(ctx: DslContext)
 fun DslChild.animateWidth(duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default)
 = change { object: DslComponent by it {
-    context(instance: DslComponent)
     override val contentMinWidth: Measure get() {
         val value by autoAnimate(it.contentMinWidth.unscaled, duration, interpolator)
         return value.scaled
@@ -138,10 +130,10 @@ fun DslChild.animateWidth(duration: Duration = 0.5.seconds, interpolator: Interp
 context(ctx: DslContext)
 fun DslChild.containerBackground(padding: Measure = 3.scaled)
 = change { object : DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
         backend.renderContainer(rect.expand(padding))
-        it.render(mouse)
+        it.render()
     }
 
     override val modifier get() = it.modifier.padding(padding)
@@ -150,10 +142,10 @@ fun DslChild.containerBackground(padding: Measure = 3.scaled)
 context(ctx: DslContext)
 fun DslChild.slotBackground(padding: Measure = 1.scaled)
 = change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
         backend.renderSlot(rect.expand(padding))
-        it.render(mouse)
+        it.render()
     }
 
     override val modifier get() = it.modifier.padding(padding)
@@ -162,9 +154,9 @@ fun DslChild.slotBackground(padding: Measure = 1.scaled)
 context(ctx: DslContext)
 fun DslChild.renderScissor() = change {
     object : DslComponent by it {
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-        override fun <RP> render(mouse: Position) = backend.withScissor(instance.rect) {
-            it.render(mouse)
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() = backend.withScissor(instance.rect) {
+            it.render()
         }
     }
 }

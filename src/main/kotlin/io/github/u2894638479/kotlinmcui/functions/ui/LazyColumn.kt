@@ -14,7 +14,6 @@ import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.withId
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
-import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
@@ -49,8 +48,7 @@ fun LazyColumn(
             prop
         }
 
-        context(instance: DslComponent)
-        override fun build() {
+        override fun build(instance: DslComponent) {
             context(ctx.change(dslIdentity = instance.identity, dslChildren = children)) {
                 function()
             }
@@ -58,7 +56,6 @@ fun LazyColumn(
 
         private var visibleChildren: List<DslComponent> = emptyList()
 
-        context(instance: DslComponent)
         override fun layoutVertical() {
             val scroller = object : Scroller {
                 override val scale get() = ctx.scale
@@ -70,7 +67,7 @@ fun LazyColumn(
                         override val identity by child::identity
                         override val size: Measure
                             get() = children[index].run {
-                                build()
+                                build(this)
                                 Aligner.simplePlace.align(rect.bound(Axis.Horizontal), listOf(alignableHorizontal))
                                 layoutHorizontal()
                                 outerMinHeight
@@ -107,15 +104,15 @@ fun LazyColumn(
             this.scroller = scroller
         }
 
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-        override fun <RP> render(mouse: Position) = backend.withScissor(instance.rect) {
-            visibleChildren.asReversed().forEach { it.run { render(mouse) } }
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() = backend.withScissor(instance.rect) {
+            visibleChildren.asReversed().forEach { it.run { render() } }
         }
 
-        context(instance: DslComponent)
-        override fun mouseScrollVertical(mouse: Position, amount: Double): Double {
+        context(mouse: Position)
+        override fun mouseScrollVertical(amount: Double): Double {
             if (mouse !in instance.rect) return amount
-            val remain = delegate.mouseScrollVertical(mouse, amount) * -sensitivity
+            val remain = delegate.mouseScrollVertical(amount) * -sensitivity
             scroller.run {
                 updateScroll()
                 val before = rawScroll
@@ -126,16 +123,15 @@ fun LazyColumn(
             }
         }
 
-        context(instance: DslComponent)
         override fun <T> testHit(mouse: Position, get: context(DslComponent) (DslComponent) -> T?): T? {
             if (mouse !in instance.rect) return null
             return delegate.testHit(mouse, get)
         }
 
-        context(instance: DslComponent, eventModifier: EventModifier)
-        override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
+        context(eventModifier: EventModifier, mouse: Position)
+        override fun mouseDown(mouseButton: MouseButton): Boolean {
             if (mouse !in instance.rect) return false
-            return delegate.mouseDown(mouse, mouseButton)
+            return delegate.mouseDown(mouseButton)
         }
 
         override val viewHorizontal get() = listOf(children)

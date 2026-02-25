@@ -22,8 +22,8 @@ fun Image(
     strategy: ImageStrategy = ImageStrategy.clip,
     id:Any
 ) = collect(object : DslComponent by DslComponentImpl(newChildId(id), modifier) {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
         strategy.render(instance.rect, image, color)
         if (instance.isHighlighted) backend.fillRect(instance.rect, Color.WHITE.change(a = 50))
     }

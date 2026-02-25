@@ -10,19 +10,14 @@ import io.github.u2894638479.kotlinmcui.scope.DslChild
 
 interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEvent, DslComponentMetadata,
     DslIdContext {
-    val children: DslChild.List? get() = null
-    context(instance: DslComponent)
-    fun build() {}
-    context(instance: DslComponent)
+    val children: DslChild.List get() = DslChild.List.empty
+    fun build(instance: DslComponent) { this.instance = instance }
     fun layoutHorizontal() {}
-    context(instance: DslComponent)
     fun layoutVertical() {}
 
-    context(instance: DslComponent)
     override fun <T> testHit(mouse: Position, get: context(DslComponent) (DslComponent) -> T?) =
         if(mouse in instance.rect) get(instance) else null
 
-    context(instance: DslComponent)
     override fun <T> testHit(get: context(DslComponent) (DslComponent) -> T?) = get(instance)
 
     override val viewHorizontal get() = listOf<List<DslComponent>>()

@@ -10,14 +10,25 @@ class DslChild(private var component: DslComponent) {
 
     class List private constructor(private val mutList: MutableList<DslChild>):kotlin.collections.List<DslComponent> by mutList.mapView({it.component}){
         constructor():this(mutableListOf())
+        companion object {
+            val empty = List(object : AbstractMutableList<DslChild>() {
+                override fun set(index: Int, element: DslChild): DslChild { error("empty DslChild.List") }
+                override fun removeAt(index: Int): DslChild { error("empty DslChild.List") }
+                override fun add(index: Int, element: DslChild) {}
+                override val size get() = 0
+                override fun get(index: Int): DslChild { error("empty DslChild.List") }
+            })
+        }
 
         fun collect(child: DslComponent) = DslChild(child).also { mutList += it }
 
         fun remove(slot: DslChild) {
-            if(!mutList.remove(slot)) error("DslChildren.remove: cannot find this element")
+            if(!mutList.remove(slot)) error("DslChild.List.remove: cannot find this element")
         }
 
         fun clear() = mutList.clear()
+
+        fun complete() = mutList.forEach { it.component.run { instance = this } }
 
         fun <R : Comparable<R>> sortBy(selector: (DslComponent) -> R?) =
             mutList.sortBy { selector(it.component) }

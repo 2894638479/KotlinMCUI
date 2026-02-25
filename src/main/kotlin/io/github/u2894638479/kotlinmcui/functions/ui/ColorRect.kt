@@ -13,8 +13,8 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
 context(ctx: DslContext)
 fun ColorRect(modifier: Modifier = Modifier, color: Color, id:Any) = collect(
     object : DslComponent by DslComponentImpl(newChildId(id), modifier) {
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-        override fun <RP> render(mouse: Position) {
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() {
             backend.fillRect(instance.rect, color)
         }
     }

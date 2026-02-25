@@ -27,7 +27,6 @@ fun MouseTip(
     context(ctx) {
         Box(modifier,id,function).change { delegate ->
             object : DslComponent by delegate, MouseTipComponent {
-                context(instance: DslComponent)
                 override fun layoutHorizontal() {
                     val width = instance.rect.width
                     val left = when(instance.modifier.alignment.horizontal) {
@@ -39,7 +38,6 @@ fun MouseTip(
                     instance.rect.right = left + width
                     delegate.layoutHorizontal()
                 }
-                context(instance: DslComponent)
                 override fun layoutVertical() {
                     val height = instance.rect.height
                     val top = when(instance.modifier.alignment.vertical) {

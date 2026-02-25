@@ -24,10 +24,10 @@ import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 context(ctx: DslContext)
 fun DslChild.tooltipBackground(padding: Measure = 3.px) = change {
     object : DslComponent by it {
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-        override fun <RP> render(mouse: Position) {
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() {
             backend.renderTooltip(instance.rect.expand(padding))
-            it.render(mouse)
+            it.render()
         }
 
         override val modifier = it.modifier.padding(3.px)
@@ -42,15 +42,12 @@ fun Tooltip(id: Any) {
         val delegate = DslScopeImpl(newChildId(id),modifier,ctx,{})
         collect(
             object : DslComponent by delegate, MouseTipComponent {
-                context(instance: DslComponent)
-                override fun build() {}
-                context(instance: DslComponent)
+                override fun build(instance: DslComponent) {}
                 override fun layoutHorizontal() {}
-                context(instance: DslComponent)
                 override fun layoutVertical() {}
 
-                context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-                override fun <RP> render(mouse: Position) {
+                context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+                override fun <RP> render() {
                     val focused = dataStore.focused?.let { id ->
                         dataStore.dslScreen.run {
                             testHit { it.takeIf { it.identity == id } }?.takeIf { it.focusable }
@@ -63,7 +60,7 @@ fun Tooltip(id: Any) {
 
                     val children = instance.children ?: return
                     context(ctx.change(dslIdentity = instance.identity, dslChildren = children),func)
-                    children.forEach { it.run { build() } }
+                    children.forEach { it.run { build(this) } }
 
                     val useFocus = focused?.tooltip != null && focused.tooltip != hovered
 
@@ -79,7 +76,7 @@ fun Tooltip(id: Any) {
                     instance.rect.bound(Axis.Vertical) copyFrom boundV
                     delegate.layoutVertical()
 
-                    delegate.render(mouse)
+                    delegate.render()
                 }
 
                 fun layoutMouseH(mouse: Position, screen: Rect, width: Measure) = MutBound(0.px,0.px).also {

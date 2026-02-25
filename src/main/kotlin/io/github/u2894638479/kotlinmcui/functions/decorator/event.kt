@@ -25,18 +25,17 @@ fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext,
         block(DslExecuteContext,ctx,instance)
     }
 
-    context(instance: DslComponent)
     override val focusable get() = true
 
-    context(instance: DslComponent, eventModifier: EventModifier)
-    override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
-        if(it.mouseDown(mouse, mouseButton)) return true
+    context(eventModifier: EventModifier, mouse: Position)
+    override fun mouseDown(mouseButton: MouseButton): Boolean {
+        if(it.mouseDown(mouseButton)) return true
         if(mouse !in instance.rect) return false
         click()
         return true
     }
 
-    context(instance: DslComponent, eventModifier: EventModifier)
+    context(eventModifier: EventModifier)
     override fun keyDown(key: Int, scanCode: Int): Boolean {
         if(it.keyDown(key, scanCode)) return true
         if(key == GLFW.GLFW_KEY_ENTER && instance.isFocused) {
@@ -57,7 +56,6 @@ fun DslChild.onHovered(
     action: context(DslExecuteContext, DslDataStoreContext) (Boolean) -> Unit
 ) = change {
     object : DslComponent by it {
-        context(instance: DslComponent)
         override fun hoverChanged(newHover: DslId?) {
             it.hoverChanged(newHover)
             action(DslExecuteContext,ctx,instance.identity == newHover)
@@ -68,9 +66,7 @@ fun DslChild.onHovered(
 context(ctx: DslContext)
 fun DslChild.narrate(string: String) = change {
     object : DslComponent by it {
-        context(instance: DslComponent)
         override val narration get() = string
-        context(instance: DslComponent)
         override val narratable get() = true
     }
 }
@@ -80,7 +76,6 @@ fun DslChild.onFocused(
     action: context(DslExecuteContext, DslDataStoreContext) (Boolean) -> Unit
 ) = change {
     object: DslComponent by it {
-        context(instance: DslComponent)
         override fun focusChanged(newFocus: DslId?) {
             it.hoverChanged(newFocus)
             action(DslExecuteContext,ctx,instance.identity == newFocus)
@@ -93,7 +88,6 @@ fun DslChild.globalFocusChanged(
     action: context(DslExecuteContext, DslDataStoreContext) (DslId?) -> Unit
 ) = change {
     object: DslComponent by it {
-        context(instance: DslComponent)
         override fun focusChanged(newFocus: DslId?) {
             it.hoverChanged(newFocus)
             action(DslExecuteContext,ctx,newFocus)
@@ -104,7 +98,6 @@ fun DslChild.globalFocusChanged(
 context(ctx: DslContext)
 fun DslChild.tooltip(function: DslFunction) = change {
     object : DslComponent by it {
-        context(instance: DslComponent)
         override val tooltip get() = function
     }
 }

@@ -7,42 +7,38 @@ import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Position
 
 interface DslComponentEvent {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    fun <RP> render(mouse: Position) {}
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    fun <RP> render() {}
 
-    context(instance: DslComponent, eventModifier: EventModifier)
+    context(eventModifier: EventModifier)
     fun keyDown(key: Int, scanCode: Int) = false
 
-    context(instance: DslComponent, eventModifier: EventModifier)
+    context(eventModifier: EventModifier)
     fun keyUp(key: Int, scanCode: Int) = false
 
-    context(instance: DslComponent, eventModifier: EventModifier)
-    fun mouseDown(mouse: Position, mouseButton: MouseButton) = false
+    context(eventModifier: EventModifier, mouse: Position)
+    fun mouseDown(mouseButton: MouseButton) = false
 
-    context(instance: DslComponent, eventModifier: EventModifier)
-    fun mouseUp(mouse: Position, mouseButton: MouseButton) = false
+    context(eventModifier: EventModifier, mouse: Position)
+    fun mouseUp(mouseButton: MouseButton) = false
 
-    context(instance: DslComponent)
-    fun mouseMove(mouse: Position) {}
+    context(mouse: Position)
+    fun mouseMove() {}
 
-    context(instance: DslComponent)
-    fun mouseScrollVertical(mouse: Position, amount: Double) = amount
+    context(mouse: Position)
+    fun mouseScrollVertical(amount: Double) = amount
 
-    context(instance: DslComponent)
-    fun mouseScrollHorizontal(mouse: Position, amount: Double) = amount
+    context(mouse: Position)
+    fun mouseScrollHorizontal(amount: Double) = amount
 
-    context(instance: DslComponent)
-    fun charTyped(c: Char, eventModifier: EventModifier) = false
+    context(eventModifier: EventModifier)
+    fun charTyped(c: Char) = false
 
-    context(instance: DslComponent)
     fun <T> testHit(mouse: Position, get: context(DslComponent) (DslComponent) -> T?): T? = null
 
-    context(instance: DslComponent)
     fun <T> testHit(get: context(DslComponent) (DslComponent) -> T?): T? = null
 
-    context(instance: DslComponent)
     fun focusChanged(newFocus: DslId?) {}
 
-    context(instance: DslComponent)
     fun hoverChanged(newHover: DslId?) {}
 }

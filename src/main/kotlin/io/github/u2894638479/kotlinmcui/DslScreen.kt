@@ -30,8 +30,7 @@ class DslScreen private constructor(
             val ctx = DslContext(id, dataStore, DslChild.List(), dataStore)
             val delegate = DslScopeImpl(id, Modifier, ctx,{})
             object: DslScope by delegate {
-                context(instance: DslComponent)
-                override fun build() {
+                override fun build(instance: DslComponent) {
                     dataStore.onClose = dataStore.defaultOnClose
                     val children = instance.children ?: return
                     context(
@@ -40,7 +39,7 @@ class DslScreen private constructor(
                             dataStore.onClose = { it(ctx) { onClose() } }
                         }, dslFunction
                     )
-                    children.forEach { it.run { build() } }
+                    children.forEach { it.build(it) }
                 }
             }
         },dataStore
@@ -51,19 +50,19 @@ class DslScreen private constructor(
         this.rect.copyFrom(rect)
     }
 
-    context(instance: DslComponent, eventModifier: EventModifier)
-    override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
+    context(eventModifier: EventModifier, mouse: Position)
+    override fun mouseDown(mouseButton: MouseButton): Boolean {
         dataStore.focused = instance.testHit(mouse) { it.takeIf { it.focusable } }?.identity
-        return delegate.mouseDown(mouse, mouseButton)
+        return delegate.mouseDown(mouseButton)
     }
 
-    context(instance: DslComponent)
-    override fun mouseMove(mouse: Position) {
+    context(mouse: Position)
+    override fun mouseMove() {
         dataStore.mouse = mouse
-        return delegate.mouseMove(mouse)
+        return delegate.mouseMove()
     }
 
-    context(instance: DslComponent, eventModifier: EventModifier)
+    context(eventModifier: EventModifier)
     override fun keyDown(key: Int, scanCode: Int): Boolean {
         if(delegate.keyDown(key, scanCode)) return true
         val focused = when(key) {
@@ -82,22 +81,21 @@ class DslScreen private constructor(
         return true
     }
 
-    context(instance: DslComponent)
-    override fun build() {
-        delegate.build()
+    override fun build(instance: DslComponent) {
+        delegate.build(instance)
         instance.children?.sortBy { it !is MouseTipComponent }
     }
 
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
         dataStore.newFrame()
         instance.children?.clear()
-        build()
+        build(instance)
         layoutHorizontal()
         layoutVertical()
         val hovered = instance.testHit(mouse) { it.takeIf { it.highlightable } }
         dataStore.hovered = hovered?.identity
         dataStore.mouseNarration = hovered?.narration ?: instance.testHit(mouse) { it.takeIf { it.narratable } }?.narration
-        delegate.render(mouse)
+        delegate.render()
     }
 }

@@ -24,16 +24,15 @@ open class DslText(
     val verticalAligner: Aligner
 ) : DslComponent {
     override val rect = MutRect()
+    override var instance: DslComponent = this
 
-    context(instance: DslComponent)
     override val narratable get() = true
-    context(instance: DslComponent)
     override val narration get() = chars.joinToString {
         val arr = IntArray(it.size) { i -> it[i].code }
         String(arr,0,arr.size)
     }
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-    override fun <RP> render(mouse: Position) {
+    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    override fun <RP> render() {
         val font = backend.getFont(fontName)
         lines().forEach { it.renderChars(font,it.alignedChars(font)) }
     }
@@ -55,11 +54,9 @@ open class DslText(
 
     private var lazyHeight = Measure.AUTO
     private var lazyWidth = Measure.AUTO
-    context(instance: DslComponent)
     override val contentMinHeight get() = ::lazyHeight.lazy {
         max(processedChars.totalHeight(font, defaultLineHeight),super.contentMinHeight)
     }
-    context(instance: DslComponent)
     override val contentMinWidth get() = ::lazyWidth.lazy {
         max(processedChars.totalWidth(font),super.contentMinHeight)
     }

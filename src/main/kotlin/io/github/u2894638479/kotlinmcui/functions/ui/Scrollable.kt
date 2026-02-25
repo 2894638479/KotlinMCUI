@@ -75,13 +75,11 @@ fun Scrollable(
             }
 
             var lazyWidth = Measure.AUTO
-            context(instance: DslComponent)
             override val contentMinWidth get() = ::lazyWidth.lazy {
                 max(if(axis == Axis.Horizontal) 0.px else instance.childrenMaxWidth,super.contentMinWidth)
             }
 
             var lazyHeight = Measure.AUTO
-            context(instance: DslComponent)
             override val contentMinHeight get() = ::lazyHeight.lazy {
                 max(if(axis == Axis.Vertical) 0.px else instance.childrenMaxHeight,super.contentMinHeight)
             }
@@ -97,56 +95,53 @@ fun Scrollable(
                 this.scroller = scroller
             }
 
-            context(instance: DslComponent)
             override fun layoutVertical() {
                 if(axis != Axis.Vertical) return delegate.layoutVertical()
                 layoutAxis()
                 children.forEach { it.run { layoutVertical() } }
             }
 
-            context(instance: DslComponent)
             override fun layoutHorizontal() {
                 if(axis != Axis.Horizontal) return delegate.layoutHorizontal()
                 layoutAxis()
                 children.forEach { it.run { layoutHorizontal() } }
             }
 
-            context(backend: DslBackendRenderer<RP>, renderParam: RP, instance: DslComponent)
-            override fun <RP> render(mouse: Position) {
+            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            override fun <RP> render() {
                 val rect = instance.rect
                 backend.withScissor(rect) {
                     children.asReversed().forEach {
                         if (it.rect.overlap(rect)) {
-                            it.run { render(mouse) }
+                            it.run { render() }
                         }
                     }
                 }
             }
 
-            context(instance: DslComponent)
-            override fun mouseScrollVertical(mouse: Position, amount: Double): Double {
-                val remain = delegate.mouseScrollVertical(mouse,amount)
+            context(mouse: Position)
+            override fun mouseScrollVertical(amount: Double): Double {
+                val remain = delegate.mouseScrollVertical(amount)
                 if((axis != Axis.Vertical && !ctxBackend.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)) || mouse !in instance.rect) return remain
                 return scroller.scroll(remain * -sensitivity) / -sensitivity
             }
 
-            context(instance: DslComponent)
-            override fun mouseScrollHorizontal(mouse: Position, amount: Double): Double {
-                val remain = delegate.mouseScrollHorizontal(mouse,amount)
+            context(mouse: Position)
+            override fun mouseScrollHorizontal(amount: Double): Double {
+                val remain = delegate.mouseScrollHorizontal(amount)
                 if(axis != Axis.Horizontal || mouse !in instance.rect) return remain
                 return scroller.scroll(remain * -sensitivity) / -sensitivity
             }
 
-            context(instance: DslComponent)
             override fun <T> testHit(mouse: Position, get: context(DslComponent) (DslComponent) -> T?): T? {
                 if (mouse !in instance.rect) return null
                 return delegate.testHit(mouse, get)
             }
 
-            context(instance: DslComponent, eventModifier: EventModifier)
-            override fun mouseDown(mouse: Position, mouseButton: MouseButton): Boolean {
+            context(eventModifier: EventModifier, mouse: Position)
+            override fun mouseDown(mouseButton: MouseButton): Boolean {
                 if (mouse !in instance.rect) return false
-                return delegate.mouseDown(mouse, mouseButton)
+                return delegate.mouseDown(mouseButton)
             }
 
             override val viewHorizontal get() = listOf(children)

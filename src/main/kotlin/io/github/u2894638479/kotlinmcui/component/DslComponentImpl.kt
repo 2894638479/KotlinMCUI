@@ -8,4 +8,6 @@ class DslComponentImpl(
     override val identity: DslId,
     override val modifier: Modifier,
     override val rect: MutRect = MutRect()
-): DslComponent
+): DslComponent {
+    override var instance: DslComponent = this
+}
