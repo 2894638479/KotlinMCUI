@@ -14,4 +14,5 @@ interface DslBackendUtils {
     fun playButtonSound()
     fun isKeyDown(key: Int): Boolean
     fun isMouseDown(mouse: Int): Boolean
+    fun openUri(uri: String)
 }
