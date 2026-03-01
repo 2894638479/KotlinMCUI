@@ -3,7 +3,6 @@ package io.github.u2894638479.kotlinmcui.math
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.outerMinSize
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
-import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.functions.animatable
@@ -13,15 +12,14 @@ import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.rect.Bound
 import io.github.u2894638479.kotlinmcui.math.rect.bound
+import io.github.u2894638479.kotlinmcui.math.rect.size
 import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.scope.DslChild
-import io.github.u2894638479.kotlinmcui.scope.DslScope
 import kotlin.collections.ifEmpty
 import kotlin.collections.sumOf
-import kotlin.getValue
 import kotlin.math.sign
 import kotlin.run
 
@@ -68,6 +66,7 @@ interface Scroller: DslScaleContext, Bound {
             override fun spaceAfter(): Double {
                 items.ifEmpty { return 0.0 }
                 val scroll = scroll
+                val size = size.unscaled
                 val (endIndex, offset) = calculateIndex(scroll + size)
                 return items.subList(endIndex, items.size).sumOf { it.size.unscaled } - (scroll + size - offset)
             }
@@ -92,7 +91,7 @@ interface Scroller: DslScaleContext, Bound {
         items.ifEmpty { return 0.0 }
         val scroll = scroll
         val (beginIndex,offset) = calculateIndex(scroll)
-        val (endIndex,_) = calculateIndex(scroll + size)
+        val (endIndex,_) = calculateIndex(scroll + size.unscaled)
         if(beginIndex == 0) return scroll - offset
         val avgSize = items.subList(beginIndex,endIndex + 1).sumOf { it.size.unscaled } / (endIndex + 1 - beginIndex)
         return avgSize * beginIndex + scroll - offset
@@ -102,11 +101,14 @@ interface Scroller: DslScaleContext, Bound {
         items.ifEmpty { return 0.0 }
         val scroll = scroll
         val (beginIndex,_) = calculateIndex(scroll)
+        val size = size.unscaled
         val (endIndex,offset) = calculateIndex(scroll + size)
         if(endIndex == items.size - 1) return items.last().size.unscaled - (scroll + size - offset)
         val avgSize = items.subList(beginIndex,endIndex + 1).sumOf { it.size.unscaled } / (endIndex + 1 - beginIndex)
         return avgSize * (items.size - endIndex) - (scroll + size - offset)
     }
+
+    fun isScrollable() = spaceBefore() + spaceAfter() > 0
 
 
 
@@ -141,7 +143,7 @@ interface Scroller: DslScaleContext, Bound {
         val (beginIndex,offset) = calculateIndex(scroll)
         scrollIndex = beginIndex
         this.offset = offset
-        val size = size
+        val size = size.unscaled
         var endIndex = scrollIndex
         var sum = offset - scroll
         while (sum < size) {
@@ -155,7 +157,7 @@ interface Scroller: DslScaleContext, Bound {
     // 把滚轮值限制到正确的范围，防止滚到画面外
     fun updateScroll() {
         val (index,offset) = calculateIndex(rawScroll)
-        val size = size
+        val size = size.unscaled
         if(index == 0 && rawScroll < offset) rawScroll = offset
 
         var i = index
@@ -204,8 +206,7 @@ interface Scroller: DslScaleContext, Bound {
                 }
             }
             Align.HIGH -> {
-                val size = size
-                if(size <= 0) return
+                if(size.unscaled <= 0) return
                 while(scrollIndex < items.size) {
                     offset += items[scrollIndex].size.unscaled
                     scrollIndex++
@@ -240,5 +241,3 @@ interface Scroller: DslScaleContext, Bound {
         }
     }
 }
-
-val Scroller.size get() = (high - low).unscaled

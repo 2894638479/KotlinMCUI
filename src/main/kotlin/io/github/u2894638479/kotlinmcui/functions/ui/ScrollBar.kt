@@ -4,6 +4,7 @@ import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.translate
@@ -14,8 +15,8 @@ import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.height
+import io.github.u2894638479.kotlinmcui.math.rect.size
 import io.github.u2894638479.kotlinmcui.math.rect.width
-import io.github.u2894638479.kotlinmcui.math.size
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.weight
 import io.github.u2894638479.kotlinmcui.prop.StableROProperty
@@ -46,7 +47,7 @@ fun ScrollBar(
     var lastDown by remember<Position?>(null)
     val scroller by scrollerProp
     val before = scroller.spaceBefore()
-    val mid = scroller.size
+    val mid = scroller.size.unscaled
     val after = scroller.spaceAfter()
     context(ctx: DslContext)
     fun Bar(function: DslFunction) = when(axis) {

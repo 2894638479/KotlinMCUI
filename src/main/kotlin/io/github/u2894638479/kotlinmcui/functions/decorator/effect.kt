@@ -13,6 +13,7 @@ import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.*
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
+import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.prop.getValue
@@ -89,7 +90,7 @@ fun DslChild.hoverMask(highlightColor: Color = Color(255, 255, 255, 80)) = chang
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         it.render()
-        if(dataStore.hovered == instance.identity) backend.fillRect(instance.rect,highlightColor)
+        if(mouse in instance.rect) backend.fillRect(instance.rect,highlightColor)
     }
 }}
 
