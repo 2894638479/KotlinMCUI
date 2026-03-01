@@ -17,4 +17,9 @@ class Position (
     operator fun div(value: Int) = Position(x / value,y / value)
 
     operator fun unaryMinus() = Position(-x,-y)
+
+    fun pos(axis: Axis) = when(axis) {
+        Axis.Horizontal -> x
+        Axis.Vertical -> y
+    }
 }

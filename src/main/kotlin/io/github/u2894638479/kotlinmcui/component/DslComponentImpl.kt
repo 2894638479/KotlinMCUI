@@ -9,5 +9,7 @@ class DslComponentImpl(
     override val modifier: Modifier,
     override val rect: MutRect = MutRect()
 ): DslComponent {
-    override var instance: DslComponent = this
+    private var _instance: DslComponent? = null
+    override var instance: DslComponent get() = _instance ?: error("using `instance` before initialize")
+        set(value) { _instance = value }
 }

@@ -83,21 +83,21 @@ fun Scrollable(
                 scroller.updateScroll()
                 scroller.updateIndex()
                 val rect = instance.rect
-                val move = scroller.run { scroll - offset + children.take(scrollIndex).sumOf { it.run { outerMinSize(axis) }.unscaled } }
-                Aligner.close(Align.LOW).align(rect.bound(axis).expand(low = move.scaled), children.map { it.run { alignable(axis) } })
+                val move = scroller.run { scroll - offset + children.take(scrollIndex).sumOf { it.outerMinSize(axis).unscaled } }
+                Aligner.close(Align.LOW).align(rect.bound(axis).expand(low = move.scaled), children.map { it.alignable(axis) })
                 this.scroller = scroller
             }
 
             override fun layoutVertical() {
                 if(axis != Axis.Vertical) return delegate.layoutVertical()
                 layoutAxis()
-                children.forEach { it.run { layoutVertical() } }
+                children.forEach { it.layoutVertical() }
             }
 
             override fun layoutHorizontal() {
                 if(axis != Axis.Horizontal) return delegate.layoutHorizontal()
                 layoutAxis()
-                children.forEach { it.run { layoutHorizontal() } }
+                children.forEach { it.layoutHorizontal() }
             }
 
             context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
@@ -106,7 +106,7 @@ fun Scrollable(
                 backend.withScissor(rect) {
                     children.asReversed().forEach {
                         if (it.rect.overlap(rect)) {
-                            it.run { render() }
+                            it.render()
                         }
                     }
                 }
@@ -126,7 +126,7 @@ fun Scrollable(
                 return scroller.scroll(remain * -sensitivity) / -sensitivity
             }
 
-            override fun <T> testHit(mouse: Position, get: context(DslComponent) (DslComponent) -> T?): T? {
+            override fun <T> testHit(mouse: Position, get: (DslComponent) -> T?): T? {
                 if (mouse !in instance.rect) return null
                 return delegate.testHit(mouse, get)
             }

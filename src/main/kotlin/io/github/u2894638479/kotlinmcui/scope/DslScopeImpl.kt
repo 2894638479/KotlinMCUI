@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.scope
 
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.attachInstance
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.identity.DslId
@@ -21,24 +22,24 @@ class DslScopeImpl(
 ) : DslScope {
     override val rect = MutRect()
     override val children = DslChild.List()
-    override var instance: DslComponent = this
+    private var _instance: DslComponent? = null
+    override var instance: DslComponent get() = _instance ?: error("using `instance` before build")
+        set(value) { _instance = value }
 
     override fun layoutHorizontal() {
-        val children = instance.children ?: return
-        alignerHorizontal.align(instance.rect.bound(Axis.Horizontal),children.map { it.run { alignableHorizontal } })
-        children.forEach { it.run { layoutHorizontal() } }
+        val children = instance.children
+        alignerHorizontal.align(instance.rect.bound(Axis.Horizontal),children.map { it.alignableHorizontal })
+        children.forEach { it.layoutHorizontal() }
     }
 
     override fun layoutVertical() {
-        val children = instance.children ?: return
-        alignerVertical.align(instance.rect.bound(Axis.Vertical),children.map { it.run { alignableVertical } })
-        children.forEach { it.run { layoutVertical() } }
+        val children = instance.children
+        alignerVertical.align(instance.rect.bound(Axis.Vertical),children.map { it.alignableVertical })
+        children.forEach { it.layoutVertical() }
     }
 
-    override fun build(instance: DslComponent) {
-        super.build(instance)
-        val children = instance.children ?: return
-        context(ctx.change(dslIdentity = instance.identity, dslChildren = children),dslFunction)
-        children.forEach { it.build(it) }
+    override fun build() {
+        instance.children.buildThis(ctx,dslFunction)
+        instance.children.forEach { it.attachInstance();it.build() }
     }
 }

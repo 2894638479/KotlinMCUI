@@ -20,7 +20,7 @@ fun MouseTip(
     id: Any? = null,
     function: DslFunction
 ) {
-    val ctx = ctx.change(dslChildren = dataStore.dslScreen.children)
+    val ctx = ctx.change(children = dataStore.dslScreen.children)
     var modifier = modifier
     if(modifier.width.bits == Measure.AUTO.bits) modifier = modifier.width(Measure.AUTO_MIN)
     if(modifier.height.bits == Measure.AUTO.bits) modifier = modifier.height(Measure.AUTO_MIN)
@@ -28,25 +28,27 @@ fun MouseTip(
         Box(modifier,id,function).change { delegate ->
             object : DslComponent by delegate, MouseTipComponent {
                 override fun layoutHorizontal() {
-                    val width = instance.rect.width
+                    val rect = instance.rect
+                    val width = rect.width
                     val left = when(instance.modifier.alignment.horizontal) {
                         LOW -> dataStore.mouse.x - width
                         MID -> dataStore.mouse.x - width/2
                         HIGH -> dataStore.mouse.x
                     }
-                    instance.rect.left = left
-                    instance.rect.right = left + width
+                    rect.left = left
+                    rect.right = left + width
                     delegate.layoutHorizontal()
                 }
                 override fun layoutVertical() {
-                    val height = instance.rect.height
+                    val rect = instance.rect
+                    val height = rect.height
                     val top = when(instance.modifier.alignment.vertical) {
                         LOW -> dataStore.mouse.y - height
                         MID -> dataStore.mouse.y - height/2
                         HIGH -> dataStore.mouse.y
                     }
-                    instance.rect.top = top
-                    instance.rect.bottom = top + height
+                    rect.top = top
+                    rect.bottom = top + height
                     delegate.layoutVertical()
                 }
             }

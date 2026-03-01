@@ -5,13 +5,7 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.outerMinHeight
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
-import io.github.u2894638479.kotlinmcui.functions.animatable
-import io.github.u2894638479.kotlinmcui.functions.collect
-import io.github.u2894638479.kotlinmcui.functions.identity
-import io.github.u2894638479.kotlinmcui.functions.property
-import io.github.u2894638479.kotlinmcui.functions.remember
-import io.github.u2894638479.kotlinmcui.functions.withId
+import io.github.u2894638479.kotlinmcui.functions.*
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Axis
@@ -25,11 +19,11 @@ import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
+import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.mapView
+import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.scope.DslScope
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
-import io.github.u2894638479.kotlinmcui.prop.getValue
-import io.github.u2894638479.kotlinmcui.prop.setValue
 
 
 context(ctx: DslContext)
@@ -48,10 +42,9 @@ fun LazyColumn(
             prop
         }
 
-        override fun build(instance: DslComponent) {
-            context(ctx.change(dslIdentity = instance.identity, dslChildren = children)) {
-                function()
-            }
+        override fun build() {
+            instance.children.buildThis(ctx,function)
+            instance.children.forEach { it.instance = it }
         }
 
         private var visibleChildren: List<DslComponent> = emptyList()
@@ -67,7 +60,8 @@ fun LazyColumn(
                         override val identity by child::identity
                         override val size: Measure
                             get() = children[index].run {
-                                build(this)
+                                instance = this
+                                build()
                                 Aligner.simplePlace.align(rect.bound(Axis.Horizontal), listOf(alignableHorizontal))
                                 layoutHorizontal()
                                 outerMinHeight
@@ -99,14 +93,14 @@ fun LazyColumn(
             Aligner.close(Align.LOW).align(
                 rect.top - (scroller.scroll - scroller.offset).scaled,
                 rect.bottom,
-                visibleChildren.map { it.run { alignableVertical } })
-            visibleChildren.forEach { it.run { layoutVertical() } }
+                visibleChildren.map { it.alignableVertical })
+            visibleChildren.forEach { it.layoutVertical() }
             this.scroller = scroller
         }
 
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() = backend.withScissor(instance.rect) {
-            visibleChildren.asReversed().forEach { it.run { render() } }
+            visibleChildren.asReversed().forEach { it.render() }
         }
 
         context(mouse: Position)
@@ -123,7 +117,7 @@ fun LazyColumn(
             }
         }
 
-        override fun <T> testHit(mouse: Position, get: context(DslComponent) (DslComponent) -> T?): T? {
+        override fun <T> testHit(mouse: Position, get: (DslComponent) -> T?): T? {
             if (mouse !in instance.rect) return null
             return delegate.testHit(mouse, get)
         }

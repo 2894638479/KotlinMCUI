@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.text
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.DslComponentImpl
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Measure
@@ -12,8 +13,8 @@ import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 
 open class DslText(
-    override val identity: DslId,
-    override val modifier: Modifier,
+    identity: DslId,
+    modifier: Modifier,
     val fontName: String?,
     val font: DslFont<*>,
     val ctx: DslContext,
@@ -21,10 +22,7 @@ open class DslText(
     val defaultLineHeight: Measure,
     val horizontalAligner: Aligner,
     val verticalAligner: Aligner
-) : DslComponent {
-    override val rect = MutRect()
-    override var instance: DslComponent = this
-
+) : DslComponent by DslComponentImpl(identity,modifier) {
     override val narratable get() = true
     override val narration get() = chars.joinToString {
         val arr = IntArray(it.size) { i -> it[i].code }

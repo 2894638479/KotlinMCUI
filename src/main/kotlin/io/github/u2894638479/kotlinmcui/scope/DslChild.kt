@@ -1,6 +1,9 @@
 package io.github.u2894638479.kotlinmcui.scope
 
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.context.DslIdContext
+import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.prop.mapView
 
 class DslChild(private var component: DslComponent) {
@@ -28,7 +31,8 @@ class DslChild(private var component: DslComponent) {
 
         fun clear() = mutList.clear()
 
-        fun complete() = mutList.forEach { it.component.run { instance = this } }
+        context(idCtx: DslIdContext)
+        fun buildThis(ctx: DslContext, function: DslFunction) = context(ctx.change(identity = idCtx.identity, children = this),function)
 
         fun <R : Comparable<R>> sortBy(selector: (DslComponent) -> R?) =
             mutList.sortBy { selector(it.component) }

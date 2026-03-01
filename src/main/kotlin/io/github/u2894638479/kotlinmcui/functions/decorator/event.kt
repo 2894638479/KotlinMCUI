@@ -14,6 +14,7 @@ import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.scope.DslChild
 import org.lwjgl.glfw.GLFW
+import java.nio.file.Path
 
 context(ctx: DslContext)
 fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext, DslDataStoreContext) DslComponent.()->Unit)
@@ -43,11 +44,6 @@ fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext,
         }
         return false
     }
-}}
-
-context(ctx: DslContext)
-fun DslChild.forceId(id: DslId) = change { object: DslComponent by it {
-    override val identity = id
 }}
 
 context(ctx: DslContext)
@@ -98,5 +94,19 @@ context(ctx: DslContext)
 fun DslChild.tooltip(function: DslFunction) = change {
     object : DslComponent by it {
         override val tooltip get() = function
+    }
+}
+
+context(ctx: DslContext)
+fun DslChild.dropFiles(action:context(DslExecuteContext) (List<Path>) -> Unit) = change {
+    object : DslComponent by it {
+        context(mouse: Position)
+        override fun dropFiles(files: List<Path>): Boolean {
+            if(mouse in instance.rect) {
+                action(DslExecuteContext,files)
+                return true
+            }
+            return it.dropFiles(files)
+        }
     }
 }

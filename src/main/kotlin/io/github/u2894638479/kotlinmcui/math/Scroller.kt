@@ -48,7 +48,7 @@ interface Scroller: DslScaleContext, Bound {
             override val items = children.mapView {
                 object : Item {
                     override val identity get() = it.identity
-                    override val size get() = it.run { outerMinSize(axis) }
+                    override val size get() = it.outerMinSize(axis)
                 }
             }
             override var offset by 0.0.remember

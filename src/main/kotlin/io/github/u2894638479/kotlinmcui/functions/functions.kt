@@ -34,7 +34,7 @@ fun newChildId(id:Any?) = ctx.identity + id
 
 context(ctx: DslContext)
 inline fun <T> withId(obj:Any?, block: context(DslContext) ()->T) =
-    context(ctx.change(dslIdentity = identity + obj),block)
+    context(ctx.change(identity = identity + obj),block)
 
 context(ctx: DslContext)
 inline fun <T> withScale(scale: Double, block: context(DslContext) ()->T) =

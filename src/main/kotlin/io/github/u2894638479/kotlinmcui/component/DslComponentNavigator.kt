@@ -41,5 +41,5 @@ fun DslComponent.nextFocusable(focused: DslId?, view:(DslComponentNavigator) -> 
     fun DslComponent.flattenView():List<DslComponent> = listOf(this) + view(this).flatMap { it.flattenView() }
     val flatten = flattenView()
     val index = flatten.indexOfFirst { it.identity == focused }
-    return flatten.drop(index + 1).firstOrNull { it.run { focusable } }
+    return flatten.drop(index + 1).firstOrNull { it.focusable }
 }

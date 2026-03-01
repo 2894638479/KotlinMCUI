@@ -69,7 +69,7 @@ override val focusable get() = true
 ```
 如果不传`instance`，前一级装饰不知道组件的`focusable`已经被设为了`true`，造成逻辑错乱。
 
-`instance`的值应该在`build()`内被正确设置，必须是已经加上全部装饰后的最终`DslComponent`对象。
+`instance`的值应该在`build()`前被正确设置，必须是已经加上全部装饰后的最终`DslComponent`对象。
 
 `delegate`访问的是前一级装饰后的对象。这个名称不是固定的，比如上一个例子里是`it`。`this`访问的是当前装饰产生的对象。`super`访问的是接口，调用的是接口中的默认实现。`instance`是最终装饰完成的对象。
 

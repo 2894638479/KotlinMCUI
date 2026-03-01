@@ -1,7 +1,7 @@
 package io.github.u2894638479.kotlinmcui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
-import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.attachInstance
 import io.github.u2894638479.kotlinmcui.component.nextFocusable
 import io.github.u2894638479.kotlinmcui.component.nextFocusableList
 import io.github.u2894638479.kotlinmcui.context.DslContext
@@ -30,16 +30,14 @@ class DslScreen private constructor(
             val ctx = DslContext(id, dataStore, DslChild.List(), dataStore)
             val delegate = DslScopeImpl(id, Modifier, ctx,{})
             object: DslScope by delegate {
-                override fun build(instance: DslComponent) {
+                override fun build() {
                     dataStore.onClose = dataStore.defaultOnClose
-                    val children = instance.children ?: return
-                    context(
-                        DslTopContext(instance.identity, dataStore, children, dataStore){
-                            val onClose = dataStore.onClose
-                            dataStore.onClose = { it(ctx) { onClose() } }
-                        }, dslFunction
-                    )
-                    children.forEach { it.build(it) }
+                    val children = instance.children
+                    DslTopContext(instance.identity, dataStore, children, dataStore){
+                        val onClose = dataStore.onClose
+                        dataStore.onClose = { it(ctx) { onClose() } }
+                    }.run { dslFunction() }
+                    children.forEach { it.attachInstance();it.build() }
                 }
             }
         },dataStore
@@ -66,31 +64,31 @@ class DslScreen private constructor(
     override fun keyDown(key: Int, scanCode: Int): Boolean {
         if(delegate.keyDown(key, scanCode)) return true
         val focused = when(key) {
-            GLFW.GLFW_KEY_LEFT -> instance.nextFocusableList(dataStore.focused,true) { it.run { viewHorizontal } }
-            GLFW.GLFW_KEY_RIGHT -> instance.nextFocusableList(dataStore.focused) { it.run { viewHorizontal } }
-            GLFW.GLFW_KEY_UP -> instance.nextFocusableList(dataStore.focused,true) { it.run { viewVertical } }
-            GLFW.GLFW_KEY_DOWN -> instance.nextFocusableList(dataStore.focused) { it.run { viewVertical } }
-            GLFW.GLFW_KEY_TAB -> if(eventModifier.shift) instance.nextFocusable(dataStore.focused) { it.run { viewSequential.asReversed() } }
-                else instance.nextFocusable(dataStore.focused) { it.run { viewSequential } }
-            GLFW.GLFW_KEY_HOME -> instance.nextFocusable(null) { it.run { viewSequential } }
-            GLFW.GLFW_KEY_END -> instance.nextFocusable(null) { it.run { viewSequential.asReversed() } }
+            GLFW.GLFW_KEY_LEFT -> instance.nextFocusableList(dataStore.focused,true) { it.viewHorizontal }
+            GLFW.GLFW_KEY_RIGHT -> instance.nextFocusableList(dataStore.focused) { it.viewHorizontal }
+            GLFW.GLFW_KEY_UP -> instance.nextFocusableList(dataStore.focused,true) { it.viewVertical }
+            GLFW.GLFW_KEY_DOWN -> instance.nextFocusableList(dataStore.focused) { it.viewVertical }
+            GLFW.GLFW_KEY_TAB -> if(eventModifier.shift) instance.nextFocusable(dataStore.focused) { it.viewSequential.asReversed() }
+                else instance.nextFocusable(dataStore.focused) { it.viewSequential }
+            GLFW.GLFW_KEY_HOME -> instance.nextFocusable(null) { it.viewSequential }
+            GLFW.GLFW_KEY_END -> instance.nextFocusable(null) { it.viewSequential.asReversed() }
             else -> return false
         }
-        dataStore.focused = focused?.run { identity }
-        dataStore.keyboardNarration = focused?.run { narration }
+        dataStore.focused = focused?.identity
+        dataStore.keyboardNarration = focused?.narration
         return true
     }
 
-    override fun build(instance: DslComponent) {
-        delegate.build(instance)
-        instance.children?.sortBy { it !is MouseTipComponent }
+    override fun build() {
+        delegate.build()
+        instance.children.sortBy { it !is MouseTipComponent }
     }
-
+    init { instance = this }
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         dataStore.newFrame()
-        instance.children?.clear()
-        build(instance)
+        instance.children.clear()
+        build()
         layoutHorizontal()
         layoutVertical()
         val hovered = instance.testHit(mouse) { it.takeIf { it.highlightable } }

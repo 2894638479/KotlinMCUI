@@ -12,9 +12,9 @@ open class DslContext(
     val scaleScope: DslScaleContext
 ): DslScaleContext by scaleScope, DslDataStoreContext, DslIdContext, DslChildrenContext {
     fun change(
-        dslIdentity: DslId = this.identity,
-        dslDataStore: DslDataStore = this.dataStore,
-        dslChildren: DslChild.List = this.children,
+        identity: DslId = this.identity,
+        dataStore: DslDataStore = this.dataStore,
+        children: DslChild.List = this.children,
         scaleScope: DslScaleContext = this.scaleScope
-    ) = DslContext(dslIdentity,dslDataStore,dslChildren,scaleScope)
+    ) = DslContext(identity,dataStore,children,scaleScope)
 }

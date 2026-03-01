@@ -5,6 +5,7 @@ import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Position
+import java.nio.file.Path
 
 interface DslComponentEvent {
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
@@ -34,11 +35,14 @@ interface DslComponentEvent {
     context(eventModifier: EventModifier)
     fun charTyped(c: Char) = false
 
-    fun <T> testHit(mouse: Position, get: context(DslComponent) (DslComponent) -> T?): T? = null
+    fun <T> testHit(mouse: Position, get: (DslComponent) -> T?): T? = null
 
-    fun <T> testHit(get: context(DslComponent) (DslComponent) -> T?): T? = null
+    fun <T> testHit(get: (DslComponent) -> T?): T? = null
 
     fun focusChanged(newFocus: DslId?) {}
 
     fun hoverChanged(newHover: DslId?) {}
+
+    context(mouse: Position)
+    fun dropFiles(files:List<Path>) = false
 }
