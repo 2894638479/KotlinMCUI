@@ -19,6 +19,8 @@ import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
+import io.github.u2894638479.kotlinmcui.utils.Config
+import io.github.u2894638479.kotlinmcui.utils.Simple
 
 context(ctx: DslContext)
 fun TestLayoutPage() = Column {
@@ -123,9 +125,6 @@ fun TestLayoutPage() = Column {
         },
         "recursion" to {
             val n by remember(10).property
-            Slider(Modifier.height(20.scaled),Axis.Horizontal,0..100,n) {
-                TextFlatten { "n=${n.value}".emit() }
-            }
             fun color(n:Int) = when(n % 5) {
                 0 -> Color.RED
                 1 -> Color.BLUE
@@ -133,18 +132,20 @@ fun TestLayoutPage() = Column {
                 3 -> Color.WHITE
                 else -> Color.BLACK
             }
-            fun Modifier.padding(n:Int):Modifier {
-                fun value(a:Int,b:Int) = if((n%4) == a || (n%4) == b) 5.px else 0.px
-                return padding(value(0,1),value(1,2),value(2,3),value(3,0))
-            }
             context(ctx:DslContext)
             fun func(n: Int) {
                 if(n <= 0) return
-                Box(Modifier.padding(n)) {
+                val f: DslFunction = {
+                    ColorRect(Modifier.weight(0.5),color(n)) {}
                     func(n-1)
-                }.background(color(n))
+                }
+                if(n % 2 == 0) Row { f() }
+                else Column { f() }
             }
-            func(n.value)
+            Column {
+                Config.IntSlider(n,0..100,"n") {}
+                func(n.value)
+            }
         },
         "LateBox" to {
             LateBox {
@@ -161,12 +162,12 @@ fun TestLayoutPage() = Column {
         }
     ) }
     var chosen by remember(map.entries.first())
-    Row(Modifier.height(25.scaled)) {
+    Row(Modifier.weight(0.0)) {
         map.entries.forEachWithId {
-            Button {
-                TextFlatten { it.key.emit() }
-            }.clickable(chosen != it) { chosen = it }
+            Simple.Button(it.key,chosen != it) { chosen = it }
         }
     }
-    chosen.value()
+    ShrinkBox {
+        chosen.value()
+    }
 }

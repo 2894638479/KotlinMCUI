@@ -17,6 +17,7 @@ import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.weight
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.utils.Simple
 
 context(ctx: DslContext)
 fun TestScreenPage() = Column {
@@ -24,13 +25,9 @@ fun TestScreenPage() = Column {
 
     context(ctx:DslContext)
     fun CounterModify(id:Any) = Row(id = id) {
-        Button(Modifier.height(20.scaled).padding(5.scaled)) {
-            TextFlatten { "counter++".emit() }
-        }.clickable { counter++ }
-        TextFlatten { "counter:$counter".emit() }
-        Button(Modifier.height(20.scaled).padding(5.scaled)) {
-            TextFlatten { "counter--".emit() }
-        }.clickable { counter-- }
+        Simple.Button("counter++") { counter++ }
+        Simple.Text { "counter: $counter" }
+        Simple.Button("conter--") { counter-- }
     }
 
     CounterModify {}
@@ -43,23 +40,20 @@ fun TestScreenPage() = Column {
             var info by remember<DslFunction> {{}}
             Column {
                 info()
-                Button(Modifier.height(20.scaled).padding(5.scaled)) {
-                    TextFlatten { "closable:$closable".emit() }
-                }.clickable { closable = !closable }
-                Button(Modifier.height(20.scaled).padding(5.scaled)) {
-                    TextFlatten { "close this screen(should equal to Esc)".emit() }
-                }.clickable {
+                Simple.Button("closable:$closable") { closable = !closable }
+                Simple.Button("close this screen(should be equal to Esc)") {
                     dataStore.onClose()
                 }
                 TextFlatten { "variable from prev screen:".emit() }
                 CounterModify {}
                 Spacer(Modifier.weight(Double.MAX_VALUE)) {}
             }.defaultBackground()
+            var triedTimes by remember(0)
             onClose {
                 if(closable) defaultOnClose()
                 else info = {
-                    TextFlatten {
-                        "close failed!".emit(Color.RED)
+                    TextAutoFold {
+                        "close is stopped in onClose(), tried times $triedTimes".emit(Color.RED)
                     }
                 }
             }

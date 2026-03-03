@@ -38,7 +38,7 @@ import kotlin.reflect.KMutableProperty0
 
 object Config {
     context(ctx: DslContext)
-    private val defaultModifier get() = Modifier.minSize(40.scaled,20.scaled).padding(2.scaled)
+    private val defaultModifier get() = Modifier.height(20.scaled).padding(2.scaled)
 
     context(ctx: DslContext)
     fun BoolButton(prop: KMutableProperty0<Boolean>, name: String = prop.name, id: Any = prop) = BoolButton(prop.property,name,id)

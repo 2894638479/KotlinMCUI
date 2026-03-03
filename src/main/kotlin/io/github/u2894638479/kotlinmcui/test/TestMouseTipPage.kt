@@ -23,67 +23,49 @@ import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
+import io.github.u2894638479.kotlinmcui.utils.Config
+import io.github.u2894638479.kotlinmcui.utils.Simple
+import io.github.u2894638479.kotlinmcui.utils.Simple.simpleTooltip
 
 
 context(ctx: DslContext)
 fun TestMouseTipPage() = Column {
     val width by remember(100).property
     val height by remember(100).property
-    var alignH by remember(Align.MID)
-    var alignV by remember(Align.MID)
-    MouseTip(Modifier.align { horizontal(alignH).vertical(alignV) }) {
+    val alignH by remember(Align.MID).property
+    val alignV by remember(Align.MID).property
+    MouseTip(Modifier.align { horizontal(alignH.value).vertical(alignV.value) }) {
         ColorRect(Modifier.size(width.value.scaled,height.value.scaled), Color(255, 255, 255, 80)) {}
     }
-    var tip2 by remember(false)
-    if(tip2) MouseTip(Modifier.size(20.scaled,20.scaled)) {
+    val tip2 by remember(false).property
+    if(tip2.value) MouseTip(Modifier.size(20.scaled,20.scaled)) {
         Spacer {}.containerBackground()
     }
     Row {
-        TextFlatten { "horizon:".emit() }
-        Button(Modifier.height(20.scaled)) {
-            TextFlatten { alignH.name.emit() }
-        }.clickable { alignH = Align.entries.run { get((alignH.ordinal + 1) % size) } }
+        Config.EnumButton(alignH,"horizontal") {}
+        Config.EnumButton(alignV,"vertical") {}
     }
     Row {
-        TextFlatten { "vertical:".emit() }
-        Button(Modifier.height(20.scaled)) {
-            TextFlatten { alignV.name.emit() }
-        }.clickable { alignV = Align.entries.run { get((alignV.ordinal + 1) % size) } }
+        Config.IntSlider(width,0..200,"width") {}
+        Config.IntSlider(height,0..200,"height") {}
     }
-    Slider(Modifier.height(20.scaled).padding(5.scaled),Axis.Horizontal,0..200,width) {
-        TextFlatten { "width:${width.value}".emit() }
-    }
-    Slider(Modifier.height(20.scaled).padding(5.scaled),Axis.Horizontal,0..200,height) {
-        TextFlatten { "height:${height.value}".emit() }
-    }
-    Button(Modifier.height(20.scaled)) { TextFlatten { "tip2:$tip2".emit() } }.clickable { tip2 = !tip2 }
+    Config.BoolButton(tip2,"tip2") {}
     var tooltipCounter by remember(2)
-    Button(Modifier.height(20.scaled)) {
-        TextFlatten { "this button has a tooltip".emit() }
-    }.clickable { tooltipCounter++ }.tooltip {
-        Column(Modifier.padding(10.scaled)) {
-            TextFlatten { "Tooltip Test: $tooltipCounter".emit(Color.BLUE,18.scaled, DslCharStyle().shadowed.italic.underlined) }
-            ColorRect(Modifier.height(1.scaled).padding(3.scaled),Color(180,180,180)) {}
-            Button(Modifier.height(20.scaled)) {
-                TextFlatten { "this is clickable now!".emit() }
-            }.clickable { tooltipCounter-- }
+
+    Simple.Button("this button has a tooltip") { tooltipCounter++ }.simpleTooltip("Tooltip Test: $tooltipCounter") {
+        Column {
+            Simple.Button("this is clickable now!"){ tooltipCounter-- }
             TextAutoFold { "123123123afdssssssssssssssssssdsaff".emit() }
-        }.tooltipBackground()
+        }
     }
-    Button(Modifier.height(20.scaled)) {
-        TextFlatten { "this button has a tooltip".emit() }
-    }.clickable {  }.tooltip {
-        Column(Modifier.padding(10.scaled)) {
-            TextFlatten { "ScrollableColumn:".emit(Color.BLUE,18.scaled, DslCharStyle().shadowed.italic.underlined) }
-            ColorRect(Modifier.height(1.scaled).padding(3.scaled),Color(180,180,180)) {}
+    Simple.Button("this button has a tooltip") {}.simpleTooltip("ScrollableColumn: ") {
+        Column {
             ScrollableColumn(Modifier.height(100.scaled)) {
                 (1..10).forEachWithId {
-                    Button(Modifier.height(20.scaled)) {
-                        TextFlatten { "Button $it".emit() }
-                    }.clickable {  }
+                    Simple.Button("Button $it") {}
                 }
             }
-        }.tooltipBackground()
+        }
     }
     Spacer(Modifier.weight(Double.MAX_VALUE)) {}
 }

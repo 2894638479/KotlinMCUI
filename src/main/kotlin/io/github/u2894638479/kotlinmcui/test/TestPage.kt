@@ -10,6 +10,7 @@ import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.utils.Simple.simpleTooltip
 
 context(ctx: DslContext)
 fun TestPage() = Row {
@@ -34,9 +35,7 @@ fun TestPage() = Row {
         pages.entries.forEachWithId {
             val h by autoAnimate(if (page == it) 40.0 else 20.0)
             Button(Modifier.height(h.scaled).padding(2.scaled)) { TextFlatten { it.key.emit() } }
-                .clickable(page != it) { page = it }.tooltip {
-                    TextFlatten(Modifier.padding(10.scaled)) { it.key.emit() }.tooltipBackground()
-                }
+                .clickable(page != it) { page = it }.simpleTooltip(it.key)
         }
     }
     Box(Modifier.weight(2.5)) { page.value() }
