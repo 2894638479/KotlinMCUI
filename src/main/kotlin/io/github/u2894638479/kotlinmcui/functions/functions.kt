@@ -26,7 +26,7 @@ typealias DslTopFunction = context(DslTopContext) ()->Unit
 context(ctx: DslDataStoreContext)
 fun translate(string: String,vararg args: Any) = ctxBackend.translate(string,*args) ?: string
 
-context(_: DslExecuteContext,_: DslDataStoreContext)
+context(_: DslExecuteContext)
 fun showScreen(title:String = "DSL Screen",function: DslTopFunction) = dataStore.backend.showScreen(title,function)
 
 context(ctx: DslContext)

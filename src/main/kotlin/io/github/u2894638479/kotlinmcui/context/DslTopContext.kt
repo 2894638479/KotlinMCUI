@@ -10,8 +10,8 @@ class DslTopContext(
     dataStore: DslDataStore,
     children: DslChild.List,
     scaleScope: DslScaleContext,
-    val onOnCloseEmit: (context(DslDataStoreContext) DslOnCloseContext.() -> Unit) -> Unit
+    val onOnCloseEmit: (context(DslOnCloseContext) () -> Unit) -> Unit
 ): DslContext(identity,dataStore,children,scaleScope)
 
 context(ctx: DslTopContext)
-fun onClose(block:context(DslDataStoreContext) DslOnCloseContext.() -> Unit) = ctx.onOnCloseEmit(block)
+fun onClose(block:context(DslOnCloseContext) () -> Unit) = ctx.onOnCloseEmit(block)

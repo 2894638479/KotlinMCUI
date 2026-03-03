@@ -8,8 +8,12 @@ import io.github.u2894638479.kotlinmcui.component.childrenMaxWidth
 import io.github.u2894638479.kotlinmcui.component.nextFocusable
 import io.github.u2894638479.kotlinmcui.component.nextFocusableList
 import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
+import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
+import io.github.u2894638479.kotlinmcui.context.DslOnCloseContext
 import io.github.u2894638479.kotlinmcui.context.DslTopContext
 import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
+import io.github.u2894638479.kotlinmcui.functions.executeContext
 import io.github.u2894638479.kotlinmcui.functions.newChildId
 import io.github.u2894638479.kotlinmcui.functions.ui.MouseTipComponent
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
@@ -47,8 +51,12 @@ class DslScreen private constructor(
                     dataStore.onClose = dataStore.defaultOnClose
                     val children = instance.children
                     DslTopContext(instance.identity, dataStore, children, dataStore){
-                        val onClose = dataStore.onClose
-                        dataStore.onClose = { it(ctx) { onClose() } }
+                        val defaultOnClose = dataStore.onClose
+                        val executeContext = context(ctx) { executeContext }
+                        val onCloseContext = object : DslOnCloseContext, DslExecuteContext by executeContext {
+                            override fun defaultOnClose() = defaultOnClose()
+                        }
+                        dataStore.onClose = { it(onCloseContext) }
                     }.run { dslFunction() }
                     children.forEach { it.attachInstance();it.build() }
                 }

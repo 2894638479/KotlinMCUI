@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.context.defaultOnClose
 import io.github.u2894638479.kotlinmcui.context.onClose
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
