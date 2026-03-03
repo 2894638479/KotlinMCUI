@@ -22,7 +22,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.height
 import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
+import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.remap
 import io.github.u2894638479.kotlinmcui.prop.setValue
@@ -34,7 +34,7 @@ fun Slider(
     modifier: Modifier = Modifier,
     axis: Axis,
     range: ClosedFloatingPointRange<Double>,
-    progress: StableRWProperty<Double>? = null,
+    progress: StableRW<Double>? = null,
     step: Double = 1.0/16, // for keyboard
     color: Color = Color.WHITE,
     buttonSize: Measure = 8.scaled,
@@ -50,7 +50,7 @@ fun Slider(
     modifier: Modifier = Modifier,
     axis: Axis,
     range: IntProgression,
-    progress: StableRWProperty<Int>? = null,
+    progress: StableRW<Int>? = null,
     color: Color = Color.WHITE,
     buttonSize: Measure = 8.scaled,
     id:Any? = null,
@@ -64,7 +64,7 @@ context(ctx: DslContext)
 fun Slider(
     modifier: Modifier = Modifier,
     axis: Axis,
-    progress: StableRWProperty<Double>? = null,
+    progress: StableRW<Double>? = null,
     step: Double = 1.0/16, // for keyboard
     color: Color = Color.WHITE,
     buttonSize: Measure = 8.scaled,

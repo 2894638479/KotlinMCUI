@@ -19,28 +19,28 @@ import io.github.u2894638479.kotlinmcui.math.rect.size
 import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.weight
-import io.github.u2894638479.kotlinmcui.prop.StableROProperty
+import io.github.u2894638479.kotlinmcui.prop.StableRO
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 
 context(ctx: DslContext)
 fun ScrollBarVertical(
     modifier: Modifier = Modifier,
-    scrollerProp: StableROProperty<Scroller>,
+    scrollerProp: StableRO<Scroller>,
     id:Any?
 ) = ScrollBar(modifier,scrollerProp,Axis.Vertical,id)
 
 context(ctx: DslContext)
 fun ScrollBarHorizontal(
     modifier: Modifier = Modifier,
-    scrollerProp: StableROProperty<Scroller>,
+    scrollerProp: StableRO<Scroller>,
     id:Any?
 ) = ScrollBar(modifier,scrollerProp,Axis.Horizontal,id)
 
 context(ctx: DslContext)
 fun ScrollBar(
     modifier: Modifier = Modifier,
-    scrollerProp: StableROProperty<Scroller>,
+    scrollerProp: StableRO<Scroller>,
     axis: Axis,
     id:Any?
 ) = Button(modifier,id = id) {

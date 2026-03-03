@@ -69,7 +69,7 @@ SliderHorizontal(Modifier,0..100,widthProp) {}
 val stringProp by "".remember.property
 EditableText(Modifier,stringProp)
 ```
-在前面的任何委托后面加上`.property`，可以得到`StableRWProperty/StableROProperty`类型的属性。它可以用来传给`Slider`和`EditableText`等控件。
+在前面的任何委托后面加上`.property`，可以得到`StableRW/StableRO`类型的属性。它可以用来传给`Slider`和`EditableText`等控件。
 
 ```kotlin
 val width by widthProp
@@ -77,19 +77,19 @@ val width by widthProp
 再委托一次，就可以向之前那样访问它的值。或者直接访问`widthProp.value`。
 
 ## 更多
-`LocalRWProperty`和`StableRWProperty`的区别：
+`LocalRW`和`StableRW`的区别：
 ```kotlin
-val aProp :LocalRWProperty = remember(0)
+val aProp :LocalRW = remember(0)
 var a1 by aProp
 var a2 by aProp
 
-val bProp : StableRWProperty = run {
+val bProp : StableRW = run {
     val prop by remember(0).property
     prop
 }
 var b1 by bProp
 var b2 by bProp
 ```
-`a1`和`a2`访问的是不同的属性。因为`LocalRWProperty`保存了当前上下文的`ID`，并把它和委托处的`KProperty`组合后作为键。`StableRWProperty`在产生时就固定了键，所以能直接访问它的`.value`，也更适合作为参数传递。
+`a1`和`a2`访问的是不同的属性。因为`LocalRW`保存了当前上下文的`ID`，并把它和委托处的`KProperty`组合后作为键。`StableRW`在产生时就固定了键，所以能直接访问它的`.value`，也更适合作为参数传递。
 
 这些属性都可以跨`Screen`访问。甚至`Screen`关闭后也能访问。。

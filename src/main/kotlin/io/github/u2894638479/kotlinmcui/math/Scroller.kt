@@ -13,7 +13,7 @@ import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.rect.Bound
 import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.math.rect.size
-import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
+import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.prop.setValue
@@ -40,7 +40,7 @@ interface Scroller: DslScaleContext, Bound {
             override val scale get() = 1.0
         }
         context(ctx: DslScaleContext,_: DslDataStoreContext,instance: DslComponent)
-        fun scroller(children: DslChild.List, axis: Axis, scrollProp: StableRWProperty<Double>?):Scroller
+        fun scroller(children: DslChild.List, axis: Axis, scrollProp: StableRW<Double>?):Scroller
         = object : Scroller, Bound by instance.rect.bound(axis) {
             override val scale get() = ctx.scale
             override val items = children.mapView {

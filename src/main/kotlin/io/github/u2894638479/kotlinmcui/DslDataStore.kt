@@ -10,8 +10,8 @@ import io.github.u2894638479.kotlinmcui.math.animate.Animator
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
 import io.github.u2894638479.kotlinmcui.math.px
-import io.github.u2894638479.kotlinmcui.prop.LocalROProperty
-import io.github.u2894638479.kotlinmcui.prop.LocalRWProperty
+import io.github.u2894638479.kotlinmcui.prop.LocalRO
+import io.github.u2894638479.kotlinmcui.prop.LocalRW
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlin.time.Duration
 
@@ -48,13 +48,13 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
     }
 
 
-    fun <T> remember(identity: DslId, defaultValue:T) = object : LocalRWProperty<T> {
+    fun <T> remember(identity: DslId, defaultValue:T) = object : LocalRW<T> {
         override val identity = identity
         override fun getValue(property: DslProperty<*>) = extraData.getOrPutInner(property,defaultValue) as T
         override fun setValue(property: DslProperty<*>, value: T) { extraData[property] = value }
     }
 
-    fun <T> remember(identity: DslId, defaultValue:()->T) = object : LocalRWProperty<T> {
+    fun <T> remember(identity: DslId, defaultValue:()->T) = object : LocalRW<T> {
         override val identity = identity
         override fun getValue(property: DslProperty<*>) = extraData.getOrEmpty(property) {
             defaultValue().also { extraData[property] = it }
@@ -63,7 +63,7 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
     }
 
     fun <T : Interpolatable<T>> animatable(identity: DslId, beginValue: T, duration: Duration, interpolator: Interpolator) = object :
-        LocalRWProperty<T> {
+        LocalRW<T> {
         fun animator(property: DslProperty<*>) = extraData.getOrPut(property) {
             Animator(
                 beginValue,
@@ -77,7 +77,7 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
     }
 
     fun <T : Interpolatable<T>> autoAnimate(identity: DslId, value: T, duration: Duration, interpolator: Interpolator) = object:
-        LocalROProperty<T> {
+        LocalRO<T> {
         override val identity = identity
         override fun getValue(property: DslProperty<*>):T {
             val animator = extraData.getOrPut(property) {
@@ -92,7 +92,7 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
         }
     }
 
-    fun <K,V> cached(identity: DslId, key: K, value:(K)->V) = object: LocalROProperty<V> {
+    fun <K,V> cached(identity: DslId, key: K, value:(K)->V) = object: LocalRO<V> {
         override val identity = identity
         override fun getValue(property: DslProperty<*>): V {
             val map = extraData.getOrPut(property) { Object2ObjectOpenHashMap<K,V>() } as Object2ObjectOpenHashMap<K,V>

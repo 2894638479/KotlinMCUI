@@ -21,7 +21,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.math.rect.overlap
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
+import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.prop.setValue
@@ -33,8 +33,8 @@ import org.lwjgl.glfw.GLFW
 context(ctx: DslContext)
 fun ScrollableColumn(
     modifier: Modifier = Modifier,
-    scrollerProp: StableRWProperty<Scroller>? = null,
-    scrollProp: StableRWProperty<Double>? = null,
+    scrollerProp: StableRW<Scroller>? = null,
+    scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
     id:Any? = null,
     function: DslFunction
@@ -44,8 +44,8 @@ fun ScrollableColumn(
 context(ctx: DslContext)
 fun ScrollableRow(
     modifier: Modifier = Modifier,
-    scrollerProp: StableRWProperty<Scroller>? = null,
-    scrollProp: StableRWProperty<Double>? = null,
+    scrollerProp: StableRW<Scroller>? = null,
+    scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
     id:Any? = null,
     function: DslFunction
@@ -56,8 +56,8 @@ context(ctx: DslContext)
 fun Scrollable(
     modifier: Modifier = Modifier,
     axis: Axis,
-    scrollerProp: StableRWProperty<Scroller>? = null,
-    scrollProp: StableRWProperty<Double>? = null,
+    scrollerProp: StableRW<Scroller>? = null,
+    scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
     id:Any? = null,
     function: DslFunction

@@ -18,7 +18,7 @@ import io.github.u2894638479.kotlinmcui.math.align.align
 import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
+import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.prop.setValue
@@ -29,8 +29,8 @@ import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 context(ctx: DslContext)
 fun LazyColumn(
     modifier: Modifier = Modifier,
-    scrollerProp: StableRWProperty<Scroller>? = null,
-    scrollProp: StableRWProperty<Double>? = null,
+    scrollerProp: StableRW<Scroller>? = null,
+    scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
     id:Any? = null,
     function: DslFunction

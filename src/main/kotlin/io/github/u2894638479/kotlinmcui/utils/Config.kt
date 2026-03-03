@@ -9,7 +9,6 @@ import io.github.u2894638479.kotlinmcui.functions.ui.Button
 import io.github.u2894638479.kotlinmcui.functions.ui.ColorRect
 import io.github.u2894638479.kotlinmcui.functions.ui.Column
 import io.github.u2894638479.kotlinmcui.functions.ui.EditableText
-import io.github.u2894638479.kotlinmcui.functions.ui.LateBox
 import io.github.u2894638479.kotlinmcui.functions.ui.Row
 import io.github.u2894638479.kotlinmcui.functions.ui.ScrollBar
 import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableRow
@@ -21,7 +20,6 @@ import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Scroller
-import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
 import io.github.u2894638479.kotlinmcui.modifier.minHeight
@@ -29,7 +27,7 @@ import io.github.u2894638479.kotlinmcui.modifier.minSize
 import io.github.u2894638479.kotlinmcui.modifier.minWidth
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.width
-import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
+import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.property
 import io.github.u2894638479.kotlinmcui.prop.remap
@@ -46,7 +44,7 @@ object Config {
     fun BoolButton(prop: KMutableProperty0<Boolean>, name: String = prop.name, id: Any = prop) = BoolButton(prop.property,name,id)
 
     context(ctx: DslContext)
-    fun BoolButton(prop: StableRWProperty<Boolean>, name: String, id: Any) = Button(defaultModifier,id = id) {
+    fun BoolButton(prop: StableRW<Boolean>, name: String, id: Any) = Button(defaultModifier,id = id) {
         TextFlatten {
             name.emit()
             ": ".emit()
@@ -60,7 +58,7 @@ object Config {
         EnumButton(prop.property,name,enumName,id)
 
     context(ctx: DslContext)
-    fun <T : Enum<T>> EnumButton(prop: StableRWProperty<T>, name:String, enumName:(T) -> String = { it.name }, id: Any): DslChild {
+    fun <T : Enum<T>> EnumButton(prop: StableRW<T>, name:String, enumName:(T) -> String = { it.name }, id: Any): DslChild {
         var value by prop
         return Button(defaultModifier,id = id) {
             TextFlatten {
@@ -79,7 +77,7 @@ object Config {
         IntSlider(prop.property,range,name,id)
     
     context(ctx: DslContext)
-    fun IntSlider(prop: StableRWProperty<Int>, range: IntProgression, name: String, id: Any) = Slider(
+    fun IntSlider(prop: StableRW<Int>, range: IntProgression, name: String, id: Any) = Slider(
         defaultModifier,Axis.Horizontal,range,prop,id = id
     ) {
         TextFlatten {
@@ -94,7 +92,7 @@ object Config {
         DoubleSlider(prop.property,range,name,id)
 
     context(ctx: DslContext)
-    fun DoubleSlider(prop: StableRWProperty<Double>, range: ClosedFloatingPointRange<Double>, name: String, id: Any) = Slider(
+    fun DoubleSlider(prop: StableRW<Double>, range: ClosedFloatingPointRange<Double>, name: String, id: Any) = Slider(
         defaultModifier,Axis.Horizontal,range,prop,id = id
     ) {
         TextFlatten {
@@ -109,7 +107,7 @@ object Config {
         FloatSlider(prop.property,range,name,id)
 
     context(ctx: DslContext)
-    fun FloatSlider(prop: StableRWProperty<Float>, range: ClosedFloatingPointRange<Float>, name: String, id: Any) = Slider(
+    fun FloatSlider(prop: StableRW<Float>, range: ClosedFloatingPointRange<Float>, name: String, id: Any) = Slider(
         defaultModifier,Axis.Horizontal,range.run { start.toDouble()..endInclusive.toDouble() },
         prop.remap(Float::toDouble,Double::toFloat),id = id
     ) {
@@ -124,7 +122,7 @@ object Config {
     fun String(prop: KMutableProperty0<String>, name: String = prop.name, id: Any = prop) = String(prop.property,name,id)
 
     context(ctx: DslContext)
-    fun String(prop: StableRWProperty<String>,name: String,id: Any) = Row(defaultModifier,id = id) {
+    fun String(prop: StableRW<String>, name: String, id: Any) = Row(defaultModifier,id = id) {
         TextFlatten(Modifier.width(Measure.AUTO_MIN)) {
             name.emit()
             ": ".emit()
@@ -137,14 +135,14 @@ object Config {
 
     context(ctx: DslContext)
     fun ColorEdit(
-        prop: StableRWProperty<Color>,
+        prop: StableRW<Color>,
         id: Any
     ) = Column(id = id) {
         var color by prop
         context(ctx: DslContext)
         fun S(text: String, get:()-> Double, set:(Double)-> Unit) = Slider(
             Modifier.width(20.scaled).padding(1.scaled),Axis.Vertical,
-            object:StableRWProperty<Double> {
+            object:StableRW<Double> {
                 override fun getValue() = 1 - get()
                 override fun setValue(value: Double) = set(1 - value)
             },id = text

@@ -21,7 +21,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
-import io.github.u2894638479.kotlinmcui.prop.StableRWProperty
+import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
@@ -73,7 +73,7 @@ private value class CodePoints(val arr: IntArray) {
 
 private class UndoInfo(val codePoints: CodePoints, val cursor: Int, val cursor2: Int?)
 
-private class EditableString(private val stringProp: StableRWProperty<String>) {
+private class EditableString(private val stringProp: StableRW<String>) {
     var codePoints get() = CodePoints(stringProp.value)
         set(value) { stringProp.value = value.string }
     var cursor = codePoints.size
@@ -182,7 +182,7 @@ private class EditableString(private val stringProp: StableRWProperty<String>) {
 context(ctx: DslContext)
 fun EditableText(
     modifier: Modifier = Modifier,
-    string: StableRWProperty<String>? = null,
+    string: StableRW<String>? = null,
     style: DslCharStyle = DslCharStyle(),
     color: Color = Color.WHITE,
     selectedColor: Color = Color(20, 20, 200),
