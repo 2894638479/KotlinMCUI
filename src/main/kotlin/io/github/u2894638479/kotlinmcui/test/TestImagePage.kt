@@ -2,8 +2,7 @@ package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
-import io.github.u2894638479.kotlinmcui.functions.decorator.dropFiles
+import io.github.u2894638479.kotlinmcui.functions.decorator.onFilesDropped
 import io.github.u2894638479.kotlinmcui.functions.decorator.hoverMask
 import io.github.u2894638479.kotlinmcui.functions.imageFile
 import io.github.u2894638479.kotlinmcui.functions.imageResource
@@ -11,7 +10,6 @@ import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
-import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.*
@@ -53,7 +51,7 @@ fun TestImagePage() = ScrollableColumn {
         Mode.LOCAL -> {
             Config.String(localImageProp,"localImage") {}
             TextFlatten(Modifier.height(30.scaled)) { "drop files here".emit() }.hoverMask()
-                .dropFiles { localImageProp.value = it.firstOrNull()?.toString() ?: "" }
+                .onFilesDropped { localImageProp.value = it.firstOrNull()?.toString() ?: "" }
             Image(Modifier.size(width.scaled, height.scaled), localImage, color, strategy) {}
         }
         Mode.RESOURCE -> {

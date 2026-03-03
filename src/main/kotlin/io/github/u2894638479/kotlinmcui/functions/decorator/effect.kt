@@ -161,3 +161,16 @@ fun DslChild.renderScissor() = change {
         }
     }
 }
+
+context(ctx: DslContext)
+fun DslChild.tooltipBackground(padding: Measure = 3.px) = change {
+    object : DslComponent by it {
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() {
+            backend.renderTooltip(instance.rect.expand(padding))
+            it.render()
+        }
+
+        override val modifier = it.modifier.padding(3.px)
+    }
+}

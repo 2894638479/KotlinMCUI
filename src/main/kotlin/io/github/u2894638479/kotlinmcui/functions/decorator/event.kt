@@ -98,7 +98,7 @@ fun DslChild.tooltip(function: DslFunction) = change {
 }
 
 context(ctx: DslContext)
-fun DslChild.dropFiles(action:context(DslExecuteContext) (List<Path>) -> Unit) = change {
+fun DslChild.onFilesDropped(action:context(DslExecuteContext) (List<Path>) -> Unit) = change {
     object : DslComponent by it {
         context(mouse: Position)
         override fun dropFiles(files: List<Path>): Boolean {

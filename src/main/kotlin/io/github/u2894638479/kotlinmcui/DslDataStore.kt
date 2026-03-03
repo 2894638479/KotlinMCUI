@@ -125,6 +125,7 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
             }
         }
     var mouse = Position(-1.px,-1.px)
+    var tooltipVisible = true
 
     val dslScreen = DslScreen(this,dslFunction)
 }
