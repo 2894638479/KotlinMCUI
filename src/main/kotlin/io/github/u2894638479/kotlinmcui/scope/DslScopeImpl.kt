@@ -11,6 +11,7 @@ import io.github.u2894638479.kotlinmcui.math.align.align
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
+import io.github.u2894638479.kotlinmcui.scope.DslChild.Companion.buildThis
 
 class DslScopeImpl(
     override val identity: DslId,
@@ -23,8 +24,8 @@ class DslScopeImpl(
     override val rect = MutRect()
     override val children = DslChild.List()
     private var _instance: DslComponent? = null
-    override var instance: DslComponent get() = _instance ?: error("using `instance` before build")
-        set(value) { _instance = value }
+    override var instance: DslComponent get() = _instance ?: error("using `instance` before initialize")
+        set(value) { if(_instance == null) _instance = value else error("`instance` is set twice") }
 
     override fun layoutHorizontal() {
         val children = instance.children

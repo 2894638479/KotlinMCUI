@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.functions.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.attachInstance
 import io.github.u2894638479.kotlinmcui.component.outerMinHeight
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
@@ -22,6 +23,7 @@ import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.scope.DslChild.Companion.buildThis
 import io.github.u2894638479.kotlinmcui.scope.DslScope
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 
@@ -44,7 +46,7 @@ fun LazyColumn(
 
         override fun build() {
             instance.children.buildThis(ctx,function)
-            instance.children.forEach { it.instance = it }
+            instance.children.forEach { it.attachInstance() }
         }
 
         private var visibleChildren: List<DslComponent> = emptyList()
@@ -60,7 +62,6 @@ fun LazyColumn(
                         override val identity by child::identity
                         override val size: Measure
                             get() = children[index].run {
-                                instance = this
                                 build()
                                 Aligner.simplePlace.align(rect.bound(Axis.Horizontal), listOf(alignableHorizontal))
                                 layoutHorizontal()

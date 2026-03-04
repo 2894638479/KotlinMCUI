@@ -11,6 +11,7 @@ import io.github.u2894638479.kotlinmcui.math.align.align
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
+import io.github.u2894638479.kotlinmcui.scope.DslChild.Companion.buildThis
 import io.github.u2894638479.kotlinmcui.scope.DslScope
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 

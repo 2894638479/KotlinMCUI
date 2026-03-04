@@ -18,6 +18,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.scope.DslChild
+import io.github.u2894638479.kotlinmcui.scope.DslChild.Companion.reverseRead
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -172,5 +173,12 @@ fun DslChild.tooltipBackground(padding: Measure = 3.px) = change {
         }
 
         override val modifier = it.modifier.padding(3.px)
+    }
+}
+
+context(ctx: DslContext)
+fun DslChild.reverseChildren() = change {
+    object: DslComponent by it {
+        override val children get() = it.children.reverseRead()
     }
 }

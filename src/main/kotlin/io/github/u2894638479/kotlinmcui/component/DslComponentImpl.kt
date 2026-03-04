@@ -11,5 +11,5 @@ class DslComponentImpl(
 ): DslComponent {
     private var _instance: DslComponent? = null
     override var instance: DslComponent get() = _instance ?: error("using `instance` before initialize")
-        set(value) { _instance = value }
+        set(value) { if(_instance == null) _instance = value else error("`instance` is set twice") }
 }

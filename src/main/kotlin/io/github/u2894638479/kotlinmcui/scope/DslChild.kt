@@ -11,10 +11,30 @@ class DslChild(private var component: DslComponent) {
     fun change(component: DslComponent) = apply { this.component = component }
     inline fun change(action: (DslComponent)-> DslComponent) = change(action(currentComponent()))
 
-    class List private constructor(private val mutList: MutableList<DslChild>):kotlin.collections.List<DslComponent> by mutList.mapView({it.component}){
+    interface List:kotlin.collections.List<DslComponent> {
+        fun collect(child: DslComponent): DslChild
+        fun remove(child: DslChild)
+        fun clear()
+        companion object {
+            val empty: List get() = ListImpl.empty
+        }
+    }
+
+    companion object {
+        fun List(): List = ListImpl()
+        fun List.reverseRead(): List = object: List,kotlin.collections.List<DslComponent> by asReversed() {
+            override fun collect(child: DslComponent) = this@reverseRead.collect(child)
+            override fun remove(child: DslChild) = this@reverseRead.remove(child)
+            override fun clear() = this@reverseRead.clear()
+        }
+        context(idCtx: DslIdContext)
+        fun List.buildThis(ctx: DslContext, function: DslFunction) = context(ctx.change(identity = idCtx.identity, children = this),function)
+    }
+
+    private class ListImpl private constructor(private val mutList: MutableList<DslChild>):List,kotlin.collections.List<DslComponent> by mutList.mapView({it.component}){
         constructor():this(mutableListOf())
         companion object {
-            val empty = List(object : AbstractMutableList<DslChild>() {
+            val empty = ListImpl(object : AbstractMutableList<DslChild>() {
                 override fun set(index: Int, element: DslChild): DslChild { error("empty DslChild.List") }
                 override fun removeAt(index: Int): DslChild { error("empty DslChild.List") }
                 override fun add(index: Int, element: DslChild) {}
@@ -23,18 +43,12 @@ class DslChild(private var component: DslComponent) {
             })
         }
 
-        fun collect(child: DslComponent) = DslChild(child).also { mutList += it }
+        override fun collect(child: DslComponent) = DslChild(child).also { mutList += it }
 
-        fun remove(slot: DslChild) {
+        override fun remove(slot: DslChild) {
             if(!mutList.remove(slot)) error("DslChild.List.remove: cannot find this element")
         }
 
-        fun clear() = mutList.clear()
-
-        context(idCtx: DslIdContext)
-        fun buildThis(ctx: DslContext, function: DslFunction) = context(ctx.change(identity = idCtx.identity, children = this),function)
-
-        fun <R : Comparable<R>> sortBy(selector: (DslComponent) -> R?) =
-            mutList.sortBy { selector(it.component) }
+        override fun clear() = mutList.clear()
     }
 }
