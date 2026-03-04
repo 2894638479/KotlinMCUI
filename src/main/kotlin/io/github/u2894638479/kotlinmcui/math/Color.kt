@@ -1,13 +1,17 @@
 package io.github.u2894638479.kotlinmcui.math
 
-import com.sun.org.apache.xerces.internal.impl.dv.xs.FloatDV
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-@Serializable
+@Serializable(with = Color.Serializer::class)
 @JvmInline
 value class Color(val rgbaInt:Int): Interpolatable<Color> {
     constructor(r: UByte, g: UByte, b: UByte, a: UByte = 255u):this(combineUBytes(r,g,b,a))
@@ -133,5 +137,11 @@ value class Color(val rgbaInt:Int): Interpolatable<Color> {
         val BLUE = Color(0u,0u,255u)
         val TRANSPARENT_WHITE = WHITE.change(a = 0)
         val TRANSPARENT_BLACK = BLACK.change(a = 0)
+    }
+
+    object Serializer : KSerializer<Color> {
+        override val descriptor = PrimitiveSerialDescriptor("color", PrimitiveKind.LONG)
+        override fun serialize(encoder: Encoder, value: Color) = encoder.encodeInt(value.rgbaInt)
+        override fun deserialize(decoder: Decoder) = ofRGBA(decoder.decodeInt())
     }
 }
