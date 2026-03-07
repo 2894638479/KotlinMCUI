@@ -16,5 +16,4 @@ interface DslBackendUtils {
     fun isKeyDown(key: Int): Boolean
     fun isMouseDown(mouse: Int): Boolean
     fun openUri(uri: String)
-    val configFolder: Path
 }

@@ -5,7 +5,8 @@ import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
 interface DslBackend<RP,SC>:
     DslBackendRenderer<RP>,
     DslBackendScreenFactory<SC>,
-    DslBackendUtils
+    DslBackendUtils,
+    DslBackendMetadata
 
 
 fun <RP,SC> DslBackend<RP,SC>.createScreen(title: String = "DSL Screen", dslFunction: DslTopFunction) = create(title,dslFunction)
