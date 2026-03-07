@@ -4,8 +4,6 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.*
 import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
-import io.github.u2894638479.kotlinmcui.functions.decorator.tooltip
-import io.github.u2894638479.kotlinmcui.functions.decorator.tooltipBackground
 import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
@@ -26,7 +24,8 @@ fun TestPage() = Row {
             "container" to { TestContainerPage() },
             "mousetip" to { TestMouseTipPage() },
             "screen" to { TestScreenPage() },
-            "color" to { TestColorPage() }
+            "color" to { TestColorPage() },
+            "metadata" to { TestMetadataPage() }
         ).mapKeys { translate("kotlinmcui.${it.key}") }
     }
     var page by remember(pages.entries.first())

@@ -12,6 +12,7 @@
     "kotlinmcui.mousetip": "Mouse Tip",
     "kotlinmcui.screen": "Screen",
     "kotlinmcui.color": "Color",
+    "kotlinmcui.metadata": "Metadata",
     "kotlinmcui.narration.button": "Button",
     "kotlinmcui.narration.row": "Row",
     "kotlinmcui.narration.column": "Column",
