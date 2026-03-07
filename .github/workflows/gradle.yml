@@ -1,0 +1,38 @@
+name: Manual Gradle Task
+
+on:
+  workflow_dispatch:
+    inputs:
+      task_name:
+        description: 'Gradle task name'
+        required: true
+        default: 'build'
+      branch:
+        description: 'branch'
+        required: true
+        default: 'main'
+      java_version:
+        description: 'java version'
+        required: true
+        default: '21'
+      java_distribution:
+        description: 'java distribution'
+        required: true
+        default: 'microsoft'
+
+jobs:
+  manual-run:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v4
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ github.event.inputs.java_version }}
+          distribution: ${{ github.event.inputs.distribution }}
+      - name: Execute Gradle Task
+        run: ./gradlew ${{ github.event.inputs.task_name }}
