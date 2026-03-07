@@ -5,6 +5,6 @@ import java.nio.file.Path
 interface DslBackendMetadata {
     val configDir: Path
     val gameDir: Path
-    val gemaVersion: String
+    val gameVersion: String
     val gameLoader: String
 }
