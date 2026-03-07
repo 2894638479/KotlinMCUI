@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import java.io.File
+import java.nio.file.Path
 
 interface DslBackendUtils {
     var clipBoard: String
@@ -15,4 +16,5 @@ interface DslBackendUtils {
     fun isKeyDown(key: Int): Boolean
     fun isMouseDown(mouse: Int): Boolean
     fun openUri(uri: String)
+    val configFolder: Path
 }
