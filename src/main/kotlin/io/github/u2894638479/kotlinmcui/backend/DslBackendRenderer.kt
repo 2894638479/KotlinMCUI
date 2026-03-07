@@ -7,6 +7,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.text.DslFont
 
 interface DslBackendRenderer<RP> {
+    val guiScale: Double
     context(renderParam: RP)
     fun fillRect(rect: Rect, color: Color)
     context(renderParam: RP)
