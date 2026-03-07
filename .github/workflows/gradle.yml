@@ -33,6 +33,6 @@ jobs:
         uses: actions/setup-java@v4
         with:
           java-version: ${{ github.event.inputs.java_version }}
-          distribution: ${{ github.event.inputs.distribution }}
+          distribution: ${{ github.event.inputs.java_distribution }}
       - name: Execute Gradle Task
         run: ./gradlew ${{ github.event.inputs.task_name }}
