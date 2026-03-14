@@ -96,6 +96,16 @@ class DslScreen private constructor(
         return true
     }
 
+    override fun globalFocusChanged(newFocus: DslId?) {
+        fun DslChild.List.f():Unit = forEach { it.children.f();it.globalFocusChanged(newFocus) }
+        instance.children.f()
+    }
+
+    override fun globalHoverChanged(newHover: DslId?) {
+        fun DslChild.List.f():Unit = forEach { it.children.f();it.globalHoverChanged(newHover) }
+        instance.children.f()
+    }
+
     init { instance = this }
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {

@@ -18,7 +18,7 @@ fun MyComponent(
         var prop by remember(false)
 
         context(eventModifier: EventModifier, mouse: Position)
-        fun mouseDown(mouseButton: MouseButton): Boolean {
+        override fun mouseDown(mouseButton: MouseButton): Boolean {
             //...
         }
     }
@@ -36,7 +36,7 @@ fun DslChild.myDecorator(
         var prop by remember(false)
 
         context(eventModifier: EventModifier, mouse: Position)
-        fun mouseDown(mouseButton: MouseButton): Boolean {
+        override fun mouseDown(mouseButton: MouseButton): Boolean {
             //...
         }
     }
@@ -51,6 +51,7 @@ val component = object:DslComponent by DslComponentImpl(modifier,id) {}
 ```
 接口委托把一个对象的接口函数转发到一个新对象上。无论原对象的类型是什么，包括`final class`，匿名`object`，还是普通的`open class`，都能转发并`override`其中的接口函数。
 
+这种模式的好处是委托并不侵入修改原对象，减少了逻辑上的混乱。缺点是委托是编译期产生，如果接口有修改，需要重新编译（建议执行`./gradlew clean`避免编译缓存造成的bug）。
 ## `this` `super` `instance` `delegate`的区别
 `DslComponent`有`instance`这个成员。设计这个成员是因为每次委托都产生一个新对象，所以一级装饰无法获得后级装饰的结果。
 ```kotlin

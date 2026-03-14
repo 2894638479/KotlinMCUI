@@ -7,12 +7,15 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.functions.autoAnimate
-import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
-import io.github.u2894638479.kotlinmcui.math.*
+import io.github.u2894638479.kotlinmcui.math.Color
+import io.github.u2894638479.kotlinmcui.math.Measure
+import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
+import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
+import io.github.u2894638479.kotlinmcui.math.rect.center
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.modifier.padding
@@ -180,5 +183,15 @@ context(ctx: DslContext)
 fun DslChild.reverseChildren() = change {
     object: DslComponent by it {
         override val children get() = it.children.reverseRead()
+    }
+}
+
+context(ctx: DslContext)
+fun DslChild.rotate(rad: Double) = change {
+    object : DslComponent by it {
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() = backend.withRotation(instance.rect.center,rad) {
+            it.render()
+        }
     }
 }

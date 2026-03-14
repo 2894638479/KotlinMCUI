@@ -134,14 +134,13 @@ fun Slider(
 
         context(eventModifier: EventModifier, mouse: Position)
         override fun mouseUp(mouseButton: MouseButton): Boolean {
-            alreadyDown = null
-            return delegate.mouseUp(mouseButton)
+            return delegate.mouseUp(mouseButton) || alreadyDown == Unit.also { alreadyDown = null }
         }
 
         override val focusable get() = true
 
-        override fun focusChanged(newFocus: DslId?) {
-            super.focusChanged(newFocus)
+        override fun globalFocusChanged(newFocus: DslId?) {
+            super.globalFocusChanged(newFocus)
             if(keyFocused != null && newFocus != instance.identity) {
                 keyFocused = null
             }

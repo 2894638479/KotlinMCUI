@@ -103,12 +103,12 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
     var focused: DslId? = null
         set(value) {
             field = value
-            dslScreen.run { focusChanged(value) }
+            dslScreen.run { globalFocusChanged(value) }
         }
     var hovered: DslId? = null
         set(value) {
             field = value
-            dslScreen.run { hoverChanged(value) }
+            dslScreen.run { globalHoverChanged(value) }
         }
     var keyboardNarration: String? = null
         set(value) {

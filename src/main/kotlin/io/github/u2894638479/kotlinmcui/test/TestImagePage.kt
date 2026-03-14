@@ -42,8 +42,8 @@ fun TestImagePage() = ScrollableColumn {
 
     Config.ColorEdit(colorProp) {}
     Row {
-        Config.IntSlider(widthProp,0..500,"width") {}
-        Config.IntSlider(heightProp,0..500,"height") {}
+        Config.Slider(widthProp,0..500,"width") {}
+        Config.Slider(heightProp,0..500,"height") {}
     }
     Config.EnumButton(mode,"mode") {}
 

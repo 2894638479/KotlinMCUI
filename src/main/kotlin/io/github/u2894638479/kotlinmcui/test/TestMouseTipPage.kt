@@ -2,27 +2,21 @@ package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
 import io.github.u2894638479.kotlinmcui.functions.decorator.containerBackground
-import io.github.u2894638479.kotlinmcui.functions.decorator.tooltip
-import io.github.u2894638479.kotlinmcui.functions.decorator.tooltipBackground
 import io.github.u2894638479.kotlinmcui.functions.forEachWithId
 import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.ui.*
-import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.align
 import io.github.u2894638479.kotlinmcui.modifier.height
-import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.size
 import io.github.u2894638479.kotlinmcui.modifier.weight
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 import io.github.u2894638479.kotlinmcui.utils.Config
 import io.github.u2894638479.kotlinmcui.utils.Simple
 import io.github.u2894638479.kotlinmcui.utils.Simple.simpleTooltip
@@ -46,8 +40,8 @@ fun TestMouseTipPage() = Column {
         Config.EnumButton(alignV,"vertical") {}
     }
     Row {
-        Config.IntSlider(width,0..200,"width") {}
-        Config.IntSlider(height,0..200,"height") {}
+        Config.Slider(width,0..200,"width") {}
+        Config.Slider(height,0..200,"height") {}
     }
     Config.BoolButton(tip2,"tip2") {}
     var tooltipCounter by remember(2)

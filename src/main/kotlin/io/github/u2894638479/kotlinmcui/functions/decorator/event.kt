@@ -3,7 +3,6 @@ package io.github.u2894638479.kotlinmcui.functions.decorator
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.context.DslContext
-import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.ctxBackend
@@ -52,8 +51,8 @@ fun DslChild.onHovered(
     action: context(DslExecuteContext) (Boolean) -> Unit
 ) = change {
     object : DslComponent by it {
-        override fun hoverChanged(newHover: DslId?) {
-            it.hoverChanged(newHover)
+        override fun globalHoverChanged(newHover: DslId?) {
+            it.globalHoverChanged(newHover)
             action(executeContext,instance.identity == newHover)
         }
     }
@@ -72,8 +71,8 @@ fun DslChild.onFocused(
     action: context(DslExecuteContext) (Boolean) -> Unit
 ) = change {
     object: DslComponent by it {
-        override fun focusChanged(newFocus: DslId?) {
-            it.hoverChanged(newFocus)
+        override fun globalFocusChanged(newFocus: DslId?) {
+            it.globalHoverChanged(newFocus)
             action(executeContext,instance.identity == newFocus)
         }
     }
@@ -84,8 +83,8 @@ fun DslChild.onFocusChanged(
     action: context(DslExecuteContext) (DslId?) -> Unit
 ) = change {
     object: DslComponent by it {
-        override fun focusChanged(newFocus: DslId?) {
-            it.hoverChanged(newFocus)
+        override fun globalFocusChanged(newFocus: DslId?) {
+            it.globalHoverChanged(newFocus)
             action(executeContext,newFocus)
         }
     }
@@ -96,8 +95,8 @@ fun DslChild.onHoverChanged(
     action: context(DslExecuteContext) (DslId?) -> Unit
 ) = change {
     object: DslComponent by it {
-        override fun hoverChanged(newHover: DslId?) {
-            it.hoverChanged(newHover)
+        override fun globalHoverChanged(newHover: DslId?) {
+            it.globalHoverChanged(newHover)
             action(executeContext,newHover)
         }
     }

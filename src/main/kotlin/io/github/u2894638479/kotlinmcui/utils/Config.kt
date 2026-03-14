@@ -2,37 +2,18 @@ package io.github.u2894638479.kotlinmcui.utils
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
+import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
+import io.github.u2894638479.kotlinmcui.functions.newChildId
 import io.github.u2894638479.kotlinmcui.functions.property
 import io.github.u2894638479.kotlinmcui.functions.remember
-import io.github.u2894638479.kotlinmcui.functions.ui.Button
-import io.github.u2894638479.kotlinmcui.functions.ui.ColorRect
-import io.github.u2894638479.kotlinmcui.functions.ui.Column
-import io.github.u2894638479.kotlinmcui.functions.ui.EditableText
-import io.github.u2894638479.kotlinmcui.functions.ui.Row
-import io.github.u2894638479.kotlinmcui.functions.ui.ScrollBar
-import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableRow
-import io.github.u2894638479.kotlinmcui.functions.ui.Slider
-import io.github.u2894638479.kotlinmcui.functions.ui.TextAutoFold
-import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
-import io.github.u2894638479.kotlinmcui.functions.ui.editBoxBackground
+import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Scroller
-import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.modifier.height
-import io.github.u2894638479.kotlinmcui.modifier.minHeight
-import io.github.u2894638479.kotlinmcui.modifier.minSize
-import io.github.u2894638479.kotlinmcui.modifier.minWidth
-import io.github.u2894638479.kotlinmcui.modifier.padding
-import io.github.u2894638479.kotlinmcui.modifier.width
-import io.github.u2894638479.kotlinmcui.prop.StableRW
-import io.github.u2894638479.kotlinmcui.prop.getValue
-import io.github.u2894638479.kotlinmcui.prop.property
-import io.github.u2894638479.kotlinmcui.prop.remap
-import io.github.u2894638479.kotlinmcui.prop.setValue
-import io.github.u2894638479.kotlinmcui.prop.value
+import io.github.u2894638479.kotlinmcui.modifier.*
+import io.github.u2894638479.kotlinmcui.prop.*
 import io.github.u2894638479.kotlinmcui.scope.DslChild
 import kotlin.reflect.KMutableProperty0
 
@@ -73,11 +54,11 @@ object Config {
     }
 
     context(ctx: DslContext)
-    fun IntSlider(prop: KMutableProperty0<Int>, range: IntProgression, name: String = prop.name, id: Any = prop) =
-        IntSlider(prop.property,range,name,id)
+    fun Slider(prop: KMutableProperty0<Int>, range: IntProgression, name: String = prop.name, id: Any = prop) =
+        Slider(prop.property,range,name,id)
     
     context(ctx: DslContext)
-    fun IntSlider(prop: StableRW<Int>, range: IntProgression, name: String, id: Any) = Slider(
+    fun Slider(prop: StableRW<Int>, range: IntProgression, name: String, id: Any) = Slider(
         defaultModifier,Axis.Horizontal,range,prop,id = id
     ) {
         TextFlatten {
@@ -87,12 +68,14 @@ object Config {
         }
     }
 
+    @JvmName("SliderDouble")
     context(ctx: DslContext)
-    fun DoubleSlider(prop: KMutableProperty0<Double>, range: ClosedFloatingPointRange<Double>, name: String = prop.name, id: Any = prop) =
-        DoubleSlider(prop.property,range,name,id)
+    fun Slider(prop: KMutableProperty0<Double>, range: ClosedFloatingPointRange<Double>, name: String = prop.name, id: Any = prop) =
+        Slider(prop.property,range,name,id)
 
+    @JvmName("SliderDouble")
     context(ctx: DslContext)
-    fun DoubleSlider(prop: StableRW<Double>, range: ClosedFloatingPointRange<Double>, name: String, id: Any) = Slider(
+    fun Slider(prop: StableRW<Double>, range: ClosedFloatingPointRange<Double>, name: String, id: Any) = Slider(
         defaultModifier,Axis.Horizontal,range,prop,id = id
     ) {
         TextFlatten {
@@ -102,12 +85,14 @@ object Config {
         }
     }
 
+    @JvmName("SliderFloat")
     context(ctx: DslContext)
-    fun FloatSlider(prop: KMutableProperty0<Float>, range: ClosedFloatingPointRange<Float>, name: String = prop.name, id: Any = prop) =
-        FloatSlider(prop.property,range,name,id)
+    fun Slider(prop: KMutableProperty0<Float>, range: ClosedFloatingPointRange<Float>, name: String = prop.name, id: Any = prop) =
+        Slider(prop.property,range,name,id)
 
+    @JvmName("SliderFloat")
     context(ctx: DslContext)
-    fun FloatSlider(prop: StableRW<Float>, range: ClosedFloatingPointRange<Float>, name: String, id: Any) = Slider(
+    fun Slider(prop: StableRW<Float>, range: ClosedFloatingPointRange<Float>, name: String, id: Any) = Slider(
         defaultModifier,Axis.Horizontal,range.run { start.toDouble()..endInclusive.toDouble() },
         prop.remap(Float::toDouble,Double::toFloat),id = id
     ) {
@@ -163,5 +148,28 @@ object Config {
         val scrollerProp by Scroller.empty.remember.property
         ScrollableRow(Modifier.minHeight(50.scaled),scrollerProp) { items() }
         if(scrollerProp.value.isScrollable()) ScrollBar(Modifier.height(10.scaled),scrollerProp,Axis.Horizontal) {}
+    }
+
+    context(ctx: DslContext)
+    fun slider(range: IntProgression, name: String = "", defaultValue: Int = range.first, id: Any): StableRW<Int> {
+        val prop by dataStore.remember(newChildId(id),defaultValue).property
+        Slider(prop,range,name,id)
+        return prop
+    }
+
+    @JvmName("SliderDouble")
+    context(ctx: DslContext)
+    fun slider(range: ClosedFloatingPointRange<Double>, name: String = "", defaultValue: Double = range.start, id: Any): StableRW<Double> {
+        val prop by dataStore.remember(newChildId(id),defaultValue).property
+        Slider(prop,range,name,id)
+        return prop
+    }
+
+    @JvmName("SliderFloat")
+    context(ctx: DslContext)
+    fun slider(range: ClosedFloatingPointRange<Float>, name: String = "", defaultValue: Float = range.start, id: Any): StableRW<Float> {
+        val prop by dataStore.remember(newChildId(id),defaultValue).property
+        Slider(prop,range,name,id)
+        return prop
     }
 }

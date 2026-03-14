@@ -49,23 +49,20 @@ inline fun <T> Iterable<T>.forEachWithId(block:context(DslContext) (T) -> Unit) 
 context(_: DslDataStoreContext, _: DslIdContext)
 val <T> LocalRW<T>.property get() = property(this)
 
-context(_: DslDataStoreContext, ctx: DslIdContext)
 fun <T> property(prop: LocalRW<T>) = object: LocalRO<StableRW<T>> {
-    override val identity = ctx.identity
+    override val identity = prop.identity
     override fun getValue(property: DslProperty<*>) = object: StableRW<T> {
-        override fun getValue() = prop.getValue(DslProperty(property.kProp, identity))
-        override fun setValue(value: T) = prop.setValue(DslProperty(property.kProp, identity),value)
+        override fun getValue() = prop.getValue(property)
+        override fun setValue(value: T) = prop.setValue(property,value)
     }
 }
 
-context(_: DslDataStoreContext, _: DslIdContext)
 val <T> LocalRO<T>.property get() = property(this)
 
-context(_: DslDataStoreContext, ctx: DslIdContext)
 fun <T> property(prop: LocalRO<T>) = object: LocalRO<StableRO<T>> {
-    override val identity = ctx.identity
+    override val identity = prop.identity
     override fun getValue(property: DslProperty<*>) = StableRO {
-        prop.getValue(DslProperty(property.kProp, identity))
+        prop.getValue(property)
     }
 }
 

@@ -4,7 +4,6 @@ import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
-import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Position
 import java.nio.file.Path
 
@@ -62,10 +61,6 @@ interface DslScope : DslComponent {
 
     override fun <T> testHit(get: (DslComponent) -> T?): T? =
         instance.children.firstNotNullOfOrNull { it.testHit(get) } ?: super.testHit(get)
-
-    override fun focusChanged(newFocus: DslId?) = instance.children.forEach { it.focusChanged(newFocus) }
-
-    override fun hoverChanged(newHover: DslId?) = instance.children.forEach { it.hoverChanged(newHover) }
 
     context(mouse: Position)
     override fun dropFiles(files: List<Path>) = instance.children.firstOrNull { it.dropFiles(files) } != null

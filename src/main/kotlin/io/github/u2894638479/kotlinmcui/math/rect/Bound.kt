@@ -20,6 +20,7 @@ fun Bound(low: Measure,high: Measure):Bound = BoundImpl(low,high)
 inline val Bound.range get() = low..high
 inline val Bound.isEmpty get() = high <= low
 inline val Bound.size get() = high - low
+inline val Bound.center get() = (low + high) / 2
 inline fun Bound.ifEmpty(action: () -> Bound) = if(isEmpty) action() else this
 fun Bound.contains(value: Measure) = value in range
 fun Bound.expand(low: Measure = 0.px,high: Measure = 0.px) = object :Bound {

@@ -25,7 +25,8 @@ fun TestPage() = Row {
             "mousetip" to { TestMouseTipPage() },
             "screen" to { TestScreenPage() },
             "color" to { TestColorPage() },
-            "metadata" to { TestMetadataPage() }
+            "metadata" to { TestMetadataPage() },
+            "rotation" to { TestRotationPage() }
         ).mapKeys { translate("kotlinmcui.${it.key}") }
     }
     var page by remember(pages.entries.first())
