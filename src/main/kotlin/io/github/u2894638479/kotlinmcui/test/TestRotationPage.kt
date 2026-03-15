@@ -14,6 +14,7 @@ import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.utils.Config
 import io.github.u2894638479.kotlinmcui.utils.Simple
+import io.github.u2894638479.kotlinmcui.utils.Simple.simpleTooltip
 import kotlin.math.PI
 
 context(ctx: DslContext)
@@ -22,7 +23,7 @@ fun TestRotationPage() = ScrollableColumn {
     Column {
         Row {
             Config.slider(0.0..1.0,"test") {}
-            Simple.Button("test") {}
+            Simple.Button("test") {}.simpleTooltip("Rotate!","rotate")
         }
         ColorRect(Modifier.height(50.scaled),Color.RED) {}
     }.rotate(rad)

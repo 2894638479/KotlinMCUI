@@ -3,8 +3,8 @@ package io.github.u2894638479.kotlinmcui.backend
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.math.Color
-import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
+import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.text.DslFont
 
 interface DslBackendRenderer<RP> {
@@ -32,6 +32,6 @@ interface DslBackendRenderer<RP> {
     context(renderParam: RP)
     fun withScissor(rect: Rect, block: () -> Unit)
     context(renderParam: RP)
-    fun withRotation(origin: Position, rad: Double, block: () -> Unit)
+    fun withTransform(transform: Transform, block: () -> Unit)
     fun getFont(name:String? = null): DslFont<RP>
 }

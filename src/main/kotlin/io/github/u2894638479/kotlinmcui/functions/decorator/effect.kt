@@ -7,6 +7,8 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.functions.autoAnimate
+import io.github.u2894638479.kotlinmcui.glfw.EventModifier
+import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.Color
@@ -18,6 +20,10 @@ import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.rect.center
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
+import io.github.u2894638479.kotlinmcui.math.transform.Rotate
+import io.github.u2894638479.kotlinmcui.math.transform.Transform
+import io.github.u2894638479.kotlinmcui.math.transform.Transforms
+import io.github.u2894638479.kotlinmcui.math.transform.Translate
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.scope.DslChild
@@ -187,11 +193,23 @@ fun DslChild.reverseChildren() = change {
 }
 
 context(ctx: DslContext)
-fun DslChild.rotate(rad: Double) = change {
+private fun DslChild.transform(getTransform:DslComponent.() -> Transform) = change {
     object : DslComponent by it {
+        val transform get() = getTransform()
+        context(eventModifier: EventModifier, mouse: Position)
+        override fun mouseDown(mouseButton: MouseButton) = context(transform.inverse(mouse)) { it.mouseDown(mouseButton) }
+        context(mouse: Position)
+        override fun mouseMove() = context(transform.inverse(mouse)) { it.mouseMove() }
+        context(eventModifier: EventModifier, mouse: Position)
+        override fun mouseUp(mouseButton: MouseButton) = context(transform.inverse(mouse)) { it.mouseUp(mouseButton) }
+        override fun <T> testHit(mouse: Position, get: (DslComponent) -> T?) = it.testHit(transform.inverse(mouse),get)
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-        override fun <RP> render() = backend.withRotation(instance.rect.center,rad) {
-            it.render()
-        }
+        override fun <RP> render() { backend.withTransform(transform) { it.render() } }
     }
+}
+
+context(ctx: DslContext)
+fun DslChild.rotate(rad: Double) = transform {
+    val center = instance.rect.center
+    Transforms(Translate(-center),Rotate(rad),Translate(center))
 }
