@@ -40,6 +40,16 @@ inline val Rect.height get() = bottom - top
 inline val Rect.center get() = Position((left + right) / 2,(top + bottom) / 2)
 inline val Rect.isEmpty get() = width <= 0.px || height <= 0.px
 inline fun Rect.ifEmpty(action: ()-> Rect) = if (isEmpty) action() else this
+val Rect.vertices:List<Position> get() = object: AbstractList<Position>() {
+    override val size get() = 4
+    override fun get(index: Int) = when(index) {
+        0 -> Position(left,top)
+        1 -> Position(right,top)
+        2 -> Position(left,bottom)
+        3 -> Position(right,bottom)
+        else -> throw IndexOutOfBoundsException()
+    }
+}
 
 fun Rect.bound(axis: Axis) = when(axis) {
     Axis.Horizontal -> object : Bound {

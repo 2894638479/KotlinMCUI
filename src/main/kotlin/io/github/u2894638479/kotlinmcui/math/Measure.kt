@@ -11,6 +11,8 @@ import kotlinx.serialization.encoding.Encoder
 import kotlin.experimental.ExperimentalTypeInference
 import kotlin.math.*
 import kotlin.collections.sumOf
+import kotlin.collections.minOf
+import kotlin.collections.maxOf
 
 @JvmInline
 @Serializable(with = Measure.Serializer::class)
@@ -88,3 +90,14 @@ val Int.px get() = Measure.ofRaw(toDouble())
 @OverloadResolutionByLambdaReturnType
 @JvmName("sumOfMeasure")
 inline fun <T> Iterable<T>.sumOf(selector: (T) -> Measure): Measure = sumOf { selector(it).raw }.px
+
+@OptIn(ExperimentalTypeInference::class)
+@OverloadResolutionByLambdaReturnType
+@JvmName("minOfMeasure")
+inline fun <T> Iterable<T>.minOf(selector: (T) -> Measure): Measure = minOf { selector(it).raw }.px
+
+@OptIn(ExperimentalTypeInference::class)
+@OverloadResolutionByLambdaReturnType
+@JvmName("maxOfMeasure")
+inline fun <T> Iterable<T>.maxOf(selector: (T) -> Measure): Measure = maxOf { selector(it).raw }.px
+

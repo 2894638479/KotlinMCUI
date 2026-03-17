@@ -5,7 +5,10 @@ import io.github.u2894638479.kotlinmcui.math.Position
 @JvmInline
 value class Transforms private constructor(private val transforms: Array<out BaseTransform>): Transform {
     companion object {
-        operator fun invoke(vararg baseTransforms: BaseTransform) = Transforms(baseTransforms)
+        operator fun invoke(vararg baseTransforms: BaseTransform) =
+            if(baseTransforms.isEmpty()) Transform.empty else Transforms(baseTransforms)
+        operator fun invoke(baseTransforms: List<BaseTransform>) =
+            if(baseTransforms.isEmpty()) Transform.empty else Transforms(baseTransforms.toTypedArray())
     }
 
     override fun transform(pos: Position): Position {

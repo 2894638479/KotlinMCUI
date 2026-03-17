@@ -6,4 +6,13 @@ interface Transform {
     fun transform(pos: Position): Position
     fun inverse(pos: Position): Position
     val baseTransforms: List<BaseTransform>
+    companion object {
+        val empty = object :Transform {
+            override fun transform(pos: Position) = pos
+            override fun inverse(pos: Position) = pos
+            override val baseTransforms get() = emptyList<BaseTransform>()
+        }
+        val Transform.isEmpty get() = baseTransforms.isEmpty()
+        operator fun Transform.plus(other: Transform) = Transforms(baseTransforms + other.baseTransforms)
+    }
 }

@@ -19,8 +19,13 @@ import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.maxOf
+import io.github.u2894638479.kotlinmcui.math.minOf
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.*
+import io.github.u2894638479.kotlinmcui.math.transform.Transform
+import io.github.u2894638479.kotlinmcui.math.transform.Transform.Companion.isEmpty
+import io.github.u2894638479.kotlinmcui.math.transform.Transform.Companion.plus
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.scope.DslChild
 import io.github.u2894638479.kotlinmcui.scope.DslChild.Companion.buildThis
@@ -136,34 +141,38 @@ class DslScreen private constructor(
         val ctx = DslContext(identity,dataStore,instance.children,dataStore,frameContext)
         val delegate = DslScopeImpl(identity + {},Modifier,ctx,{})
         object : DslComponent by delegate, MouseTipComponent {
-            var focused: DslComponent? = null
+            var focusedRect: Rect? = null
             override fun build() {
-                val focused = dataStore.focused?.let { id ->
-                    dataStore.dslScreen.run {
-                        testHit { it.takeIf { it.identity == id } }?.takeIf { it.focusable }
+                val hovered = dataStore.dslScreen.testHit(dataStore.mouse) { it.tooltip }
+                val focusedId = dataStore.focused
+                val focused = if(focusedId == null) null else dataStore.dslScreen.testHit { it.takeIf { it.identity == focusedId } }
+                val func = hovered ?: focused?.tooltip ?: return
+                if(focusedId != null && hovered == null) focusedRect = run {
+                    fun getTransform(component: DslComponent): Transform? {
+                        if(component.identity == focusedId) return component.transform
+                        val child = component.children.firstNotNullOfOrNull { getTransform(it) } ?: return null
+                        return component.transform + child
                     }
+                    val transform = getTransform(dataStore.dslScreen) ?: return@run null
+                    val rect = focused?.rect ?: return@run null
+                    if(transform.isEmpty) return@run rect
+                    val vertices = rect.vertices.map { transform.transform(it) }
+                    Rect(vertices.minOf { it.x },vertices.minOf { it.y },vertices.maxOf { it.x },vertices.maxOf { it.y })
                 }
-                val hovered = dataStore.dslScreen.run {
-                    testHit { it.takeIf { dataStore.mouse in it.rect }?.tooltip }
-                }
-                val func = focused?.tooltip ?: hovered ?: return
 
                 instance.children.buildThis(ctx,func)
                 instance.children.forEach { it.attachInstance();it.build() }
-                this.focused = focused?.takeIf { it.tooltip != null && it != hovered }
             }
             override fun layoutHorizontal() {
-                val focused = focused
-                val useFocus = focused != null
-                val boundH = if(useFocus) layoutFocusH(focused.rect, dataStore.dslScreen.rect,instance.childrenMaxWidth)
+                val focusedRect = focusedRect
+                val boundH = if(focusedRect != null) layoutFocusH(focusedRect, dataStore.dslScreen.rect,instance.childrenMaxWidth)
                 else layoutMouseH(dataStore.mouse, dataStore.dslScreen.rect,instance.childrenMaxWidth)
                 instance.rect.bound(Axis.Horizontal) copyFrom boundH
                 delegate.layoutHorizontal()
             }
             override fun layoutVertical() {
-                val focused = focused
-                val useFocus = focused != null
-                val boundV = if(useFocus) layoutFocusV(focused.rect, dataStore.dslScreen.rect,instance.childrenMaxHeight)
+                val focusedRect = focusedRect
+                val boundV = if(focusedRect != null) layoutFocusV(focusedRect, dataStore.dslScreen.rect,instance.childrenMaxHeight)
                 else layoutMouseV(dataStore.mouse, dataStore.dslScreen.rect,instance.childrenMaxHeight)
                 instance.rect.bound(Axis.Vertical) copyFrom boundV
                 delegate.layoutVertical()

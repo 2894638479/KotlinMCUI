@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.functions.decorator
 
+import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.context.DslContext
@@ -120,5 +121,33 @@ fun DslChild.onFilesDropped(action:context(DslExecuteContext) (List<Path>) -> Un
             }
             return it.dropFiles(files)
         }
+    }
+}
+
+context(ctx: DslContext)
+fun DslChild.scissor() = change {
+    object:DslComponent by it {
+        context(eventModifier: EventModifier, mouse: Position)
+        override fun mouseDown(mouseButton: MouseButton) = mouse in instance.rect && it.mouseDown(mouseButton)
+
+        context(mouse: Position)
+        override fun mouseScrollHorizontal(amount: Double): Double {
+            if(mouse !in instance.rect) return amount
+            return it.mouseScrollHorizontal(amount)
+        }
+
+        context(mouse: Position)
+        override fun mouseScrollVertical(amount: Double): Double {
+            if(mouse !in instance.rect) return amount
+            return it.mouseScrollVertical(amount)
+        }
+
+        override fun <T> testHit(mouse: Position, get: (DslComponent) -> T?): T? {
+            if(mouse !in instance.rect) return null
+            return it.testHit(mouse,get)
+        }
+
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() = backend.withScissor(instance.rect) { it.render() }
     }
 }

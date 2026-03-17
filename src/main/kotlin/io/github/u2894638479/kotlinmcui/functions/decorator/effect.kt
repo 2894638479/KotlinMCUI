@@ -195,7 +195,7 @@ fun DslChild.reverseChildren() = change {
 context(ctx: DslContext)
 private fun DslChild.transform(getTransform:DslComponent.() -> Transform) = change {
     object : DslComponent by it {
-        val transform get() = getTransform()
+        override val transform get() = getTransform()
         context(eventModifier: EventModifier, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton) = context(transform.inverse(mouse)) { it.mouseDown(mouseButton) }
         context(mouse: Position)
@@ -209,7 +209,7 @@ private fun DslChild.transform(getTransform:DslComponent.() -> Transform) = chan
 }
 
 context(ctx: DslContext)
-fun DslChild.rotate(rad: Double) = transform {
+fun DslChild.rotate(rad: Double) = if(rad == 0.0) this else transform {
     val center = instance.rect.center
     Transforms(Translate(-center),Rotate(rad),Translate(center))
 }

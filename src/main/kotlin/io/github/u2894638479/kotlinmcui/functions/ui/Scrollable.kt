@@ -1,13 +1,15 @@
 package io.github.u2894638479.kotlinmcui.functions.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
-import io.github.u2894638479.kotlinmcui.component.*
+import io.github.u2894638479.kotlinmcui.component.alignable
+import io.github.u2894638479.kotlinmcui.component.childrenMaxHeight
+import io.github.u2894638479.kotlinmcui.component.childrenMaxWidth
+import io.github.u2894638479.kotlinmcui.component.outerMinSize
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.functions.*
-import io.github.u2894638479.kotlinmcui.glfw.EventModifier
-import io.github.u2894638479.kotlinmcui.glfw.MouseButton
+import io.github.u2894638479.kotlinmcui.functions.decorator.scissor
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
@@ -17,7 +19,6 @@ import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.align.align
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.bound
-import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.math.rect.overlap
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
@@ -103,11 +104,9 @@ fun Scrollable(
             context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
                 val rect = instance.rect
-                backend.withScissor(rect) {
-                    children.asReversed().forEach {
-                        if (it.rect.overlap(rect)) {
-                            it.render()
-                        }
+                children.asReversed().forEach {
+                    if (it.rect.overlap(rect)) {
+                        it.render()
                     }
                 }
             }
@@ -115,30 +114,19 @@ fun Scrollable(
             context(mouse: Position)
             override fun mouseScrollVertical(amount: Double): Double {
                 val remain = delegate.mouseScrollVertical(amount)
-                if((axis != Axis.Vertical && !ctxBackend.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)) || mouse !in instance.rect) return remain
+                if(axis != Axis.Vertical && !ctxBackend.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)) return remain
                 return scroller.scroll(remain * -sensitivity) / -sensitivity
             }
 
             context(mouse: Position)
             override fun mouseScrollHorizontal(amount: Double): Double {
                 val remain = delegate.mouseScrollHorizontal(amount)
-                if(axis != Axis.Horizontal || mouse !in instance.rect) return remain
+                if(axis != Axis.Horizontal) return remain
                 return scroller.scroll(remain * -sensitivity) / -sensitivity
-            }
-
-            override fun <T> testHit(mouse: Position, get: (DslComponent) -> T?): T? {
-                if (mouse !in instance.rect) return null
-                return delegate.testHit(mouse, get)
-            }
-
-            context(eventModifier: EventModifier, mouse: Position)
-            override fun mouseDown(mouseButton: MouseButton): Boolean {
-                if (mouse !in instance.rect) return false
-                return delegate.mouseDown(mouseButton)
             }
 
             override val viewHorizontal get() = listOf(children)
             override val viewVertical get() = children.mapView { listOf(it) }
         }
-    )
+    ).scissor()
 }

@@ -5,14 +5,15 @@ import io.github.u2894638479.kotlinmcui.math.align.Alignable
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.math.sumOf
+import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.modifier.contentMinHeight
 import io.github.u2894638479.kotlinmcui.modifier.contentMinWidth
 import io.github.u2894638479.kotlinmcui.modifier.paddingHeight
 import io.github.u2894638479.kotlinmcui.modifier.paddingWidth
-import kotlin.run
 
 interface DslComponentAlign: DslComponentMetadata {
     val rect: MutRect
+    val transform: Transform get() = Transform.empty
 
     val contentMinWidth get() = instance.modifier.contentMinWidth
     val contentMinHeight get() = instance.modifier.contentMinHeight

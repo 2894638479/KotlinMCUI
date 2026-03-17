@@ -7,8 +7,7 @@ import io.github.u2894638479.kotlinmcui.component.outerMinHeight
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.*
-import io.github.u2894638479.kotlinmcui.glfw.EventModifier
-import io.github.u2894638479.kotlinmcui.glfw.MouseButton
+import io.github.u2894638479.kotlinmcui.functions.decorator.scissor
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
@@ -17,7 +16,6 @@ import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.align.align
 import io.github.u2894638479.kotlinmcui.math.rect.bound
-import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
@@ -100,13 +98,10 @@ fun LazyColumn(
         }
 
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-        override fun <RP> render() = backend.withScissor(instance.rect) {
-            visibleChildren.asReversed().forEach { it.render() }
-        }
+        override fun <RP> render() = visibleChildren.asReversed().forEach { it.render() }
 
         context(mouse: Position)
         override fun mouseScrollVertical(amount: Double): Double {
-            if (mouse !in instance.rect) return amount
             val remain = delegate.mouseScrollVertical(amount) * -sensitivity
             scroller.run {
                 updateScroll()
@@ -118,18 +113,7 @@ fun LazyColumn(
             }
         }
 
-        override fun <T> testHit(mouse: Position, get: (DslComponent) -> T?): T? {
-            if (mouse !in instance.rect) return null
-            return delegate.testHit(mouse, get)
-        }
-
-        context(eventModifier: EventModifier, mouse: Position)
-        override fun mouseDown(mouseButton: MouseButton): Boolean {
-            if (mouse !in instance.rect) return false
-            return delegate.mouseDown(mouseButton)
-        }
-
         override val viewHorizontal get() = listOf(children)
         override val viewVertical get() = children.mapView { listOf(it) }
-    })
+    }).scissor()
 }
