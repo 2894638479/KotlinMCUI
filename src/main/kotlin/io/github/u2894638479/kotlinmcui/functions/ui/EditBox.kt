@@ -204,12 +204,12 @@ fun EditableText(
     val editable by remember { EditableString(stringProp) }
     editable.undoDepth = undoDepth
     val info by remember {object{
-        var blinkBeginNano = ctx.dataStore.frameTimeNano
+        var blinkBeginNano = ctx.frameContext.frameBeginNano
         var alignedLines = listOf<Pair<DslTextLine, List<AlignableChar>>>()
         var mouseDown: Unit? = null
     }}
     val font = ctx.dataStore.backend.getFont(fontName)
-    val blink = (((ctx.dataStore.frameTimeNano - info.blinkBeginNano) / blinkCycle.inWholeNanoseconds) % 2L) == 0L
+    val blink = (((ctx.frameContext.frameBeginNano - info.blinkBeginNano) / blinkCycle.inWholeNanoseconds) % 2L) == 0L
     class CursorPos(val line:Int,val index:Int)
     val delegate = DslText(
         identity, modifier, fontName, font, ctx,

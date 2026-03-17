@@ -79,7 +79,7 @@ fun Scrollable(
             }
 
             private fun layoutAxis() {
-                val scroller = Scroller.scroller(children,axis,scrollProp)
+                val scroller = Scroller.scroller(instance,axis,scrollProp)
                 scroller.updateScroll()
                 scroller.updateIndex()
                 val rect = instance.rect

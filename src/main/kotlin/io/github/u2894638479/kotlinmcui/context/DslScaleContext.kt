@@ -6,6 +6,11 @@ import io.github.u2894638479.kotlinmcui.math.px
 
 interface DslScaleContext {
     val scale: Double
+    companion object {
+        operator fun invoke(scale:Double) = object : DslScaleContext {
+            override val scale = scale
+        }
+    }
 }
 
 context(ctx: DslScaleContext)

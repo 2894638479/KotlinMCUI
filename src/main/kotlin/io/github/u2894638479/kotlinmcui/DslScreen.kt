@@ -3,7 +3,10 @@ package io.github.u2894638479.kotlinmcui
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.*
 import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
+import io.github.u2894638479.kotlinmcui.context.DslFrameContext
+import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslOnCloseContext
 import io.github.u2894638479.kotlinmcui.context.DslTopContext
 import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
@@ -26,38 +29,14 @@ import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 import org.lwjgl.glfw.GLFW
 
 class DslScreen private constructor(
-    val delegate: DslScope,
     val dataStore: DslDataStore,
+    val dslFunction: DslTopFunction,
+    val delegate: DslScope
 ) : DslScope by delegate {
     constructor(dataStore: DslDataStore,dslFunction: DslTopFunction):this(
-        Unit.run {
-            val id = DslId(dataStore.title)
-            val ctx = DslContext(id, dataStore, DslChild.List.empty, dataStore)
-            val delegate = DslScopeImpl(id, Modifier, ctx,{})
-            object: DslScope by delegate {
-                override fun build() {
-                    dataStore.onClose = dataStore.defaultOnClose
-                    val buildChildren = DslChild.List()
-                    DslTopContext(identity, dataStore, buildChildren, dataStore){
-                        val defaultOnClose = dataStore.onClose
-                        val executeContext = context(ctx) { executeContext }
-                        val onCloseContext = object : DslOnCloseContext, DslExecuteContext by executeContext {
-                            override fun defaultOnClose() = defaultOnClose()
-                        }
-                        dataStore.onClose = { it(onCloseContext) }
-                    }.run { dslFunction() }
-                    buildChildren.forEach { it.attachInstance();it.build() }
-
-                    val children = instance.children
-                    var list = children.toSet()
-                    while(list.isNotEmpty()) {
-                        list.forEach { it.attachInstance();it.build() }
-                        list = children.subtract(list)
-                    }
-                    buildChildren.forEach { children.collect(it) }
-                }
-            }
-        },dataStore
+        dataStore,dslFunction,DslScopeImpl(DslId(null), Modifier,
+            DslContext(DslId(null),dataStore, DslChild.List.empty,dataStore,
+                DslFrameContext(ULong.MAX_VALUE,0L)),{}),
     )
 
     fun close() { dataStore.onClose() }
@@ -107,9 +86,38 @@ class DslScreen private constructor(
     }
 
     init { instance = this }
+
+    private val frameContext = object: DslFrameContext {
+        override var frameBeginNano = 0L
+        override var frameIndex = ULong.MAX_VALUE
+    }
+
+    override fun build() {
+        dataStore.onClose = dataStore.defaultOnClose
+        val buildChildren = DslChild.List()
+        DslTopContext(identity, dataStore, buildChildren, dataStore, frameContext){
+            val defaultOnClose = dataStore.onClose
+            val executeContext = context(DslIdContext(identity), DslDataStoreContext(dataStore)) { executeContext }
+            val onCloseContext = object : DslOnCloseContext, DslExecuteContext by executeContext {
+                override fun defaultOnClose() = defaultOnClose()
+            }
+            dataStore.onClose = { it(onCloseContext) }
+        }.run { dslFunction() }
+        buildChildren.forEach { it.attachInstance();it.build() }
+
+        val children = instance.children
+        var list = children.toSet()
+        while(list.isNotEmpty()) {
+            list.forEach { it.attachInstance();it.build() }
+            list = children.subtract(list)
+        }
+        buildChildren.forEach { children.collect(it) }
+    }
+
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
-        dataStore.newFrame()
+        frameContext.frameIndex++
+        frameContext.frameBeginNano = System.nanoTime()
         instance.children.clear()
         val tooltipPlaceHolder = DslComponentImpl(DslId(Unit),Modifier)
         val tooltip = instance.children.collect(tooltipPlaceHolder)
@@ -125,7 +133,7 @@ class DslScreen private constructor(
     }
 
     private fun buildTooltip() = run {
-        val ctx = DslContext(identity,dataStore,instance.children,dataStore)
+        val ctx = DslContext(identity,dataStore,instance.children,dataStore,frameContext)
         val delegate = DslScopeImpl(identity + {},Modifier,ctx,{})
         object : DslComponent by delegate, MouseTipComponent {
             var focused: DslComponent? = null

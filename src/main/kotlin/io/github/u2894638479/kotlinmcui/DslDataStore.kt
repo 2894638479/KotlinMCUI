@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
+import io.github.u2894638479.kotlinmcui.context.DslFrameContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
 import io.github.u2894638479.kotlinmcui.identity.DslId
@@ -15,8 +16,14 @@ import io.github.u2894638479.kotlinmcui.prop.LocalRW
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlin.time.Duration
 
-class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultOnClose:()-> Unit, dslFunction: DslTopFunction): DslScaleContext {
+class DslDataStore(
+    val backend: DslBackend<*, *>,
+    val title:String,
+    val defaultOnClose:()-> Unit,
+    dslFunction: DslTopFunction
+): DslScaleContext {
     override val scale get() = backend.guiScale
+
     private val extraData = object: Object2ObjectOpenHashMap<DslProperty<*>, Any?>(){
         val empty = object{}
         inline fun getOrEmpty(key: DslProperty<*>, ifEmpty:()->Any?):Any?{
@@ -32,21 +39,11 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
             return result
         }
     }
-    var frameIndex = ULong.MAX_VALUE
-        private set
-    var frameTimeNano = 0L
-        private set
 
     var onClose:()-> Unit = defaultOnClose
         internal set
 
     var pauseGame = true
-
-    internal fun newFrame() {
-        frameIndex++
-        frameTimeNano = System.nanoTime()
-    }
-
 
     fun <T> remember(identity: DslId, defaultValue:T) = object : LocalRW<T> {
         override val identity = identity
@@ -62,32 +59,26 @@ class DslDataStore(val backend: DslBackend<*, *>, val title:String, val defaultO
         override fun setValue(property: DslProperty<*>, value: T) { extraData[property] = value}
     }
 
+    context(ctx: DslFrameContext)
     fun <T : Interpolatable<T>> animatable(identity: DslId, beginValue: T, duration: Duration, interpolator: Interpolator) = object :
         LocalRW<T> {
         fun animator(property: DslProperty<*>) = extraData.getOrPut(property) {
-            Animator(
-                beginValue,
-                duration.inWholeNanoseconds,
-                interpolator
-            )
+            Animator(beginValue, duration.inWholeNanoseconds, interpolator, ctx)
         } as Animator<T>
         override val identity = identity
         override fun getValue(property: DslProperty<*>) = animator(property).value
         override fun setValue(property: DslProperty<*>, value: T) { animator(property).value = value }
     }
 
+    context(ctx: DslFrameContext)
     fun <T : Interpolatable<T>> autoAnimate(identity: DslId, value: T, duration: Duration, interpolator: Interpolator) = object:
         LocalRO<T> {
         override val identity = identity
         override fun getValue(property: DslProperty<*>):T {
             val animator = extraData.getOrPut(property) {
-                Animator(
-                    value,
-                    duration.inWholeNanoseconds,
-                    interpolator
-                )
+                Animator(value, duration.inWholeNanoseconds, interpolator,ctx)
             } as Animator<T>
-            if(animator.targetValue != value) animator.value = value
+            if(animator.targetValue != value) animator.setWithTime(value,ctx.frameBeginNano)
             return animator.value
         }
     }

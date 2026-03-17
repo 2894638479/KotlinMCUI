@@ -5,6 +5,7 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
+import io.github.u2894638479.kotlinmcui.context.DslFrameContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.context.DslTopContext
@@ -38,9 +39,7 @@ inline fun <T> withId(obj:Any?, block: context(DslContext) ()->T) =
 
 context(ctx: DslContext)
 inline fun <T> withScale(scale: Double, block: context(DslContext) ()->T) =
-    context(ctx.change(scaleScope = object : DslScaleContext {
-        override val scale = scale
-    }),block)
+    context(ctx.change(scaleContext = DslScaleContext(scale)),block)
 
 context(ctx: DslContext)
 inline fun <T> Iterable<T>.forEachWithId(block:context(DslContext) (T) -> Unit) = forEach { withId(it) { block(it) } }
@@ -75,19 +74,19 @@ val <T> T.remember get() = remember(this)
 context(_: DslDataStoreContext, _: DslIdContext)
 fun <T> remember(defaultValue:()->T) = dataStore.remember(identity,defaultValue)
 
-context(_: DslDataStoreContext, _: DslIdContext)
+context(_: DslDataStoreContext, _: DslIdContext, _: DslFrameContext)
 fun <T: Interpolatable<T>> animatable(beginValue: T, duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default) =
     dataStore.animatable(identity,beginValue,duration,interpolator)
 
-context(_: DslDataStoreContext, _: DslIdContext)
+context(_: DslDataStoreContext, _: DslIdContext, _: DslFrameContext)
 fun <T: Interpolatable<T>> autoAnimate(value: T, duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default) =
     dataStore.autoAnimate(identity,value,duration,interpolator)
 
-context(_: DslDataStoreContext, _: DslIdContext)
+context(_: DslDataStoreContext, _: DslIdContext, _: DslFrameContext)
 fun animatable(beginValue: Double, duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default) =
     dataStore.animatable(identity,beginValue.toInterpolatable(),duration,interpolator).remap({it.toDouble()},{it.toInterpolatable()})
 
-context(_: DslDataStoreContext, _: DslIdContext)
+context(_: DslDataStoreContext, _: DslIdContext, _: DslFrameContext)
 fun autoAnimate(value: Double, duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default) =
     dataStore.autoAnimate(identity,value.toInterpolatable(),duration,interpolator).remap { it.toDouble() }
 

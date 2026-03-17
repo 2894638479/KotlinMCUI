@@ -3,6 +3,8 @@ package io.github.u2894638479.kotlinmcui.math
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.outerMinSize
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
+import io.github.u2894638479.kotlinmcui.context.DslFrameContext
+import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.functions.animatable
@@ -17,7 +19,6 @@ import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.prop.setValue
-import io.github.u2894638479.kotlinmcui.scope.DslChild
 import kotlin.collections.ifEmpty
 import kotlin.collections.sumOf
 import kotlin.math.sign
@@ -39,11 +40,11 @@ interface Scroller: DslScaleContext, Bound {
                 set(value) {}
             override val scale get() = 1.0
         }
-        context(ctx: DslScaleContext,_: DslDataStoreContext,instance: DslComponent)
-        fun scroller(children: DslChild.List, axis: Axis, scrollProp: StableRW<Double>?):Scroller
+        context(ctx: DslScaleContext,_: DslDataStoreContext,_: DslFrameContext,_: DslIdContext)
+        fun scroller(instance: DslComponent, axis: Axis, scrollProp: StableRW<Double>?):Scroller
         = object : Scroller, Bound by instance.rect.bound(axis) {
             override val scale get() = ctx.scale
-            override val items = children.mapView {
+            override val items = instance.children.mapView {
                 object : Item {
                     override val identity get() = it.identity
                     override val size get() = it.outerMinSize(axis)

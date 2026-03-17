@@ -9,12 +9,14 @@ open class DslContext(
     override val identity: DslId,
     override val dataStore: DslDataStore,
     override val children: DslChild.List,
-    val scaleScope: DslScaleContext
-): DslScaleContext by scaleScope, DslDataStoreContext, DslIdContext, DslChildrenContext {
+    val scaleContext: DslScaleContext,
+    val frameContext: DslFrameContext
+): DslScaleContext by scaleContext, DslDataStoreContext, DslIdContext, DslChildrenContext, DslFrameContext by frameContext {
     fun change(
         identity: DslId = this.identity,
         dataStore: DslDataStore = this.dataStore,
         children: DslChild.List = this.children,
-        scaleScope: DslScaleContext = this.scaleScope
-    ) = DslContext(identity,dataStore,children,scaleScope)
+        scaleContext: DslScaleContext = this.scaleContext,
+        frameContext: DslFrameContext = this.frameContext
+    ) = DslContext(identity,dataStore,children,scaleContext,frameContext)
 }
