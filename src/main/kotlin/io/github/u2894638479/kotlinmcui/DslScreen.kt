@@ -2,30 +2,17 @@ package io.github.u2894638479.kotlinmcui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.*
-import io.github.u2894638479.kotlinmcui.context.DslContext
-import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
-import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
-import io.github.u2894638479.kotlinmcui.context.DslFrameContext
-import io.github.u2894638479.kotlinmcui.context.DslIdContext
-import io.github.u2894638479.kotlinmcui.context.DslOnCloseContext
-import io.github.u2894638479.kotlinmcui.context.DslTopContext
+import io.github.u2894638479.kotlinmcui.context.*
 import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
 import io.github.u2894638479.kotlinmcui.functions.executeContext
 import io.github.u2894638479.kotlinmcui.functions.ui.MouseTipComponent
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
-import io.github.u2894638479.kotlinmcui.math.Axis
-import io.github.u2894638479.kotlinmcui.math.Measure
+import io.github.u2894638479.kotlinmcui.math.*
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
-import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.maxOf
-import io.github.u2894638479.kotlinmcui.math.minOf
-import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.*
 import io.github.u2894638479.kotlinmcui.math.transform.Transform
-import io.github.u2894638479.kotlinmcui.math.transform.Transform.Companion.isEmpty
-import io.github.u2894638479.kotlinmcui.math.transform.Transform.Companion.plus
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.scope.DslChild
 import io.github.u2894638479.kotlinmcui.scope.DslChild.Companion.buildThis
@@ -73,6 +60,7 @@ class DslScreen private constructor(
                 else instance.nextFocusable(dataStore.focused) { it.viewSequential }
             GLFW.GLFW_KEY_HOME -> instance.nextFocusable(null) { it.viewSequential }
             GLFW.GLFW_KEY_END -> instance.nextFocusable(null) { it.viewSequential.asReversed() }
+            GLFW.GLFW_KEY_F3 -> return true.also { dataStore.debug = !dataStore.debug }
             else -> return false
         }
         dataStore.focused = focused?.identity
@@ -142,6 +130,8 @@ class DslScreen private constructor(
         val delegate = DslScopeImpl(identity + {},Modifier,ctx,{})
         object : DslComponent by delegate, MouseTipComponent {
             var focusedRect: Rect? = null
+            var rawFocusedRect: Rect? = null
+            var transforms = Transform.empty
             override fun build() {
                 val hovered = dataStore.dslScreen.testHit(dataStore.mouse) { it.tooltip }
                 val focusedId = dataStore.focused
@@ -151,12 +141,16 @@ class DslScreen private constructor(
                     fun getTransform(component: DslComponent): Transform? {
                         if(component.identity == focusedId) return component.transform
                         val child = component.children.firstNotNullOfOrNull { getTransform(it) } ?: return null
-                        return component.transform + child
+                        return component.transform * child
                     }
                     val transform = getTransform(dataStore.dslScreen) ?: return@run null
                     val rect = focused?.rect ?: return@run null
                     if(transform.isEmpty) return@run rect
-                    val vertices = rect.vertices.map { transform.transform(it) }
+                    val vertices = rect.vertices.map { transform * it }
+                    if(dataStore.debug) {
+                        transforms = transform
+                        rawFocusedRect = rect
+                    }
                     Rect(vertices.minOf { it.x },vertices.minOf { it.y },vertices.maxOf { it.x },vertices.maxOf { it.y })
                 }
 
@@ -176,6 +170,14 @@ class DslScreen private constructor(
                 else layoutMouseV(dataStore.mouse, dataStore.dslScreen.rect,instance.childrenMaxHeight)
                 instance.rect.bound(Axis.Vertical) copyFrom boundV
                 delegate.layoutVertical()
+            }
+
+            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            override fun <RP> render() {
+                delegate.render()
+                if(dataStore.debug) backend.withTransform(transforms) {
+                    backend.fillRect(rawFocusedRect ?: return@withTransform, Color(255,255,255,100))
+                }
             }
 
             fun layoutMouseH(mouse: Position, screen: Rect, width: Measure) = MutBound(0.px,0.px).also {

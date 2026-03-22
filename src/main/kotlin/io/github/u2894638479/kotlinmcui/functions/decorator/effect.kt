@@ -20,10 +20,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.rect.center
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
-import io.github.u2894638479.kotlinmcui.math.transform.Rotate
 import io.github.u2894638479.kotlinmcui.math.transform.Transform
-import io.github.u2894638479.kotlinmcui.math.transform.Transforms
-import io.github.u2894638479.kotlinmcui.math.transform.Translate
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.scope.DslChild
@@ -193,23 +190,35 @@ fun DslChild.reverseChildren() = change {
 }
 
 context(ctx: DslContext)
-private fun DslChild.transform(getTransform:DslComponent.() -> Transform) = change {
+private fun DslChild.transform(getTransform:DslComponent.(DslComponent) -> Transform) = change {
     object : DslComponent by it {
-        override val transform get() = getTransform()
+        override val transform get() = it.transform * getTransform(it)
         context(eventModifier: EventModifier, mouse: Position)
-        override fun mouseDown(mouseButton: MouseButton) = context(transform.inverse(mouse)) { it.mouseDown(mouseButton) }
+        override fun mouseDown(mouseButton: MouseButton) = context(getTransform(it).invert() * mouse) { it.mouseDown(mouseButton) }
         context(mouse: Position)
-        override fun mouseMove() = context(transform.inverse(mouse)) { it.mouseMove() }
+        override fun mouseMove() = context(getTransform(it).invert() * mouse) { it.mouseMove() }
         context(eventModifier: EventModifier, mouse: Position)
-        override fun mouseUp(mouseButton: MouseButton) = context(transform.inverse(mouse)) { it.mouseUp(mouseButton) }
-        override fun <T> testHit(mouse: Position, get: (DslComponent) -> T?) = it.testHit(transform.inverse(mouse),get)
+        override fun mouseUp(mouseButton: MouseButton) = context(getTransform(it).invert() * mouse) { it.mouseUp(mouseButton) }
+        override fun <T> testHit(mouse: Position, get: (DslComponent) -> T?) = it.testHit(getTransform(it).invert() * mouse,get)
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-        override fun <RP> render() { backend.withTransform(transform) { it.render() } }
+        override fun <RP> render() { backend.withTransform(getTransform(it)) { it.render() } }
     }
 }
 
 context(ctx: DslContext)
 fun DslChild.rotate(rad: Double) = if(rad == 0.0) this else transform {
-    val center = instance.rect.center
-    Transforms(Translate(-center),Rotate(rad),Translate(center))
+    val center = it.transform * instance.rect.center
+    Transform.rotate(center,rad)
 }
+
+context(ctx: DslContext)
+fun DslChild.scale(x:Double,y:Double = x) = if(x == 1.0 && y == 1.0) this else transform {
+    val center = it.transform * instance.rect.center
+    Transform.scale(center,x,y)
+}
+
+context(ctx: DslContext)
+fun DslChild.move(x: Measure,y: Measure) = if(x == 0.px && y == 0.px) this else transform { Transform.translate(x,y) }
+
+context(ctx: DslContext)
+fun DslChild.move(pos: Position) = move(pos.x,pos.y)

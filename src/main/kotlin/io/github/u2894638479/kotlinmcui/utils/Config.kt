@@ -151,7 +151,7 @@ object Config {
     }
 
     context(ctx: DslContext)
-    fun slider(range: IntProgression, name: String = "", defaultValue: Int = range.first, id: Any): StableRW<Int> {
+    fun Slider(range: IntProgression, name: String = "", defaultValue: Int = range.first, id: Any): StableRW<Int> {
         val prop by dataStore.remember(newChildId(id),defaultValue).property
         Slider(prop,range,name,id)
         return prop
@@ -159,7 +159,7 @@ object Config {
 
     @JvmName("SliderDouble")
     context(ctx: DslContext)
-    fun slider(range: ClosedFloatingPointRange<Double>, name: String = "", defaultValue: Double = range.start, id: Any): StableRW<Double> {
+    fun Slider(range: ClosedFloatingPointRange<Double>, name: String = "", defaultValue: Double = range.start, id: Any): StableRW<Double> {
         val prop by dataStore.remember(newChildId(id),defaultValue).property
         Slider(prop,range,name,id)
         return prop
@@ -167,7 +167,7 @@ object Config {
 
     @JvmName("SliderFloat")
     context(ctx: DslContext)
-    fun slider(range: ClosedFloatingPointRange<Float>, name: String = "", defaultValue: Float = range.start, id: Any): StableRW<Float> {
+    fun Slider(range: ClosedFloatingPointRange<Float>, name: String = "", defaultValue: Float = range.start, id: Any): StableRW<Float> {
         val prop by dataStore.remember(newChildId(id),defaultValue).property
         Slider(prop,range,name,id)
         return prop

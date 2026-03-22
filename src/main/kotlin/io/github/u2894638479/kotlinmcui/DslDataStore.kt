@@ -45,6 +45,8 @@ class DslDataStore(
 
     var pauseGame = true
 
+    var debug = false
+
     fun <T> remember(identity: DslId, defaultValue:T) = object : LocalRW<T> {
         override val identity = identity
         override fun getValue(property: DslProperty<*>) = extraData.getOrPutInner(property,defaultValue) as T
