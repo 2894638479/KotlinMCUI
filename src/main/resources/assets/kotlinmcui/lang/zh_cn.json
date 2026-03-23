@@ -14,6 +14,7 @@
     "kotlinmcui.color": "颜色",
     "kotlinmcui.metadata": "元信息",
     "kotlinmcui.rotation": "旋转",
+    "kotlinmcui.animation": "动画",
     "kotlinmcui.narration.button": "按钮",
     "kotlinmcui.narration.row": "行",
     "kotlinmcui.narration.column": "列",

@@ -192,7 +192,7 @@ fun DslChild.reverseChildren() = change {
 context(ctx: DslContext)
 private fun DslChild.transform(getTransform:DslComponent.(DslComponent) -> Transform) = change {
     object : DslComponent by it {
-        override val transform get() = it.transform * getTransform(it)
+        override val transform by lazy { it.transform * getTransform(it) }
         context(eventModifier: EventModifier, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton) = context(getTransform(it).invert() * mouse) { it.mouseDown(mouseButton) }
         context(mouse: Position)
