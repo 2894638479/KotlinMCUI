@@ -30,6 +30,7 @@ import io.github.u2894638479.kotlinmcui.text.AlignableChar
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 import io.github.u2894638479.kotlinmcui.text.DslText
 import io.github.u2894638479.kotlinmcui.text.DslTextLine
+import io.github.u2894638479.kotlinmcui.text.kotlinmcui
 import org.lwjgl.glfw.GLFW
 import kotlin.math.max
 import kotlin.math.min
@@ -196,20 +197,17 @@ fun EditableText(
 ) = context(object : DslIdContext {
     override val identity = newChildId(id)
 }) {
-    val stringProp = string ?: run {
-        val prop by remember("").property
-        prop
-    }
+    val stringProp = string ?: local { "" }
     var string by stringProp
-    val editable by remember { EditableString(stringProp) }
+    val editable by local { EditableString(stringProp) }
     editable.undoDepth = undoDepth
-    val info by remember {object{
-        var blinkBeginNano = ctx.frameContext.frameBeginNano
+    val info by local {object{
+        var blinkBeginNano = ctx.dataStore.frameBeginNano
         var alignedLines = listOf<Pair<DslTextLine, List<AlignableChar>>>()
         var mouseDown: Unit? = null
     }}
     val font = ctx.dataStore.backend.getFont(fontName)
-    val blink = (((ctx.frameContext.frameBeginNano - info.blinkBeginNano) / blinkCycle.inWholeNanoseconds) % 2L) == 0L
+    val blink = (((ctx.dataStore.frameBeginNano - info.blinkBeginNano) / blinkCycle.inWholeNanoseconds) % 2L) == 0L
     class CursorPos(val line:Int,val index:Int)
     val delegate = DslText(
         identity, modifier, fontName, font, ctx,
@@ -219,7 +217,7 @@ fun EditableText(
     info.run {
         collect(object : DslComponent by delegate {
             override val narratable get() = true
-            override val narration get() = "${translate("kotlinmcui.narration.editabletext")} $string"
+            override val narration get() = "${kotlinmcui.narration.editabletext()} $string"
 
             override val focusable get() = true
 

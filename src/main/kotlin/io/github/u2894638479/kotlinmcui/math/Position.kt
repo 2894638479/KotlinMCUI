@@ -19,7 +19,7 @@ class Position (
 
     operator fun unaryMinus() = Position(-x,-y)
 
-    fun pos(axis: Axis) = when(axis) {
+    operator fun get(axis: Axis) = when(axis) {
         Axis.Horizontal -> x
         Axis.Vertical -> y
     }

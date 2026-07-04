@@ -7,8 +7,7 @@ import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
-import io.github.u2894638479.kotlinmcui.functions.property
-import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.local
 import io.github.u2894638479.kotlinmcui.functions.translate
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
@@ -75,12 +74,9 @@ fun Slider(
         override val narratable get() = true
         override val narration get() = "${delegate.run { narration }} ${translate("kotlinmcui.narration.slider")}"
 
-        var progress by progress ?: run {
-            val prop by 0.5.remember.property
-            prop
-        }
-        var alreadyDown by remember<Unit?>(null)
-        var keyFocused by remember<Unit?>(null)
+        var progress by progress ?: local<Double> { 0.5 }
+        var alreadyDown by local<Unit?> { null }
+        var keyFocused by local<Unit?> { null }
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
             val rect = instance.rect

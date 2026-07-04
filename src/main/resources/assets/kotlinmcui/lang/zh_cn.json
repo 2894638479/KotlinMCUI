@@ -1,5 +1,6 @@
 {
     "kotlinmcui.testpage": "测试页面",
+    "kotlinmcui.testentry": "测试入口",
     "kotlinmcui.test_translate": "测试翻译: 字符串:%s, 整数:%d, 浮点数:%f",
     "kotlinmcui.layout": "布局",
     "kotlinmcui.text": "文字",

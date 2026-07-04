@@ -13,7 +13,6 @@ import io.github.u2894638479.kotlinmcui.modifier.paddingWidth
 
 interface DslComponentAlign: DslComponentMetadata {
     val rect: MutRect
-    val transform: Transform get() = Transform.empty
 
     val contentMinWidth get() = instance.modifier.contentMinWidth
     val contentMinHeight get() = instance.modifier.contentMinHeight
@@ -45,8 +44,8 @@ interface DslComponentAlign: DslComponentMetadata {
     }
 }
 
-val DslComponent.outerMinWidth get() = contentMinWidth + modifier.paddingWidth
-val DslComponent.outerMinHeight get() = contentMinHeight + modifier.paddingHeight
+val DslComponentAlign.outerMinWidth get() = contentMinWidth + modifier.paddingWidth
+val DslComponentAlign.outerMinHeight get() = contentMinHeight + modifier.paddingHeight
 
 val DslComponent.childrenSumWidth get() = children.sumOf { it.outerMinWidth }
 val DslComponent.childrenSumHeight get() = children.sumOf { it.outerMinHeight }
@@ -54,17 +53,17 @@ val DslComponent.childrenSumHeight get() = children.sumOf { it.outerMinHeight }
 val DslComponent.childrenMaxWidth get() = children.maxOfOrNull { it.outerMinWidth } ?: 0.px
 val DslComponent.childrenMaxHeight get() = children.maxOfOrNull { it.outerMinHeight } ?: 0.px
 
-fun DslComponent.contentMinSize(axis: Axis) = when(axis) {
+fun DslComponentAlign.contentMinSize(axis: Axis) = when(axis) {
     Axis.Horizontal -> contentMinWidth
     Axis.Vertical -> contentMinHeight
 }
 
-fun DslComponent.outerMinSize(axis: Axis) = when(axis) {
+fun DslComponentAlign.outerMinSize(axis: Axis) = when(axis) {
     Axis.Horizontal -> outerMinWidth
     Axis.Vertical -> outerMinHeight
 }
 
-fun DslComponent.alignable(axis: Axis) = when(axis) {
+fun DslComponentAlign.alignable(axis: Axis) = when(axis) {
     Axis.Horizontal -> alignableHorizontal
     Axis.Vertical -> alignableVertical
 }

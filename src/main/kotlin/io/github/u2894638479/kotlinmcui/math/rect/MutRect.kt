@@ -25,6 +25,8 @@ fun MutRect(horizontal: MutBound,vertical: MutBound) = object:MutRect {
     override var bottom by vertical::high
 }
 
+operator fun MutRect.get(axis: Axis) = bound(axis)
+operator fun MutRect.set(axis: Axis, value: Bound) = this[axis] copyFrom value
 
 fun MutRect.bound(axis: Axis) = when(axis) {
     Axis.Horizontal -> object : MutBound {

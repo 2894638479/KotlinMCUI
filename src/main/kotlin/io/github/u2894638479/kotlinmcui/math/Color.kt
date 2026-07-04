@@ -140,7 +140,7 @@ value class Color(val rgbaInt:Int): Interpolatable<Color> {
     }
 
     object Serializer : KSerializer<Color> {
-        override val descriptor = PrimitiveSerialDescriptor("color", PrimitiveKind.LONG)
+        override val descriptor = PrimitiveSerialDescriptor("color", PrimitiveKind.INT)
         override fun serialize(encoder: Encoder, value: Color) = encoder.encodeInt(value.rgbaInt)
         override fun deserialize(decoder: Decoder) = ofRGBA(decoder.decodeInt())
     }

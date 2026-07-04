@@ -3,6 +3,7 @@ package io.github.u2894638479.kotlinmcui.scope
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
+import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.prop.mapView
 
@@ -13,8 +14,8 @@ class DslChild(private var component: DslComponent) {
 
     interface List:kotlin.collections.List<DslComponent> {
         fun collect(child: DslComponent): DslChild
+        fun collectAll(list: kotlin.collections.List<DslComponent>)
         fun remove(child: DslChild)
-        fun clear()
         companion object {
             val empty: List get() = ListImpl.empty
         }
@@ -24,11 +25,22 @@ class DslChild(private var component: DslComponent) {
         fun List(): List = ListImpl()
         fun List.reverseRead(): List = object: List,kotlin.collections.List<DslComponent> by asReversed() {
             override fun collect(child: DslComponent) = this@reverseRead.collect(child)
+            override fun collectAll(list: kotlin.collections.List<DslComponent>) {
+               this@reverseRead.collectAll(list)
+            }
             override fun remove(child: DslChild) = this@reverseRead.remove(child)
-            override fun clear() = this@reverseRead.clear()
         }
-        context(idCtx: DslIdContext)
-        fun List.buildThis(ctx: DslContext, function: DslFunction) = context(ctx.change(identity = idCtx.identity, children = this),function)
+
+        context(idCtx: DslIdContext, scaleCtx: DslScaleContext)
+        inline fun List.buildThis(ctx:DslContext, function: DslFunction) = context(ctx) {
+            ctx.withIdentity(idCtx.identity) {
+                ctx.withScale(scaleCtx.scale) {
+                    ctx.withChildren(this) {
+                        function()
+                    }
+                }
+            }
+        }
     }
 
     private class ListImpl private constructor(private val mutList: MutableList<DslChild>):List,kotlin.collections.List<DslComponent> by mutList.mapView({it.component}){
@@ -45,10 +57,12 @@ class DslChild(private var component: DslComponent) {
 
         override fun collect(child: DslComponent) = DslChild(child).also { mutList += it }
 
+        override fun collectAll(list: kotlin.collections.List<DslComponent>) {
+            mutList.addAll(list.map { DslChild(it) })
+        }
+
         override fun remove(slot: DslChild) {
             if(!mutList.remove(slot)) error("DslChild.List.remove: cannot find this element")
         }
-
-        override fun clear() = mutList.clear()
     }
 }

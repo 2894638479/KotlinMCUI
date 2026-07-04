@@ -5,8 +5,7 @@ import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.decorator.move
 import io.github.u2894638479.kotlinmcui.functions.decorator.rotate
 import io.github.u2894638479.kotlinmcui.functions.decorator.scale
-import io.github.u2894638479.kotlinmcui.functions.property
-import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.local
 import io.github.u2894638479.kotlinmcui.functions.ui.ColorRect
 import io.github.u2894638479.kotlinmcui.functions.ui.Column
 import io.github.u2894638479.kotlinmcui.functions.ui.Row
@@ -30,7 +29,7 @@ fun TestRotationPage() = ScrollableColumn {
     var x by Config.Slider(-100..100,"moveX") {}
     var y by Config.Slider(-100..100,"moveY") {}
     Column {
-        val rad2 by 0.0.remember.property
+        val rad2 = local { 0.0 }
         Row {
             Config.Slider(rad2,0.0..1.0,"test") {}
             Simple.Button("test") {}.simpleTooltip("Rotate!","rotate")

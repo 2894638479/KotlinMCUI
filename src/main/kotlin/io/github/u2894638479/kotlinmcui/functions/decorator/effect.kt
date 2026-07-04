@@ -6,7 +6,7 @@ import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.context.unscaled
-import io.github.u2894638479.kotlinmcui.functions.autoAnimate
+import io.github.u2894638479.kotlinmcui.functions.local
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
@@ -121,7 +121,8 @@ context(ctx: DslContext)
 fun DslChild.animateHeight(duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default)
 = change { object: DslComponent by it {
     override val contentMinHeight: Measure get() {
-        val value by autoAnimate(it.contentMinHeight.unscaled, duration, interpolator)
+        val unscaled = it.contentMinHeight.unscaled
+        val value by local.autoAnimate(duration, interpolator) { unscaled }
         return value.scaled
     }
 }}
@@ -130,7 +131,8 @@ context(ctx: DslContext)
 fun DslChild.animateWidth(duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default)
 = change { object: DslComponent by it {
     override val contentMinWidth: Measure get() {
-        val value by autoAnimate(it.contentMinWidth.unscaled, duration, interpolator)
+        val unscaled = it.contentMinWidth.unscaled
+        val value by local.autoAnimate(duration, interpolator) { unscaled }
         return value.scaled
     }
 }}

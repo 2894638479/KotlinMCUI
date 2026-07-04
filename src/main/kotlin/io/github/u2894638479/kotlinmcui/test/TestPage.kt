@@ -12,7 +12,7 @@ import io.github.u2894638479.kotlinmcui.utils.Simple.simpleTooltip
 
 context(ctx: DslContext)
 fun TestPage() = Row {
-    val pages by remember {
+    val pages by static {
         mapOf<String, DslFunction>(
             "layout" to { TestLayoutPage() },
             "scroll" to { TestScrollPage() },
@@ -30,11 +30,11 @@ fun TestPage() = Row {
             "animation" to { TestAnimationPage() }
         ).mapKeys { translate("kotlinmcui.${it.key}") }
     }
-    var page by remember(pages.entries.first())
+    var page by static { pages.entries.first() }
     ScrollableColumn(Modifier.weight(1.0).minWidth(100.scaled)) {
         TextFlatten(Modifier.padding(5.scaled)) { translate("kotlinmcui.testpage").emit() }
         pages.entries.forEachWithId {
-            val h by autoAnimate(if (page == it) 40.0 else 20.0)
+            val h by local.autoAnimate { if (page == it) 40.0 else 20.0 }
             Button(Modifier.height(h.scaled).padding(2.scaled)) { TextFlatten { it.key.emit() } }
                 .clickable(page != it) { page = it }.simpleTooltip(it.key)
         }

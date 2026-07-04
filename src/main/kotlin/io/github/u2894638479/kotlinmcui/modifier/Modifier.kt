@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.modifier
 
 import io.github.u2894638479.kotlinmcui.context.DslPreventContext
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.align.Alignment
 import io.github.u2894638479.kotlinmcui.math.px
@@ -25,6 +26,22 @@ inline val Modifier.paddingWidth get() = paddingLeft + paddingRight
 inline val Modifier.paddingHeight get() = paddingTop + paddingBottom
 inline val Modifier.contentMinWidth get() = width.ifNan { minWidth }
 inline val Modifier.contentMinHeight get() = height.ifNan { minHeight }
+fun Modifier.getSize(axis: Axis) = when(axis) {
+    Axis.Horizontal -> width
+    Axis.Vertical -> height
+}
+fun Modifier.getMinSize(axis: Axis) = when(axis) {
+    Axis.Horizontal -> minWidth
+    Axis.Vertical -> minHeight
+}
+fun Modifier.getPaddingLow(axis: Axis) = when(axis) {
+    Axis.Horizontal -> paddingLeft
+    Axis.Vertical -> paddingTop
+}
+fun Modifier.getPaddingHigh(axis: Axis) = when(axis) {
+    Axis.Horizontal -> paddingRight
+    Axis.Vertical -> paddingBottom
+}
 
 fun Modifier.size(width: Measure, height: Measure) = object : Modifier by this {
     override val width get() = width

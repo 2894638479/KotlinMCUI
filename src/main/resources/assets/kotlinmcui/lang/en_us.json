@@ -1,5 +1,6 @@
 {
     "kotlinmcui.testpage": "Test Page",
+    "kotlinmcui.testentry": "Test Entry",
     "kotlinmcui.test_translate": "Test Translate: string:%s, int:%d, float:%f",
     "kotlinmcui.layout": "Layout",
     "kotlinmcui.text": "Text",

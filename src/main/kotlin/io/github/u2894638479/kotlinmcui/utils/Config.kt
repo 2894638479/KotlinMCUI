@@ -2,11 +2,9 @@ package io.github.u2894638479.kotlinmcui.utils
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
+import io.github.u2894638479.kotlinmcui.functions.local
 import io.github.u2894638479.kotlinmcui.functions.newChildId
-import io.github.u2894638479.kotlinmcui.functions.property
-import io.github.u2894638479.kotlinmcui.functions.remember
 import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
@@ -26,7 +24,7 @@ object Config {
 
     context(ctx: DslContext)
     fun BoolButton(prop: StableRW<Boolean>, name: String, id: Any) = Button(defaultModifier,id = id) {
-        TextFlatten {
+        TextFlatten(Modifier.padding(h = 5.scaled)) {
             name.emit()
             ": ".emit()
             val bl = prop.value
@@ -42,7 +40,7 @@ object Config {
     fun <T : Enum<T>> EnumButton(prop: StableRW<T>, name:String, enumName:(T) -> String = { it.name }, id: Any): DslChild {
         var value by prop
         return Button(defaultModifier,id = id) {
-            TextFlatten {
+            TextFlatten(Modifier.padding(h = 5.scaled)) {
                 name.emit()
                 ": ".emit()
                 enumName(value).emit()
@@ -61,7 +59,7 @@ object Config {
     fun Slider(prop: StableRW<Int>, range: IntProgression, name: String, id: Any) = Slider(
         defaultModifier,Axis.Horizontal,range,prop,id = id
     ) {
-        TextFlatten {
+        TextFlatten(Modifier.padding(h = 5.scaled)) {
             name.emit()
             ": ".emit()
             prop.value.toString().emit()
@@ -78,7 +76,7 @@ object Config {
     fun Slider(prop: StableRW<Double>, range: ClosedFloatingPointRange<Double>, name: String, id: Any) = Slider(
         defaultModifier,Axis.Horizontal,range,prop,id = id
     ) {
-        TextFlatten {
+        TextFlatten(Modifier.padding(h = 5.scaled)) {
             name.emit()
             ": ".emit()
             prop.value.toString().emit()
@@ -96,7 +94,7 @@ object Config {
         defaultModifier,Axis.Horizontal,range.run { start.toDouble()..endInclusive.toDouble() },
         prop.remap(Float::toDouble,Double::toFloat),id = id
     ) {
-        TextFlatten {
+        TextFlatten(Modifier.padding(h = 5.scaled)) {
             name.emit()
             ": ".emit()
             prop.value.toString().emit()
@@ -145,14 +143,14 @@ object Config {
             S("v",{ color.vDouble },{color = color.changeHSV(v = it)})
         }
 
-        val scrollerProp by Scroller.empty.remember.property
+        val scrollerProp = local { Scroller.empty }
         ScrollableRow(Modifier.minHeight(50.scaled),scrollerProp) { items() }
         if(scrollerProp.value.isScrollable()) ScrollBar(Modifier.height(10.scaled),scrollerProp,Axis.Horizontal) {}
     }
 
     context(ctx: DslContext)
     fun Slider(range: IntProgression, name: String = "", defaultValue: Int = range.first, id: Any): StableRW<Int> {
-        val prop by dataStore.remember(newChildId(id),defaultValue).property
+        val prop = local(newChildId(id)) { defaultValue }
         Slider(prop,range,name,id)
         return prop
     }
@@ -160,7 +158,7 @@ object Config {
     @JvmName("SliderDouble")
     context(ctx: DslContext)
     fun Slider(range: ClosedFloatingPointRange<Double>, name: String = "", defaultValue: Double = range.start, id: Any): StableRW<Double> {
-        val prop by dataStore.remember(newChildId(id),defaultValue).property
+        val prop = local(newChildId(id)) { defaultValue }
         Slider(prop,range,name,id)
         return prop
     }
@@ -168,7 +166,7 @@ object Config {
     @JvmName("SliderFloat")
     context(ctx: DslContext)
     fun Slider(range: ClosedFloatingPointRange<Float>, name: String = "", defaultValue: Float = range.start, id: Any): StableRW<Float> {
-        val prop by dataStore.remember(newChildId(id),defaultValue).property
+        val prop = local(newChildId(id)) { defaultValue }
         Slider(prop,range,name,id)
         return prop
     }

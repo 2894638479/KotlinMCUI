@@ -6,24 +6,26 @@ import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
-import io.github.u2894638479.kotlinmcui.functions.ctxBackend
+import io.github.u2894638479.kotlinmcui.functions.backend
 import io.github.u2894638479.kotlinmcui.functions.executeContext
+import io.github.u2894638479.kotlinmcui.functions.local
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.scope.DslChild
+import kotlinx.coroutines.CoroutineScope
 import org.lwjgl.glfw.GLFW
 import java.nio.file.Path
 
 context(ctx: DslContext)
-fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext) ()->Unit)
+fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext) CoroutineScope.()->Unit)
 = change { if(!enabled) it else object : DslComponent by it {
-
+    val launchable = local.launchableContext
     fun click() {
-        ctxBackend.playButtonSound()
-        block(executeContext)
+        backend.playButtonSound()
+        block(DslExecuteContext(),launchable)
     }
 
     override val focusable get() = true
@@ -49,12 +51,13 @@ fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext)
 
 context(ctx: DslContext)
 fun DslChild.onHovered(
-    action: context(DslExecuteContext) (Boolean) -> Unit
+    action: context(DslExecuteContext) CoroutineScope.(Boolean) -> Unit
 ) = change {
     object : DslComponent by it {
+        val launchable = local.launchableContext
         override fun globalHoverChanged(newHover: DslId?) {
             it.globalHoverChanged(newHover)
-            action(executeContext,instance.identity == newHover)
+            action(executeContext,launchable,instance.identity == newHover)
         }
     }
 }
@@ -69,36 +72,38 @@ fun DslChild.narrate(string: String) = change {
 
 context(ctx: DslContext)
 fun DslChild.onFocused(
-    action: context(DslExecuteContext) (Boolean) -> Unit
+    action: context(DslExecuteContext) CoroutineScope.(Boolean) -> Unit
 ) = change {
     object: DslComponent by it {
         override fun globalFocusChanged(newFocus: DslId?) {
             it.globalHoverChanged(newFocus)
-            action(executeContext,instance.identity == newFocus)
+            action(executeContext,local.launchableContext,instance.identity == newFocus)
         }
     }
 }
 
 context(ctx: DslContext)
 fun DslChild.onFocusChanged(
-    action: context(DslExecuteContext) (DslId?) -> Unit
+    action: context(DslExecuteContext) CoroutineScope.(DslId?) -> Unit
 ) = change {
     object: DslComponent by it {
+        val launchable = local.launchableContext
         override fun globalFocusChanged(newFocus: DslId?) {
             it.globalHoverChanged(newFocus)
-            action(executeContext,newFocus)
+            action(executeContext,launchable,newFocus)
         }
     }
 }
 
 context(ctx: DslContext)
 fun DslChild.onHoverChanged(
-    action: context(DslExecuteContext) (DslId?) -> Unit
+    action: context(DslExecuteContext) CoroutineScope.(DslId?) -> Unit
 ) = change {
     object: DslComponent by it {
+        val launchable = local.launchableContext
         override fun globalHoverChanged(newHover: DslId?) {
             it.globalHoverChanged(newHover)
-            action(executeContext,newHover)
+            action(executeContext,launchable,newHover)
         }
     }
 }
@@ -111,12 +116,13 @@ fun DslChild.tooltip(function: DslFunction) = change {
 }
 
 context(ctx: DslContext)
-fun DslChild.onFilesDropped(action:context(DslExecuteContext) (List<Path>) -> Unit) = change {
+fun DslChild.onFilesDropped(action:context(DslExecuteContext) CoroutineScope.(List<Path>) -> Unit) = change {
     object : DslComponent by it {
+        val launchable = local.launchableContext
         context(mouse: Position)
         override fun dropFiles(files: List<Path>): Boolean {
             if(mouse in instance.rect) {
-                action(executeContext,files)
+                action(executeContext,launchable,files)
                 return true
             }
             return it.dropFiles(files)

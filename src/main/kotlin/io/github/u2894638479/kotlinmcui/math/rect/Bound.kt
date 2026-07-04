@@ -1,6 +1,8 @@
 package io.github.u2894638479.kotlinmcui.math.rect
 
 import io.github.u2894638479.kotlinmcui.math.Measure
+import io.github.u2894638479.kotlinmcui.math.align.Align
+import io.github.u2894638479.kotlinmcui.math.align.Align.*
 import io.github.u2894638479.kotlinmcui.math.px
 
 
@@ -16,6 +18,21 @@ interface Bound {
 }
 
 fun Bound(low: Measure,high: Measure):Bound = BoundImpl(low,high)
+fun Bound(align: Align, pos: Measure, size: Measure) = when(align) {
+    LOW -> Bound(pos - size, pos)
+    MID -> Bound(pos - size/2, pos + size/2)
+    HIGH -> Bound(pos, pos + size)
+}
+fun Bound.alignIn(align: Align, size: Measure) = when(align) {
+    LOW -> Bound(low, low + size)
+    MID -> Bound(center - size/2, center + size/2)
+    HIGH -> Bound(high - size, high)
+}
+fun Bound.alignOut(align: Align, size: Measure) = when(align) {
+    LOW -> Bound(low - size, low)
+    MID -> Bound(center - size/2, center + size/2)
+    HIGH -> Bound(high, high + size)
+}
 
 inline val Bound.range get() = low..high
 inline val Bound.isEmpty get() = high <= low

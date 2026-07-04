@@ -6,7 +6,7 @@ import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
-import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.local
 import io.github.u2894638479.kotlinmcui.functions.translate
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
@@ -44,7 +44,7 @@ fun ScrollBar(
     axis: Axis,
     id:Any?
 ) = Button(modifier,id = id) {
-    var lastDown by remember<Position?>(null)
+    var lastDown by local<Position?> { null }
     val scroller by scrollerProp
     val before = scroller.spaceBefore()
     val mid = scroller.size.unscaled

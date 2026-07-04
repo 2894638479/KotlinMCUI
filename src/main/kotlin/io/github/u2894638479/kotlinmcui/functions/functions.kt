@@ -2,110 +2,53 @@ package io.github.u2894638479.kotlinmcui.functions
 
 import io.github.u2894638479.kotlinmcui.backend.showScreen
 import io.github.u2894638479.kotlinmcui.component.DslComponent
-import io.github.u2894638479.kotlinmcui.context.DslContext
-import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
-import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
-import io.github.u2894638479.kotlinmcui.context.DslFrameContext
-import io.github.u2894638479.kotlinmcui.context.DslIdContext
-import io.github.u2894638479.kotlinmcui.context.DslScaleContext
-import io.github.u2894638479.kotlinmcui.context.DslTopContext
-import io.github.u2894638479.kotlinmcui.identity.DslProperty
+import io.github.u2894638479.kotlinmcui.context.*
+import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
 import io.github.u2894638479.kotlinmcui.math.animate.toInterpolatable
-import io.github.u2894638479.kotlinmcui.prop.*
+import io.github.u2894638479.kotlinmcui.prop.remap
 import io.github.u2894638479.kotlinmcui.scope.DslChild
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import java.io.File
+import kotlin.reflect.KMutableProperty1
+import kotlin.reflect.KProperty1
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 typealias DslFunction = context(DslContext) ()->Unit
-typealias DslTopFunction = context(DslTopContext) ()->Unit
 
 context(ctx: DslDataStoreContext)
-fun translate(string: String,vararg args: Any) = ctxBackend.translate(string,*args) ?: string
+fun translate(string: String,vararg args: Any) = backend.translate(string,*args) ?: string
 
 context(_: DslExecuteContext)
-fun showScreen(title:String = "DSL Screen",function: DslTopFunction) = dataStore.backend.showScreen(title,function)
+fun showScreen(title:String = "DSL Screen",function: DslFunction) = dataStore.backend.showScreen(title,function)
 
 context(ctx: DslContext)
 fun newChildId(id:Any?) = ctx.identity + id
 
 context(ctx: DslContext)
-inline fun <T> withId(obj:Any?, block: context(DslContext) ()->T) =
-    context(ctx.change(identity = identity + obj),block)
+inline fun <T> withId(obj:Any?, block: () -> T) = ctx.withIdentity(identity + obj,block)
 
 context(ctx: DslContext)
-inline fun <T> withScale(scale: Double, block: context(DslContext) ()->T) =
-    context(ctx.change(scaleContext = DslScaleContext(scale)),block)
+inline fun <T> withScale(scale: Double, block: () -> T) = ctx.withScale(scale,block)
 
 context(ctx: DslContext)
-inline fun <T> Iterable<T>.forEachWithId(block:context(DslContext) (T) -> Unit) = forEach { withId(it) { block(it) } }
-
-
-context(_: DslDataStoreContext, _: DslIdContext)
-val <T> LocalRW<T>.property get() = property(this)
-
-fun <T> property(prop: LocalRW<T>) = object: LocalRO<StableRW<T>> {
-    override val identity = prop.identity
-    override fun getValue(property: DslProperty<*>) = object: StableRW<T> {
-        override fun getValue() = prop.getValue(property)
-        override fun setValue(value: T) = prop.setValue(property,value)
-    }
-}
-
-val <T> LocalRO<T>.property get() = property(this)
-
-fun <T> property(prop: LocalRO<T>) = object: LocalRO<StableRO<T>> {
-    override val identity = prop.identity
-    override fun getValue(property: DslProperty<*>) = StableRO {
-        prop.getValue(property)
-    }
-}
-
-context(_: DslDataStoreContext, _: DslIdContext)
-fun <T> remember(defaultValue:T) = dataStore.remember(identity,defaultValue)
-
-context(_: DslDataStoreContext, _: DslIdContext)
-val <T> T.remember get() = remember(this)
-
-context(_: DslDataStoreContext, _: DslIdContext)
-fun <T> remember(defaultValue:()->T) = dataStore.remember(identity,defaultValue)
-
-context(_: DslDataStoreContext, _: DslIdContext, _: DslFrameContext)
-fun <T: Interpolatable<T>> animatable(beginValue: T, duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default) =
-    dataStore.animatable(identity,beginValue,duration,interpolator)
-
-context(_: DslDataStoreContext, _: DslIdContext, _: DslFrameContext)
-fun <T: Interpolatable<T>> autoAnimate(value: T, duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default) =
-    dataStore.autoAnimate(identity,value,duration,interpolator)
-
-context(_: DslDataStoreContext, _: DslIdContext, _: DslFrameContext)
-fun animatable(beginValue: Double, duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default) =
-    dataStore.animatable(identity,beginValue.toInterpolatable(),duration,interpolator).remap({it.toDouble()},{it.toInterpolatable()})
-
-context(_: DslDataStoreContext, _: DslIdContext, _: DslFrameContext)
-fun autoAnimate(value: Double, duration: Duration = 0.5.seconds, interpolator: Interpolator = Interpolator.default) =
-    dataStore.autoAnimate(identity,value.toInterpolatable(),duration,interpolator).remap { it.toDouble() }
+inline fun <T> Iterable<T>.forEachWithId(block: (T) -> Unit) = forEach { withId(it) { block(it) } }
 
 context(_: DslDataStoreContext, _: DslIdContext)
 fun imageFile(file: File?): ImageHolder {
-    return ctxBackend.loadLocalImage(file ?: return ImageHolder.empty)
+    return backend.loadLocalImage(file ?: return ImageHolder.empty)
 }
 
 context(_: DslDataStoreContext, _: DslIdContext)
-fun <K,V> cached(key: K, value:(K)->V) = dataStore.cached(identity,key,value)
-
-context(_: DslDataStoreContext, _: DslIdContext)
 fun imageResource(location: String, width: Measure, height: Measure) = ImageHolder(location, width, height)
-
 
 context(ctx: DslContext)
 fun collect(component: DslComponent) = ctx.children.collect(component)
 
 context(ctx: DslContext)
 fun remove(child: DslChild) = ctx.children.remove(child)
-
-

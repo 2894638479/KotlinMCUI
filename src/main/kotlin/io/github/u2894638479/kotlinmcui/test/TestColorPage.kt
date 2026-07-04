@@ -2,8 +2,7 @@ package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.property
-import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.local
 import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
@@ -15,7 +14,7 @@ import io.github.u2894638479.kotlinmcui.prop.setValue
 
 context(ctx: DslContext)
 fun TestColorPage() = ScrollableColumn {
-    val colorProp by Color.WHITE.remember.property
+    val colorProp = local { Color.WHITE }
     var color by colorProp
     ColorRect(Modifier.height(50.scaled),color) {}
     Row(Modifier.height(20.scaled)) {

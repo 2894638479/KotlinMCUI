@@ -7,23 +7,14 @@ import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
 import io.github.u2894638479.kotlinmcui.functions.decorator.tooltip
 import io.github.u2894638479.kotlinmcui.functions.decorator.tooltipBackground
-import io.github.u2894638479.kotlinmcui.functions.ui.Box
-import io.github.u2894638479.kotlinmcui.functions.ui.Button
-import io.github.u2894638479.kotlinmcui.functions.ui.ColorRect
-import io.github.u2894638479.kotlinmcui.functions.ui.Column
-import io.github.u2894638479.kotlinmcui.functions.ui.Spacer
-import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
+import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.px
-import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.modifier.height
-import io.github.u2894638479.kotlinmcui.modifier.minSize
-import io.github.u2894638479.kotlinmcui.modifier.padding
-import io.github.u2894638479.kotlinmcui.modifier.size
-import io.github.u2894638479.kotlinmcui.modifier.weight
+import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.scope.DslChild
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
+import kotlinx.coroutines.CoroutineScope
 
 object Simple {
     context(ctx: DslContext)
@@ -31,8 +22,8 @@ object Simple {
         ColorRect(Modifier.minSize(size,size).weight(0.0).padding(padding),color,id)
 
     context(ctx: DslContext)
-    fun Button(text: String, active: Boolean = true, id: Any? = null, onClick:context(DslExecuteContext)() -> Unit) = Button(Modifier.height(20.scaled).padding(2.scaled),id = id ?: onClick::class) {
-        TextFlatten(Modifier.padding(h = 10.scaled)) { text.emit() }
+    fun Button(text: String, active: Boolean = true, id: Any? = null, onClick:context(DslExecuteContext) CoroutineScope.() -> Unit) = Button(Modifier.height(20.scaled).padding(2.scaled),id = id ?: onClick::class) {
+        TextFlatten(Modifier.padding(h = 5.scaled)) { text.emit() }
     }.clickable(active,onClick)
 
     context(ctx: DslContext)

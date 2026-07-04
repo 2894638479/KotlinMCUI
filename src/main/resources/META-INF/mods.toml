@@ -19,4 +19,4 @@ modId = "kotlinmcuibackend"
 mandatory = true
 versionRange = "[0,)"
 ordering = "NONE"
-side = "CLIENT"
+side = "BOTH"

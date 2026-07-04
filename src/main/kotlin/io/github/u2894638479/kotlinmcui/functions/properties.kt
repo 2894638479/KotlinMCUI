@@ -11,10 +11,19 @@ context(ctx: DslIdContext)
 val identity get() = ctx.identity
 
 context(ctx: DslDataStoreContext)
-val ctxBackend get() = ctx.dataStore.backend
+val backend get() = ctx.dataStore.backend
 
 context(ctx: DslDataStoreContext)
 val screenTitle get() = dataStore.title
 
-context(ctx: DslDataStoreContext,ctx2: DslIdContext)
-val executeContext: DslExecuteContext get() = object : DslExecuteContext, DslDataStoreContext by ctx, DslIdContext by ctx2 {}
+context(ctx: DslDataStoreContext)
+val stable get() = dataStore.stableLifeScope
+
+context(ctx: DslDataStoreContext)
+val static get() = dataStore.staticLifeScope
+
+context(ctx: DslDataStoreContext)
+val local get() = dataStore.localLifeScope
+
+context(ctx: DslDataStoreContext)
+val executeContext: DslExecuteContext get() = DslExecuteContext(ctx.dataStore)

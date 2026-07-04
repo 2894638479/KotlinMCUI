@@ -3,7 +3,7 @@ package io.github.u2894638479.kotlinmcui.test
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
-import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.local
 import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Axis
@@ -15,7 +15,7 @@ import io.github.u2894638479.kotlinmcui.scope.DslChild
 
 context(ctx: DslContext)
 fun TestIdPage() = Row {
-    var id by remember(DslId(null))
+    var id by local { DslId(null) }
 
     ScrollableColumn {
         TextAutoFold { "last clicked id: $id".emit() }

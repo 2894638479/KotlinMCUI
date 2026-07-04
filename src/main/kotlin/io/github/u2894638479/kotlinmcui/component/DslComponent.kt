@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.component
 
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
+import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.functions.dataStore
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.contains
@@ -9,7 +10,7 @@ import io.github.u2894638479.kotlinmcui.scope.DslChild
 
 
 interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEvent, DslComponentGlobalEvent, DslComponentMetadata,
-    DslIdContext {
+    DslIdContext, DslScaleContext {
     val children: DslChild.List get() = DslChild.List.empty
     fun build() {}
     fun layoutHorizontal() {}

@@ -22,7 +22,7 @@ open class DslText(
     val defaultLineHeight: Measure,
     val horizontalAligner: Aligner,
     val verticalAligner: Aligner
-) : DslComponent by DslComponentImpl(identity,modifier) {
+) : DslComponent by DslComponentImpl(identity,modifier,ctx) {
     override val narratable get() = true
     override val narration get() = chars.joinToString {
         val arr = IntArray(it.size) { i -> it[i].code }

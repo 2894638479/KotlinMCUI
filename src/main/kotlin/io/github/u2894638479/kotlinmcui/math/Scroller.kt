@@ -3,13 +3,10 @@ package io.github.u2894638479.kotlinmcui.math
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.outerMinSize
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
-import io.github.u2894638479.kotlinmcui.context.DslFrameContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.context.unscaled
-import io.github.u2894638479.kotlinmcui.functions.animatable
-import io.github.u2894638479.kotlinmcui.functions.property
-import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.local
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.rect.Bound
@@ -19,10 +16,8 @@ import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.prop.setValue
-import kotlin.collections.ifEmpty
 import kotlin.collections.sumOf
 import kotlin.math.sign
-import kotlin.run
 
 interface Scroller: DslScaleContext, Bound {
     companion object {
@@ -40,7 +35,7 @@ interface Scroller: DslScaleContext, Bound {
                 set(value) {}
             override val scale get() = 1.0
         }
-        context(ctx: DslScaleContext,_: DslDataStoreContext,_: DslFrameContext,_: DslIdContext)
+        context(ctx: DslScaleContext,_: DslDataStoreContext,_: DslIdContext)
         fun scroller(instance: DslComponent, axis: Axis, scrollProp: StableRW<Double>?):Scroller
         = object : Scroller, Bound by instance.rect.bound(axis) {
             override val scale get() = ctx.scale
@@ -50,13 +45,10 @@ interface Scroller: DslScaleContext, Bound {
                     override val size get() = it.outerMinSize(axis)
                 }
             }
-            override var offset by 0.0.remember
-            override var rawScroll by 0.0.remember
-            override var scroll by scrollProp ?: run {
-                val prop by animatable(0.0).property
-                prop
-            }
-            override var scrollIndex by 0.remember
+            override var offset by local { 0.0 }
+            override var rawScroll by local { 0.0 }
+            override var scroll by scrollProp ?: local.animatable { 0.0 }
+            override var scrollIndex by local { 0 }
             override fun spaceBefore(): Double {
                 items.ifEmpty { return 0.0 }
                 val scroll = scroll

@@ -17,7 +17,7 @@ fun Item(
     damage: Double? = null,
     enchanted:Boolean = false,
     id:Any
-) = collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier) {
+) = collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier,ctx) {
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         backend.renderItem(instance.rect,item,count,damage,enchanted)

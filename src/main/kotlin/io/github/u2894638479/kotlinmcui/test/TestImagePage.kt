@@ -2,17 +2,21 @@ package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.decorator.onFilesDropped
 import io.github.u2894638479.kotlinmcui.functions.decorator.hoverMask
+import io.github.u2894638479.kotlinmcui.functions.decorator.onFilesDropped
 import io.github.u2894638479.kotlinmcui.functions.imageFile
 import io.github.u2894638479.kotlinmcui.functions.imageResource
-import io.github.u2894638479.kotlinmcui.functions.property
-import io.github.u2894638479.kotlinmcui.functions.remember
-import io.github.u2894638479.kotlinmcui.functions.ui.*
+import io.github.u2894638479.kotlinmcui.functions.local
+import io.github.u2894638479.kotlinmcui.functions.ui.Image
+import io.github.u2894638479.kotlinmcui.functions.ui.Row
+import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableColumn
+import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.px
-import io.github.u2894638479.kotlinmcui.modifier.*
+import io.github.u2894638479.kotlinmcui.modifier.Modifier
+import io.github.u2894638479.kotlinmcui.modifier.height
+import io.github.u2894638479.kotlinmcui.modifier.size
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.remap
 import io.github.u2894638479.kotlinmcui.prop.setValue
@@ -24,21 +28,21 @@ private enum class Mode{ LOCAL,RESOURCE }
 
 context(ctx: DslContext)
 fun TestImagePage() = ScrollableColumn {
-    val colorProp by remember(Color.WHITE).property
+    val colorProp = local { Color.WHITE }
     val color by colorProp
-    val widthProp by 100.remember.property
-    val heightProp by 100.remember.property
+    val widthProp = local { 100 }
+    val heightProp = local { 100 }
     val width by widthProp
     val height by heightProp
-    val localImageProp by "".remember.property
+    val localImageProp = local { "" }
     val localImage by localImageProp.remap { imageFile(File(it)) }
-    val resourceImageProp by "minecraft:textures/block/dirt.png".remember.property
-    val resourceWidthProp by 32.px.remember.property
-    val resourceHeightProp by 32.px.remember.property
+    val resourceImageProp = local { "minecraft:textures/block/dirt.png" }
+    val resourceWidthProp = local { 32.px }
+    val resourceHeightProp = local { 32.px }
     val resourceImage by resourceImageProp.remap { imageResource(it, resourceWidthProp.value,resourceHeightProp.value) }
-    var strategy by ImageStrategy.clip.remember
+    var strategy by local { ImageStrategy.clip }
 
-    val mode by Mode.LOCAL.remember.property
+    val mode = local { Mode.LOCAL }
 
     Config.ColorEdit(colorProp) {}
     Row {

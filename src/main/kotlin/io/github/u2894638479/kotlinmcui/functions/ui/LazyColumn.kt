@@ -37,10 +37,7 @@ fun LazyColumn(
 ) = withId(id ?: function::class) {
     val delegate = DslScopeImpl(identity, modifier, ctx, function)
     collect(object : DslScope by delegate {
-        var scroller by scrollerProp ?: run {
-            val prop by Scroller.empty.remember.property
-            prop
-        }
+        var scroller by scrollerProp ?: local<Scroller> { Scroller.empty }
 
         override fun build() {
             instance.children.buildThis(ctx,function)
@@ -51,7 +48,7 @@ fun LazyColumn(
 
         override fun layoutVertical() {
             val scroller = object : Scroller {
-                override val scale get() = ctx.scale
+                override val scale = ctx.scale
                 override val items = object : AbstractList<Scroller.Item>() {
                     private val list = MutableList<Scroller.Item?>(children.size) { null }
                     override val size by list::size
@@ -74,13 +71,10 @@ fun LazyColumn(
                 }
                 override val low by instance.rect::top
                 override val high by instance.rect::bottom
-                override var offset by 0.0.remember
-                override var rawScroll by 0.0.remember
-                override var scroll by scrollProp ?: run {
-                    val prop by animatable(0.0).property
-                    prop
-                }
-                override var scrollIndex by 0.remember
+                override var offset by local { 0.0 }
+                override var rawScroll by local { 0.0 }
+                override var scroll by scrollProp ?: local.animatable { 0.0 }
+                override var scrollIndex by local { 0 }
             }
             scroller.updateScroll()
             val visibleIndices = scroller.updateIndex()

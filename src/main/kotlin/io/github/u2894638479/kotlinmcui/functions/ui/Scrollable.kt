@@ -66,10 +66,7 @@ fun Scrollable(
     val delegate = DslScopeImpl(identity, modifier, ctx, function)
     collect(
         object : DslScope by delegate {
-            var scroller by scrollerProp ?: run {
-                val prop by Scroller.empty.remember.property
-                prop
-            }
+            var scroller by scrollerProp ?: local<Scroller> { Scroller.empty }
 
             override val contentMinWidth by lazy {
                 max(if(axis == Axis.Horizontal) 0.px else instance.childrenMaxWidth,super.contentMinWidth)
@@ -114,7 +111,7 @@ fun Scrollable(
             context(mouse: Position)
             override fun mouseScrollVertical(amount: Double): Double {
                 val remain = delegate.mouseScrollVertical(amount)
-                if(axis != Axis.Vertical && !ctxBackend.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)) return remain
+                if(axis != Axis.Vertical && !backend.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)) return remain
                 return scroller.scroll(remain * -sensitivity) / -sensitivity
             }
 

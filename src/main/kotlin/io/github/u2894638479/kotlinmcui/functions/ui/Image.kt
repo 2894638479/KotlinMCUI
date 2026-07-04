@@ -21,7 +21,7 @@ fun Image(
     color: Color = Color.WHITE,
     strategy: ImageStrategy = ImageStrategy.clip,
     id:Any
-) = collect(object : DslComponent by DslComponentImpl(newChildId(id), modifier) {
+) = collect(object : DslComponent by DslComponentImpl(newChildId(id), modifier,ctx) {
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         strategy.render(instance.rect, image, color)

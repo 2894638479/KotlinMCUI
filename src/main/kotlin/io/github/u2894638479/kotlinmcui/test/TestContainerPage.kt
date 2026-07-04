@@ -7,8 +7,8 @@ import io.github.u2894638479.kotlinmcui.functions.decorator.containerBackground
 import io.github.u2894638479.kotlinmcui.functions.decorator.hoverMask
 import io.github.u2894638479.kotlinmcui.functions.decorator.slotBackground
 import io.github.u2894638479.kotlinmcui.functions.forEachWithId
-import io.github.u2894638479.kotlinmcui.functions.property
-import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.local
+import io.github.u2894638479.kotlinmcui.functions.static
 import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
@@ -20,22 +20,22 @@ import io.github.u2894638479.kotlinmcui.prop.value
 context(ctx: DslContext)
 fun TestContainerPage() = ScrollableColumn {
     class ItemInfo(val id:String,val count: Int,val damage: Double? = null,val enchanted:Boolean = false)
-    var mouseHold by remember<ItemInfo?>(null)
+    var mouseHold by local<ItemInfo?> { null }
     MouseTip {
         mouseHold?.run {
             Item(Modifier.size(16.scaled,16.scaled),id,count,damage,enchanted) {}
         }
     }
     Row {
-        val size by 10.remember.property
+        val size = local { 10 }
         Slider(Modifier.height(20.scaled),Axis.Horizontal,0..100,size) {
             TextFlatten { "slot size:${size.value}".emit() }
         }
         Spacer(Modifier.size(size.value.scaled,size.value.scaled)) {}.slotBackground()
     }
     Row {
-        val width by 80.remember.property
-        val height by 50.remember.property
+        val width = local { 80 }
+        val height = local { 50 }
         Column {
             Slider(Modifier.height(20.scaled),Axis.Horizontal,0..200,width) {
                 TextFlatten { "container width:${width.value}".emit() }
@@ -46,7 +46,7 @@ fun TestContainerPage() = ScrollableColumn {
         }
         Spacer(Modifier.size(width.value.scaled,height.value.scaled)) {}.containerBackground()
     }
-    val items by remember {
+    val items by static {
         Array<ItemInfo?>(4 * 9) { null }.also {
             it[3] = ItemInfo("placeholder",3,0.5,true)
             it[13] = ItemInfo("minecraft:grass_block",35,0.4,true)
@@ -56,7 +56,7 @@ fun TestContainerPage() = ScrollableColumn {
     }
 
     Column(Modifier.width(Measure.AUTO_MIN)) {
-        val text by "text".remember.property
+        val text = local { "text" }
         EditableText(Modifier.padding(4.scaled),text) {}.slotBackground(2.scaled)
         (0..<4).forEachWithId { row ->
             Row {

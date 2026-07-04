@@ -1,97 +1,53 @@
 package io.github.u2894638479.kotlinmcui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.context.DslFrameContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
-import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
+import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.identity.DslId
-import io.github.u2894638479.kotlinmcui.identity.DslProperty
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.animate.Animator
-import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
-import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
 import io.github.u2894638479.kotlinmcui.math.px
-import io.github.u2894638479.kotlinmcui.prop.LocalRO
-import io.github.u2894638479.kotlinmcui.prop.LocalRW
+import io.github.u2894638479.kotlinmcui.prop.PropertyLifeScope
+import io.github.u2894638479.kotlinmcui.prop.PropertyLifeScope.TimedProperty
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
-import kotlin.time.Duration
 
 class DslDataStore(
     val backend: DslBackend<*, *>,
     val title:String,
-    val defaultOnClose:()-> Unit,
-    dslFunction: DslTopFunction
+    val onClose:()-> Unit,
+    dslFunction: DslFunction
 ): DslScaleContext {
     override val scale get() = backend.guiScale
 
-    private val extraData = object: Object2ObjectOpenHashMap<DslProperty<*>, Any?>(){
-        val empty = object{}
-        inline fun getOrEmpty(key: DslProperty<*>, ifEmpty:()->Any?):Any?{
-            val result = getOrDefault(key,empty)
-            if(result === empty) return ifEmpty()
-            return result
-        }
-        fun getOrPutInner(key: DslProperty<*>, default: Any?):Any? {
-            defRetValue = empty
-            val result = putIfAbsent(key,default)
-            defRetValue = null
-            if(result === empty) return default
-            return result
-        }
+    var frameBeginNano = 0L
+        private set
+
+    var frameIndex = ULong.MAX_VALUE
+        private set
+
+    var inFrame = false
+        private set
+
+    companion object {
+        private val staticPropertyMap = Object2ObjectOpenHashMap<DslId, TimedProperty<*>>()
     }
 
-    var onClose:()-> Unit = defaultOnClose
-        internal set
+    val stableLifeScope = PropertyLifeScope(this)
+    val localLifeScope = PropertyLifeScope(this)
+    val staticLifeScope = PropertyLifeScope(this,true,staticPropertyMap)
+
+    fun frame(action:() -> Unit) = try {
+        inFrame = true
+        frameBeginNano = System.nanoTime()
+        frameIndex++
+        action()
+    } finally {
+        localLifeScope.clearOutdated()
+        inFrame = false
+    }
 
     var pauseGame = true
 
     var debug = false
-
-    fun <T> remember(identity: DslId, defaultValue:T) = object : LocalRW<T> {
-        override val identity = identity
-        override fun getValue(property: DslProperty<*>) = extraData.getOrPutInner(property,defaultValue) as T
-        override fun setValue(property: DslProperty<*>, value: T) { extraData[property] = value }
-    }
-
-    fun <T> remember(identity: DslId, defaultValue:()->T) = object : LocalRW<T> {
-        override val identity = identity
-        override fun getValue(property: DslProperty<*>) = extraData.getOrEmpty(property) {
-            defaultValue().also { extraData[property] = it }
-        } as T
-        override fun setValue(property: DslProperty<*>, value: T) { extraData[property] = value}
-    }
-
-    context(ctx: DslFrameContext)
-    fun <T : Interpolatable<T>> animatable(identity: DslId, beginValue: T, duration: Duration, interpolator: Interpolator) = object :
-        LocalRW<T> {
-        fun animator(property: DslProperty<*>) = extraData.getOrPut(property) {
-            Animator(beginValue, duration.inWholeNanoseconds, interpolator, ctx)
-        } as Animator<T>
-        override val identity = identity
-        override fun getValue(property: DslProperty<*>) = animator(property).value
-        override fun setValue(property: DslProperty<*>, value: T) { animator(property).value = value }
-    }
-
-    context(ctx: DslFrameContext)
-    fun <T : Interpolatable<T>> autoAnimate(identity: DslId, value: T, duration: Duration, interpolator: Interpolator) = object:
-        LocalRO<T> {
-        override val identity = identity
-        override fun getValue(property: DslProperty<*>):T {
-            val animator = extraData.getOrPut(property) {
-                Animator(value, duration.inWholeNanoseconds, interpolator,ctx)
-            } as Animator<T>
-            if(animator.targetValue != value) animator.setWithTime(value,ctx.frameBeginNano)
-            return animator.value
-        }
-    }
-
-    fun <K,V> cached(identity: DslId, key: K, value:(K)->V) = object: LocalRO<V> {
-        override val identity = identity
-        override fun getValue(property: DslProperty<*>): V {
-            val map = extraData.getOrPut(property) { Object2ObjectOpenHashMap<K,V>() } as Object2ObjectOpenHashMap<K,V>
-            return map.getOrPut(key) { value(key) }
-        }
-    }
 
     var focused: DslId? = null
         set(value) {

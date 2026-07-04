@@ -76,7 +76,7 @@ value class Measure private constructor(val raw: Double):Comparable<Measure>, In
     override operator fun compareTo(other: Measure) = raw.compareTo(other.raw)
 
     object Serializer : KSerializer<Measure> {
-        override val descriptor = PrimitiveSerialDescriptor("RawDouble", PrimitiveKind.LONG)
+        override val descriptor = PrimitiveSerialDescriptor("rawDouble", PrimitiveKind.LONG)
         override fun serialize(encoder: Encoder, value: Measure) = encoder.encodeLong(value.bits)
         override fun deserialize(decoder: Decoder) = ofBits(decoder.decodeLong())
     }

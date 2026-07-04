@@ -5,8 +5,8 @@ import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.functions.DslFunction
 import io.github.u2894638479.kotlinmcui.functions.decorator.background
 import io.github.u2894638479.kotlinmcui.functions.forEachWithId
-import io.github.u2894638479.kotlinmcui.functions.property
-import io.github.u2894638479.kotlinmcui.functions.remember
+import io.github.u2894638479.kotlinmcui.functions.local
+import io.github.u2894638479.kotlinmcui.functions.static
 import io.github.u2894638479.kotlinmcui.functions.ui.*
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
@@ -22,7 +22,7 @@ import io.github.u2894638479.kotlinmcui.utils.Simple
 
 context(ctx: DslContext)
 fun TestLayoutPage() = Column {
-    val map by remember { mapOf<String, DslFunction>(
+    val map by static { mapOf<String, DslFunction>(
         "general" to {
             Row {
                 Column {
@@ -122,7 +122,7 @@ fun TestLayoutPage() = Column {
             }
         },
         "recursion" to {
-            val n by remember(10).property
+            val n = local { 10 }
             fun color(n:Int) = when(n % 5) {
                 0 -> Color.RED
                 1 -> Color.BLUE
@@ -159,7 +159,7 @@ fun TestLayoutPage() = Column {
             }
         }
     ) }
-    var chosen by remember(map.entries.first())
+    var chosen by local { map.entries.first() }
     Row(Modifier.weight(0.0)) {
         map.entries.forEachWithId {
             Simple.Button(it.key,chosen != it) { chosen = it }

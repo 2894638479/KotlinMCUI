@@ -21,6 +21,7 @@ class DslScopeImpl(
     val alignerHorizontal: Aligner = Aligner.simplePlace,
     val alignerVertical: Aligner = Aligner.simplePlace,
 ) : DslScope {
+    override val scale = ctx.scale
     override val rect = MutRect()
     override val children = DslChild.List()
     private var _instance: DslComponent? = null

@@ -3,6 +3,7 @@ package io.github.u2894638479.kotlinmcui.math.rect
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.px
 
 
@@ -33,6 +34,19 @@ fun Rect(horizontal: Bound,vertical: Bound) = object: Rect {
     override val top by vertical::low
     override val right by horizontal::high
     override val bottom by vertical::high
+}
+
+operator fun Rect.get(axis: Axis) = bound(axis)
+
+val Rect.fixed get() = object: MutRect {
+    override var left get() = this@fixed.left
+        set(value) {}
+    override var top get() = this@fixed.top
+        set(value) {}
+    override var right get() = this@fixed.right
+        set(value) {}
+    override var bottom get() = this@fixed.bottom
+        set(value) {}
 }
 
 inline val Rect.width get() = right - left

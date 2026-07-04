@@ -1,34 +1,42 @@
 package io.github.u2894638479.kotlinmcui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
-import io.github.u2894638479.kotlinmcui.component.*
-import io.github.u2894638479.kotlinmcui.context.*
-import io.github.u2894638479.kotlinmcui.functions.DslTopFunction
-import io.github.u2894638479.kotlinmcui.functions.executeContext
-import io.github.u2894638479.kotlinmcui.functions.ui.MouseTipComponent
+import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.attachInstance
+import io.github.u2894638479.kotlinmcui.component.nextFocusable
+import io.github.u2894638479.kotlinmcui.component.nextFocusableList
+import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.functions.DslFunction
+import io.github.u2894638479.kotlinmcui.functions.ui.Overlay
 import io.github.u2894638479.kotlinmcui.glfw.EventModifier
 import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
-import io.github.u2894638479.kotlinmcui.math.*
-import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
-import io.github.u2894638479.kotlinmcui.math.rect.*
+import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.align.OverlayAlign
+import io.github.u2894638479.kotlinmcui.math.maxOf
+import io.github.u2894638479.kotlinmcui.math.minOf
+import io.github.u2894638479.kotlinmcui.math.rect.Rect
+import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
+import io.github.u2894638479.kotlinmcui.math.rect.vertices
 import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.scope.DslChild
-import io.github.u2894638479.kotlinmcui.scope.DslChild.Companion.buildThis
 import io.github.u2894638479.kotlinmcui.scope.DslScope
 import io.github.u2894638479.kotlinmcui.scope.DslScopeImpl
 import org.lwjgl.glfw.GLFW
 
 class DslScreen private constructor(
     val dataStore: DslDataStore,
-    val dslFunction: DslTopFunction,
+    val dslFunction: DslFunction,
     val delegate: DslScope
 ) : DslScope by delegate {
-    constructor(dataStore: DslDataStore,dslFunction: DslTopFunction):this(
-        dataStore,dslFunction,DslScopeImpl(DslId(null), Modifier,
-            DslContext(DslId(null),dataStore, DslChild.List.empty,dataStore,
-                DslFrameContext(ULong.MAX_VALUE,0L)),{}),
+    constructor(dataStore: DslDataStore,dslFunction: DslFunction):this(
+        dataStore,dslFunction,
+        with(DslContext(dataStore)) {
+            withScale(0.0) {
+                DslScopeImpl(DslId(null), Modifier, this,{})
+            }
+        },
     )
 
     fun close() { dataStore.onClose() }
@@ -80,44 +88,64 @@ class DslScreen private constructor(
 
     init { instance = this }
 
-    private val frameContext = object: DslFrameContext {
-        override var frameBeginNano = 0L
-        override var frameIndex = ULong.MAX_VALUE
-    }
 
+    private var overlays = DslChild.List()
+    override var children = DslChild.List()
     override fun build() {
-        dataStore.onClose = dataStore.defaultOnClose
-        val buildChildren = DslChild.List()
-        DslTopContext(identity, dataStore, buildChildren, dataStore, frameContext){
-            val defaultOnClose = dataStore.onClose
-            val executeContext = context(DslIdContext(identity), DslDataStoreContext(dataStore)) { executeContext }
-            val onCloseContext = object : DslOnCloseContext, DslExecuteContext by executeContext {
-                override fun defaultOnClose() = defaultOnClose()
-            }
-            dataStore.onClose = { it(onCloseContext) }
-        }.run { dslFunction() }
-        buildChildren.forEach { it.attachInstance();it.build() }
+        children = DslChild.List()
+        overlays = DslChild.List()
+        val ctx = DslContext(dataStore)
+        context(ctx) {
+            ctx.withScale(dataStore.scale) {
+                ctx.withIdentity(DslId(null)) {
+                    var overlays = DslChild.List()
+                    ctx.withChildren(children) {
+                        ctx.withOverlays(overlays) {
+                            dslFunction()
+                            children.forEach {
+                                it.attachInstance()
+                                it.build()
+                            }
+                        }
+                    }
+                    layoutHorizontal()
+                    layoutVertical()
+                    do {
+                        this.overlays.collectAll(overlays)
+                        val temp = overlays
+                        overlays = DslChild.List()
+                        ctx.withOverlays(overlays) {
+                            temp.forEach {
+                                it.attachInstance()
+                                it.build()
+                                it.layoutHorizontal()
+                                it.layoutVertical()
+                            }
+                        }
+                    } while (overlays.isNotEmpty())
 
-        val children = instance.children
-        var list = children.toSet()
-        while(list.isNotEmpty()) {
-            list.forEach { it.attachInstance();it.build() }
-            list = children.subtract(list)
+
+                    children = DslChild.List().also { it.collectAll(this.overlays + children) }
+                    val tooltips = DslChild.List()
+                    ctx.withOverlays(tooltips) {
+                        Tooltip()
+                    }
+
+                    tooltips.forEach {
+                        it.attachInstance()
+                        it.build()
+                        it.layoutHorizontal()
+                        it.layoutVertical()
+                    }
+                    children = DslChild.List().apply { collectAll(tooltips + children) }
+                }
+            }
         }
-        buildChildren.forEach { children.collect(it) }
     }
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-    override fun <RP> render() {
-        frameContext.frameIndex++
-        frameContext.frameBeginNano = System.nanoTime()
-        instance.children.clear()
-        val tooltipPlaceHolder = DslComponentImpl(DslId(Unit),Modifier)
-        val tooltip = instance.children.collect(tooltipPlaceHolder)
+    override fun <RP> render() = dataStore.frame {
         build()
-        layoutHorizontal()
-        layoutVertical()
-        tooltip.change(buildTooltip().apply { attachInstance();build();layoutHorizontal();layoutVertical() })
 
         val hovered = instance.testHit(mouse) { it.takeIf { it.highlightable } }
         dataStore.hovered = hovered?.identity
@@ -125,86 +153,34 @@ class DslScreen private constructor(
         delegate.render()
     }
 
-    private fun buildTooltip() = run {
-        val ctx = DslContext(identity,dataStore,instance.children,dataStore,frameContext)
-        val delegate = DslScopeImpl(identity + {},Modifier,ctx,{})
-        object : DslComponent by delegate, MouseTipComponent {
-            var focusedRect: Rect? = null
-            var rawFocusedRect: Rect? = null
-            var transforms = Transform.empty
-            override fun build() {
-                val hovered = dataStore.dslScreen.testHit(dataStore.mouse) { it.tooltip }
-                val focusedId = dataStore.focused
-                val focused = if(focusedId == null) null else dataStore.dslScreen.testHit { it.takeIf { it.identity == focusedId } }
-                val func = hovered ?: focused?.tooltip ?: return
-                if(focusedId != null && hovered == null) focusedRect = run {
-                    fun getTransform(component: DslComponent): Transform? {
-                        if(component.identity == focusedId) return component.transform
-                        val child = component.children.firstNotNullOfOrNull { getTransform(it) } ?: return null
-                        return component.transform * child
-                    }
-                    val transform = getTransform(dataStore.dslScreen) ?: return@run null
-                    val rect = focused?.rect ?: return@run null
-                    if(transform.isEmpty) return@run rect
-                    val vertices = rect.vertices.map { transform * it }
-                    if(dataStore.debug) {
-                        transforms = transform
-                        rawFocusedRect = rect
-                    }
-                    Rect(vertices.minOf { it.x },vertices.minOf { it.y },vertices.maxOf { it.x },vertices.maxOf { it.y })
-                }
-
-                instance.children.buildThis(ctx,func)
-                instance.children.forEach { it.attachInstance();it.build() }
-            }
-            override fun layoutHorizontal() {
-                val focusedRect = focusedRect
-                val boundH = if(focusedRect != null) layoutFocusH(focusedRect, dataStore.dslScreen.rect,instance.childrenMaxWidth)
-                else layoutMouseH(dataStore.mouse, dataStore.dslScreen.rect,instance.childrenMaxWidth)
-                instance.rect.bound(Axis.Horizontal) copyFrom boundH
-                delegate.layoutHorizontal()
-            }
-            override fun layoutVertical() {
-                val focusedRect = focusedRect
-                val boundV = if(focusedRect != null) layoutFocusV(focusedRect, dataStore.dslScreen.rect,instance.childrenMaxHeight)
-                else layoutMouseV(dataStore.mouse, dataStore.dslScreen.rect,instance.childrenMaxHeight)
-                instance.rect.bound(Axis.Vertical) copyFrom boundV
-                delegate.layoutVertical()
+    context(ctx: DslContext)
+    private fun Tooltip() {
+        var focusedRect: Rect? = null
+        var rawFocusedRect: Rect? = null
+        var transforms = Transform.empty
+        val hovered = dataStore.dslScreen.testHit(dataStore.mouse) { it.tooltip }
+        val focusedId = dataStore.focused
+        val focused = if(focusedId == null) null else dataStore.dslScreen.testHit { it.takeIf { it.identity == focusedId } }
+        val func = hovered ?: focused?.tooltip ?: return
+        if(focusedId != null && hovered == null) focusedRect = run {
+            fun getTransform(component: DslComponent): Transform? {
+                if (component.identity == focusedId) return component.transform
+                val child = component.children.firstNotNullOfOrNull { getTransform(it) } ?: return null
+                return component.transform * child
             }
 
-            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-            override fun <RP> render() {
-                delegate.render()
-                if(dataStore.debug) backend.withTransform(transforms) {
-                    backend.fillRect(rawFocusedRect ?: return@withTransform, Color(255,255,255,100))
-                }
+            val transform = getTransform(dataStore.dslScreen) ?: return@run null
+            val rect = focused?.rect ?: return@run null
+            if (transform.isEmpty) return@run rect
+            val vertices = rect.vertices.map { transform * it }
+            if (dataStore.debug) {
+                transforms = transform
+                rawFocusedRect = rect
             }
-
-            fun layoutMouseH(mouse: Position, screen: Rect, width: Measure) = MutBound(0.px,0.px).also {
-                it.low = when {
-                    screen.right - mouse.x >= width -> mouse.x
-                    screen.left + width <= mouse.x -> mouse.x - width
-                    else -> screen.right - width
-                }
-                it.high = it.low + width
-            }
-            fun layoutMouseV(mouse: Position, screen: Rect, height: Measure) = MutBound(0.px,0.px).also {
-                it.low = when {
-                    mouse.y - screen.top >= height -> mouse.y - height
-                    mouse.y + height <= screen.bottom -> mouse.y
-                    else -> screen.top
-                }
-                it.high = it.low + height
-            }
-
-            fun layoutFocusH(focused: Rect, screen: Rect, width: Measure) = MutBound(0.px,0.px).also {
-                it.low = if(screen.right - focused.left >= width) focused.left else max(screen.left,focused.right - width)
-                it.high = it.low + width
-            }
-            fun layoutFocusV(focused: Rect, screen: Rect, height: Measure) = MutBound(0.px,0.px).also {
-                it.low = if(screen.bottom - focused.bottom >= height) focused.bottom else max(screen.top,focused.top - height)
-                it.high = it.low + height
-            }
+            Rect(vertices.minOf { it.x }, vertices.minOf { it.y }, vertices.maxOf { it.x }, vertices.maxOf { it.y })
         }
+        val outline: Rect = ctx.dataStore.dslScreen.rect
+        val align = focusedRect?.let { OverlayAlign.AutoToRect(it,outline) } ?: OverlayAlign.AutoToPoint(dataStore.mouse,outline)
+        Overlay(Modifier,align) { func() }
     }
 }
