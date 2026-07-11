@@ -1,21 +1,44 @@
 package io.github.u2894638479.kotlinmcui.entry
 
+import io.github.u2894638479.kotlinmcui.backend.Environment
 import io.github.u2894638479.kotlinmcui.context.DslContext
-import io.github.u2894638479.kotlinmcui.dslLogger
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
-import io.github.u2894638479.kotlinmcui.functions.forEachWithId
-import io.github.u2894638479.kotlinmcui.functions.ui.Box
+import io.github.u2894638479.kotlinmcui.logger.dslLogger
+import io.github.u2894638479.kotlinmcui.dsl.forEachWithId
+import io.github.u2894638479.kotlinmcui.dsl.ui.Box
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 object DslEntryLoader {
-    fun initClient() { load<DslEntryClient>().forEach { it.initializeClient() } }
-    fun initGui() { load<DslEntryGui>() }
-    fun initOverlay() { enabledOverlays += load<DslEntryOverlay>() }
-    fun initServer() { load<DslEntryServer>().forEach { it.initializeServer() } }
-    fun initCommon() { load<DslEntryCommon>().forEach { it.initialize() } }
-    private val cache = mutableMapOf<Class<*>,DslEntryService>()
-    val entries: Collection<DslEntryService> get() = cache.values
+    private fun initClient() { load<DslEntryClient> { isClient = true }.forEach { it.initializeClient() } }
+    private fun initGui() { load<DslEntryGui> { isGui = true } }
+    private fun initOverlay() { load<DslEntryOverlay> { isOverlay = true } }
+    private fun initServer() { load<DslEntryServer> { isServer = true }.forEach { it.initializeServer() } }
+    private fun initCommon() { load<DslEntryCommon> { isCommon = true }.forEach { it.initialize() } }
+    fun init(environment: Environment) {
+        cache.clear()
+        initCommon()
+        when(environment) {
+            Environment.CLIENT -> initClient()
+            Environment.SERVER -> initServer()
+            Environment.COMMON -> {}
+        }
+        initGui()
+        initOverlay()
+    }
+    class Flags {
+        var isClient = false
+            internal set
+        var isServer = false
+            internal set
+        var isCommon = false
+            internal set
+        var isGui = false
+            internal set
+        var isOverlay = false
+            internal set
+    }
+    private val cache = mutableMapOf<Class<*>,Pair<DslEntryService, Flags>>()
+    val entries: Collection<Pair<DslEntryService,Flags>> get() = cache.values
     internal var enabledOverlays = mutableListOf<DslEntryOverlay>()
     context(ctx: DslContext)
     fun overlays() = enabledOverlays.forEachWithId {
@@ -23,8 +46,12 @@ object DslEntryLoader {
             it.overlay()
         }
     }
-    private inline fun <reified T: DslEntryService> load() = load(T::class.java)
-    private fun <T: DslEntryService> load(serviceInterface: Class<T>, classLoader: ClassLoader = Thread.currentThread().contextClassLoader): List<T> {
+    private inline fun <reified T: DslEntryService> load(flagAction: Flags.() -> Unit) = load(T::class.java) { flagAction() }
+    private inline fun <T: DslEntryService> load(
+        serviceInterface: Class<T>,
+        classLoader: ClassLoader = Thread.currentThread().contextClassLoader,
+        flagAction: Flags.() -> Unit
+    ): List<T> {
         val result = mutableListOf<T>()
         try {
             val configs = classLoader.getResources("META-INF/services/${serviceInterface.name}")
@@ -37,7 +64,9 @@ object DslEntryLoader {
                             if (className.isEmpty() || className.startsWith("#")) continue
                             try {
                                 val clazz = Class.forName(className, false, classLoader)
-                                result += cache.getOrPut(clazz) { getObject(clazz,serviceInterface) } as T
+                                val item = cache.getOrPut(clazz) { getObject(clazz,serviceInterface) to Flags() }
+                                item.second.flagAction()
+                                result += item.first as T
                             } catch (e: Exception) {
                                 dslLogger.error("class load failed: $className")
                             }

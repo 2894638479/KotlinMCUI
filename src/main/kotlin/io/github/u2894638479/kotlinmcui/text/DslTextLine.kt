@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.text
 
-import io.github.u2894638479.kotlinmcui.dslLogger
+import io.github.u2894638479.kotlinmcui.logger.dslLogger
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Alignable

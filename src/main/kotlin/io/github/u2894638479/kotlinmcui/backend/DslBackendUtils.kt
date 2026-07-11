@@ -12,8 +12,6 @@ interface DslBackendUtils {
     fun loadLocalImage(file: File): ImageHolder
     fun forceLoadLocalImage(file: File): ImageHolder
     fun playButtonSound()
-    fun isKeyDown(key: Int): Boolean
-    fun isMouseDown(mouse: Int): Boolean
     fun openUri(uri: String)
     val mainDispatcher: CoroutineDispatcher
 }

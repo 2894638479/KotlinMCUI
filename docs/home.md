@@ -67,7 +67,7 @@ permalink: /
 ### 如果想开发独立`java/kotlin` GUI程序/游戏
 emmm...原理上也可以用，但是要自行适配后端。另外注意：这是为游戏场景设计的，每帧都会完整渲染，静态功耗会比专门的GUI框架更高。
 ## 实现
-基于`kotlin`的`lambda`简化语法以及实验性功能的`context parameter`。由于`context parameter`目前是`kotlin`的实验性功能，所以可能并不稳定。
+基于`kotlin`的`lambda`简化语法以及`context parameter`。`context parameter`已在`kotlin 2.4.0`版本中转为正式语法。
 
 没有使用编译器插件，维护简单并且兼容性会更好。
 

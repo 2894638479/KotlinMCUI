@@ -10,6 +10,8 @@ import io.github.u2894638479.kotlinmcui.text.DslFont
 interface DslBackendRenderer<RP> {
     val guiScale: Double
     context(renderParam: RP)
+    fun flush()
+    context(renderParam: RP)
     fun fillRect(rect: Rect, color: Color)
     context(renderParam: RP)
     fun fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color)

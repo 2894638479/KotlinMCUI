@@ -38,11 +38,3 @@ dependencies {
 在`fabric.mod.json`或`mods.toml`等文件中添加依赖。具体到对应加载器官网了解。
 
 你只需要依赖`kotlinmcui`，因为`kotlinmcui`会依赖`kotlinmcuibackend`。
-
-## 开启`context parameters`
-这可能需要比较高的`kotlin`版本。
-```groovy
-tasks.withType(KotlinCompile).configureEach {
-    compilerOptions.freeCompilerArgs.add('-Xcontext-parameters')
-}
-```

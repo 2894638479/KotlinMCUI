@@ -2,15 +2,15 @@ package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.decorator.hoverMask
-import io.github.u2894638479.kotlinmcui.functions.decorator.onFilesDropped
-import io.github.u2894638479.kotlinmcui.functions.imageFile
-import io.github.u2894638479.kotlinmcui.functions.imageResource
-import io.github.u2894638479.kotlinmcui.functions.local
-import io.github.u2894638479.kotlinmcui.functions.ui.Image
-import io.github.u2894638479.kotlinmcui.functions.ui.Row
-import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableColumn
-import io.github.u2894638479.kotlinmcui.functions.ui.TextFlatten
+import io.github.u2894638479.kotlinmcui.dsl.decorator.hoverMask
+import io.github.u2894638479.kotlinmcui.dsl.decorator.onFilesDropped
+import io.github.u2894638479.kotlinmcui.dsl.imageFile
+import io.github.u2894638479.kotlinmcui.dsl.imageResource
+import io.github.u2894638479.kotlinmcui.dsl.local
+import io.github.u2894638479.kotlinmcui.dsl.ui.Image
+import io.github.u2894638479.kotlinmcui.dsl.ui.Row
+import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
+import io.github.u2894638479.kotlinmcui.dsl.ui.TextFlatten
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.px

@@ -2,22 +2,24 @@ package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
-import io.github.u2894638479.kotlinmcui.functions.decorator.background
-import io.github.u2894638479.kotlinmcui.functions.forEachWithId
-import io.github.u2894638479.kotlinmcui.functions.local
-import io.github.u2894638479.kotlinmcui.functions.static
-import io.github.u2894638479.kotlinmcui.functions.ui.*
+import io.github.u2894638479.kotlinmcui.dsl.DslFunction
+import io.github.u2894638479.kotlinmcui.dsl.decorator.background
+import io.github.u2894638479.kotlinmcui.dsl.forEachWithId
+import io.github.u2894638479.kotlinmcui.dsl.local
+import io.github.u2894638479.kotlinmcui.dsl.static
+import io.github.u2894638479.kotlinmcui.dsl.ui.*
+import io.github.u2894638479.kotlinmcui.dsl.withScale
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.height
 import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.modifier.*
+import io.github.u2894638479.kotlinmcui.prop.StableRO
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import io.github.u2894638479.kotlinmcui.utils.Config
 import io.github.u2894638479.kotlinmcui.utils.Simple
 
 context(ctx: DslContext)
@@ -122,27 +124,21 @@ fun TestLayoutPage() = Column {
             }
         },
         "recursion" to {
-            val n = local { 10 }
-            fun color(n:Int) = when(n % 5) {
-                0 -> Color.RED
-                1 -> Color.BLUE
-                2 -> Color.GREEN
-                3 -> Color.WHITE
-                else -> Color.BLACK
-            }
-            context(ctx:DslContext)
-            fun func(n: Int) {
-                if(n <= 0) return
-                val f: DslFunction = {
-                    ColorRect(Modifier.weight(0.5),color(n)) {}
-                    func(n-1)
-                }
-                if(n % 2 == 0) Row { f() }
-                else Column { f() }
-            }
             Column {
-                Config.Slider(n,0..100,"n") {}
-                func(n.value)
+                val scaleProp = local { 1 }
+                val decimalPart = local { 0.0 }
+                val scale by StableRO { scaleProp.value + decimalPart.value }
+                Row(Modifier.height(20.scaled).padding(3.scaled)) {
+                    Slider(Modifier,Axis.Horizontal,1..7,scaleProp) {}
+                    Slider(Modifier,Axis.Horizontal,0.0..1.0,decimalPart) {}
+                }.Box {
+                    TextFlatten {
+                        "scale: ${String.format("%.2f",scale)}".emit()
+                    }
+                }
+                withScale(scale) {
+                    TestPage()
+                }
             }
         },
         "LateBox" to {

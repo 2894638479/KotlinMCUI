@@ -3,16 +3,16 @@ package io.github.u2894638479.kotlinmcui.utils
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
-import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
-import io.github.u2894638479.kotlinmcui.functions.decorator.tooltip
-import io.github.u2894638479.kotlinmcui.functions.decorator.tooltipBackground
-import io.github.u2894638479.kotlinmcui.functions.ui.*
+import io.github.u2894638479.kotlinmcui.dsl.DslFunction
+import io.github.u2894638479.kotlinmcui.dsl.decorator.clickable
+import io.github.u2894638479.kotlinmcui.dsl.decorator.tooltip
+import io.github.u2894638479.kotlinmcui.dsl.decorator.tooltipBackground
+import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.*
-import io.github.u2894638479.kotlinmcui.scope.DslChild
+import io.github.u2894638479.kotlinmcui.container.DslChild
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 import kotlinx.coroutines.CoroutineScope
 

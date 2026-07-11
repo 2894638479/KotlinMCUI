@@ -1,7 +1,15 @@
 package io.github.u2894638479.kotlinmcui.identity
 
 class DslId(private val obj: Any?,val prevNode: DslId? = null) : Iterable<DslId> {
-    private val hash by lazy { prevNode.hashCode() * 31 + obj.hashCode() }
+    private var init = false
+    private var hash = 0
+        get() {
+            if(!init) {
+                field = prevNode.hashCode() * 31 + obj.hashCode()
+                init = true
+            }
+            return field
+        }
     override fun equals(other: Any?) = other is DslId && obj == other.obj && prevNode == other.prevNode
     override fun hashCode() = hash
     operator fun plus(other: Any?) = DslId(other,this)

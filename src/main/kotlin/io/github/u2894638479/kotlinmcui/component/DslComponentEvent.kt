@@ -39,5 +39,5 @@ interface DslComponentEvent {
     fun <T> testHit(get: (DslComponent) -> T?): T? = null
 
     context(mouse: Position)
-    fun dropFiles(files:List<Path>) = false
+    fun dropFiles(files: Array<Path>) = false
 }

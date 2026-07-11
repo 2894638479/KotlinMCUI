@@ -23,7 +23,7 @@ Row(id = Unit) {
     Column {}
 }
 ```
-但是维护这么多id是很繁琐的。你会发现代码写成下面这样，控件依然会获得不同的id：
+但是维护这么多id是很繁琐的。你会发现代码写成下面这样，组件件依然会获得不同的id：
 ```kotlin
 Row {
     if(bool) Button {}
@@ -45,7 +45,7 @@ Row {
 
 所以，at your own risk。我倾向更简单的写法。
 
-`Iterable<T>.forEachWithId`在每个循环，会在`ID`后面加上被迭代的元素。
+`Iterable<T>.forEachWithId`在每个循环，会在`ID`后面追加上被迭代的元素。
 ### 传递ID
 ```kotlin
 context(ctx: DslContext)
@@ -72,7 +72,7 @@ ID用来区分不同的组件。关于为什么需要ID，看下面这个示例�
 context(ctx: DslContext)
 fun MyUIComponent(text:String) = run {
     var counter by remember(0)
-    Button { TextFlatten { "$text$counter".emit() } }.clickable { counter++ }
+    Button { TextFlatten { "$text: $counter".emit() } }.clickable { counter++ }
 }
 
 // in a ui function
@@ -81,5 +81,4 @@ Row {
     MyUIComponent("counter2")
 }
 ```
-两个counter会变得无法区分。在读写`counter`时，`kotlin`会调用`remember`返回的对象的`getValue(thisRef:Any?, property: KProperty<*>)`和`setValue(thisRef: Any?,property: KProperty<*>,value:T)`。
-每一次在代码中声明`by`委托属性，对应一个`KProperty`对象。通过比较`KProperty`，能区分这个属性在源码中的位置是否相同，但是没法区分同一个函数多次调用。
+两个counter会变得无法区分。因此需要构建一个id树，为每个组件分配不同且唯一的id。

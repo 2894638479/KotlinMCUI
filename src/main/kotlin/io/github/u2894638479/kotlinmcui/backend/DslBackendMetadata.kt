@@ -7,4 +7,5 @@ interface DslBackendMetadata {
     val gameDir: Path
     val gameVersion: String
     val gameLoader: String
+    val environment: Environment
 }

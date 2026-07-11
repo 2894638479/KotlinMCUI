@@ -9,6 +9,7 @@ import io.github.u2894638479.kotlinmcui.math.align.Alignment
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.rect.height
+import io.github.u2894638479.kotlinmcui.math.rect.ifEmpty
 import io.github.u2894638479.kotlinmcui.math.rect.isEmpty
 import io.github.u2894638479.kotlinmcui.math.rect.width
 import kotlin.math.min
@@ -104,7 +105,8 @@ interface ImageStrategy {
             }
             context(backend: DslBackendRenderer<RP>, renderParam: RP)
             override fun <RP> render(rect: Rect, image: ImageHolder, color: Color) {
-                if(rect.isEmpty) return
+                rect.ifEmpty { return }
+                if(rect.width < 1e-3.px || rect.height < 1e-3.px) return
                 val scale = min(
                     min(scale,rect.width / (uvOuter.width - uvInner.width)),
                     rect.height / (uvOuter.height - uvInner.height)

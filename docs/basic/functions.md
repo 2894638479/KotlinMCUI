@@ -26,7 +26,7 @@ Row {
 每个ui函数都有`DslContext`作为`context parameter`。`ctx`传递了ui函数执行所需的参数。
 
 ## 执行时机
-每帧都会执行。但是对于立即模式绘制的游戏来说，不是明显的开销。相比之下带来的好处更多。
+每帧都会执行一次。但是对于立即模式绘制的游戏来说，不是明显的开销。相比之下带来的好处更多。
 
 ## 示例
 展示一些内置ui函数的签名（不一定准确）
@@ -61,7 +61,7 @@ fun DslChild.clickable(
 ): DslChild
 ```
 
-## 编写自己的函数
+## 定义自己的函数
 
 ```kotlin
 context(ctx: DslContext)

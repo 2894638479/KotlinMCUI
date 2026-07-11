@@ -1,7 +1,7 @@
 package io.github.u2894638479.kotlinmcui.context
 
-import io.github.u2894638479.kotlinmcui.DslDataStore
-import io.github.u2894638479.kotlinmcui.functions.dataStore
+import io.github.u2894638479.kotlinmcui.container.DslDataStore
+import io.github.u2894638479.kotlinmcui.dsl.dataStore
 
 @DslContextMarker
 interface DslExecuteContext : DslDataStoreContext {

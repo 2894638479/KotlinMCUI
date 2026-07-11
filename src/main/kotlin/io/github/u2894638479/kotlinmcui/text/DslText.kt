@@ -32,6 +32,7 @@ open class DslText(
     override fun <RP> render() {
         val font = backend.getFont(fontName)
         lines().forEach { it.renderChars(font,it.alignedChars(font)) }
+        backend.flush()
     }
     open fun processChars(chars:List<List<DslRenderableChar>>) = chars
 

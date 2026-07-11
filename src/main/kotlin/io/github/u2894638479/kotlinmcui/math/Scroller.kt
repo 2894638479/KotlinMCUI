@@ -6,7 +6,7 @@ import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.context.unscaled
-import io.github.u2894638479.kotlinmcui.functions.local
+import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.rect.Bound
@@ -36,7 +36,7 @@ interface Scroller: DslScaleContext, Bound {
             override val scale get() = 1.0
         }
         context(ctx: DslScaleContext,_: DslDataStoreContext,_: DslIdContext)
-        fun scroller(instance: DslComponent, axis: Axis, scrollProp: StableRW<Double>?):Scroller
+        fun scroller(instance: DslComponent, axis: Axis, scrollProp: StableRW<Double> = local.animatable { 0.0 }):Scroller
         = object : Scroller, Bound by instance.rect.bound(axis) {
             override val scale get() = ctx.scale
             override val items = instance.children.mapView {
@@ -47,7 +47,7 @@ interface Scroller: DslScaleContext, Bound {
             }
             override var offset by local { 0.0 }
             override var rawScroll by local { 0.0 }
-            override var scroll by scrollProp ?: local.animatable { 0.0 }
+            override var scroll by scrollProp
             override var scrollIndex by local { 0 }
             override fun spaceBefore(): Double {
                 items.ifEmpty { return 0.0 }

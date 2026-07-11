@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.context
 
-import io.github.u2894638479.kotlinmcui.DslDataStore
+import io.github.u2894638479.kotlinmcui.container.DslDataStore
 
 interface DslDataStoreContext {
     val dataStore: DslDataStore

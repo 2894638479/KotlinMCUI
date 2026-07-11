@@ -20,7 +20,7 @@ class DslTextBuilderContext(private val ctx: DslContext): DslScaleContext by ctx
         }
     }
 
-    fun enter() = chars.add(mutableListOf())
+    fun enter() { chars.add(mutableListOf()) }
 
     fun toChars(): List<List<DslRenderableChar>> = chars
 }

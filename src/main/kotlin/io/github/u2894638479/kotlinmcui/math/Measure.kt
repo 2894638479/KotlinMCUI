@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.math
 
-import io.github.u2894638479.kotlinmcui.dslLogger
+import io.github.u2894638479.kotlinmcui.logger.dslLogger
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable

@@ -1,8 +1,8 @@
 package io.github.u2894638479.kotlinmcui.context
 
-import io.github.u2894638479.kotlinmcui.DslDataStore
+import io.github.u2894638479.kotlinmcui.container.DslDataStore
 import io.github.u2894638479.kotlinmcui.identity.DslId
-import io.github.u2894638479.kotlinmcui.scope.DslChild
+import io.github.u2894638479.kotlinmcui.container.DslChild
 
 @DslContextMarker
 open class DslContext(

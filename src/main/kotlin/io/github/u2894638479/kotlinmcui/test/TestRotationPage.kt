@@ -2,14 +2,14 @@ package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.decorator.move
-import io.github.u2894638479.kotlinmcui.functions.decorator.rotate
-import io.github.u2894638479.kotlinmcui.functions.decorator.scale
-import io.github.u2894638479.kotlinmcui.functions.local
-import io.github.u2894638479.kotlinmcui.functions.ui.ColorRect
-import io.github.u2894638479.kotlinmcui.functions.ui.Column
-import io.github.u2894638479.kotlinmcui.functions.ui.Row
-import io.github.u2894638479.kotlinmcui.functions.ui.ScrollableColumn
+import io.github.u2894638479.kotlinmcui.dsl.decorator.move
+import io.github.u2894638479.kotlinmcui.dsl.decorator.rotate
+import io.github.u2894638479.kotlinmcui.dsl.decorator.scale
+import io.github.u2894638479.kotlinmcui.dsl.local
+import io.github.u2894638479.kotlinmcui.dsl.ui.ColorRect
+import io.github.u2894638479.kotlinmcui.dsl.ui.Column
+import io.github.u2894638479.kotlinmcui.dsl.ui.Row
+import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height

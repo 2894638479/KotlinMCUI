@@ -2,14 +2,14 @@ package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
-import io.github.u2894638479.kotlinmcui.functions.decorator.containerBackground
-import io.github.u2894638479.kotlinmcui.functions.decorator.hoverMask
-import io.github.u2894638479.kotlinmcui.functions.decorator.slotBackground
-import io.github.u2894638479.kotlinmcui.functions.forEachWithId
-import io.github.u2894638479.kotlinmcui.functions.local
-import io.github.u2894638479.kotlinmcui.functions.static
-import io.github.u2894638479.kotlinmcui.functions.ui.*
+import io.github.u2894638479.kotlinmcui.dsl.decorator.clickable
+import io.github.u2894638479.kotlinmcui.dsl.decorator.containerBackground
+import io.github.u2894638479.kotlinmcui.dsl.decorator.hoverMask
+import io.github.u2894638479.kotlinmcui.dsl.decorator.slotBackground
+import io.github.u2894638479.kotlinmcui.dsl.forEachWithId
+import io.github.u2894638479.kotlinmcui.dsl.local
+import io.github.u2894638479.kotlinmcui.dsl.static
+import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.modifier.*

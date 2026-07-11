@@ -1,10 +1,9 @@
 package io.github.u2894638479.kotlinmcui.prop
 
-import io.github.u2894638479.kotlinmcui.DslDataStore
+import io.github.u2894638479.kotlinmcui.container.DslDataStore
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
-import io.github.u2894638479.kotlinmcui.context.DslLaunchableContext
-import io.github.u2894638479.kotlinmcui.functions.identity
+import io.github.u2894638479.kotlinmcui.dsl.identity
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
 import io.github.u2894638479.kotlinmcui.math.animate.InterpolatableDouble
@@ -13,6 +12,7 @@ import io.github.u2894638479.kotlinmcui.math.animate.interpolate
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -21,7 +21,8 @@ class PropertyLifeScope internal constructor(
     val isStatic: Boolean = false,
     private val map: Object2ObjectOpenHashMap<DslId, TimedProperty<*>> = Object2ObjectOpenHashMap<DslId, TimedProperty<*>>()
 ) {
-    open class TimedProperty<T> internal constructor(protected var _value:T, var frameStamp: ULong) : StableRW<T> {
+    val size get() = map.size
+    open class TimedProperty<T> internal constructor(protected var _value:T, var frameStamp: ULong = 0uL) : StableRW<T> {
         override fun getValue() = _value
         override fun setValue(value: T) { this._value = value }
         open fun onClear() {}
@@ -66,7 +67,7 @@ class PropertyLifeScope internal constructor(
         override fun setValue(value: T) = setWithTime(value, dataStore.frameBeginNano)
     }
 
-    private class CachedProperty<K,V>(value:V,frameStamp: ULong,val key:K): TimedProperty<V>(value,frameStamp)
+    private class CachedProperty<K,V>(val key: K,value:V,frameStamp: ULong = 0uL): TimedProperty<V>(value,frameStamp)
     fun clearOutdated() {
         val frameIndex = dataStore.frameIndex
         map.values.removeIf {
@@ -75,41 +76,47 @@ class PropertyLifeScope internal constructor(
         }
     }
 
-    private fun launchableContext(
+    private fun coroutineScope(
         identity:DslId,
         dispatcher: CoroutineDispatcher = dataStore.backend.mainDispatcher
-    ): DslLaunchableContext {
+    ): CoroutineScope {
         val identity = identity + dispatcher
-        return map.getOrPut(identity) {
-            object : TimedProperty<DslLaunchableContext>
-                (DslLaunchableContext(dispatcher),dataStore.frameIndex) {
-                override fun onClear() { _value.destroy() }
-            }
-        }.also { it.frameStamp = dataStore.frameIndex }.getValue() as DslLaunchableContext
+        val property = map[identity] ?: return object : CoroutineScope {
+            var delegate: CoroutineScope? = null
+            override val coroutineContext: CoroutineContext
+                get() = delegate?.coroutineContext ?: CoroutineScope(dispatcher).let {
+                    delegate = it
+                    val property = TimedProperty(it,dataStore.frameIndex)
+                    map[identity] = property
+                    it.coroutineContext
+                }
+        }
+        property.frameStamp = dataStore.frameIndex
+        return property.value as CoroutineScope
     }
 
     /**
-     * @return 一个[DslLaunchableContext]对象，可用于获取[CoroutineScope]以启动协程。
+     * @return 一个[CoroutineScope]对象，可用于启动协程。默认调度在渲染线程。
      *
-     * 使用此属性不会立即创建[CoroutineScope]，而是在第一次启动协程时创建。
+     * 访问此属性不会立即造成开销，而是在第一次使用时进行构造。
      *
-     * [CoroutineScope]创建后每次访问此属性会刷新变量的帧戳。如果没有每帧都访问此属性，在[io.github.u2894638479.kotlinmcui.functions.local]中会被销毁。
+     * 如果没有每帧都访问此属性，视生命周期的类型，[CoroutineScope]可能会被销毁。
      *
      * ### 用法示例
      * ```
      * Button{}.clickable {
      *     // ✅ 使用自带的scope，自动管理
-     *     coroutineScope.launch {
+     *     launch {
      *         // ...
      *     }
      * }
      * ```
      * ### 用法示例2
      * ```
-     * // ✅ 每帧都会被调用，保证存活
-     * val ctx = local.launchableContext
+     * // ✅ 每帧都会访问属性，保证存活
+     * val coroutineScope = local.coroutineScope
      * Button{}.clickable {
-     *     ctx.launch {
+     *     coroutineScope.launch {
      *         // ...
      *     }
      * }
@@ -118,31 +125,31 @@ class PropertyLifeScope internal constructor(
      * ```
      * Button{}.clickable {
      *     // ❌ 只有点击时调用，下一帧就被销毁
-     *     local.launchableContext.launch {
+     *     local.coroutineScope.launch {
      *         // ...
      *     }
      * }
      */
     context(ctx: DslIdContext)
-    val launchableContext get() = launchableContext(identity, dataStore.backend.mainDispatcher)
+    val coroutineScope get() = coroutineScope(identity, dataStore.backend.mainDispatcher)
 
     /**
      * 返回一个属性。
      * @param init 属性的初始值。只会在属性不存在且调用了此方法时调用。
      *
-     * 注意变量生命周期结束后再次调用会触发[init]
+     * 注意属性生命周期结束后再次调用会触发[init]来重新创建属性
      */
     context(ctx: DslIdContext)
     fun <T> property(id:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T): StableRW<T> {
         val identity = getId(id ?: init::class)
-        val launchable = launchableContext(identity)
+        val coroutineScope = coroutineScope(identity)
         return map.getOrPut(identity) {
-            TimedProperty(context(DslExecuteContext(dataStore)) { launchable.init() },dataStore.frameIndex)
+            TimedProperty(context(DslExecuteContext(dataStore)) { coroutineScope.init() })
         }.also { it.frameStamp = dataStore.frameIndex } as StableRW<T>
     }
 
     /**
-     * [PropertyLifeScope.property]的语法糖。可用于声明变量也可用于初始化。
+     * [PropertyLifeScope.property]的语法糖。可用于声明属性也可用于初始化。
      * @see [PropertyLifeScope.property]
      * ### 用法示例
      * ```
@@ -151,7 +158,7 @@ class PropertyLifeScope internal constructor(
      *
      * static {
      *     initMyGui()
-     *     coroutineScope.launch {
+     *     launch {
      *         loadMyData()
      *     }
      * }
@@ -170,16 +177,16 @@ class PropertyLifeScope internal constructor(
      * 少量的计算不建议使用此函数进行缓存。
      *
      * @param key 缓存的标识。
-     * @param id 存储位置的ID。会延伸在[identity]之后。如果为`null`则使用`init::class`
+     * @param id 存储位置的ID。会追加在[identity]之后。如果传入`null`则使用`init::class`
      * @param init 在第一次调用时和[key]发生变化时调用，用来计算缓存值。
      */
     context(ctx: DslIdContext)
     fun <K,V> cached(key: K,id: Any? = null, init:context(DslExecuteContext) CoroutineScope.(K)->V) : StableRW<V> {
         val identity = getId(id ?: init::class)
-        val launchableCtx = launchableContext(identity)
+        val coroutineScope = coroutineScope(identity)
         val property = map[identity]?.let { it as CachedProperty<K,V> }
         if(property != null && property.key == key) return property
-        return CachedProperty(context(DslExecuteContext(dataStore)){ launchableCtx.init(key) },dataStore.frameIndex,key).also {
+        return CachedProperty(key,context(DslExecuteContext(dataStore)){ coroutineScope.init(key) }).also {
             property?.onClear()
             map[identity] = it
         }
@@ -256,6 +263,11 @@ class PropertyLifeScope internal constructor(
 
     context(ctx: DslIdContext)
     fun dispose(id:Any? = null, action: context(DslExecuteContext)() -> Unit) {
-
+        val identity = getId(id ?: action::class)
+        map.getOrPut(identity) {
+            object : TimedProperty<Unit>(Unit) {
+                override fun onClear() { context(DslExecuteContext(dataStore)) { action() } }
+            }
+        }
     }
 }

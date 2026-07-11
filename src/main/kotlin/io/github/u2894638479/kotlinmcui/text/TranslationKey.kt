@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.text
 
-import io.github.u2894638479.kotlinmcui.dslBackend
+import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import kotlin.properties.ReadOnlyProperty
 import kotlin.reflect.KProperty
 
@@ -58,7 +58,7 @@ class KeyProperty<T: BaseKey>(val key: T,val string: String? = null): ReadOnlyPr
 
 
 class SimpleKey : BaseTranslatableKey()
-val name = KeyProperty(SimpleKey())
+val name get() = KeyProperty(SimpleKey())
 fun string(string: String) = KeyProperty(SimpleKey(),string)
 fun <K: BaseKey> type(key:K) = KeyProperty(key)
 
@@ -96,4 +96,27 @@ class KotlinMCUIKey : BaseParentKey() {
         val text by name
         val editabletext by name
     }
+
+    val entrypage by name type EntryPageKey()
+    class EntryPageKey : BaseParentKey() {
+        val overlay by name
+        val show_details by name
+        val show_code_entry by name
+        val tooltip by name type TooltipKey()
+        class TooltipKey : BaseParentKey() {
+            val client by name
+            val server by name
+            val common by name
+            val gui by name
+            val overlay by name
+        }
+    }
+
+    val utils by name type UtilsKey()
+    class UtilsKey : BaseParentKey() {
+        val `true` by name
+        val `false` by name
+    }
+
+    val debugoverlay by name
 }

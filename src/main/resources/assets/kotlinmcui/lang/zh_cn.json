@@ -23,5 +23,16 @@
     "kotlinmcui.narration.slider": "滑条",
     "kotlinmcui.narration.scroller": "滚动条",
     "kotlinmcui.narration.text": "文字",
-    "kotlinmcui.narration.editabletext": "可编辑文字"
+    "kotlinmcui.narration.editabletext": "可编辑文字",
+    "kotlinmcui.entrypage.tooltip.gui": "点击进入gui",
+    "kotlinmcui.entrypage.tooltip.overlay": "点击右侧按钮切换overlay",
+    "kotlinmcui.entrypage.tooltip.client": "client代码执行入口点",
+    "kotlinmcui.entrypage.tooltip.server": "server代码执行入口点",
+    "kotlinmcui.entrypage.tooltip.common": "common代码执行入口点",
+    "kotlinmcui.entrypage.overlay": "叠加层",
+    "kotlinmcui.entrypage.show_code_entry": "显示代码入口",
+    "kotlinmcui.entrypage.show_details": "显示详情",
+    "kotlinmcui.utils.true": "开",
+    "kotlinmcui.utils.false": "关",
+    "kotlinmcui.debugoverlay": "调试叠加层"
 }

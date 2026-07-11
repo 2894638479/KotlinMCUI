@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.component
 
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
+import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 

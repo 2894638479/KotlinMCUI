@@ -2,16 +2,16 @@ package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
-import io.github.u2894638479.kotlinmcui.functions.decorator.clickable
-import io.github.u2894638479.kotlinmcui.functions.local
-import io.github.u2894638479.kotlinmcui.functions.ui.*
+import io.github.u2894638479.kotlinmcui.dsl.decorator.clickable
+import io.github.u2894638479.kotlinmcui.dsl.local
+import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
-import io.github.u2894638479.kotlinmcui.scope.DslChild
+import io.github.u2894638479.kotlinmcui.container.DslChild
 
 context(ctx: DslContext)
 fun TestIdPage() = Row {

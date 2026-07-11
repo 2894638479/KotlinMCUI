@@ -47,29 +47,29 @@ fun Modifier.size(width: Measure, height: Measure) = object : Modifier by this {
     override val width get() = width
     override val height get() = height
 }
-fun Modifier.width(width: Measure) = object : Modifier by this {
+infix fun Modifier.width(width: Measure) = object : Modifier by this {
     override val width get() = width
 }
-fun Modifier.height(height: Measure) = object : Modifier by this {
+infix fun Modifier.height(height: Measure) = object : Modifier by this {
     override val height get() = height
 }
-fun Modifier.minWidth(minWidth: Measure) = object : Modifier by this {
+infix fun Modifier.minWidth(minWidth: Measure) = object : Modifier by this {
     override val minWidth get() = Measure.max(this@minWidth.minWidth, minWidth)
 }
-fun Modifier.minHeight(minHeight: Measure) = object : Modifier by this {
+infix fun Modifier.minHeight(minHeight: Measure) = object : Modifier by this {
     override val minHeight get() = Measure.max(this@minHeight.minHeight, minHeight)
 }
 fun Modifier.minSize(minWidth: Measure, minHeight: Measure) = object : Modifier by this {
     override val minWidth get() = Measure.max(this@minSize.minWidth, minWidth)
     override val minHeight get() = Measure.max(this@minSize.minHeight, minHeight)
 }
-fun Modifier.weight(weight: Double) = object : Modifier by this {
+infix fun Modifier.weight(weight: Double) = object : Modifier by this {
     override val weight get() = weight
 }
-fun Modifier.align(alignment: context(DslPreventContext) Alignment.()-> Alignment) = object : Modifier by this {
+infix fun Modifier.align(alignment: context(DslPreventContext) Alignment.()-> Alignment) = object : Modifier by this {
     override val alignment = context(DslPreventContext) { Alignment().alignment() }
 }
-fun Modifier.padding(value: Measure) = object : Modifier by this {
+infix fun Modifier.padding(value: Measure) = object : Modifier by this {
     override val paddingLeft get() = this@padding.paddingLeft + value
     override val paddingTop get() = this@padding.paddingTop + value
     override val paddingRight get() = this@padding.paddingRight + value

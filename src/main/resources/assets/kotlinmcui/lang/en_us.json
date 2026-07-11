@@ -23,5 +23,16 @@
     "kotlinmcui.narration.slider": "Slider",
     "kotlinmcui.narration.scroller": "Scroller",
     "kotlinmcui.narration.text": "Text",
-    "kotlinmcui.narration.editabletext": "Editable text"
+    "kotlinmcui.narration.editabletext": "Editable text",
+    "kotlinmcui.entrypage.tooltip.gui": "Click to enter gui",
+    "kotlinmcui.entrypage.tooltip.overlay": "Click the button on the right to switch overlay",
+    "kotlinmcui.entrypage.tooltip.client": "Client code entrypoint",
+    "kotlinmcui.entrypage.tooltip.server": "Server code entrypoint",
+    "kotlinmcui.entrypage.tooltip.common": "Common code entrypoint",
+    "kotlinmcui.entrypage.overlay": "overlay",
+    "kotlinmcui.entrypage.show_code_entry": "Show code entry",
+    "kotlinmcui.entrypage.show_details": "Show details",
+    "kotlinmcui.utils.true": "true",
+    "kotlinmcui.utils.false": "false",
+    "kotlinmcui.debugoverlay": "Debug Overlay"
 }

@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.backend
 
-import io.github.u2894638479.kotlinmcui.functions.DslFunction
+import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 
 fun interface DslBackendScreenFactory<SC> {
     fun create(title:String, dslFunction: DslFunction): DslBackendScreenHolder<SC>
