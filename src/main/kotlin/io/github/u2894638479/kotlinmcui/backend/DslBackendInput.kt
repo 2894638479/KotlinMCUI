@@ -1,17 +1,21 @@
 package io.github.u2894638479.kotlinmcui.backend
 
+import io.github.u2894638479.kotlinmcui.input.Key
 import io.github.u2894638479.kotlinmcui.math.Position
 
 /**
  * Input state queries provided by the backend.
  *
- * All key and mouse button codes follow GLFW constants (e.g. `GLFW.GLFW_KEY_ENTER`).
+ * Key codes use the framework's platform-neutral [Key] type. The backend is
+ * responsible for translating its platform-specific key codes to [Key] before
+ * dispatching events. Mouse button indices follow the convention shared by
+ * GLFW and SDL (0=left, 1=right, 2=middle, then additional buttons).
  */
 interface DslBackendInput {
-    /** Returns `true` while the given GLFW key code is held down. */
-    fun isKeyDown(key: Int): Boolean
+    /** Returns `true` while the given [key] is held down. */
+    fun isKeyDown(key: Key): Boolean
 
-    /** Returns `true` while the given GLFW mouse button is held down. */
+    /** Returns `true` while the given mouse button index is held down. */
     fun isMouseDown(mouse: Int): Boolean
 
     /** The current mouse cursor position in logical pixels. */

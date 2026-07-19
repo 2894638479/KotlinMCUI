@@ -1,8 +1,9 @@
 package io.github.u2894638479.kotlinmcui.component
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
-import io.github.u2894638479.kotlinmcui.glfw.EventModifier
-import io.github.u2894638479.kotlinmcui.glfw.MouseButton
+import io.github.u2894638479.kotlinmcui.input.Key
+import io.github.u2894638479.kotlinmcui.input.KeyModifiers
+import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Position
 import java.nio.file.Path
 
@@ -23,20 +24,20 @@ interface DslComponentEvent {
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     fun <RP> render() {}
 
-    /** A key was pressed. [key] and [scanCode] use GLFW key codes. */
-    context(eventModifier: EventModifier)
-    fun keyDown(key: Int, scanCode: Int) = false
+    /** A key was pressed. */
+    context(eventModifier: KeyModifiers)
+    fun keyDown(key: Key, scanCode: Int) = false
 
     /** A key was released. */
-    context(eventModifier: EventModifier)
-    fun keyUp(key: Int, scanCode: Int) = false
+    context(eventModifier: KeyModifiers)
+    fun keyUp(key: Key, scanCode: Int) = false
 
     /** A mouse button was pressed. */
-    context(eventModifier: EventModifier, mouse: Position)
+    context(eventModifier: KeyModifiers, mouse: Position)
     fun mouseDown(mouseButton: MouseButton) = false
 
     /** A mouse button was released. */
-    context(eventModifier: EventModifier, mouse: Position)
+    context(eventModifier: KeyModifiers, mouse: Position)
     fun mouseUp(mouseButton: MouseButton) = false
 
     /** The mouse moved. */
@@ -59,7 +60,7 @@ interface DslComponentEvent {
     fun mouseScrollHorizontal(amount: Double) = amount
 
     /** A character was typed (for text input fields). */
-    context(eventModifier: EventModifier)
+    context(eventModifier: KeyModifiers)
     fun charTyped(c: Char) = false
 
     /**

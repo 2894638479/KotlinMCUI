@@ -8,8 +8,9 @@ import io.github.u2894638479.kotlinmcui.component.nextFocusableList
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.ui.Overlay
-import io.github.u2894638479.kotlinmcui.glfw.EventModifier
-import io.github.u2894638479.kotlinmcui.glfw.MouseButton
+import io.github.u2894638479.kotlinmcui.input.Key
+import io.github.u2894638479.kotlinmcui.input.KeyModifiers
+import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.align.OverlayAlign
@@ -19,7 +20,6 @@ import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.rect.vertices
 import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import org.lwjgl.glfw.GLFW
 
 /**
  * The top-level screen component that orchestrates the build-layout-render cycle.
@@ -44,24 +44,24 @@ class DslScreen private constructor(
 
     fun close() { dataStore.onClose() }
 
-    context(eventModifier: EventModifier, mouse: Position)
+    context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton): Boolean {
         dataStore.focused = instance.testHit(mouse) { it.takeIf { it.focusable } }?.identity
         return delegate.mouseDown(mouseButton)
     }
 
-    context(eventModifier: EventModifier)
-    override fun keyDown(key: Int, scanCode: Int): Boolean {
+    context(eventModifier: KeyModifiers)
+    override fun keyDown(key: Key, scanCode: Int): Boolean {
         if(delegate.keyDown(key, scanCode)) return true
         val focused = when(key) {
-            GLFW.GLFW_KEY_LEFT -> instance.nextFocusableList(dataStore.focused,true) { it.viewHorizontal }
-            GLFW.GLFW_KEY_RIGHT -> instance.nextFocusableList(dataStore.focused) { it.viewHorizontal }
-            GLFW.GLFW_KEY_UP -> instance.nextFocusableList(dataStore.focused,true) { it.viewVertical }
-            GLFW.GLFW_KEY_DOWN -> instance.nextFocusableList(dataStore.focused) { it.viewVertical }
-            GLFW.GLFW_KEY_TAB -> if(eventModifier.shift) instance.nextFocusable(dataStore.focused) { it.viewSequential.asReversed() }
+            Key.LEFT -> instance.nextFocusableList(dataStore.focused,true) { it.viewHorizontal }
+            Key.RIGHT -> instance.nextFocusableList(dataStore.focused) { it.viewHorizontal }
+            Key.UP -> instance.nextFocusableList(dataStore.focused,true) { it.viewVertical }
+            Key.DOWN -> instance.nextFocusableList(dataStore.focused) { it.viewVertical }
+            Key.TAB -> if(eventModifier.shift) instance.nextFocusable(dataStore.focused) { it.viewSequential.asReversed() }
                 else instance.nextFocusable(dataStore.focused) { it.viewSequential }
-            GLFW.GLFW_KEY_HOME -> instance.nextFocusable(null) { it.viewSequential }
-            GLFW.GLFW_KEY_END -> instance.nextFocusable(null) { it.viewSequential.asReversed() }
+            Key.HOME -> instance.nextFocusable(null) { it.viewSequential }
+            Key.END -> instance.nextFocusable(null) { it.viewSequential.asReversed() }
             else -> return false
         }
         if(dataStore.focused != focused?.identity) {

@@ -8,8 +8,8 @@ import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.translate
-import io.github.u2894638479.kotlinmcui.glfw.EventModifier
-import io.github.u2894638479.kotlinmcui.glfw.MouseButton
+import io.github.u2894638479.kotlinmcui.input.KeyModifiers
+import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.Scroller
@@ -58,7 +58,7 @@ fun ScrollBar(
         Spacer(Modifier.weight(before)) {}
         Box(Modifier.weight(mid)) {}.change { object: DslComponent by it {
             override val focusable get() = true
-            context(eventModifier: EventModifier, mouse: Position)
+            context(eventModifier: KeyModifiers, mouse: Position)
             override fun mouseDown(mouseButton: MouseButton): Boolean {
                 if(it.mouseDown(mouseButton)) return true
                 if(mouse !in instance.rect) return false
@@ -67,7 +67,7 @@ fun ScrollBar(
             }
             override val narratable get() = true
             override val narration get() = "${it.run { narration ?: "" }} ${translate("kotlinmcui.narration.scroller")}"
-            context(eventModifier: EventModifier, mouse: Position)
+            context(eventModifier: KeyModifiers, mouse: Position)
             override fun mouseUp(mouseButton: MouseButton): Boolean {
                 if(it.mouseUp(mouseButton)) return true
                 return lastDown?.let { lastDown = null } != null

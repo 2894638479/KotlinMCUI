@@ -9,8 +9,9 @@ import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.translate
-import io.github.u2894638479.kotlinmcui.glfw.EventModifier
-import io.github.u2894638479.kotlinmcui.glfw.MouseButton
+import io.github.u2894638479.kotlinmcui.input.Key
+import io.github.u2894638479.kotlinmcui.input.KeyModifiers
+import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
@@ -25,7 +26,6 @@ import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.remap
 import io.github.u2894638479.kotlinmcui.prop.setValue
-import org.lwjgl.glfw.GLFW
 import kotlin.math.roundToInt
 
 context(ctx: DslContext)
@@ -110,7 +110,7 @@ fun Slider(
             this.progress = value.coerceIn(0.0..1.0)
         }
 
-        context(eventModifier: EventModifier, mouse: Position)
+        context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton): Boolean {
             if (delegate.mouseDown(mouseButton)) return true
             if (mouse in instance.rect) {
@@ -129,7 +129,7 @@ fun Slider(
             setProgress(mouse)
         }
 
-        context(eventModifier: EventModifier, mouse: Position)
+        context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseUp(mouseButton: MouseButton): Boolean {
             return delegate.mouseUp(mouseButton) || alreadyDown == Unit.also { alreadyDown = null }
         }
@@ -143,35 +143,35 @@ fun Slider(
             }
         }
 
-        context(eventModifier: EventModifier)
-        override fun keyDown(key: Int, scanCode: Int): Boolean {
+        context(eventModifier: KeyModifiers)
+        override fun keyDown(key: Key, scanCode: Int): Boolean {
             if(!instance.isFocused) return super.keyDown(key, scanCode)
             when(key) {
-                GLFW.GLFW_KEY_LEFT -> if(axis == Axis.Horizontal && keyFocused != null) {
+                Key.LEFT -> if(axis == Axis.Horizontal && keyFocused != null) {
                     this.progress = (this.progress - step).coerceIn(0.0..1.0)
                     return true
                 }
-                GLFW.GLFW_KEY_RIGHT -> if(axis == Axis.Horizontal && keyFocused != null) {
+                Key.RIGHT -> if(axis == Axis.Horizontal && keyFocused != null) {
                     this.progress = (this.progress + step).coerceIn(0.0..1.0)
                     return true
                 }
-                GLFW.GLFW_KEY_UP -> if(axis == Axis.Vertical && keyFocused != null) {
+                Key.UP -> if(axis == Axis.Vertical && keyFocused != null) {
                     this.progress = (this.progress - step).coerceIn(0.0..1.0)
                     return true
                 }
-                GLFW.GLFW_KEY_DOWN -> if(axis == Axis.Vertical && keyFocused != null) {
+                Key.DOWN -> if(axis == Axis.Vertical && keyFocused != null) {
                     this.progress = (this.progress + step).coerceIn(0.0..1.0)
                     return true
                 }
-                GLFW.GLFW_KEY_ENTER -> {
+                Key.ENTER -> {
                     keyFocused = if(keyFocused == Unit) null else Unit
                     return true
                 }
-                GLFW.GLFW_KEY_HOME -> {
+                Key.HOME -> {
                     this.progress = 0.0
                     return true
                 }
-                GLFW.GLFW_KEY_END -> {
+                Key.END -> {
                     this.progress = 1.0
                     return true
                 }

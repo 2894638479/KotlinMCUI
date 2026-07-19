@@ -14,8 +14,8 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.dsl.local
-import io.github.u2894638479.kotlinmcui.glfw.EventModifier
-import io.github.u2894638479.kotlinmcui.glfw.MouseButton
+import io.github.u2894638479.kotlinmcui.input.KeyModifiers
+import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.Color
@@ -212,11 +212,11 @@ context(ctx: DslContext)
 private fun DslChild.transform(getTransform:DslComponent.(DslComponent) -> Transform) = change {
     object : DslComponent by it {
         override val transform by lazy { it.transform * getTransform(it) }
-        context(eventModifier: EventModifier, mouse: Position)
+        context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton) = context(getTransform(it).invert() * mouse) { it.mouseDown(mouseButton) }
         context(mouse: Position)
         override fun mouseMove() = context(getTransform(it).invert() * mouse) { it.mouseMove() }
-        context(eventModifier: EventModifier, mouse: Position)
+        context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseUp(mouseButton: MouseButton) = context(getTransform(it).invert() * mouse) { it.mouseUp(mouseButton) }
         override fun <T> testHit(mouse: Position, get: (DslComponent) -> T?) = it.testHit(getTransform(it).invert() * mouse,get)
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)

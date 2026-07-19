@@ -2,8 +2,9 @@ package io.github.u2894638479.kotlinmcui.container
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
-import io.github.u2894638479.kotlinmcui.glfw.EventModifier
-import io.github.u2894638479.kotlinmcui.glfw.MouseButton
+import io.github.u2894638479.kotlinmcui.input.Key
+import io.github.u2894638479.kotlinmcui.input.KeyModifiers
+import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Position
 import java.nio.file.Path
 
@@ -20,19 +21,19 @@ interface DslScope : DslComponent {
     override fun <RP> render() =
         instance.children.asReversed().forEach { it.render() }
 
-    context(eventModifier: EventModifier)
-    override fun keyDown(key: Int, scanCode: Int) =
+    context(eventModifier: KeyModifiers)
+    override fun keyDown(key: Key, scanCode: Int) =
         instance.children.firstOrNull { it.keyDown(key, scanCode) } != null
 
-    context(eventModifier: EventModifier)
-    override fun keyUp(key: Int, scanCode: Int) =
+    context(eventModifier: KeyModifiers)
+    override fun keyUp(key: Key, scanCode: Int) =
         instance.children.firstOrNull { it.keyUp(key, scanCode) } != null
 
-    context(eventModifier: EventModifier, mouse: Position)
+    context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton) =
         instance.children.firstOrNull { it.mouseDown(mouseButton) } != null
 
-    context(eventModifier: EventModifier, mouse: Position)
+    context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseUp(mouseButton: MouseButton) =
         instance.children.firstOrNull { it.mouseUp(mouseButton) } != null
 
@@ -59,7 +60,7 @@ interface DslScope : DslComponent {
         return remain
     }
 
-    context(eventModifier: EventModifier)
+    context(eventModifier: KeyModifiers)
     override fun charTyped(c: Char) =
         instance.children.firstOrNull { it.charTyped(c) } != null
 

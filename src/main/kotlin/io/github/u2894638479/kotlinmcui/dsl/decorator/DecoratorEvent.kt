@@ -16,14 +16,14 @@ import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.backend
 import io.github.u2894638479.kotlinmcui.dsl.executeContext
 import io.github.u2894638479.kotlinmcui.dsl.local
-import io.github.u2894638479.kotlinmcui.glfw.EventModifier
-import io.github.u2894638479.kotlinmcui.glfw.MouseButton
+import io.github.u2894638479.kotlinmcui.input.Key
+import io.github.u2894638479.kotlinmcui.input.KeyModifiers
+import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.container.DslChild
 import kotlinx.coroutines.CoroutineScope
-import org.lwjgl.glfw.GLFW
 import java.nio.file.Path
 
 context(ctx: DslContext)
@@ -37,7 +37,7 @@ fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext)
 
     override val focusable get() = true
 
-    context(eventModifier: EventModifier, mouse: Position)
+    context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton): Boolean {
         if(it.mouseDown(mouseButton)) return true
         if(mouse !in instance.rect) return false
@@ -45,10 +45,10 @@ fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext)
         return true
     }
 
-    context(eventModifier: EventModifier)
-    override fun keyDown(key: Int, scanCode: Int): Boolean {
+    context(eventModifier: KeyModifiers)
+    override fun keyDown(key: Key, scanCode: Int): Boolean {
         if(it.keyDown(key, scanCode)) return true
-        if(key == GLFW.GLFW_KEY_ENTER && instance.isFocused) {
+        if(key == Key.ENTER && instance.isFocused) {
             click()
             return true
         }
@@ -140,7 +140,7 @@ fun DslChild.onFilesDropped(action:context(DslExecuteContext) CoroutineScope.(Ar
 context(ctx: DslContext)
 fun DslChild.scissor() = change {
     object:DslComponent by it {
-        context(eventModifier: EventModifier, mouse: Position)
+        context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton) = mouse in instance.rect && it.mouseDown(mouseButton)
 
         context(mouse: Position)

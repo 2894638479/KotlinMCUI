@@ -9,8 +9,9 @@ import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslTextBuilderContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.*
-import io.github.u2894638479.kotlinmcui.glfw.EventModifier
-import io.github.u2894638479.kotlinmcui.glfw.MouseButton
+import io.github.u2894638479.kotlinmcui.input.Key
+import io.github.u2894638479.kotlinmcui.input.KeyModifiers
+import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
@@ -31,7 +32,6 @@ import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 import io.github.u2894638479.kotlinmcui.text.DslText
 import io.github.u2894638479.kotlinmcui.text.DslTextLine
 import io.github.u2894638479.kotlinmcui.text.kotlinmcui
-import org.lwjgl.glfw.GLFW
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration
@@ -288,15 +288,15 @@ fun EditableText(
                 }
             }
 
-            context(eventModifier: EventModifier)
+            context(eventModifier: KeyModifiers)
             override fun charTyped(c: Char): Boolean {
                 if (!instance.isFocused) return false
                 editable.insert(c)
                 return true
             }
 
-            context(eventModifier: EventModifier)
-            override fun keyDown(key: Int, scanCode: Int): Boolean {
+            context(eventModifier: KeyModifiers)
+            override fun keyDown(key: Key, scanCode: Int): Boolean {
                 fun default() = delegate.keyDown(key, scanCode)
                 if (!instance.isFocused) return default()
                 editable.check()
@@ -307,15 +307,15 @@ fun EditableText(
                     } else cursor2 = null
                 }
                 when (key) {
-                    GLFW.GLFW_KEY_BACKSPACE -> editable.ifNothingChanged({ return default() }) {
+                    Key.BACKSPACE -> editable.ifNothingChanged({ return default() }) {
                         backspace()
                     }
 
-                    GLFW.GLFW_KEY_DELETE -> editable.ifNothingChanged({ return default() }) {
+                    Key.DELETE -> editable.ifNothingChanged({ return default() }) {
                         delete()
                     }
 
-                    GLFW.GLFW_KEY_LEFT -> editable.ifCursorUnChanged({ return default() }) {
+                    Key.LEFT -> editable.ifCursorUnChanged({ return default() }) {
                         if (eventModifier.shift) {
                             if (cursor2 == null) cursor2 = cursor
                             cursor = max(0, cursor - 1)
@@ -325,7 +325,7 @@ fun EditableText(
                         }
                     }
 
-                    GLFW.GLFW_KEY_RIGHT -> editable.ifCursorUnChanged({ return default() }) {
+                    Key.RIGHT -> editable.ifCursorUnChanged({ return default() }) {
                         if (eventModifier.shift) {
                             if (cursor2 == null) cursor2 = cursor
                             cursor = min(maxCursor, cursor + 1)
@@ -335,42 +335,42 @@ fun EditableText(
                         }
                     }
 
-                    GLFW.GLFW_KEY_UP -> editable.ifCursorUnChanged({ return default() }) {
+                    Key.UP -> editable.ifCursorUnChanged({ return default() }) {
                         checkCursor2()
                         cursorPos = cursorPos?.let { CursorPos(it.line - 1, it.index) }
                     }
 
-                    GLFW.GLFW_KEY_DOWN -> editable.ifCursorUnChanged({ return default() }) {
+                    Key.DOWN -> editable.ifCursorUnChanged({ return default() }) {
                         checkCursor2()
                         cursorPos = cursorPos?.let { CursorPos(it.line + 1, it.index) }
                     }
 
-                    GLFW.GLFW_KEY_HOME -> editable.ifCursorUnChanged({ return default() }) {
+                    Key.HOME -> editable.ifCursorUnChanged({ return default() }) {
                         checkCursor2()
                         cursorPos = cursorPos?.let { CursorPos(it.line, 0) }
                     }
 
-                    GLFW.GLFW_KEY_END -> editable.ifCursorUnChanged({ return default() }) {
+                    Key.END -> editable.ifCursorUnChanged({ return default() }) {
                         checkCursor2()
                         cursorPos = cursorPos?.let { CursorPos(it.line, Int.MAX_VALUE) }
                     }
 
-                    GLFW.GLFW_KEY_ENTER -> editable.insert('\n')
-                    GLFW.GLFW_KEY_V -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.backend.clipboard)
-                    GLFW.GLFW_KEY_C -> if (eventModifier.ctrl) editable.range?.let {
+                    Key.ENTER -> editable.insert('\n')
+                    Key.V -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.backend.clipboard)
+                    Key.C -> if (eventModifier.ctrl) editable.range?.let {
                         ctx.dataStore.backend.clipboard = string.substring(it)
                     }
 
-                    GLFW.GLFW_KEY_Z -> if (eventModifier.ctrl) {
+                    Key.Z -> if (eventModifier.ctrl) {
                         if (eventModifier.shift) editable.redo() else editable.undo()
                     }
 
-                    GLFW.GLFW_KEY_X -> if (eventModifier.ctrl) {
+                    Key.X -> if (eventModifier.ctrl) {
                         editable.range?.let { ctx.dataStore.backend.clipboard = string.substring(it) }
                         editable.insert()
                     }
 
-                    GLFW.GLFW_KEY_A -> if (eventModifier.ctrl) {
+                    Key.A -> if (eventModifier.ctrl) {
                         editable.cursor = editable.maxCursor
                         editable.cursor2 = 0
                     }
@@ -380,8 +380,8 @@ fun EditableText(
                 return true
             }
 
-            context(eventModifier: EventModifier)
-            override fun keyUp(key: Int, scanCode: Int): Boolean {
+            context(eventModifier: KeyModifiers)
+            override fun keyUp(key: Key, scanCode: Int): Boolean {
                 return delegate.keyUp(key, scanCode)
             }
 
@@ -396,7 +396,7 @@ fun EditableText(
                 return CursorPos(alignedLines.indexOf(selectedLine), xValues.indexOf(selected))
             }
 
-            context(eventModifier: EventModifier, mouse: Position)
+            context(eventModifier: KeyModifiers, mouse: Position)
             override fun mouseDown(mouseButton: MouseButton): Boolean {
                 if (mouse !in instance.rect) return delegate.mouseDown(mouseButton)
                 editable.check()
@@ -407,7 +407,7 @@ fun EditableText(
                 return true
             }
 
-            context(eventModifier: EventModifier, mouse: Position)
+            context(eventModifier: KeyModifiers, mouse: Position)
             override fun mouseUp(mouseButton: MouseButton): Boolean {
                 return delegate.mouseUp(mouseButton) || mouseDown == Unit.also { mouseDown = null }
             }

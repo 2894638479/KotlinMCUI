@@ -28,7 +28,7 @@ import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.container.DslScope
 import io.github.u2894638479.kotlinmcui.container.DslScopeImpl
-import org.lwjgl.glfw.GLFW
+import io.github.u2894638479.kotlinmcui.input.Key
 
 
 context(ctx: DslContext)
@@ -111,7 +111,7 @@ fun Scrollable(
             context(mouse: Position)
             override fun mouseScrollVertical(amount: Double): Double {
                 val remain = delegate.mouseScrollVertical(amount)
-                if(axis != Axis.Vertical && !backend.isKeyDown(GLFW.GLFW_KEY_LEFT_SHIFT)) return remain
+                if(axis != Axis.Vertical && !backend.isKeyDown(Key.LEFT_SHIFT)) return remain
                 return scroller.scroll(remain * -sensitivity) / -sensitivity
             }
 
