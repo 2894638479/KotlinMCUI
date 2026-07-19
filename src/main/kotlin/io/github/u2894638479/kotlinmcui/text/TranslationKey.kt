@@ -37,10 +37,9 @@ interface TranslationKey {
  * Child keys extend the parent's path with their own segment:
  * `parent.path + "." + child.name`.
  *
- * ### Usage
- * Declare child keys with [KeyProperty] delegates (`by name`, `by type`, `by string`).
- * The delegate automatically initialises each child's [KeyInfo] from its parent
- * using Kotlin's `by` delegation mechanism.
+ * Declare child keys with [name], [string], or [type] delegates.
+ * Each delegate automatically initialises the child's [KeyInfo] from its
+ * parent using Kotlin's `by` delegation mechanism.
  */
 interface ParentKey : TranslationKey {
     /**
@@ -69,41 +68,78 @@ interface TranslatableKey : TranslationKey {
     operator fun invoke(vararg args: Any?) = dslBackend.translate(getPath(), *args) ?: getPath()
 }
 
-// ── Base implementations ─────────────────────────────────────────────────────
+// ── Base implementation ──────────────────────────────────────────────────────
 
 /**
  * Abstract base implementing [TranslationKey] with lazy initialisation.
  *
- * A key's [KeyInfo] is set exactly once by [init], which is called automatically
- * by [KeyProperty] when the key is first accessed via delegation.
+ * The [KeyInfo] is set internally by [KeyProperty] when the key is first
+ * accessed via delegation. Direct use without a delegate will produce a
+ * descriptive error.
  */
 abstract class BaseKey : TranslationKey {
-    private var keyInfo: KeyInfo? = null
+    internal var keyInfo: KeyInfo? = null
 
-    override fun getInfo() = keyInfo ?: error("TranslationKey not initialized — ensure it is accessed via a KeyProperty delegate")
-
-    /** Set the [KeyInfo] for this key. Must only be called once. */
-    fun init(info: KeyInfo) {
-        if (keyInfo != null) error("TranslationKey init twice — each key instance must be used with exactly one delegate")
-        keyInfo = info
-    }
+    override fun getInfo() = keyInfo ?: error(
+        "TranslationKey was not initialized. " +
+        "Keys must be declared with a delegate inside a ParentKey context.\n" +
+        "  ✅ val myKey by name\n" +
+        "  ✅ val myKey by string(\"custom_name\")\n" +
+        "  ❌ val myKey = SimpleKey()  // missing delegate"
+    )
 }
 
-/** A concrete [ParentKey] backed by [BaseKey]. */
-abstract class BaseParentKey : ParentKey, BaseKey()
+// ── Concrete key types ───────────────────────────────────────────────────────
 
-/** A concrete [TranslatableKey] backed by [BaseKey]. */
-abstract class BaseTranslatableKey : TranslatableKey, BaseKey()
+/**
+ * A key that can both produce translations and have child keys.
+ *
+ * This is the most common base type for defining a translation key subtree.
+ * Extend this class to group related translation keys:
+ * ```
+ * class MyPageKeys : KeyNode() {
+ *     val title by name
+ *     val subtitle by name
+ *     val button by name type NarrationKey()
+ *     class NarrationKey : KeyNode() {
+ *         val confirm by name
+ *         val cancel by name
+ *     }
+ * }
+ * ```
+ *
+ * Each `by name` child automatically derives its dot-separated path from
+ * the parent's position in the tree.
+ */
+open class KeyNode : BaseKey(), ParentKey, TranslatableKey
 
-/** A concrete key that is both a [ParentKey] and [TranslatableKey]. */
-abstract class BaseTranslatableParentKey : ParentKey, TranslatableKey, BaseKey()
+/**
+ * A key that can produce translations but has no children.
+ *
+ * Use this (or [SimpleKey]) for leaf-level translation keys that only need to
+ * look up translated strings. If you need a subtree, use [KeyNode] instead.
+ */
+open class LeafKey : BaseKey(), TranslatableKey
+
+/**
+ * The simplest concrete translation key — a [LeafKey] with a friendlier name.
+ *
+ * ```kotlin
+ * val myText by name             // SimpleKey with property name as segment
+ * val myText by string("my_text") // SimpleKey with explicit segment name
+ * ```
+ */
+class SimpleKey : LeafKey()
 
 // ── Root ────────────────────────────────────────────────────────────────────
 
 /**
  * The root of the translation key tree.
  *
- * All top-level translation key objects should use [top] as their parent.
+ * All top-level translation key objects should use [top] as their implicit
+ * parent. [KeyProperty] automatically detects when a key is declared at the
+ * top level and uses [top] as the fallback parent.
+ *
  * [top] itself has no parent and produces [KeyInfo] with empty [KeyInfo.parents].
  */
 val top: ParentKey = object : ParentKey, BaseKey() {
@@ -117,21 +153,21 @@ val top: ParentKey = object : ParentKey, BaseKey() {
  * parent context.
  *
  * When a key is declared as `val myKey by name`, the delegate:
- * 1. Reads the parent key from [thisRef] (the containing object, which must be a [ParentKey])
+ * 1. Gets the parent from [thisRef] (the containing object, which should be a [ParentKey])
  * 2. Uses [property.name] (or the explicit [string]) as the key's segment name
- * 3. Calls [BaseKey.init] with the parent's [ParentKey.spawn] result
+ * 3. Sets the key's [KeyInfo] via [BaseKey.keyInfo]
  *
  * @param key A new instance of the key to initialise (e.g. `SimpleKey()`).
  * @param string An explicit segment name, or `null` to use the Kotlin property name.
  */
 class KeyProperty<T : BaseKey>(val key: T, val string: String? = null) : ReadOnlyProperty<Any?, T> {
-    var initialized = false
+    private var initialized = false
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): T {
         if (!initialized) {
             initialized = true
             val parent = (thisRef as? ParentKey) ?: top
-            key.init(parent.spawn(string ?: property.name))
+            key.keyInfo = parent.spawn(string ?: property.name)
         }
         return key
     }
@@ -142,18 +178,15 @@ class KeyProperty<T : BaseKey>(val key: T, val string: String? = null) : ReadOnl
 
 // ── Convenience builders ─────────────────────────────────────────────────────
 
-/** A minimal concrete key that can produce translations (has no children). */
-class SimpleKey : BaseTranslatableKey()
-
 /**
  * Create a [KeyProperty] for a [SimpleKey] using the Kotlin property name as
  * the translation key segment.
  *
  * ### Example
  * ```kotlin
- * object MyKeys : BaseParentKey() {
- *     val button by name        // path: "MyKeys.button"
- *     val title by name         // path: "MyKeys.title"
+ * object MyKeys : KeyNode() {
+ *     val button by name        // path: "...MyKeys.button"
+ *     val title by name         // path: "...MyKeys.title"
  * }
  * ```
  */
@@ -161,6 +194,9 @@ val name get() = KeyProperty(SimpleKey())
 
 /**
  * Create a [KeyProperty] for a [SimpleKey] with an explicit segment name.
+ *
+ * Use this when the translation key segment differs from the Kotlin property
+ * name (e.g. snake_case in JSON vs camelCase in Kotlin).
  *
  * ### Example
  * ```kotlin
@@ -172,9 +208,9 @@ fun string(string: String) = KeyProperty(SimpleKey(), string)
 /**
  * Create a [KeyProperty] for a custom key type.
  *
- * ### Example
+ * Use this to declare a subtree with its own children:
  * ```kotlin
- * val mySubtree by type(MySubtreeKey())
+ * val narration by type(NarrationKey())
  * ```
  */
 fun <K : BaseKey> type(key: K) = KeyProperty(key)
@@ -190,7 +226,7 @@ fun <K : BaseKey> type(key: K) = KeyProperty(key)
  */
 val kotlinmcui by type(KotlinMCUIKey())
 
-class KotlinMCUIKey : BaseParentKey() {
+class KotlinMCUIKey : KeyNode() {
     val testpage by string("testpage")
     val testentry by name type SimpleKey()
     val test_translate by name
@@ -210,7 +246,7 @@ class KotlinMCUIKey : BaseParentKey() {
     val narration by name type NarrationKey()
 
     /** `kotlinmcui.narration.*` — accessibility narration strings. */
-    class NarrationKey : BaseParentKey() {
+    class NarrationKey : KeyNode() {
         val button by name
         val row by name
         val column by name
@@ -224,13 +260,13 @@ class KotlinMCUIKey : BaseParentKey() {
     val entrypage by name type EntryPageKey()
 
     /** `kotlinmcui.entrypage.*` — entry list UI strings. */
-    class EntryPageKey : BaseParentKey() {
+    class EntryPageKey : KeyNode() {
         val overlay by name
         val show_details by name
         val show_code_entry by name
         val tooltip by name type TooltipKey()
 
-        class TooltipKey : BaseParentKey() {
+        class TooltipKey : KeyNode() {
             val client by name
             val server by name
             val common by name
@@ -242,7 +278,7 @@ class KotlinMCUIKey : BaseParentKey() {
     val utils by name type UtilsKey()
 
     /** `kotlinmcui.utils.*` — utility UI strings (e.g. true/false labels). */
-    class UtilsKey : BaseParentKey() {
+    class UtilsKey : KeyNode() {
         val `true` by name
         val `false` by name
     }
