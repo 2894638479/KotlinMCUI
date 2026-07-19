@@ -20,14 +20,14 @@ value class MeasureArray private constructor(val raw: DoubleArray) {
     fun clone() = MeasureArray(raw.clone())
     fun sum() = raw.sum().px
     fun average() = raw.average().px
-    fun first() = raw.first()
-    fun last() = raw.last()
+    fun first() = raw.first().px
+    fun last() = raw.last().px
     fun firstOrNull() = raw.firstOrNull()?.px
     fun lastOrNull() = raw.lastOrNull()?.px
-    inline fun first(predicate:(Measure) -> Boolean) = raw.first { predicate(Measure.ofRaw(it)) }
-    inline fun last(predicate:(Measure) -> Boolean) = raw.last { predicate(Measure.ofRaw(it)) }
-    inline fun firstOrNull(predicate: (Measure) -> Boolean) = raw.firstOrNull { predicate(Measure.ofRaw(it)) }
-    inline fun lastOrNull(predicate: (Measure) -> Boolean) = raw.lastOrNull { predicate(Measure.ofRaw(it)) }
+    inline fun first(predicate:(Measure) -> Boolean) = raw.first { predicate(Measure.ofRaw(it)) }.px
+    inline fun last(predicate:(Measure) -> Boolean) = raw.last { predicate(Measure.ofRaw(it)) }.px
+    inline fun firstOrNull(predicate: (Measure) -> Boolean) = raw.firstOrNull { predicate(Measure.ofRaw(it)) }?.px
+    inline fun lastOrNull(predicate: (Measure) -> Boolean) = raw.lastOrNull { predicate(Measure.ofRaw(it)) }?.px
     inline fun <R> map(transform: (Measure) -> R) = raw.map { transform(Measure.ofRaw(it)) }
     inline fun forEach(action:(Measure)-> Unit) = raw.forEach { action(it.px) }
     fun getOrNull(index:Int) = raw.getOrNull(index)?.px
@@ -42,6 +42,24 @@ value class MeasureArray private constructor(val raw: DoubleArray) {
         override fun get(index: Int) = this@MeasureArray[index]
         override fun isEmpty() = this@MeasureArray.isEmpty()
     }
+
+    /** Returns a new [List] containing all elements in order. */
+    fun toList(): List<Measure> = raw.map { it.px }
+
+    /** Returns the index of the first element matching [predicate], or -1 if not found. */
+    inline fun indexOfFirst(predicate: (Measure) -> Boolean): Int = raw.indexOfFirst { predicate(Measure.ofRaw(it)) }
+
+    /** Returns the index of the last element matching [predicate], or -1 if not found. */
+    inline fun indexOfLast(predicate: (Measure) -> Boolean): Int = raw.indexOfLast { predicate(Measure.ofRaw(it)) }
+
+    /** Returns a new [MeasureArray] containing only elements matching [predicate]. */
+    fun filter(predicate: (Measure) -> Boolean): MeasureArray {
+        val list = raw.filter { predicate(Measure.ofRaw(it)) }
+        return MeasureArray(list.size) { i -> list[i].px }
+    }
+
+    /** Returns `true` if [element] is present in this array. */
+    fun contains(element: Measure): Boolean = raw.any { it == element.raw }
 }
 
 @OptIn(ExperimentalTypeInference::class)

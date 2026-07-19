@@ -112,8 +112,27 @@ class MeasureArrayTest {
     @Test
     fun `first with predicate`() {
         val arr = MeasureArray(4) { (it * 10).px }
-        val result = arr.asList().first { it > 5.px }
+        val result = arr.first { it > 5.px }
         assertEquals(10.px, result)
+    }
+
+    @Test
+    fun `first returns first element`() {
+        val arr = MeasureArray(3) { (it * 10).px }
+        assertEquals(0.px, arr.first())
+    }
+
+    @Test
+    fun `last returns last element`() {
+        val arr = MeasureArray(3) { (it * 10).px }
+        assertEquals(20.px, arr.last())
+    }
+
+    @Test
+    fun `firstOrNull with predicate returns Measure`() {
+        val arr = MeasureArray(3) { (it * 10).px }
+        assertEquals(10.px, arr.firstOrNull { it > 5.px })
+        assertNull(arr.firstOrNull { it > 100.px })
     }
 
     @Test
@@ -128,8 +147,45 @@ class MeasureArrayTest {
     @Test
     fun `any with predicate`() {
         val arr = MeasureArray(3) { (it * 10).px }
-        assertTrue(arr.asList().any { it > 5.px })
-        assertFalse(arr.asList().any { it > 50.px })
+        assertTrue(arr.any { it > 5.px })
+        assertFalse(arr.any { it > 50.px })
+    }
+
+    @Test
+    fun `contains returns true for present element`() {
+        val arr = MeasureArray(3) { (it * 10).px }
+        assertTrue(arr.contains(0.px))
+        assertTrue(arr.contains(10.px))
+        assertFalse(arr.contains(99.px))
+    }
+
+    @Test
+    fun `indexOfFirst returns first matching index`() {
+        val arr = MeasureArray(4) { (it * 5).px } // 0, 5, 10, 15
+        assertEquals(2, arr.indexOfFirst { it > 5.px })
+        assertEquals(-1, arr.indexOfFirst { it > 100.px })
+    }
+
+    @Test
+    fun `indexOfLast returns last matching index`() {
+        val arr = MeasureArray(4) { (it * 5).px } // 0, 5, 10, 15
+        assertEquals(3, arr.indexOfLast { it > 5.px })
+    }
+
+    @Test
+    fun `filter returns new array with matching elements`() {
+        val arr = MeasureArray(4) { (it * 5).px } // 0, 5, 10, 15
+        val filtered = arr.filter { it > 5.px }
+        assertEquals(2, filtered.size)
+        assertEquals(10.px, filtered[0])
+        assertEquals(15.px, filtered[1])
+    }
+
+    @Test
+    fun `toList returns independent list`() {
+        val arr = MeasureArray(3) { (it * 5).px }
+        val list = arr.toList()
+        assertEquals(listOf(0.px, 5.px, 10.px), list)
     }
 
     @Test
