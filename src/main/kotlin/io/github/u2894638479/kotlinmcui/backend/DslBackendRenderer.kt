@@ -26,7 +26,7 @@ interface DslBackendRenderer<RP> {
     context(renderParam: RP, ctx: DslScaleContext)
     fun renderItem(rect: Rect, item: String, count: Int, damage: Double?, enchanted: Boolean)
 
-    context(renderParam:RP)
+    context(renderParam: RP)
     fun renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE)
     context(ctx: DslScaleContext, renderParam: RP)
     fun renderDefaultBackground(rect: Rect)

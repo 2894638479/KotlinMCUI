@@ -14,6 +14,6 @@ class DslComponentImpl(
 ): DslComponent {
     override val scale = ctx.scale
     private var _instance: DslComponent? = null
-    override var instance: DslComponent get() = _instance ?: error("using `instance` before initialize")
-        set(value) { if(_instance == null) _instance = value else error("`instance` is set twice") }
+    override var instance: DslComponent get() = _instance ?: error("using `instance` before initialization")
+        set(value) { if(_instance == null) _instance = value else error("`instance` has already been set") }
 }

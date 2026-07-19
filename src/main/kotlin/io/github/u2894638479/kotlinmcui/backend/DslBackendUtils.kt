@@ -5,7 +5,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import java.io.File
 
 interface DslBackendUtils {
-    var clipBoard: String
+    var clipboard: String
     fun narrate(string: String)
     fun translate(key: String,vararg args: Any?): String?
     val isInWorld: Boolean

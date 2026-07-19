@@ -11,7 +11,7 @@ import io.github.u2894638479.kotlinmcui.container.DslChild
 
 interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEvent, DslComponentGlobalEvent, DslComponentMetadata,
     DslIdContext, DslScaleContext {
-    val children: DslChild.List get() = DslChild.List.empty
+    val children: DslChild.Group get() = DslChild.Group.empty
     fun build() {}
     fun layoutHorizontal() {}
     fun layoutVertical() {}

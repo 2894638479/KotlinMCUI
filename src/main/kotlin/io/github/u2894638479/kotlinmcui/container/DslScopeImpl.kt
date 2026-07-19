@@ -23,7 +23,7 @@ class DslScopeImpl(
 ) : DslScope {
     override val scale = ctx.scale
     override val rect = MutRect()
-    override val children = DslChild.List()
+    override val children = DslChild.Group()
     private var _instance: DslComponent? = null
     override var instance: DslComponent get() = _instance ?: error("using `instance` before initialize")
         set(value) { if(_instance == null) _instance = value else error("`instance` is set twice") }

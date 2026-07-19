@@ -356,9 +356,9 @@ fun EditableText(
                     }
 
                     GLFW.GLFW_KEY_ENTER -> editable.insert('\n')
-                    GLFW.GLFW_KEY_V -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.backend.clipBoard)
+                    GLFW.GLFW_KEY_V -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.backend.clipboard)
                     GLFW.GLFW_KEY_C -> if (eventModifier.ctrl) editable.range?.let {
-                        ctx.dataStore.backend.clipBoard = string.substring(it)
+                        ctx.dataStore.backend.clipboard = string.substring(it)
                     }
 
                     GLFW.GLFW_KEY_Z -> if (eventModifier.ctrl) {
@@ -366,7 +366,7 @@ fun EditableText(
                     }
 
                     GLFW.GLFW_KEY_X -> if (eventModifier.ctrl) {
-                        editable.range?.let { ctx.dataStore.backend.clipBoard = string.substring(it) }
+                        editable.range?.let { ctx.dataStore.backend.clipboard = string.substring(it) }
                         editable.insert()
                     }
 

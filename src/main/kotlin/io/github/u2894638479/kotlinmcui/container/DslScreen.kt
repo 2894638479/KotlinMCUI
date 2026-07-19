@@ -66,28 +66,28 @@ class DslScreen private constructor(
     }
 
     override fun globalFocusChanged(newFocus: DslId?) {
-        fun DslChild.List.f():Unit = forEach { it.children.f();it.globalFocusChanged(newFocus) }
+        fun DslChild.Group.f():Unit = forEach { it.children.f();it.globalFocusChanged(newFocus) }
         instance.children.f()
     }
 
     override fun globalHoverChanged(newHover: DslId?) {
-        fun DslChild.List.f():Unit = forEach { it.children.f();it.globalHoverChanged(newHover) }
+        fun DslChild.Group.f():Unit = forEach { it.children.f();it.globalHoverChanged(newHover) }
         instance.children.f()
     }
 
     init { instance = this }
 
 
-    private var overlays = DslChild.List()
-    override var children = DslChild.List()
+    private var overlays = DslChild.Group()
+    override var children = DslChild.Group()
     override fun build() {
-        children = DslChild.List()
-        overlays = DslChild.List()
+        children = DslChild.Group()
+        overlays = DslChild.Group()
         val ctx = DslContext(dataStore)
         context(ctx) {
             ctx.withScale(dataStore.scale) {
                 ctx.withIdentity(DslId(null)) {
-                    var overlays = DslChild.List()
+                    var overlays = DslChild.Group()
                     ctx.withChildren(children) {
                         ctx.withOverlays(overlays) {
                             dslFunction()
@@ -102,7 +102,7 @@ class DslScreen private constructor(
                     do {
                         this.overlays.collectAll(overlays)
                         val temp = overlays
-                        overlays = DslChild.List()
+                        overlays = DslChild.Group()
                         ctx.withOverlays(overlays) {
                             temp.forEach {
                                 it.attachInstance()
@@ -114,8 +114,8 @@ class DslScreen private constructor(
                     } while (overlays.isNotEmpty())
 
 
-                    children = DslChild.List().also { it.collectAll(this.overlays + children) }
-                    val tooltips = DslChild.List()
+                    children = DslChild.Group().also { it.collectAll(this.overlays + children) }
+                    val tooltips = DslChild.Group()
                     ctx.withOverlays(tooltips) {
                         Tooltip()
                     }
@@ -126,7 +126,7 @@ class DslScreen private constructor(
                         it.layoutHorizontal()
                         it.layoutVertical()
                     }
-                    children = DslChild.List().apply { collectAll(tooltips + children) }
+                    children = DslChild.Group().apply { collectAll(tooltips + children) }
                 }
             }
         }

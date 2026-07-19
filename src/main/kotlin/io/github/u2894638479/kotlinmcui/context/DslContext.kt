@@ -19,11 +19,11 @@ open class DslContext(
     @PublishedApi
     internal var _identity: DslId? = null
     @PublishedApi
-    internal var _children: DslChild.List? = null
+    internal var _children: DslChild.Group? = null
     @PublishedApi
     internal var _scale: Double = Double.NaN
     @PublishedApi
-    internal var _overlays: DslChild.List? = null
+    internal var _overlays: DslChild.Group? = null
     @PublishedApi
     internal inline fun <T,R> withField(get:() -> T, set:(T) -> Unit,value: T,block:() -> R): R {
         checkThread()
@@ -40,7 +40,7 @@ open class DslContext(
     override val scale get() = _scale.checkThread().also { require(!_scale.isNaN()) { "undefined scale" } }
     val overlays get() = _overlays.checkThread() ?: error("undefined overlays")
     inline fun <R> withIdentity(identity:DslId, block: () -> R) = withField({_identity},{_identity = it},identity,block)
-    inline fun <R> withChildren(children:DslChild.List, block: () -> R) = withField({_children},{_children = it},children,block)
+    inline fun <R> withChildren(children:DslChild.Group, block: () -> R) = withField({_children},{_children = it},children,block)
     inline fun <R> withScale(scale:Double, block: () -> R) = require(!scale.isNaN()).run { withField({_scale},{_scale = it},scale,block) }
-    inline fun <R> withOverlays(overlays:DslChild.List, block: () -> R) = withField({_overlays},{_overlays = it},overlays,block)
+    inline fun <R> withOverlays(overlays:DslChild.Group, block: () -> R) = withField({_overlays},{_overlays = it},overlays,block)
 }
