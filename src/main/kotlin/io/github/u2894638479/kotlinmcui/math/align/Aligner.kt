@@ -156,7 +156,11 @@ fun interface Aligner {
             var current = low
             alignable.forEach {
                 it.low = current
-                if(!it.size.isNumber) current += space
+                if (!it.size.isNumber) {
+                    current += space
+                } else {
+                    current += it.autoSizeMin
+                }
                 it.high = current
             }
         }

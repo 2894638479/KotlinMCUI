@@ -95,7 +95,8 @@ object DslEntryLoader {
             dslLogger.warn("no constructor found, trying to load as Kotlin object.")
             dslLogger.warn("class: $clazz")
         }
-        val instanceField = clazz.declaredFields.firstOrNull { it.name == "INSTANCE" }!!
+        val instanceField = clazz.declaredFields.firstOrNull { it.name == "INSTANCE" }
+            ?: error("no no-arg constructor or INSTANCE field found for $clazz")
         return instanceField.get(null)!!.let { service.cast(it) }.also {
             dslLogger.info("loaded Kotlin object: $clazz")
         }

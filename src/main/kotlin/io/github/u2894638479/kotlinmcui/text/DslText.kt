@@ -50,6 +50,6 @@ open class DslText(
         max(processedChars.totalHeight(font, defaultLineHeight),super.contentMinHeight)
     }
     override val contentMinWidth by lazy {
-        max(processedChars.totalWidth(font),super.contentMinHeight)
+        max(processedChars.totalWidth(font),super.contentMinWidth)
     }
 }

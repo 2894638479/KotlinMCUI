@@ -22,8 +22,8 @@ value class MeasureArray private constructor(val raw: DoubleArray) {
     fun average() = raw.average().px
     fun first() = raw.first()
     fun last() = raw.last()
-    fun firstOrNull() = raw.firstOrNull()
-    fun lastOrNull() = raw.lastOrNull()
+    fun firstOrNull() = raw.firstOrNull()?.px
+    fun lastOrNull() = raw.lastOrNull()?.px
     inline fun first(predicate:(Measure) -> Boolean) = raw.first { predicate(Measure.ofRaw(it)) }
     inline fun last(predicate:(Measure) -> Boolean) = raw.last { predicate(Measure.ofRaw(it)) }
     inline fun firstOrNull(predicate: (Measure) -> Boolean) = raw.firstOrNull { predicate(Measure.ofRaw(it)) }

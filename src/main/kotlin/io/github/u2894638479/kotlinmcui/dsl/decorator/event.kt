@@ -76,7 +76,7 @@ fun DslChild.onFocused(
 ) = change {
     object: DslComponent by it {
         override fun globalFocusChanged(newFocus: DslId?) {
-            it.globalHoverChanged(newFocus)
+            it.globalFocusChanged(newFocus)
             action(executeContext,local.coroutineScope,instance.identity == newFocus)
         }
     }
@@ -89,7 +89,7 @@ fun DslChild.onFocusChanged(
     object: DslComponent by it {
         val coroutineScope = local.coroutineScope
         override fun globalFocusChanged(newFocus: DslId?) {
-            it.globalHoverChanged(newFocus)
+            it.globalFocusChanged(newFocus)
             action(executeContext,coroutineScope,newFocus)
         }
     }
