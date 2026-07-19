@@ -76,11 +76,18 @@ interface TranslatableKey : TranslationKey {
  * The [KeyInfo] is set internally by [KeyProperty] when the key is first
  * accessed via delegation. Direct use without a delegate will produce a
  * descriptive error.
+ *
+ * ### Thread safety
+ * The backing field is [Volatile] so that initialisation performed by one
+ * thread is immediately visible to all others. Key initialisation is
+ * idempotent (the same key always produces the same [KeyInfo]), so concurrent
+ * initialisation by two threads is safe — they will both produce the same result.
  */
 abstract class BaseKey : TranslationKey {
-    internal var keyInfo: KeyInfo? = null
+    @Volatile
+    internal var `__kotlinmcui_key_info__`: KeyInfo? = null
 
-    override fun getInfo() = keyInfo ?: error(
+    override fun getInfo() = `__kotlinmcui_key_info__` ?: error(
         "TranslationKey was not initialized. " +
         "Keys must be declared with a delegate inside a ParentKey context.\n" +
         "  ✅ val myKey by name\n" +
@@ -161,13 +168,13 @@ val top: ParentKey = object : ParentKey, BaseKey() {
  * @param string An explicit segment name, or `null` to use the Kotlin property name.
  */
 class KeyProperty<T : BaseKey>(val key: T, val string: String? = null) : ReadOnlyProperty<Any?, T> {
-    private var initialized = false
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): T {
-        if (!initialized) {
-            initialized = true
+        // Double-checked: null means uninitialised. Init is idempotent so
+        // two threads racing to initialise will produce the same result.
+        if (key.`__kotlinmcui_key_info__` == null) {
             val parent = (thisRef as? ParentKey) ?: top
-            key.keyInfo = parent.spawn(string ?: property.name)
+            key.`__kotlinmcui_key_info__` = parent.spawn(string ?: property.name)
         }
         return key
     }
