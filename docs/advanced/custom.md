@@ -17,7 +17,7 @@ fun MyComponent(
     object: DslComponent by DslComponentImpl(newChildId(id), modifier) {
         var prop by remember(false)
 
-        context(eventModifier: EventModifier, mouse: Position)
+        context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton): Boolean {
             //...
         }
@@ -35,7 +35,7 @@ fun DslChild.myDecorator(
     object: DslComponent by it {
         var prop by remember(false)
 
-        context(eventModifier: EventModifier, mouse: Position)
+        context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton): Boolean {
             //...
         }
@@ -55,7 +55,7 @@ val component = object:DslComponent by DslComponentImpl(modifier,id) {}
 ## `this` `super` `instance` `delegate`的区别
 `DslComponent`有`instance`这个成员。设计这个成员是因为每次委托都产生一个新对象，所以一级装饰无法获得后级装饰的结果。
 ```kotlin
-context(eventModifier: EventModifier, mouse: Position)
+context(eventModifier: KeyModifiers, mouse: Position)
 override fun mouseDown(mouseButton: MouseButton): Boolean {
     if(delegate.focusable) {
         // ...
