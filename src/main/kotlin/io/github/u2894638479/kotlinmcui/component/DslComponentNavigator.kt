@@ -38,7 +38,15 @@ fun DslComponent.nextFocusableList(focused: DslId?, reverse:Boolean = false, vie
 }
 
 fun DslComponent.nextFocusable(focused: DslId?, view:(DslComponentNavigator) -> List<DslComponent>): DslComponent? {
-    fun DslComponent.flattenView():List<DslComponent> = listOf(this) + view(this).flatMap { it.flattenView() }
+    fun DslComponent.flattenView(): List<DslComponent> = buildList {
+        fun flatten(component: DslComponent) {
+            for (child in view(component)) {
+                flatten(child)
+            }
+            add(component)
+        }
+        flatten(this@nextFocusable)
+    }
     val flatten = flattenView()
     val index = flatten.indexOfFirst { it.identity == focused }
     return flatten.drop(index + 1).firstOrNull { it.focusable }
