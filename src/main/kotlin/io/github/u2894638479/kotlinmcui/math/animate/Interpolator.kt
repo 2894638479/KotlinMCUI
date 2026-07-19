@@ -2,7 +2,18 @@ package io.github.u2894638479.kotlinmcui.math.animate
 
 import kotlin.math.*
 
+/**
+ * An easing function that maps linear progress `t` (0..1) to eased progress.
+ *
+ * Pre-built instances are available in the [companion][Companion] object.
+ * Create custom interpolators with a lambda:
+ * ```
+ * val myEasing = Interpolator { t -> t * t }
+ * val result = myEasing.interpolate(start, end, fraction)
+ * ```
+ */
 fun interface Interpolator {
+    /** Map linear progress to eased progress. */
     fun progress(t: Double): Double
     companion object {
         val linear = Interpolator { it }

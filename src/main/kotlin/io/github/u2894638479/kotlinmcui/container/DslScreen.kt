@@ -21,6 +21,13 @@ import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import org.lwjgl.glfw.GLFW
 
+/**
+ * The top-level screen component that orchestrates the build-layout-render cycle.
+ *
+ * Each frame, [render] calls [build] to reconstruct the entire UI tree (including
+ * overlay collection and tooltip creation), detects hover, and dispatches rendering
+ * to children. Focus navigation (arrow keys, Tab, Home, End) is handled in [keyDown].
+ */
 class DslScreen private constructor(
     val dataStore: DslDataStore,
     val dslFunction: DslFunction,

@@ -5,8 +5,14 @@ import kotlin.reflect.KProperty
 import kotlin.reflect.KProperty0
 
 
+/**
+ * A read-only reactive property. Use [value] or delegate syntax to read.
+ *
+ * @see StableRW
+ * @see PropertyLifeScope.property
+ */
 fun interface StableRO<out T> {
-    fun getValue():T
+    fun getValue(): T
 }
 
 val <T> StableRO<T>.value @JvmName("extGetValue") get() = getValue()
@@ -14,8 +20,9 @@ val <T> StableRO<T>.value @JvmName("extGetValue") get() = getValue()
 operator fun <T> StableRO<T>.getValue(thisRef:Any?, property: KProperty<*>) = getValue()
 
 
+/** A readable and writable reactive property. */
 interface StableRW<T>: StableRO<T> {
-    fun setValue(value:T)
+    fun setValue(value: T)
 }
 
 var <T> StableRW<T>.value @JvmName("extGetValue") get() = getValue()

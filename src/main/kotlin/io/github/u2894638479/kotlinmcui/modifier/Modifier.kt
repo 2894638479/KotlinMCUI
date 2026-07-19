@@ -6,17 +6,42 @@ import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.align.Alignment
 import io.github.u2894638479.kotlinmcui.math.px
 
+/**
+ * A chainable modifier that controls size, padding, weight, and alignment.
+ *
+ * Modifiers are immutable — each function returns a new [Modifier] wrapping
+ * the previous one with one property overridden. This creates a chain similar
+ * to Jetpack Compose's modifier system.
+ *
+ * ### Usage
+ * ```
+ * Modifier.width(100.px).padding(5.px).weight(2.0)
+ * ```
+ *
+ * [Modifier] (the companion object) is the default modifier with all defaults.
+ */
 interface Modifier {
+    /** Desired width. [Measure.AUTO] means "determine from content". */
     val width get() = Measure.AUTO
+
+    /** Desired height. [Measure.AUTO] means "determine from content". */
     val height get() = Measure.AUTO
+
+    /** Layout weight for space distribution in weighted aligners. */
     val weight get() = 1.0
+
     val paddingTop get() = 0.px
     val paddingLeft get() = 0.px
     val paddingBottom get() = 0.px
     val paddingRight get() = 0.px
+
+    /** Minimum width constraint. */
     val minWidth get() = 0.px
+
+    /** Minimum height constraint. */
     val minHeight get() = 0.px
 
+    /** Horizontal and vertical alignment within allocated space. */
     val alignment get() = Alignment()
 
     companion object : Modifier

@@ -10,6 +10,7 @@ import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.container.DslChild
 import java.io.File
 
+/** A DSL function that builds UI content within a [DslContext]. */
 typealias DslFunction = context(DslContext) ()->Unit
 
 context(ctx: DslDataStoreContext)

@@ -7,6 +7,13 @@ import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.prop.mapView
 
+/**
+ * A mutable wrapper around a [DslComponent] in the child list.
+ *
+ * Supports the decorator pattern via [change] — wrapping a component's behaviour
+ * without changing its identity. The [Group] interface is the managed collection
+ * of children used throughout the tree.
+ */
 class DslChild(private var component: DslComponent) {
     fun currentComponent() = component
     fun change(component: DslComponent) = apply { this.component = component }

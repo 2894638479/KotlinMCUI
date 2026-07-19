@@ -11,6 +11,15 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
+/**
+ * An RGBA color packed into a single [Int].
+ *
+ * Layout: R at bits 24-31, G at 16-23, B at 8-15, A at 0-7.
+ *
+ * Supports construction from [UByte], [Int], [Float], [Double], and HSV.
+ * Provides channel access at multiple numeric precisions and immutable
+ * modification via [change] / [changeHSV].
+ */
 @Serializable(with = Color.Serializer::class)
 @JvmInline
 value class Color(val rgbaInt:Int): Interpolatable<Color> {

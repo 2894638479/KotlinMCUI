@@ -19,6 +19,16 @@ import io.github.u2894638479.kotlinmcui.prop.setValue
 import kotlin.collections.sumOf
 import kotlin.math.sign
 
+/**
+ * A scroll controller managing scroll position, item visibility, and boundary
+ * clamping for virtualised lists.
+ *
+ * ### Design rationale
+ * [rawScroll] tracks the real-time scroll position (may be animated).
+ * [offset] and [scrollIndex] anchor to the first visible item to prevent drift
+ * when items above the viewport change size. The visible range is computed
+ * from the viewport size ([high] - [low]) relative to item sizes.
+ */
 interface Scroller: DslScaleContext, Bound {
     companion object {
         val empty = object : Scroller {

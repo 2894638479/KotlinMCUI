@@ -2,12 +2,31 @@ package io.github.u2894638479.kotlinmcui.component
 
 import io.github.u2894638479.kotlinmcui.identity.DslId
 
+/**
+ * Focus traversal navigation for a component tree.
+ *
+ * Each view defines a different navigation model:
+ * - [viewHorizontal] — 2D grid for left/right arrow key navigation.
+ * - [viewVertical] — 2D grid for up/down arrow key navigation.
+ * - [viewSequential] — flat list for Tab / Shift+Tab navigation.
+ */
 interface DslComponentNavigator {
     val viewHorizontal: List<List<DslComponent>>
     val viewVertical: List<List<DslComponent>>
     val viewSequential: List<DslComponent>
 }
 
+/**
+ * Find the next focusable component in a 2D navigation view.
+ *
+ * Traverses the component tree depth-first using [view]. When [reverse] is true,
+ * traversal order is reversed.
+ *
+ * @param focused The identity of the currently focused component, or `null`.
+ * @param reverse If `true`, traverse in reverse direction.
+ * @param view Extracts the 2D navigation view from a [DslComponentNavigator].
+ * @return The next focusable component, or `null` if none is found.
+ */
 fun DslComponent.nextFocusableList(focused: DslId?, reverse:Boolean = false, view:(DslComponentNavigator) -> List<List<DslComponent>>): DslComponent? {
     var hit = false
     fun <T> List<T>.rev() = if (reverse) asReversed() else this
@@ -37,6 +56,17 @@ fun DslComponent.nextFocusableList(focused: DslId?, reverse:Boolean = false, vie
     return firstFocusable()
 }
 
+/**
+ * Find the next focusable component in a flat sequential navigation view.
+ *
+ * Flattens the tree using [view] and returns the first focusable component
+ * after the currently focused one. Wraps around by returning `null` when
+ * nothing is found (caller should then reset to the first focusable).
+ *
+ * @param focused The identity of the currently focused component, or `null`.
+ * @param view Extracts the flat list view from a [DslComponentNavigator].
+ * @return The next focusable component, or `null`.
+ */
 fun DslComponent.nextFocusable(focused: DslId?, view:(DslComponentNavigator) -> List<DslComponent>): DslComponent? {
     fun DslComponent.flattenView(): List<DslComponent> = buildList {
         fun flatten(component: DslComponent) {

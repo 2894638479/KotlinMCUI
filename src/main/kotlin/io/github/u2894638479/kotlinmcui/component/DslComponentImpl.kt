@@ -6,6 +6,16 @@ import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 
+/**
+ * A basic concrete implementation of [DslComponent].
+ *
+ * Provides the minimal wiring: identity, modifier, scale from context,
+ * a mutable rectangle, and the self-referencing [instance] property.
+ * Use this as a delegate for simple components:
+ * ```
+ * object : DslComponent by DslComponentImpl(id, modifier, ctx) { ... }
+ * ```
+ */
 class DslComponentImpl(
     override val identity: DslId,
     override val modifier: Modifier,

@@ -1,3 +1,10 @@
+/**
+ * Visual decorator functions for [DslChild] components.
+ *
+ * Each function wraps a component using the [DslChild.change] pattern
+ * (decorator via delegation) to add visual effects: backgrounds, outlines,
+ * transforms (rotate/scale/move), animations, and masks.
+ */
 package io.github.u2894638479.kotlinmcui.dsl.decorator
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer

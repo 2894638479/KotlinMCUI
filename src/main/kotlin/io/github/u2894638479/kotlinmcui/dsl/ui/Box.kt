@@ -14,16 +14,17 @@ import io.github.u2894638479.kotlinmcui.container.DslScope
 import io.github.u2894638479.kotlinmcui.container.DslScopeImpl
 
 /**
- * 创建一个 Box 布局容器。
+ * Create a Box layout container.
  *
- * Box 是一种无特定排列方向的布局容器，其内容的最小尺寸由所有子组件的最大宽度和最大高度决定。
- * 它通常作为其他布局（如 Row、Column）的嵌套容器或基础组件。
+ * Box has no specific layout direction — its minimum content size is determined
+ * by the maximum width and height of its children. It is typically used as a
+ * nesting container or base component for other layouts (Row, Column).
  *
- * @param modifier 修饰器，用于控制组件的尺寸、边距、背景等属性，默认为 [Modifier]。
- * @param id 组件的唯一标识符；若为 `null`，则使用 [function] 的 `::class` 作为 ID。
- * @param function DSL 构建函数，用于在 Box 内声明子组件。该函数在 [DslContext] 的隐式上下文中执行。
- * @receiver [DslContext] 隐式 DSL 上下文，提供组件注册和布局计算能力。
- * @return 收集到的组件对象（具体类型由 [collect] 返回，通常为 [DslScope] 或等效的容器引用）。
+ * @param modifier The modifier controlling size, padding, background, etc. Defaults to [Modifier].
+ * @param id Unique identifier; if `null`, [function]'s `::class` is used as the ID.
+ * @param function DSL builder function executed within an implicit [DslContext].
+ * @receiver [DslContext] The implicit DSL context providing component registration and layout.
+ * @return The collected component (returned by [collect], typically a [DslScope]).
  * @see DslScopeImpl
  * @see childrenMaxWidth
  * @see childrenMaxHeight

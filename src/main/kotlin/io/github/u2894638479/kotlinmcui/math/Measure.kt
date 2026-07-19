@@ -14,15 +14,40 @@ import kotlin.collections.sumOf
 import kotlin.collections.minOf
 import kotlin.collections.maxOf
 
+/**
+ * A measurement value that can be either a numeric pixel size or a sentinel
+ * value representing automatic sizing.
+ *
+ * Sentinels use reserved NaN bit-patterns so that [isNumber] returns `false`
+ * while [equals] and [hashCode] still function correctly.
+ *
+ * ### Pixel syntax
+ * Use the [px] extension to create pixel values:
+ * ```
+ * val width = 20.0.px
+ * val height = 5.px
+ * ```
+ */
 @JvmInline
 @Serializable(with = Measure.Serializer::class)
 value class Measure private constructor(val raw: Double):Comparable<Measure>, Interpolatable<Measure> {
     companion object {
+        /** Sentinel value representing automatic sizing (behaves like a signaling NaN). */
         val AUTO = Measure(Double.fromBits(0x7FF1000000000000L))
+
+        /** Sentinel value for auto-sizing with a minimum constraint. */
         val AUTO_MIN = Measure(Double.fromBits(0x7FF2000000000000L))
+
+        /** Create a [Measure] from a raw [Double] value. */
         fun ofRaw(raw: Double) = Measure(raw)
+
+        /** Create a [Measure] from raw IEEE 754 bits. */
         fun ofBits(bits: Long) = Measure(Double.fromBits(bits))
+
+        /** Return the larger of two measures. */
         fun max(a: Measure,b: Measure) = Measure(max(a.raw,b.raw))
+
+        /** Return the smaller of two measures. */
         fun min(a: Measure,b: Measure) = Measure(min(a.raw,b.raw))
     }
     inline val bits get() = raw.toRawBits()

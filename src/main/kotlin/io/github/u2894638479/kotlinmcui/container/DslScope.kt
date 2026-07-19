@@ -7,6 +7,13 @@ import io.github.u2894638479.kotlinmcui.glfw.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Position
 import java.nio.file.Path
 
+/**
+ * A component that acts as a layout container and event router for its children.
+ *
+ * Default implementations delegate input events and hit-testing to [children],
+ * and render children in reverse order. Layout containers ([Box], [Row], [Column])
+ * use [DslScopeImpl] which extends this interface with alignment logic.
+ */
 interface DslScope : DslComponent {
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)

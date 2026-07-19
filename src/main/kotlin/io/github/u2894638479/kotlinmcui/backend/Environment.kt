@@ -1,18 +1,27 @@
 package io.github.u2894638479.kotlinmcui.backend
 
+/**
+ * The runtime environment in which the framework is executing.
+ *
+ * Determines which entry points are safe to load without causing
+ * [ClassNotFoundException] or similar linkage errors.
+ */
 enum class Environment {
     /**
-     * 表示环境中存在CLIENT特定代码，可确保[io.github.u2894638479.kotlinmcui.entry.DslEntryClient.initializeClient]加载并执行时不因缺少类而崩溃
+     * Client-specific code is available.
+     * [io.github.u2894638479.kotlinmcui.entry.DslEntryClient.initializeClient] will be called.
      */
     CLIENT,
 
     /**
-     * 表示环境中存在SERVER特定代码，可确保[io.github.u2894638479.kotlinmcui.entry.DslEntryServer.initializeServer]加载并执行时不因缺少类而崩溃
+     * Server-specific code is available.
+     * [io.github.u2894638479.kotlinmcui.entry.DslEntryServer.initializeServer] will be called.
      */
     SERVER,
 
     /**
-     * 表示环境中只可确保[io.github.u2894638479.kotlinmcui.entry.DslEntryCommon.initialize]加载并执行时不因缺少类而崩溃
+     * Only common code is guaranteed to be available.
+     * Only [io.github.u2894638479.kotlinmcui.entry.DslEntryCommon.initialize] will be called.
      */
     COMMON
 }

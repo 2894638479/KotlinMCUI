@@ -1,3 +1,10 @@
+/**
+ * Interactive decorator functions for [DslChild] components.
+ *
+ * Each function wraps a component to add interactive behaviour: click handling,
+ * focus/hover change callbacks, tooltips, file drop handling, and scissor clipping
+ * for both rendering and input.
+ */
 package io.github.u2894638479.kotlinmcui.dsl.decorator
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer

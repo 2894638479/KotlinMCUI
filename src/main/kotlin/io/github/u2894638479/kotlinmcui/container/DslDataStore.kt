@@ -10,6 +10,17 @@ import io.github.u2894638479.kotlinmcui.prop.PropertyLifeScope.TimedProperty
 import io.github.u2894638479.kotlinmcui.test.DebugOverlay
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 
+/**
+ * Central data store for a screen instance.
+ *
+ * Holds the backend reference, frame timing, focus/hover state, narration,
+ * and three [PropertyLifeScope] instances with different lifetimes:
+ * - [localLifeScope]: cleared every frame (properties not accessed this frame are disposed)
+ * - [stableLifeScope]: persists across frames as long as accessed each frame
+ * - [staticLifeScope]: persists for the lifetime of the process
+ *
+ * Also provides a [debugOverlay] with performance metrics.
+ */
 class DslDataStore(
     val backend: DslBackend<*, *>,
     val title:String,

@@ -7,6 +7,13 @@ import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.px
 
 
+/**
+ * An immutable 2D rectangle defined by its four edges.
+ *
+ * Factory function: `Rect(left, top, right, bottom)`. Use extension properties
+ * ([width], [height], [center], [isEmpty], [vertices]) and functions
+ * ([contains], [overlap], [expand], [bound]) for common operations.
+ */
 interface Rect {
     val left: Measure
     val top: Measure
