@@ -22,3 +22,10 @@ class DslId(private val obj: Any?,val prevNode: DslId? = null) : Iterable<DslId>
         override fun next() = node!!.also { node = node!!.prevNode }
     }
 }
+
+private class RefWrapper<T>(val ref: T) {
+    override fun equals(other: Any?) = this === other || (other is RefWrapper<*> && ref === other.ref)
+    override fun hashCode() = System.identityHashCode(ref)
+}
+
+val <T> T.refId: Any get() = RefWrapper(this)
