@@ -16,7 +16,7 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
  * object : DslComponent by DslComponentImpl(id, modifier, ctx) { ... }
  * ```
  */
-class DslComponentImpl(
+internal class DslComponentImpl(
     override val identity: DslId,
     override val modifier: Modifier,
     ctx: DslContext,

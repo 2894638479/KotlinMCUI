@@ -13,7 +13,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.container.DslChild.Companion.buildThis
 
-class DslScopeImpl(
+internal class DslScopeImpl(
     override val identity: DslId,
     override val modifier: Modifier,
     val ctx: DslContext,
