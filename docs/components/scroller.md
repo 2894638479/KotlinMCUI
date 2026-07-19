@@ -11,8 +11,8 @@ parent: Components
 ## `Scroller`
 可以向`ScrollableColumn`传入`scrollerProp`和`scrollProp`。
 ```kotlin
-val scrollerProp by Scroller.empty.remember.property
-val scrollProp by 0.0.remember.property
+val scrollerProp by local { Scroller.empty }
+val scrollProp by local.animatable { 0.0 }
 LazyColumn(Modifier,scrollerProp,scrollProp) {
     // ...
 }

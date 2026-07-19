@@ -6,7 +6,7 @@ nav_order: 3
 # 基础
 这一章展示ui的基础写法。如果想要详细阅读，可以跳过这一页。如果不想详细阅读，建议查看源码中`TestPage()`相关的ui代码。下面给一些示例：
 ```kotlin
-var i by remember(0)
+var i by local { 0 }
 
 Button(Modifier.size(Measure.AUTO_MIN,Measure.AUTO_MIN)) {
     TextFlatten(Modifier.padding(7.scaled)) { "counter: $i".emit() }
@@ -19,8 +19,8 @@ DefaultBackground()
 
 ```kotlin
 Column {
-    val strings by remember(mutableSetOf("a","bb","ccc"))
-    var chosen by "".remember
+    val strings by local { mutableSetOf("a","bb","ccc") }
+    var chosen by local { "" }
     Row(Modifier.height(50.scaled)) {
         TextFlatten { "buttons: ".emit() }
         strings.forEachWithId {

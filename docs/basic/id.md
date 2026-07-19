@@ -71,7 +71,7 @@ ID用来区分不同的组件。关于为什么需要ID，看下面这个示例�
 ```kotlin
 context(ctx: DslContext)
 fun MyUIComponent(text:String) = run {
-    var counter by remember(0)
+    var counter by local { 0 }
     Button { TextFlatten { "$text: $counter".emit() } }.clickable { counter++ }
 }
 

@@ -15,7 +15,7 @@ fun MyComponent(
     id: Any
 ) = collect(
     object: DslComponent by DslComponentImpl(newChildId(id), modifier) {
-        var prop by remember(false)
+        var prop by local { false }
 
         context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton): Boolean {
@@ -24,7 +24,7 @@ fun MyComponent(
     }
 )
 ```
-向`collect()`传入一个`DslComponent`，就会把这个组件加入到外部的作用域中（如`Row`，`Box`）。在这里也可以使用`remember`等函数来存储状态。
+向`collect()`传入一个`DslComponent`，就会把这个组件加入到外部的作用域中（如`Row`，`Box`）。在这里也可以使用`local`/`stable`/`static`等函数来存储状态。
 ```kotlin
 context(ctx: DslContext)
 fun DslChild.myDecorator(
@@ -33,7 +33,7 @@ fun DslChild.myDecorator(
     id: Any
 ) = change {
     object: DslComponent by it {
-        var prop by remember(false)
+        var prop by local { false }
 
         context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton): Boolean {
