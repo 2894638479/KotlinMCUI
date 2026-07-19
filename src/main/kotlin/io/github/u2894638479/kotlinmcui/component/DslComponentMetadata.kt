@@ -22,7 +22,17 @@ interface DslComponentMetadata {
      */
     var instance: DslComponent
 
-    /** The current cumulative transform matrix applied to this component. */
+    /**
+     * The transform of this component **relative to its parent**.
+     *
+     * During rendering and event propagation, transforms are composed layer by
+     * layer from parent to child. Since most components have no transform, the
+     * default is [Transform.empty], allowing the composition chain to short-circuit
+     * (identity × anything = anything) for zero overhead in the common case.
+     *
+     * Set a non-empty transform only when this component needs to be rotated,
+     * scaled, or translated relative to its parent.
+     */
     val transform: Transform get() = Transform.empty
 
     /** Whether this component can receive keyboard focus. */

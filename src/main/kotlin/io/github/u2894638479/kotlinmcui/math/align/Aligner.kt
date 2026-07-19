@@ -9,7 +9,22 @@ import kotlin.collections.sumOf
 
 fun Aligner.align(bound: Bound,alignable: List<Alignable>) = align(bound.low,bound.high,alignable)
 
+/**
+ * A 1D layout strategy that positions items within a given range.
+ *
+ * Each [Alignable] provides hints ([weight], [size], [minSize], [align]),
+ * but individual strategies are free to use or ignore any of these.
+ * For example, [close] ignores [weight], while [weightedStrictByMin] uses it
+ * to distribute remaining space.
+ *
+ * Pre-built strategies are available in the [companion][Companion].
+ * Implement this interface for custom layout behaviour.
+ */
 fun interface Aligner {
+    /**
+     * Layout [alignable] items within the range [[low], [high]].
+     * Each item's [Alignable.low] and [Alignable.high] must be set.
+     */
     fun align(low: Measure, high: Measure, alignable: List<Alignable>)
 
     companion object {

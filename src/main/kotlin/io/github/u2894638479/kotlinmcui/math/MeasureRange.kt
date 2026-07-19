@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.math
 import kotlinx.serialization.Serializable
 
+/** A closed range of [Measure] values usable with `in` and range operators. */
 @Serializable
 class MeasureRange(
     override val start: Measure,

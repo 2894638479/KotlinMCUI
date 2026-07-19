@@ -14,6 +14,18 @@ import io.github.u2894638479.kotlinmcui.math.rect.isEmpty
 import io.github.u2894638479.kotlinmcui.math.rect.width
 import kotlin.math.min
 
+/**
+ * Defines how an image is rendered into a target rectangle.
+ *
+ * Pre-built strategies are available in the [companion][Companion]:
+ * - [stretch] — fills the rect, ignoring aspect ratio
+ * - [clip] — fills while preserving aspect ratio, cropping excess
+ * - [repeat] — tiles the image (optionally scaled)
+ * - [nineSlice] — classic 9-slice scaling for panels and borders
+ * - [fitIn] — letterboxes the image inside the rect
+ *
+ * Custom strategies can implement [UVStrategy] or the raw [render] method.
+ */
 interface ImageStrategy {
     context(backend: DslBackendRenderer<RP>, renderParam: RP)
     fun <RP> render(rect: Rect, image: ImageHolder, color: Color)

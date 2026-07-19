@@ -23,6 +23,12 @@ import kotlin.math.sign
  * A scroll controller managing scroll position, item visibility, and boundary
  * clamping for virtualised lists.
  *
+ * ### First-frame behaviour
+ * When declared as `local { Scroller.empty }`, the scroller is [empty] during
+ * the first frame and cannot provide valid scroll information. The scroll state
+ * only becomes meaningful on the second frame, after the first layout pass has
+ * populated the item list. Code reading scroll state should guard against this.
+ *
  * ### Design rationale
  * [rawScroll] tracks the real-time scroll position (may be animated).
  * [offset] and [scrollIndex] anchor to the first visible item to prevent drift

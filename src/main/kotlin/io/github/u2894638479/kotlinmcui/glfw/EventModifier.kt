@@ -2,6 +2,12 @@ package io.github.u2894638479.kotlinmcui.glfw
 
 import org.lwjgl.glfw.GLFW
 
+/**
+ * Wraps a GLFW modifier key bitmask with readable boolean properties.
+ *
+ * Each property returns `true` if the corresponding modifier key is held
+ * during the current event.
+ */
 @JvmInline
 value class EventModifier(val value:Int) {
     private fun has(mod:Int) = (value and mod) != 0

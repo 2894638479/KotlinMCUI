@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.math.animate
 
+/** Wraps a [Double] to implement [Interpolatable], enabling animation of scalar values. */
 @JvmInline
 value class InterpolatableDouble(private val value: Double): Interpolatable<InterpolatableDouble> {
     override fun plus(other: InterpolatableDouble) = InterpolatableDouble(value + other.value)

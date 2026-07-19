@@ -6,6 +6,17 @@ import io.github.u2894638479.kotlinmcui.math.px
 import kotlin.math.cos
 import kotlin.math.sin
 
+/**
+ * A 3×3 homogeneous transformation matrix using [Float] precision.
+ *
+ * Supports translation, scale, and rotation via companion factory methods.
+ * Transformations compose via `*` and can be inverted. The [empty] identity
+ * matrix is the default — use [isEmpty] to detect it for optimisation.
+ *
+ * ### FMA optimisation
+ * Matrix operations use [Math.fma] when available (detected at class load time),
+ * falling back to `a * b + c` on older JVMs for consistent numerical behaviour.
+ */
 data class Transform(
     val m00: Num,
     val m01: Num,

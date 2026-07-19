@@ -6,6 +6,7 @@ import io.github.u2894638479.kotlinmcui.math.align.Align.*
 import io.github.u2894638479.kotlinmcui.math.px
 
 
+/** A 1D range defined by a [low] and [high] bound. */
 interface Bound {
     val low: Measure
     val high: Measure

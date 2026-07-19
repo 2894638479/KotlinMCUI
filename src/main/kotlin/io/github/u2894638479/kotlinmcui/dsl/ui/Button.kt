@@ -16,6 +16,7 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.container.DslChild
 
+/** Decorator that renders a Minecraft-style button border around the component. */
 context(ctx: DslContext)
 fun DslChild.buttonBackground(color: Color = Color.WHITE,padding: Measure = 2.scaled) = change {
     object:DslComponent by it {
@@ -32,6 +33,20 @@ fun DslChild.buttonBackground(color: Color = Color.WHITE,padding: Measure = 2.sc
     }
 }
 
+/**
+ * Create a button with a Minecraft-style background texture.
+ *
+ * **Note:** This only provides the visual button border. To make the button
+ * interactive, apply [clickable]:
+ * ```
+ * Button { Text { "Click Me" } }.clickable { ... }
+ * ```
+ *
+ * @param modifier The modifier for sizing and padding.
+ * @param color The tint color for the button texture.
+ * @param id Unique identifier.
+ * @param function DSL builder for the button's content.
+ */
 context(ctx: DslContext)
 fun Button(
     modifier: Modifier = Modifier,

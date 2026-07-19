@@ -30,7 +30,15 @@ interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEv
     /** Build children and initialise state. Called once before layout. */
     fun build() {}
 
-    /** Perform horizontal layout for this component and its children. */
+    /**
+     * Perform horizontal layout for this component and its children.
+     *
+     * ### Layout order
+     * The framework always runs all horizontal layout first, then all vertical
+     * layout. This fixed order allows a component's vertical layout to depend
+     * on its children's horizontal layout results (e.g. text wrapping needs to
+     * know the available width before computing line heights).
+     */
     fun layoutHorizontal() {}
 
     /** Perform vertical layout for this component and its children. */

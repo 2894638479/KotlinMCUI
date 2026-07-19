@@ -4,6 +4,7 @@ import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.px
 
+/** A mutable [Rect] with writable edge properties. */
 interface MutRect: Rect {
     override var left: Measure
     override var top: Measure

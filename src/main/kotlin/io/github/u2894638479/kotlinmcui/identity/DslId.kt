@@ -1,5 +1,17 @@
 package io.github.u2894638479.kotlinmcui.identity
 
+/**
+ * A linked-list identity chain uniquely identifying a DSL element in the tree.
+ *
+ * Each node wraps an [obj] (typically a class reference or user-provided key)
+ * and points to its parent via [prevNode]. The chain is built with `+`:
+ * ```
+ * val id = DslId("root") + "child" + "grandchild"
+ * ```
+ *
+ * Identity chains enable scoped ID generation — [DslFunctionsKt.newChildId]
+ * appends to the current context identity, creating a tree-shaped namespace.
+ */
 class DslId(private val obj: Any?,val prevNode: DslId? = null) : Iterable<DslId> {
     private var init = false
     private var hash = 0
