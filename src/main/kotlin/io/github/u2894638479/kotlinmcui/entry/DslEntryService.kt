@@ -16,7 +16,7 @@ interface DslEntryOverlay: DslEntryService {
 }
 
 /**
- * 仅用于注册gui
+ * An entry that appears in the GUI list. Used for registering screens.
  */
 interface DslEntryGui: DslEntryService {
     context(ctx: DslContext)
@@ -24,21 +24,23 @@ interface DslEntryGui: DslEntryService {
 }
 
 /**
- * 仅在客户端执行。适用于渲染相关初始化。
+ * Runs on the client side only. Suitable for rendering-related initialisation.
  */
 interface DslEntryClient: DslEntryService {
     fun initializeClient()
 }
 
 /**
- * 仅在服务端执行。适用于服务端特定逻辑。一般不会用到此接口。
+ * Runs on the server side only. Suitable for server-specific logic.
+ * Most mods will not need this interface.
  */
 interface DslEntryServer: DslEntryService {
     fun initializeServer()
 }
 
 /**
- * 在客户端和服务端都执行。适用于大多数逻辑初始化。效果接近于`init{}`块
+ * Runs on both client and server. Suitable for most logic initialisation.
+ * Behaves similarly to an `init {}` block.
  */
 interface DslEntryCommon: DslEntryService {
     fun initialize()

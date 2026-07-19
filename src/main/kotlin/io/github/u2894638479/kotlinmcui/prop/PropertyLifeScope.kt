@@ -96,48 +96,45 @@ class PropertyLifeScope internal constructor(
     }
 
     /**
-     * @return 一个[CoroutineScope]对象，可用于启动协程。默认调度在渲染线程。
+     * Returns a [CoroutineScope] for launching coroutines, dispatched on the render thread by default.
      *
-     * 访问此属性不会立即造成开销，而是在第一次使用时进行构造。
+     * Accessing this property has no immediate cost — the scope is constructed lazily
+     * on first use. If the scope is not accessed every frame, it may be disposed
+     * depending on the lifecycle type.
      *
-     * 如果没有每帧都访问此属性，视生命周期的类型，[CoroutineScope]可能会被销毁。
-     *
-     * ### 用法示例
+     * ### Correct usage 1: use the built-in scope
      * ```
      * Button{}.clickable {
-     *     // ✅ 使用自带的scope，自动管理
-     *     launch {
-     *         // ...
-     *     }
+     *     launch { /* ... */ }
      * }
      * ```
-     * ### 用法示例2
+     * The scope provided to [clickable] is automatically managed.
+     *
+     * ### Correct usage 2: keep a reference accessed every frame
      * ```
-     * // ✅ 每帧都会访问属性，保证存活
      * val coroutineScope = local.coroutineScope
      * Button{}.clickable {
-     *     coroutineScope.launch {
-     *         // ...
-     *     }
+     *     coroutineScope.launch { /* ... */ }
      * }
      * ```
-     * ### 错误示例
+     *
+     * ### Incorrect: accessing only in event handler
      * ```
      * Button{}.clickable {
-     *     // ❌ 只有点击时调用，下一帧就被销毁
-     *     local.coroutineScope.launch {
-     *         // ...
-     *     }
+     *     local.coroutineScope.launch { /* destroyed next frame! */ }
      * }
+     * ```
      */
     context(ctx: DslIdContext)
     val coroutineScope get() = coroutineScope(identity, dataStore.backend.mainDispatcher)
 
     /**
-     * 返回一个属性。
-     * @param init 属性的初始值。只会在属性不存在且调用了此方法时调用。
+     * Returns a reactive property with automatic lifecycle management.
      *
-     * 注意属性生命周期结束后再次调用会触发[init]来重新创建属性
+     * @param init The initial value. Only called when the property does not yet exist.
+     *
+     * When the property's lifecycle ends and it is accessed again, [init] is
+     * called again to recreate the property.
      */
     context(ctx: DslIdContext)
     fun <T> property(id:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T): StableRW<T> {
@@ -149,36 +146,32 @@ class PropertyLifeScope internal constructor(
     }
 
     /**
-     * [PropertyLifeScope.property]的语法糖。可用于声明属性也可用于初始化。
-     * @see [PropertyLifeScope.property]
-     * ### 用法示例
+     * Syntactic sugar for [property]. Can be used for both declaration and initialisation.
+     * @see property
+     *
+     * ### Usage
      * ```
      * var a by static { 1 }
      * var b by local { "alice" }
      *
      * static {
      *     initMyGui()
-     *     launch {
-     *         loadMyData()
-     *     }
+     *     launch { loadMyData() }
      * }
      *
-     * local {
-     *     startEnterAnimation()
-     * }
+     * local { startEnterAnimation() }
      * ```
      */
     context(ctx: DslIdContext)
     operator fun <T> invoke(id:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T) = property(id,init)
 
     /**
-     * 缓存一个计算耗时较长的值。如[String.format]。
+     * Cache a value with an expensive computation (e.g. [String.format]).
+     * For lightweight calculations, caching is not recommended.
      *
-     * 少量的计算不建议使用此函数进行缓存。
-     *
-     * @param key 缓存的标识。
-     * @param id 存储位置的ID。会追加在[identity]之后。如果传入`null`则使用`init::class`
-     * @param init 在第一次调用时和[key]发生变化时调用，用来计算缓存值。
+     * @param key The cache key — when this changes, the value is recomputed.
+     * @param id Storage location ID, appended to the current [identity]. Uses `init::class` if `null`.
+     * @param init Called on first access and whenever [key] changes, to compute the cached value.
      */
     context(ctx: DslIdContext)
     fun <K,V> cached(key: K,id: Any? = null, init:context(DslExecuteContext) CoroutineScope.(K)->V) : StableRW<V> {
@@ -193,10 +186,12 @@ class PropertyLifeScope internal constructor(
     }
 
     /**
-     * 生命周期同[property]，被赋值时并不会立刻变为目标值，而是渐变到目标值。动画起始时间为被赋值的时刻。
+     * An animatable property with the same lifecycle as [property].
+     * When assigned, the value gradually interpolates to the target instead of
+     * changing immediately. Animation starts from the moment of assignment.
      *
-     * @param duration 动画持续时长
-     * @param interpolator 插值器
+     * @param duration Animation duration.
+     * @param interpolator The easing function.
      */
     context(ctx: DslIdContext)
     fun <T : Interpolatable<T>> animatable(
@@ -224,14 +219,17 @@ class PropertyLifeScope internal constructor(
     }.remap({it.toDouble()},{InterpolatableDouble(it)})
 
     /**
-     * 跟随value的值自动产生动画。不能手动赋值。动画的起始时间点为帧起始时刻。
+     * Automatically animates to follow the [value] expression each frame.
+     * Cannot be assigned manually. Animation starts from the beginning of the frame.
      *
-     * @param duration 动画持续时长
-     * @param interpolator 插值器
-     * @param value 每帧都会调用
+     * @param duration Animation duration.
+     * @param interpolator The easing function.
+     * @param value Evaluated every frame to determine the animation target.
+     *
+     * ### Example
      * ```
      * val height by autoAnimate {
-     *     if(unfold) 60.scaled else 20.scaled
+     *     if (unfold) 60.scaled else 20.scaled
      * }
      * ```
      */
@@ -261,6 +259,10 @@ class PropertyLifeScope internal constructor(
         InterpolatableDouble(value())
     }.remap { it.toDouble() }
 
+    /**
+     * Register an [action] to be executed when this property is cleared from the lifecycle.
+     * Useful for cleanup (e.g. cancelling coroutines, releasing resources).
+     */
     context(ctx: DslIdContext)
     fun dispose(id:Any? = null, action: context(DslExecuteContext)() -> Unit) {
         val identity = getId(id ?: action::class)

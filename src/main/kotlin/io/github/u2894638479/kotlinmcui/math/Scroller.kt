@@ -86,10 +86,11 @@ interface Scroller: DslScaleContext, Bound {
         val identity: DslId
     }
     val items: List<Item>
-    /*
-    rawScroll: 实时滚动值。为了和scroll（可为animatable）做区分
-    offset、scrollIndex: 显示4~6元素时，防止元素0~3的大小变化导致漂移。另lazy时无法检测0~3的大小。
-    所以按照可见的首个元素的位置作为offset，不依赖前面的元素。
+    /**
+     * [rawScroll] is the real-time scroll position, separate from [scroll] which may be animated.
+     * [offset] and [scrollIndex] anchor to the first visible item to prevent drift when items
+     * above the viewport change size (e.g. in a lazy list where sizes of items 0-3 are unknown).
+     * The offset tracks the position of the first visible item independently of preceding items.
      */
     var offset: Double
     var rawScroll: Double
