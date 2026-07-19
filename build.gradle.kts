@@ -35,6 +35,11 @@ dependencies {
     implementation("org.lwjgl:lwjgl-glfw:3.3.1")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    testImplementation(kotlin("test"))
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 kotlin {
