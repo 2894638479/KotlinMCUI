@@ -16,8 +16,10 @@ val topComponent: DslComponent = object: DslScope {
         set(value) {}
     override val identity get() = error("identity is not available on topComponent")
     override val scale get() = error("scale is not available on topComponent")
-    override val children = DslChild.Group().also {
-        it.collect(dslBackend.create("Dsl Overlay") { DslEntryLoader.overlays() }.dslScreen)
+    override val children by lazy {
+        DslChild.Group().also {
+            it.collect(dslBackend.create("Dsl Overlay") { DslEntryLoader.overlays() }.dslScreen)
+        }
     }
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
