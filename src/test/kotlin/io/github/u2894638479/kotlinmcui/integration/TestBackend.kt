@@ -124,5 +124,5 @@ private object TestInput : DslBackendInput {
     override val mouse: Position get() = _mouse
     override fun isKeyDown(key: Key) = false
     override fun isMouseDown(mouse: Int) = false
-    override fun setImeArea(rect: Rect) {}
+    override fun setPreeditArea(rect: Rect) {}
 }

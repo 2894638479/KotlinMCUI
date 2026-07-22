@@ -277,7 +277,7 @@ fun EditableText(
             }
 
             /** Report the cursor rectangle for IME candidate window positioning. */
-            override val imeArea get() = cursorRect()
+            override val preeditArea get() = cursorRect()
 
             /** Whether IME preedit is rendered by this component (rather than the framework overlay). */
             override val selfRenderPreedit get() = selfRenderPreedit

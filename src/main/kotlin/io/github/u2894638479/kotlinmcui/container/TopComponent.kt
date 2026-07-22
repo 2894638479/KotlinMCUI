@@ -79,8 +79,8 @@ object TopComponent: DslScope {
     var preedit = PreeditInfo.empty
         internal set
 
-    /** Whether the currently focused component accepts IME input (has a non-null [DslComponentMetadata.imeArea]). */
-    val imeUsing get() = testHit { it.takeIf { it !== this && it.identity == focused } }?.imeArea != null
+    /** Whether the currently focused component accepts IME input (has a non-null [DslComponentMetadata.preeditArea]). */
+    val preeditUsing get() = testHit { it.takeIf { it !== this && it.identity == focused } }?.preeditArea != null
 
     context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton): Boolean {
@@ -123,7 +123,7 @@ object TopComponent: DslScope {
      * Dispatch IME preedit state. When [info] is empty, broadcast to all
      * components (composition ended). When non-empty, send only to the
      * focused component. If the component does not have [selfRenderPreedit],
-     * also notify the platform of the cursor position via [setImeArea].
+     * also notify the platform of the cursor position via [setPreeditArea].
      */
     override fun globalPreedit(info: PreeditInfo) {
         preedit = info
@@ -132,7 +132,7 @@ object TopComponent: DslScope {
         } else {
             val component = testHit { it.takeIf { it.identity == focused } }
             component?.globalPreedit(info)
-            if(component?.selfRenderPreedit == false) component.imeArea?.let { dslBackend.setImeArea(it) }
+            if(component?.selfRenderPreedit == false) component.preeditArea?.let { dslBackend.setPreeditArea(it) }
         }
     }
 }

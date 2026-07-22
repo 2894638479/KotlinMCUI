@@ -115,7 +115,7 @@ class DslScreen private constructor(
      * Render the default IME preedit preview box.
      *
      * Only shown when the focused component accepts IME input
-     * ([DslComponentMetadata.imeArea] is non-null) but does not handle
+     * ([DslComponentMetadata.preeditArea] is non-null) but does not handle
      * rendering internally ([DslComponentMetadata.selfRenderPreedit] is false).
      * The box is rendered in the overlay layer so it is not clipped by
      * parent scissor or constrained by component bounds.
@@ -123,7 +123,7 @@ class DslScreen private constructor(
     context(ctx: DslContext)
     private fun ImeBox() {
         val component = testHit { it.takeIf { it.identity == TopComponent.focused } } ?: return
-        val rect = component.imeArea?.transformedMaxBound(component.relativeTransform(this) ?: return) ?: return
+        val rect = component.preeditArea?.transformedMaxBound(component.relativeTransform(this) ?: return) ?: return
         if(TopComponent.preedit.isEmpty) return
         if(component.selfRenderPreedit) return
         Overlay(Modifier, OverlayAlign.AutoToRect(rect,this.rect)) {
@@ -134,7 +134,7 @@ class DslScreen private constructor(
                     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
                     override fun <RP> render() {
                         it.render()
-                        dslBackend.setImeArea(instance.rect)
+                        dslBackend.setPreeditArea(instance.rect)
                     }
                 }
             }

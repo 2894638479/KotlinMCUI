@@ -25,7 +25,7 @@ interface DslBackendInput {
     /**
      * Notify the platform of the rectangle where the IME candidate window
      * should appear. Called each frame by the framework when a focused
-     * component declares a non-null [io.github.u2894638479.kotlinmcui.component.DslComponentMetadata.imeArea].
+     * component declares a non-null [io.github.u2894638479.kotlinmcui.component.DslComponentMetadata.preeditArea].
      */
-    fun setImeArea(rect: Rect)
+    fun setPreeditArea(rect: Rect)
 }
