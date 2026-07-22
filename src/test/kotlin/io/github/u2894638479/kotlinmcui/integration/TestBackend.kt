@@ -3,8 +3,7 @@ package io.github.u2894638479.kotlinmcui.integration
 import io.github.u2894638479.kotlinmcui.backend.*
 import io.github.u2894638479.kotlinmcui.container.DslDataStore
 import io.github.u2894638479.kotlinmcui.container.DslScreen
-import io.github.u2894638479.kotlinmcui.container.DslChild
-import io.github.u2894638479.kotlinmcui.container.topComponent
+import io.github.u2894638479.kotlinmcui.container.TopComponent
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
@@ -40,17 +39,17 @@ internal object TestBackend : DslBackend<Unit, Unit>,
     /** Run a single frame of the DSL lifecycle for the given [screen]. */
     fun renderFrame(screen: DslScreen, mousePos: Position = Position(0.px, 0.px)) {
         TestInput._mouse = mousePos
-        topComponent.rect.apply {
+        TopComponent.rect.apply {
             left = 0.px; top = 0.px
             right = 800.px; bottom = 600.px
         }
-        val child = topComponent.children.collect(screen)
+        val child = TopComponent.children.collect(screen)
         val backend = this
         val renderParam: Unit = Unit
         kotlin.context(backend, renderParam, mousePos) {
-            topComponent.render<Unit>()
+            TopComponent.render<Unit>()
         }
-        topComponent.children.remove(child)
+        TopComponent.children.remove(child)
     }
 }
 
@@ -124,5 +123,6 @@ private object TestInput : DslBackendInput {
     var _mouse = Position(0.px, 0.px)
     override val mouse: Position get() = _mouse
     override fun isKeyDown(key: Key) = false
-    override fun isMouseDown(button: Int) = false
+    override fun isMouseDown(mouse: Int) = false
+    override fun setImeArea(rect: Rect) {}
 }

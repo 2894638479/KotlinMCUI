@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.component
 
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
+import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 
@@ -28,7 +29,7 @@ interface DslComponentMetadata {
      * During rendering and event propagation, transforms are composed layer by
      * layer from parent to child. Since most components have no transform, the
      * default is [Transform.empty], allowing the composition chain to short-circuit
-     * (identity × anything = anything) for zero overhead in the common case.
+     * (empty × anything = anything) for zero overhead in the common case.
      *
      * Set a non-empty transform only when this component needs to be rotated,
      * scaled, or translated relative to its parent.
@@ -49,4 +50,37 @@ interface DslComponentMetadata {
 
     /** Whether this component can be visually highlighted. Defaults to [focusable]. */
     val highlightable: Boolean get() = instance.focusable
+
+    /**
+     * The screen-space rectangle of this component's text input cursor, or `null`
+     * if this component does not accept IME input. When non-null, the framework
+     * renders the IME preedit preview box adjacent to this rectangle and calls
+     * [io.github.u2894638479.kotlinmcui.backend.DslBackendInput.setImeArea]
+     * to position the platform IME candidate window.
+     */
+    val imeArea: Rect? get() = null
+
+    /**
+     * Whether this component renders IME preedit text internally.
+     *
+     * Only meaningful when [imeArea] is non-null. If `true`, the framework
+     * does not render a generic preedit overlay — the component is responsible
+     * for displaying the composition text. If `false` (or [imeArea] is `null`),
+     * the framework renders a standard preedit preview in the overlay layer.
+     */
+    val selfRenderPreedit: Boolean get() = false
+}
+
+/**
+ * Compute the cumulative transform from this component up to [parent].
+ *
+ * Walks the component tree upward, composing transforms along the path.
+ * Returns `null` if [parent] is not an ancestor of this component.
+ * Returns [Transform.empty] if this component is [parent] itself.
+ */
+fun DslComponent.relativeTransform(parent: DslComponent): Transform? {
+    if (parent.identity == identity) return Transform.empty
+    return parent.children.firstNotNullOfOrNull { child ->
+        relativeTransform(child)?.let { child.transform * it }
+    }
 }

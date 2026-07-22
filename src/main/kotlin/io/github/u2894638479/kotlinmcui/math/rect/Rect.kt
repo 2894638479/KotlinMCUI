@@ -5,6 +5,7 @@ import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.transform.Transform
 
 
 /**
@@ -107,6 +108,16 @@ fun Rect.overlap(other: Rect): Boolean {
     if(right < other.left || left > other.right) return false
     if(bottom < other.top || top > other.bottom) return false
     return true
+}
+
+/**
+ * Compute the axis-aligned bounding box of this rectangle after applying
+ * [transform]. Returns `this` if the transform is identity.
+ */
+fun Rect.transformedMaxBound(transform: Transform): Rect {
+    if(transform.isEmpty) return this
+    val vertices = vertices.map { transform * it }
+    return Rect(vertices.minOf { it.x }, vertices.minOf { it.y }, vertices.maxOf { it.x }, vertices.maxOf { it.y })
 }
 
 

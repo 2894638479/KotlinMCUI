@@ -13,13 +13,18 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 /**
  * Central data store for a screen instance.
  *
- * Holds the backend reference, frame timing, focus/hover state, narration,
- * and three [PropertyLifeScope] instances with different lifetimes:
+ * Holds the backend reference, frame timing, and three [PropertyLifeScope]
+ * instances with different lifetimes:
  * - [localLifeScope]: cleared every frame (properties not accessed this frame are disposed)
  * - [stableLifeScope]: persists across frames as long as accessed each frame
  * - [staticLifeScope]: persists for the lifetime of the process
  *
- * Also provides a [debugOverlay] with performance metrics.
+ * Global UI state (focus, hover, narration, IME) lives on
+ * [TopComponent] rather than here, since it is shared across all screens
+ * within the process.
+ *
+ * Also provides a [debugOverlay] with performance metrics referencing
+ * [TopComponent] for current focus/hover state.
  */
 class DslDataStore(
     val backend: DslBackend<*, *>,
@@ -62,34 +67,6 @@ class DslDataStore(
 
     var pauseGame = true
 
-    var debug = false
-
-    var focused: DslId? = null
-        set(value) {
-            field = value
-            dslScreen.run { globalFocusChanged(value) }
-        }
-    var hovered: DslId? = null
-        set(value) {
-            field = value
-            dslScreen.run { globalHoverChanged(value) }
-        }
-    var keyboardNarration: String? = null
-        set(value) {
-            if(value != field) {
-                field = value
-                value?.let { backend.narrate(it) }
-            }
-        }
-    var mouseNarration: String? = null
-        set(value) {
-            if(value != field) {
-                field = value
-                value?.let { backend.narrate(it) }
-            }
-        }
-    val mouse get() = backend.mouse
-
     val dslScreen = DslScreen(this,dslFunction)
 
     val debugOverlay: DebugOverlay field = object: DebugOverlay {
@@ -127,8 +104,8 @@ class DslDataStore(
             return dslScreen.components()
         }
         override val conflictId: DslId? = null
-        override val focusedId get() = focused
-        override val hoveredId get() = hovered
+        override val focusedId get() = TopComponent.focused
+        override val hoveredId get() = TopComponent.hovered
         override val focusedDepth: Int get() {
             return 0
         }

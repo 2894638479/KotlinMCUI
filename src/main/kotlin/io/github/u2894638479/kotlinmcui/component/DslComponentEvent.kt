@@ -10,11 +10,14 @@ import java.nio.file.Path
 /**
  * Input event handling contract for a DSL component.
  *
- * All methods use [context receivers] to implicitly receive input state
- * (mouse position, keyboard modifiers, render parameters).
+ * Events propagate **parent-to-child**: each component dispatches to its
+ * children in order until one consumes the event (returns `true`). This is
+ * the standard bubbling model for keyboard, mouse, scroll, and character input.
  *
- * Event methods return `true` to indicate the event was consumed (preventing
- * further propagation). Scroll methods return the unconsumed scroll amount.
+ * Contrast with [DslComponentGlobalEvent] which is dispatched from the root
+ * and may target specific components.
+ *
+ * Scroll methods return the unconsumed scroll amount rather than a boolean.
  */
 interface DslComponentEvent {
     /**
@@ -59,8 +62,11 @@ interface DslComponentEvent {
     context(mouse: Position)
     fun mouseScrollHorizontal(amount: Double) = amount
 
-    /** A character was typed (for text input fields). */
-    context(eventModifier: KeyModifiers)
+    /**
+     * A character was typed (for text input fields).
+     * Unlike key events, character input does not carry modifier state —
+     * composed characters from IME are delivered directly.
+     */
     fun charTyped(c: Char) = false
 
     /**

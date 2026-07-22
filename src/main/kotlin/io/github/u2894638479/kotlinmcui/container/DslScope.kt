@@ -60,7 +60,6 @@ interface DslScope : DslComponent {
         return remain
     }
 
-    context(eventModifier: KeyModifiers)
     override fun charTyped(c: Char) =
         instance.children.firstOrNull { it.charTyped(c) } != null
 

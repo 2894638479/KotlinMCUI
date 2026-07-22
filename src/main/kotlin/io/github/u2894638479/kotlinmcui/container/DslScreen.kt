@@ -1,25 +1,26 @@
 package io.github.u2894638479.kotlinmcui.container
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.attachInstance
-import io.github.u2894638479.kotlinmcui.component.nextFocusable
-import io.github.u2894638479.kotlinmcui.component.nextFocusableList
+import io.github.u2894638479.kotlinmcui.component.relativeTransform
 import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
+import io.github.u2894638479.kotlinmcui.dsl.decorator.background
+import io.github.u2894638479.kotlinmcui.dsl.decorator.outline
+import io.github.u2894638479.kotlinmcui.dsl.ui.Box
 import io.github.u2894638479.kotlinmcui.dsl.ui.Overlay
-import io.github.u2894638479.kotlinmcui.input.Key
-import io.github.u2894638479.kotlinmcui.input.KeyModifiers
-import io.github.u2894638479.kotlinmcui.input.MouseButton
+import io.github.u2894638479.kotlinmcui.dsl.ui.TextFlatten
 import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.align.OverlayAlign
-import io.github.u2894638479.kotlinmcui.math.maxOf
-import io.github.u2894638479.kotlinmcui.math.minOf
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
-import io.github.u2894638479.kotlinmcui.math.rect.vertices
-import io.github.u2894638479.kotlinmcui.math.transform.Transform
+import io.github.u2894638479.kotlinmcui.math.rect.transformedMaxBound
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
+import io.github.u2894638479.kotlinmcui.modifier.padding
 
 /**
  * The top-level screen component that orchestrates the build-layout-render cycle.
@@ -37,50 +38,13 @@ class DslScreen private constructor(
         dataStore,dslFunction,
         with(DslContext(dataStore)) {
             withScale(0.0) {
-                DslScopeImpl(DslId(null), Modifier, this,{})
+                DslScopeImpl(DslId(dataStore), Modifier, this,{})
             }
         },
     )
 
     fun close() { dataStore.onClose() }
 
-    context(eventModifier: KeyModifiers, mouse: Position)
-    override fun mouseDown(mouseButton: MouseButton): Boolean {
-        dataStore.focused = instance.testHit(mouse) { it.takeIf { it.focusable } }?.identity
-        return delegate.mouseDown(mouseButton)
-    }
-
-    context(eventModifier: KeyModifiers)
-    override fun keyDown(key: Key, scanCode: Int): Boolean {
-        if(delegate.keyDown(key, scanCode)) return true
-        val focused = when(key) {
-            Key.LEFT -> instance.nextFocusableList(dataStore.focused,true) { it.viewHorizontal }
-            Key.RIGHT -> instance.nextFocusableList(dataStore.focused) { it.viewHorizontal }
-            Key.UP -> instance.nextFocusableList(dataStore.focused,true) { it.viewVertical }
-            Key.DOWN -> instance.nextFocusableList(dataStore.focused) { it.viewVertical }
-            Key.TAB -> if(eventModifier.shift) instance.nextFocusable(dataStore.focused) { it.viewSequential.asReversed() }
-                else instance.nextFocusable(dataStore.focused) { it.viewSequential }
-            Key.HOME -> instance.nextFocusable(null) { it.viewSequential }
-            Key.END -> instance.nextFocusable(null) { it.viewSequential.asReversed() }
-            else -> return false
-        }
-        if(dataStore.focused != focused?.identity) {
-            dataStore.focused = focused?.identity
-            dataStore.keyboardNarration = focused?.narration
-            return true
-        }
-        return false
-    }
-
-    override fun globalFocusChanged(newFocus: DslId?) {
-        fun DslChild.Group.f():Unit = forEach { it.children.f();it.globalFocusChanged(newFocus) }
-        instance.children.f()
-    }
-
-    override fun globalHoverChanged(newHover: DslId?) {
-        fun DslChild.Group.f():Unit = forEach { it.children.f();it.globalHoverChanged(newHover) }
-        instance.children.f()
-    }
 
     init { instance = this }
 
@@ -93,7 +57,7 @@ class DslScreen private constructor(
         val ctx = DslContext(dataStore)
         context(ctx) {
             ctx.withScale(dataStore.scale) {
-                ctx.withIdentity(DslId(null)) {
+                ctx.withIdentity(identity) {
                     var overlays = DslChild.Group()
                     ctx.withChildren(children) {
                         ctx.withOverlays(overlays) {
@@ -124,6 +88,7 @@ class DslScreen private constructor(
                     children = DslChild.Group().also { it.collectAll(this.overlays + children) }
                     val tooltips = DslChild.Group()
                     ctx.withOverlays(tooltips) {
+                        ImeBox()
                         Tooltip()
                     }
 
@@ -142,42 +107,51 @@ class DslScreen private constructor(
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() = dataStore.frame { buildFinish ->
         build()
-
-        val hovered = instance.testHit(mouse) { it.takeIf { it.highlightable } }
-        dataStore.hovered = hovered?.identity
-        dataStore.mouseNarration = hovered?.narration ?: instance.testHit(mouse) { it.takeIf { it.narratable } }?.narration
         buildFinish()
         delegate.render()
     }
 
+    /**
+     * Render the default IME preedit preview box.
+     *
+     * Only shown when the focused component accepts IME input
+     * ([DslComponentMetadata.imeArea] is non-null) but does not handle
+     * rendering internally ([DslComponentMetadata.selfRenderPreedit] is false).
+     * The box is rendered in the overlay layer so it is not clipped by
+     * parent scissor or constrained by component bounds.
+     */
+    context(ctx: DslContext)
+    private fun ImeBox() {
+        val component = testHit { it.takeIf { it.identity == TopComponent.focused } } ?: return
+        val rect = component.imeArea?.transformedMaxBound(component.relativeTransform(this) ?: return) ?: return
+        if(TopComponent.preedit.isEmpty) return
+        if(component.selfRenderPreedit) return
+        Overlay(Modifier, OverlayAlign.AutoToRect(rect,this.rect)) {
+            Box {
+                TextFlatten(Modifier.padding(3.scaled)) { TopComponent.preedit.toString().emit(color = Color.BLACK) }
+            }.background(Color.WHITE).outline(color = Color.GREEN).change {
+                object : DslComponent by it {
+                    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+                    override fun <RP> render() {
+                        it.render()
+                        dslBackend.setImeArea(instance.rect)
+                    }
+                }
+            }
+        }
+    }
+
     context(ctx: DslContext)
     private fun Tooltip() {
-        var focusedRect: Rect? = null
-        var rawFocusedRect: Rect? = null
-        var transforms = Transform.empty
-        val hovered = dataStore.dslScreen.testHit(dataStore.mouse) { it.tooltip }
-        val focusedId = dataStore.focused
-        val focused = if(focusedId == null) null else dataStore.dslScreen.testHit { it.takeIf { it.identity == focusedId } }
+        val hovered = testHit(dslBackend.mouse) { it.tooltip }
+        val focusedId = TopComponent.focused
+        val focused = if(focusedId == null) null else testHit { it.takeIf { it.identity == focusedId } }
         val func = hovered ?: focused?.tooltip ?: return
-        if(focusedId != null && hovered == null) focusedRect = run {
-            fun getTransform(component: DslComponent): Transform? {
-                if (component.identity == focusedId) return component.transform
-                val child = component.children.firstNotNullOfOrNull { getTransform(it) } ?: return null
-                return component.transform * child
-            }
-
-            val transform = getTransform(dataStore.dslScreen) ?: return@run null
-            val rect = focused?.rect ?: return@run null
-            if (transform.isEmpty) return@run rect
-            val vertices = rect.vertices.map { transform * it }
-            if (dataStore.debug) {
-                transforms = transform
-                rawFocusedRect = rect
-            }
-            Rect(vertices.minOf { it.x }, vertices.minOf { it.y }, vertices.maxOf { it.x }, vertices.maxOf { it.y })
-        }
-        val outline: Rect = ctx.dataStore.dslScreen.rect
-        val align = focusedRect?.let { OverlayAlign.AutoToRect(it,outline) } ?: OverlayAlign.AutoToPoint(dataStore.mouse,outline)
+        val focusedRect = if(focusedId != null && hovered == null) run {
+            focused?.rect?.transformedMaxBound(focused.relativeTransform(this) ?: return@run null)
+        } else null
+        val outline: Rect = rect
+        val align = focusedRect?.let { OverlayAlign.AutoToRect(it,outline) } ?: OverlayAlign.AutoToPoint(dslBackend.mouse,outline)
         Overlay(Modifier,align) { func() }
     }
 }

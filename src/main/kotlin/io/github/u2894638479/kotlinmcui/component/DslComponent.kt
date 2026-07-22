@@ -7,6 +7,7 @@ import io.github.u2894638479.kotlinmcui.dsl.dataStore
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.container.DslChild
+import io.github.u2894638479.kotlinmcui.container.TopComponent
 
 /**
  * The core interface for all DSL components in the UI tree.
@@ -56,23 +57,17 @@ interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEv
 
 /**
  * Whether this component currently has keyboard focus.
- * Requires a [DslDataStoreContext] in scope.
  */
-context(ctx: DslDataStoreContext)
-val DslComponent.isFocused get() = focusable && dataStore.focused == identity
+val DslComponent.isFocused get() = focusable && TopComponent.focused == identity
 
 /**
  * Whether the mouse is currently hovering over this component.
- * Requires a [DslDataStoreContext] in scope.
  */
-context(ctx: DslDataStoreContext)
-val DslComponent.isHovered get() = dataStore.hovered == identity
+val DslComponent.isHovered get() = TopComponent.hovered == identity
 
 /**
  * Whether this component is visually highlighted (focused or hovered).
- * Requires a [DslDataStoreContext] in scope.
  */
-context(ctx: DslDataStoreContext)
 val DslComponent.isHighlighted get() = highlightable && (isFocused || isHovered)
 
 /** Attach this component as its own [DslComponentMetadata.instance]. */

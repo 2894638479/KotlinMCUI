@@ -27,7 +27,9 @@ import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
 import io.github.u2894638479.kotlinmcui.container.DslChild
+import io.github.u2894638479.kotlinmcui.input.PreeditInfo
 import io.github.u2894638479.kotlinmcui.text.AlignableChar
+import io.github.u2894638479.kotlinmcui.text.CodePoints
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 import io.github.u2894638479.kotlinmcui.text.DslText
 import io.github.u2894638479.kotlinmcui.text.DslTextLine
@@ -50,27 +52,6 @@ fun DslChild.editBoxBackground(width: Measure = 1.scaled, padding: Measure = wid
 
     override val modifier get() = it.modifier.padding(padding)
 }}
-
-@JvmInline
-private value class CodePoints(val arr: IntArray) {
-    constructor(str:String):this(str.codePoints().toArray())
-    operator fun get(index: Int) = arr[index]
-    operator fun get(range: IntRange) = arr.sliceArray(range)
-    val string get() = String(arr,0,arr.size)
-    val size get() = arr.size
-    // [first,end)
-    fun replace(first: Int, end: Int, value: IntArray): CodePoints {
-        val arr0 = arr.sliceArray(0..<first)
-        val arr1 = arr.sliceArray(end..<size)
-        return CodePoints(arr0 + value + arr1)
-    }
-    fun replace(range: IntRange, value: IntArray): CodePoints {
-        require(!range.isEmpty())
-        return replace(range.first,range.last + 1,value)
-    }
-    fun insert(index: Int, value: IntArray) = replace(index,index,value)
-    fun contentEquals(other: CodePoints) = arr.contentEquals(other.arr)
-}
 
 private class UndoInfo(val codePoints: CodePoints, val cursor: Int, val cursor2: Int?)
 
@@ -193,6 +174,7 @@ fun EditableText(
     verticalAligner: Aligner = Aligner.close(Align.MID),
     blinkCycle: Duration = 0.5.seconds,
     undoDepth:Int = 10,
+    selfRenderPreedit: Boolean = true,
     id:Any
 ) = context(object : DslIdContext {
     override val identity = newChildId(id)
@@ -288,11 +270,26 @@ fun EditableText(
                 }
             }
 
-            context(eventModifier: KeyModifiers)
             override fun charTyped(c: Char): Boolean {
                 if (!instance.isFocused) return false
                 editable.insert(c)
                 return true
+            }
+
+            /** Report the cursor rectangle for IME candidate window positioning. */
+            override val imeArea get() = cursorRect()
+
+            /** Whether IME preedit is rendered by this component (rather than the framework overlay). */
+            override val selfRenderPreedit get() = selfRenderPreedit
+
+            /** Insert the preedit composition text at the cursor, preserving selection state. */
+            override fun globalPreedit(info: PreeditInfo) {
+                if(selfRenderPreedit && instance.isFocused) {
+                    val text = info.toString()
+                    val cursor = editable.cursor2 ?: editable.cursor
+                    editable.insert(text)
+                    editable.cursor2 = cursor
+                }
             }
 
             context(eventModifier: KeyModifiers)

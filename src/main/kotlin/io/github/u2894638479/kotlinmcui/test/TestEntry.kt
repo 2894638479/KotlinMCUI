@@ -1,7 +1,7 @@
 package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.container.DslScreen
-import io.github.u2894638479.kotlinmcui.container.topComponent
+import io.github.u2894638479.kotlinmcui.container.TopComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.entry.*
@@ -53,7 +53,7 @@ object TestEntry: DslEntryService {
         override val name get() = kotlinmcui.debugoverlay()
         context(ctx: DslContext)
         override fun overlay() {
-            val screen = topComponent.children.getOrNull(1) as? DslScreen
+            val screen = TopComponent.children.getOrNull(1) as? DslScreen
             val debugOverlay = screen?.dataStore?.debugOverlay ?: dataStore.debugOverlay
             debugOverlay.content()
         }
