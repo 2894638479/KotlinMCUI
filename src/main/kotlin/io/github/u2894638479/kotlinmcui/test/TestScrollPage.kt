@@ -103,4 +103,18 @@ fun TestScrollPage() = Row {
         ScrollBarHorizontal(Modifier.height(10.scaled), scrollerProp3) {}
     }
     ScrollBarVertical(Modifier.width(10.scaled), scrollerProp3) {}
+
+    val scrollerProp4 = local { Scroller.empty }
+    Column {
+        TextAutoFold(Modifier.weight(0.0)) { "this is a lazy row".emit() }
+        LazyRow(Modifier.height(100.scaled), scrollerProp4) {
+            for (i in 1..15) {
+                Button(Modifier.size(60.scaled, 60.scaled).padding(3.scaled), id = i) {
+                    TextFlatten { "item$i".emit() }
+                }.clickable { }
+            }
+        }
+        ScrollBarHorizontal(Modifier.height(10.scaled), scrollerProp4) {}
+    }
+    ScrollBarVertical(Modifier.width(10.scaled), scrollerProp4) {}
 }
