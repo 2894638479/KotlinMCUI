@@ -3,6 +3,7 @@ package io.github.u2894638479.kotlinmcui.backend
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.math.Color
+import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.text.DslFont
@@ -29,19 +30,35 @@ interface DslBackendRenderer<RP> {
     context(renderParam: RP)
     fun flush()
 
-    /** Draw a solid filled rectangle. */
-    context(renderParam: RP)
-    fun fillRect(rect: Rect, color: Color)
-
     /**
-     * Draw a gradient-filled rectangle.
-     * @param lt Color at the left-top corner.
-     * @param rt Color at the right-top corner.
-     * @param lb Color at the left-bottom corner.
-     * @param rb Color at the right-bottom corner.
+     * Render a list of colored vertices as a filled polygon.
+     *
+     * This is the primitive fill operation — backends should implement this
+     * directly. Order determines the shape: vertices are connected in sequence
+     * to form a triangle fan where vertices[0] is the hub.
      */
     context(renderParam: RP)
-    fun fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color)
+    fun renderVertices(vertices: List<Pair<Position, Color>>)
+
+    /**
+     * Draw a gradient-filled rectangle. Default implementation delegates to
+     * [renderVertices] with the four corner vertices.
+     */
+    context(renderParam: RP)
+    fun fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color) {
+        renderVertices(listOf(
+            Position(rect.left, rect.top) to lt,
+            Position(rect.right, rect.top) to rt,
+            Position(rect.right, rect.bottom) to rb,
+            Position(rect.left, rect.bottom) to lb,
+        ))
+    }
+
+    /** Draw a solid filled rectangle. Default delegates to [fillRectGradient]. */
+    context(renderParam: RP)
+    fun fillRect(rect: Rect, color: Color) {
+        fillRectGradient(rect, color, color, color, color)
+    }
 
     /**
      * Render a Minecraft-style button background.

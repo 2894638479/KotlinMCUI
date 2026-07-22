@@ -58,8 +58,7 @@ internal object TestBackend : DslBackend<Unit, Unit>,
 private object TestRenderer : DslBackendRenderer<Unit> {
     override val guiScale = 1.0
     context(renderParam: Unit) override fun flush() {}
-    context(renderParam: Unit) override fun fillRect(rect: Rect, color: Color) {}
-    context(renderParam: Unit) override fun fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color) {}
+    context(renderParam: Unit) override fun renderVertices(vertices: List<Pair<Position, Color>>) {}
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderButton(rect: Rect, highlighted: Boolean, active: Boolean, color: Color) {}
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderSlot(rect: Rect) {}
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderContainer(rect: Rect) {}
