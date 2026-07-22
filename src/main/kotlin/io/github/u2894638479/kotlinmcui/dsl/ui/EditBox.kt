@@ -162,7 +162,7 @@ fun EditableText(
                 set(value) { editable.cursor = offsetFromCursor(string, value, editable.maxCursor) ?: return }
 
             fun cursorRect(): Rect? =
-                cursorRectAt(cursorPos, alignedLines, instance.rect.left, ctx.scale)
+                cursorRectAt(cursorPos, alignedLines, instance.rect.left, scale)
 
             // ── Render ──────────────────────────────────────────────────
 
@@ -226,14 +226,14 @@ fun EditableText(
                 blinkBeginNano = System.nanoTime()
 
                 when (key) {
-                    Key.BACKSPACE -> editable.ifNothingChanged({ return default() }) { backspace() }
-                    Key.DELETE    -> editable.ifNothingChanged({ return default() }) { delete() }
-                    Key.LEFT      -> moveCursorHorizontal(-1)
-                    Key.RIGHT     -> moveCursorHorizontal(+1)
-                    Key.UP        -> moveCursorVertical(-1)
-                    Key.DOWN      -> moveCursorVertical(+1)
-                    Key.HOME      -> moveCursorToLineStart()
-                    Key.END       -> moveCursorToLineEnd()
+                    Key.BACKSPACE -> if (!editable.backspace()) return default()
+                    Key.DELETE    -> if (!editable.delete()) return default()
+                    Key.LEFT      -> if (!moveCursorHorizontal(-1)) return default()
+                    Key.RIGHT     -> if (!moveCursorHorizontal(+1)) return default()
+                    Key.UP        -> if (!moveCursorVertical(-1)) return default()
+                    Key.DOWN      -> if (!moveCursorVertical(+1)) return default()
+                    Key.HOME      -> if (!moveCursorToLineStart()) return default()
+                    Key.END       -> if (!moveCursorToLineEnd()) return default()
                     Key.ENTER     -> editable.insert('\n')
                     Key.V         -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.backend.clipboard)
                     Key.C         -> if (eventModifier.ctrl) editable.range?.let { ctx.dataStore.backend.clipboard = string.substring(it) }
@@ -257,8 +257,11 @@ fun EditableText(
                 } else editable.cursor2 = null
             }
 
+            /** Returns true if the cursor position changed. */
             context(eventModifier: KeyModifiers)
-            private fun moveCursorHorizontal(delta: Int) = editable.ifCursorUnChanged({ delegate.keyDown(Key(0), 0); Unit }) {
+            private fun moveCursorHorizontal(delta: Int): Boolean {
+                val origCursor = editable.cursor
+                val origCursor2 = editable.cursor2
                 checkCursor2()
                 if (eventModifier.shift) {
                     if (editable.cursor2 == null) editable.cursor2 = editable.cursor
@@ -270,24 +273,34 @@ fun EditableText(
                         max(editable.cursor, editable.cursor2 ?: min(editable.maxCursor, editable.cursor + delta))
                     editable.cursor2 = null
                 }
+                return origCursor != editable.cursor || origCursor2 != editable.cursor2
             }
 
+            /** Returns true if the cursor line changed. */
             context(eventModifier: KeyModifiers)
-            private fun moveCursorVertical(delta: Int) = editable.ifCursorUnChanged({ delegate.keyDown(Key(0), 0); Unit }) {
+            private fun moveCursorVertical(delta: Int): Boolean {
+                val origPos = cursorPos
                 checkCursor2()
                 cursorPos = cursorPos?.let { CursorPos(it.line + delta, it.index) }
+                return cursorPos != origPos
             }
 
+            /** Returns true if the cursor position changed. */
             context(eventModifier: KeyModifiers)
-            private fun moveCursorToLineStart() = editable.ifCursorUnChanged({ delegate.keyDown(Key(0), 0); Unit }) {
+            private fun moveCursorToLineStart(): Boolean {
+                val origPos = cursorPos
                 checkCursor2()
                 cursorPos = cursorPos?.let { CursorPos(it.line, 0) }
+                return cursorPos != origPos
             }
 
+            /** Returns true if the cursor position changed. */
             context(eventModifier: KeyModifiers)
-            private fun moveCursorToLineEnd() = editable.ifCursorUnChanged({ delegate.keyDown(Key(0), 0); Unit }) {
+            private fun moveCursorToLineEnd(): Boolean {
+                val origPos = cursorPos
                 checkCursor2()
                 cursorPos = cursorPos?.let { CursorPos(it.line, Int.MAX_VALUE) }
+                return cursorPos != origPos
             }
 
             // ── Mouse ───────────────────────────────────────────────────

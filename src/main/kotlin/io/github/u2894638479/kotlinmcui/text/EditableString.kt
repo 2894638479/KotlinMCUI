@@ -39,22 +39,26 @@ internal class EditableString(private val stringProp: StableRW<String>) {
     fun insert(c: Char) = insert(IntArray(1) { c.code })
     fun insert(s: String) = insert(CodePoints(s).arr)
 
-    /** Delete the character after the cursor (or delete the selection). */
-    fun delete() {
+    /** Delete the character after the cursor (or delete the selection).
+     * @return true if text was modified. */
+    fun delete(): Boolean {
         check()
-        if (cursor2 != null) return insert()
-        if (cursor == codePoints.size) return
+        if (cursor2 != null) { insert(); return true }
+        if (cursor == codePoints.size) return false
         codePoints = codePoints.replace(cursor..cursor, IntArray(0))
+        return true
     }
 
-    /** Delete the character before the cursor (or delete the selection). */
-    fun backspace() {
+    /** Delete the character before the cursor (or delete the selection).
+     * @return true if text was modified. */
+    fun backspace(): Boolean {
         check()
-        if (cursor2 != null) return insert()
-        if (cursor == 0) return
+        if (cursor2 != null) { insert(); return true }
+        if (cursor == 0) return false
         val countToEnd = codePoints.size - max(cursor, cursor2 ?: cursor)
         codePoints = codePoints.replace(cursor - 1..cursor - 1, IntArray(0))
         cursor = codePoints.size - countToEnd
+        return true
     }
 
     // ── Cursor & selection ──────────────────────────────────────────────
@@ -69,29 +73,6 @@ internal class EditableString(private val stringProp: StableRW<String>) {
         val indices = 0..codePoints.size
         cursor = cursor.coerceIn(indices)
         cursor2?.let { cursor2 = it.coerceIn(indices) }
-    }
-
-    // ── Change detection helpers ────────────────────────────────────────
-
-    inline fun ifCursorUnChanged(action: () -> Unit, block: EditableString.() -> Unit) {
-        val origCursor = cursor
-        val origCursor2 = cursor2
-        block()
-        if (origCursor == cursor && origCursor2 == cursor2) action()
-    }
-
-    inline fun ifStringUnChanged(action: () -> Unit, block: EditableString.() -> Unit) {
-        val origStr = codePoints
-        block()
-        if (origStr == codePoints) action()
-    }
-
-    inline fun ifNothingChanged(action: () -> Unit, block: EditableString.() -> Unit) {
-        var changed = false
-        ifCursorUnChanged({ changed = true }) {
-            ifStringUnChanged({ changed = true }, block)
-        }
-        if (changed) action()
     }
 
     // ── Undo / Redo ─────────────────────────────────────────────────────
