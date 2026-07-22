@@ -24,33 +24,28 @@ import io.github.u2894638479.kotlinmcui.modifier.padding
 
 /**
  * The top-level screen component that orchestrates the build-layout-render cycle.
- *
- * Each frame, [render] calls [build] to reconstruct the entire UI tree (including
- * overlay collection and tooltip creation), detects hover, and dispatches rendering
- * to children. Focus navigation (arrow keys, Tab, Home, End) is handled in [keyDown].
  */
 class DslScreen private constructor(
     val dataStore: DslDataStore,
     val dslFunction: DslFunction,
     val delegate: DslScope
 ) : DslScope by delegate {
-    constructor(dataStore: DslDataStore,dslFunction: DslFunction):this(
-        dataStore,dslFunction,
+    constructor(dataStore: DslDataStore, dslFunction: DslFunction) : this(
+        dataStore, dslFunction,
         with(DslContext(dataStore)) {
             withScale(0.0) {
-                DslScopeImpl(DslId(dataStore), Modifier, this,{})
+                DslScopeImpl(DslId(dataStore), Modifier, this, {})
             }
         },
     )
 
     fun close() { dataStore.onClose() }
 
-
     init { instance = this }
-
 
     private var overlays = DslChild.Group()
     override var children = DslChild.Group()
+
     override fun build() {
         children = DslChild.Group()
         overlays = DslChild.Group()
@@ -58,50 +53,78 @@ class DslScreen private constructor(
         context(ctx) {
             ctx.withScale(dataStore.scale) {
                 ctx.withIdentity(identity) {
-                    var overlays = DslChild.Group()
-                    ctx.withChildren(children) {
-                        ctx.withOverlays(overlays) {
-                            dslFunction()
-                            children.forEach {
-                                it.attachInstance()
-                                it.build()
-                            }
-                        }
-                    }
-                    layoutHorizontal()
-                    layoutVertical()
-                    do {
-                        this.overlays.collectAll(overlays)
-                        val temp = overlays
-                        overlays = DslChild.Group()
-                        ctx.withOverlays(overlays) {
-                            temp.forEach {
-                                it.attachInstance()
-                                it.build()
-                                it.layoutHorizontal()
-                                it.layoutVertical()
-                            }
-                        }
-                    } while (overlays.isNotEmpty())
-
-
-                    children = DslChild.Group().also { it.collectAll(this.overlays + children) }
-                    val tooltips = DslChild.Group()
-                    ctx.withOverlays(tooltips) {
-                        ImeBox()
-                        Tooltip()
-                    }
-
-                    tooltips.forEach {
-                        it.attachInstance()
-                        it.build()
-                        it.layoutHorizontal()
-                        it.layoutVertical()
-                    }
-                    children = DslChild.Group().apply { collectAll(tooltips + children) }
+                    val initialOverlays = buildMainTree()
+                    buildOverlayTree(initialOverlays)
+                    buildTooltips()
                 }
             }
         }
+    }
+
+    /**
+     * First phase: execute the DSL function, attach instances, run build and
+     * layout on all children. Returns overlays created during this phase.
+     */
+    context(ctx: DslContext)
+    private fun buildMainTree(): DslChild.Group {
+        val batch = DslChild.Group()
+        ctx.withChildren(children) {
+            ctx.withOverlays(batch) {
+                dslFunction()
+                children.forEach {
+                    it.attachInstance()
+                    it.build()
+                }
+            }
+        }
+        layoutHorizontal()
+        layoutVertical()
+        return batch
+    }
+
+    /**
+     * Second phase: iteratively build and layout overlay components. Overlay
+     * builds can create more overlays, so this loops until no new overlays
+     * are produced.
+     */
+    context(ctx: DslContext)
+    private fun buildOverlayTree(initial: DslChild.Group) {
+        overlays.collectAll(initial)
+        var batch = initial
+        while (batch.isNotEmpty()) {
+            val next = DslChild.Group()
+            ctx.withOverlays(next) {
+                batch.forEach {
+                    it.attachInstance()
+                    it.build()
+                    it.layoutHorizontal()
+                    it.layoutVertical()
+                }
+            }
+            overlays.collectAll(next)
+            batch = next
+        }
+    }
+
+    /**
+     * Third phase: build tooltip-layer components (IME preedit box and
+     * hover/focus tooltip). These are rendered on top of everything else.
+     */
+    context(ctx: DslContext)
+    private fun buildTooltips() {
+        children = DslChild.Group().also { it.collectAll(overlays + children) }
+        val tooltips = DslChild.Group()
+        ctx.withOverlays(tooltips) {
+            ImeBox()
+            Tooltip()
+        }
+        tooltips.forEach {
+            it.attachInstance()
+            it.build()
+            it.layoutHorizontal()
+            it.layoutVertical()
+        }
+        children = DslChild.Group().apply { collectAll(tooltips + children) }
     }
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
@@ -112,21 +135,16 @@ class DslScreen private constructor(
     }
 
     /**
-     * Render the default IME preedit preview box.
-     *
-     * Only shown when the focused component accepts IME input
-     * ([DslComponentMetadata.preeditArea] is non-null) but does not handle
-     * rendering internally ([DslComponentMetadata.selfRenderPreedit] is false).
-     * The box is rendered in the overlay layer so it is not clipped by
-     * parent scissor or constrained by component bounds.
+     * Render the default IME preedit preview box in the overlay layer,
+     * positioned at the focused component's preedit cursor.
      */
     context(ctx: DslContext)
     private fun ImeBox() {
         val component = testHit { it.takeIf { it.identity == TopComponent.focused } } ?: return
         val rect = component.preeditArea?.transformedMaxBound(component.relativeTransform(this) ?: return) ?: return
-        if(TopComponent.preedit.isEmpty) return
-        if(component.selfRenderPreedit) return
-        Overlay(Modifier, OverlayAlign.AutoToRect(rect,this.rect)) {
+        if (TopComponent.preedit.isEmpty) return
+        if (component.selfRenderPreedit) return
+        Overlay(Modifier, OverlayAlign.AutoToRect(rect, this.rect)) {
             Box {
                 TextFlatten(Modifier.padding(3.scaled)) { TopComponent.preedit.toString().emit(color = Color.BLACK) }
             }.background(Color.WHITE).outline(color = Color.GREEN).change {
@@ -141,17 +159,23 @@ class DslScreen private constructor(
         }
     }
 
+    /**
+     * Render a tooltip near the hovered or focused component. If a component
+     * is focused but not hovered, the tooltip anchors to the component's rect.
+     * Otherwise it anchors to the mouse position.
+     */
     context(ctx: DslContext)
     private fun Tooltip() {
         val hovered = testHit(dslBackend.mouse) { it.tooltip }
         val focusedId = TopComponent.focused
-        val focused = if(focusedId == null) null else testHit { it.takeIf { it.identity == focusedId } }
+        val focused = if (focusedId == null) null else testHit { it.takeIf { it.identity == focusedId } }
         val func = hovered ?: focused?.tooltip ?: return
-        val focusedRect = if(focusedId != null && hovered == null) run {
+        val focusedRect = if (focusedId != null && hovered == null) run {
             focused?.rect?.transformedMaxBound(focused.relativeTransform(this) ?: return@run null)
         } else null
         val outline: Rect = rect
-        val align = focusedRect?.let { OverlayAlign.AutoToRect(it,outline) } ?: OverlayAlign.AutoToPoint(dslBackend.mouse,outline)
-        Overlay(Modifier,align) { func() }
+        val align = focusedRect?.let { OverlayAlign.AutoToRect(it, outline) }
+            ?: OverlayAlign.AutoToPoint(dslBackend.mouse, outline)
+        Overlay(Modifier, align) { func() }
     }
 }
