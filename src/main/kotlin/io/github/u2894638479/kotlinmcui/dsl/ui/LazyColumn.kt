@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.dsl.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.input.Key
 import io.github.u2894638479.kotlinmcui.component.alignable
 import io.github.u2894638479.kotlinmcui.component.attachInstance
 import io.github.u2894638479.kotlinmcui.component.contentMinSize
@@ -116,17 +117,23 @@ private fun LazyScrollable(
         override fun <RP> render() = visibleChildren.asReversed().forEach { it.render() }
 
         context(mouse: Position)
-        override fun mouseScrollVertical(amount: Double): Double =
-            if (axis == Axis.Vertical) handleScroll(amount) else delegate.mouseScrollVertical(amount)
+        override fun mouseScrollVertical(amount: Double): Double {
+            val remain = delegate.mouseScrollVertical(amount)
+            // Shift+scroll on LazyRow acts as horizontal scroll
+            if (axis != Axis.Vertical && !backend.isKeyDown(Key.LEFT_SHIFT)) return remain
+            return handleScroll(remain)
+        }
 
         context(mouse: Position)
-        override fun mouseScrollHorizontal(amount: Double): Double =
-            if (axis == Axis.Horizontal) handleScroll(amount) else delegate.mouseScrollHorizontal(amount)
+        override fun mouseScrollHorizontal(amount: Double): Double {
+            val remain = delegate.mouseScrollHorizontal(amount)
+            if (axis != Axis.Horizontal) return remain
+            return handleScroll(remain)
+        }
 
         context(mouse: Position)
         private fun handleScroll(amount: Double): Double {
-            val remain = (if (axis == Axis.Vertical)
-                delegate.mouseScrollVertical(amount) else delegate.mouseScrollHorizontal(amount)) * -sensitivity
+            val remain = amount * -sensitivity
             scroller.run {
                 updateScroll()
                 val before = rawScroll
