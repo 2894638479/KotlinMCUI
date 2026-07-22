@@ -130,9 +130,9 @@ object TopComponent: DslScope {
         if(info.isEmpty) testHit {
             if(it !== this) { it.globalPreedit(info) };null
         } else {
-            val component = testHit { it.takeIf { it.identity == focused } }
-            component?.globalPreedit(info)
-            if(component?.selfRenderPreedit == false) component.preeditArea?.let { dslBackend.setPreeditArea(it) }
+            val component = testHit { it.takeIf { it.identity == focused } } ?: return
+            component.globalPreedit(info)
+            if(component.selfRenderPreedit) component.preeditArea?.let { dslBackend.setPreeditArea(it) }
         }
     }
 }
