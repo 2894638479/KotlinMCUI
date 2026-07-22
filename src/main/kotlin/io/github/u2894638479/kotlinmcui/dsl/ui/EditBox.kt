@@ -15,6 +15,7 @@ import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
@@ -33,11 +34,14 @@ import io.github.u2894638479.kotlinmcui.text.CodePoints
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 import io.github.u2894638479.kotlinmcui.text.DslText
 import io.github.u2894638479.kotlinmcui.text.DslTextLine
+import io.github.u2894638479.kotlinmcui.text.EditableString
 import io.github.u2894638479.kotlinmcui.text.kotlinmcui
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+
+// ── Decorator ────────────────────────────────────────────────────────────────
 
 context(ctx: DslContext)
 fun DslChild.editBoxBackground(width: Measure = 1.scaled, padding: Measure = width + 1.scaled)
@@ -53,113 +57,63 @@ fun DslChild.editBoxBackground(width: Measure = 1.scaled, padding: Measure = wid
     override val modifier get() = it.modifier.padding(padding)
 }}
 
-private class UndoInfo(val codePoints: CodePoints, val cursor: Int, val cursor2: Int?)
+// ── Internal cursor helpers ──────────────────────────────────────────────────
 
-private class EditableString(private val stringProp: StableRW<String>) {
-    var codePoints get() = CodePoints(stringProp.value)
-        set(value) { stringProp.value = value.string }
-    var cursor = codePoints.size
-    var cursor2:Int? = null
-    var undoDepth = 0
-    val undoList = mutableListOf<UndoInfo>()
-    var redo: UndoInfo? = null
+/** Maps between a character offset in the string and a (line, index) position. */
+private class CursorPos(val line: Int, val index: Int)
 
-    fun insert(value: IntArray = IntArray(0)) {
-        check()
-        val max = max(cursor,cursor2?:cursor)
-        val min = min(cursor,cursor2?:cursor)
-        val countToEnd = codePoints.size - max
-        codePoints = codePoints.replace(min,max,value)
-        cursor = codePoints.size - countToEnd
-        cursor2 = null
-    }
-    fun insert(c:Char) = insert(IntArray(1){ c.code })
-    fun insert(s:String) = insert(CodePoints(s).arr)
-
-    fun delete() {
-        check()
-        if(cursor2 != null) return insert()
-        if(cursor == codePoints.size) return
-        codePoints = codePoints.replace(cursor..cursor, IntArray(0))
-    }
-
-    fun backspace() {
-        check()
-        if(cursor2 != null) return insert()
-        if(cursor == 0) return
-        val countToEnd = codePoints.size - max(cursor, cursor2 ?: cursor)
-        codePoints = codePoints.replace(cursor-1..cursor-1, IntArray(0))
-        cursor = codePoints.size - countToEnd
-    }
-
-    private var undo get() = UndoInfo(codePoints,cursor,cursor2)
-        set(value) {
-            redo = undo
-            codePoints = value.codePoints
-            cursor = value.cursor
-            cursor2 = value.cursor2
+private fun cursorFromOffset(text: String, offset: Int?): CursorPos? {
+    if (offset == null) return null
+    var count = 0
+    text.lines().forEachIndexed { i, chars ->
+        val codePointCount = CodePoints(chars).size
+        if (offset > count + codePointCount) {
+            count += (codePointCount + 1)
+            return@forEachIndexed
         }
-
-    fun check() {
-        codePoints = CodePoints(stringProp.value)
-        val indices = 0..codePoints.size
-        cursor = cursor.coerceIn(indices)
-        cursor2?.let { cursor2 = it.coerceIn(indices) }
+        return CursorPos(i, offset - count)
     }
-
-    inline fun ifCursorUnChanged(action:()->Unit,block: EditableString.()->Unit) {
-        val origCursor = cursor
-        val origCursor2 = cursor2
-        block()
-        if(origCursor == cursor && origCursor2 == cursor2) action()
-    }
-
-    inline fun ifStringUnChanged(action:()->Unit,block: EditableString.()->Unit) {
-        val origStr = codePoints
-        block()
-        if(origStr == codePoints) action()
-    }
-
-    inline fun ifNothingChanged(action: () -> Unit,block: EditableString.() -> Unit) {
-        var changed = false
-        ifCursorUnChanged({changed = true}) {
-            ifStringUnChanged({changed = true},block)
-        }
-        if(changed) action()
-    }
-
-    fun addUndo() {
-        check()
-        val list = undoList
-        if(undoDepth <= 0) return list.clear()
-        if (list.firstOrNull()?.codePoints?.contentEquals(codePoints) == true) {
-            list[0] = undo
-            return
-        }
-        list.add(0, undo)
-        if (list.size > undoDepth) list.removeAt(list.size - 1)
-        redo = null
-    }
-
-    fun redo() {
-        check()
-        redo?.let {
-            undo = it
-            redo = null
-        }
-    }
-
-    fun undo() {
-        check()
-        redo = undoList.removeFirstOrNull()
-        undo = undoList.firstOrNull() ?: return
-    }
-
-    val range get() = cursor2?.let {
-        min(it,cursor)..<max(it,cursor)
-    }
-    inline val maxCursor get() = codePoints.size
+    return null
 }
+
+private fun offsetFromCursor(text: String, pos: CursorPos?, maxOffset: Int): Int? {
+    if (pos == null) return null
+    val lines = text.lines()
+    if (pos.line < 0) return 0
+    if (pos.line >= lines.size) return maxOffset
+    val prevLinesCount = lines.take(pos.line).sumOf { CodePoints(it).size + 1 }
+    val lastLineCount = min(CodePoints(lines[pos.line]).size, pos.index)
+    return prevLinesCount + lastLineCount
+}
+
+private fun cursorRectAt(
+    cursorPos: CursorPos?,
+    alignedLines: List<Pair<DslTextLine, List<AlignableChar>>>,
+    fallbackX: Measure,
+    scale: Double
+): Rect? {
+    if (cursorPos == null) return null
+    val (line, chars) = alignedLines.getOrNull(cursorPos.line) ?: return null
+    val char = chars.getOrNull(cursorPos.index - 1)
+    val x = char?.high ?: chars.firstOrNull()?.low ?: fallbackX
+    val half = 0.5.px * scale
+    return Rect(x - half, line.low, x + half, line.high)
+}
+
+private fun mouseHitPos(
+    mouse: Position,
+    alignedLines: List<Pair<DslTextLine, List<AlignableChar>>>
+): CursorPos {
+    if (alignedLines.isEmpty()) return CursorPos(0, 0)
+    val selectedLine = alignedLines.minBy { it.first.run { (low + high) / 2 - mouse.y }.absoluteValue }
+    val chars = selectedLine.second
+    if (chars.isEmpty()) return CursorPos(alignedLines.indexOf(selectedLine), 0)
+    val xValues = chars.map { it.low } + chars.last().high
+    val idx = xValues.indices.minBy { (xValues[it] - mouse.x).absoluteValue }
+    return CursorPos(alignedLines.indexOf(selectedLine), idx)
+}
+
+// ── DSL function ─────────────────────────────────────────────────────────────
 
 context(ctx: DslContext)
 fun EditableText(
@@ -168,76 +122,49 @@ fun EditableText(
     style: DslCharStyle = DslCharStyle(),
     color: Color = Color.WHITE,
     selectedColor: Color = Color(20, 20, 200),
-    size: Measure =  9.scaled,
+    size: Measure = 9.scaled,
     fontName: String? = null,
     horizontalAligner: Aligner = Aligner.close(Align.LOW),
     verticalAligner: Aligner = Aligner.close(Align.MID),
     blinkCycle: Duration = 0.5.seconds,
-    undoDepth:Int = 10,
+    undoDepth: Int = 10,
     selfRenderPreedit: Boolean = true,
-    id:Any
+    id: Any
 ) = context(object : DslIdContext {
     override val identity = newChildId(id)
 }) {
     var string by stringProp
     val editable by local { EditableString(stringProp) }
     editable.undoDepth = undoDepth
-    val info by local {object{
+    val info by local { object {
         var blinkBeginNano = ctx.dataStore.frameBeginNano
         var alignedLines = listOf<Pair<DslTextLine, List<AlignableChar>>>()
         var mouseDown: Unit? = null
     }}
     val font = ctx.dataStore.backend.getFont(fontName)
     val blink = (((ctx.dataStore.frameBeginNano - info.blinkBeginNano) / blinkCycle.inWholeNanoseconds) % 2L) == 0L
-    class CursorPos(val line:Int,val index:Int)
     val delegate = DslText(
         identity, modifier, fontName, font, ctx,
         DslTextBuilderContext(ctx).apply { string.emit(color, size, style) }.toChars(),
         size, horizontalAligner, verticalAligner
     )
+
     info.run {
         collect(object : DslComponent by delegate {
             override val narratable get() = true
             override val narration get() = "${kotlinmcui.narration.editabletext()} $string"
-
             override val focusable get() = true
 
-            fun getPos(cursor: Int?): CursorPos? {
-                var count = 0
-                val cursor = cursor ?: return null
-                string.lines().forEachIndexed { i, chars ->
-                    val codePointCount = CodePoints(chars).size
-                    if (cursor > count + codePointCount) {
-                        count += (codePointCount + 1)
-                        return@forEachIndexed
-                    }
-                    return CursorPos(i, cursor - count)
-                }
-                return null
-            }
-
-            fun setPos(value: CursorPos?): Int? {
-                if (value == null) return null
-                val lines = string.lines()
-                if (value.line < 0) return 0
-                if (value.line >= lines.size) return editable.maxCursor
-                if (value.line !in lines.indices) return null
-                val prevLinesCount = lines.take(value.line).sumOf { CodePoints(it).size + 1 }
-                val lastLineCount = min(CodePoints(lines[value.line]).size, value.index)
-                return prevLinesCount + lastLineCount
-            }
+            // ── Cursor state ────────────────────────────────────────────
 
             var cursorPos: CursorPos?
-                get() = getPos(editable.cursor)
-                set(value) { editable.cursor = setPos(value) ?: return }
+                get() = cursorFromOffset(string, editable.cursor)
+                set(value) { editable.cursor = offsetFromCursor(string, value, editable.maxCursor) ?: return }
 
-            fun cursorRect(): Rect? {
-                val cursorPos = cursorPos ?: return null
-                val (line, chars) = alignedLines.getOrNull(cursorPos.line) ?: return null
-                val char = chars.getOrNull(cursorPos.index - 1)
-                val x = char?.high ?: chars.firstOrNull()?.low ?: instance.rect.left
-                return Rect(x - 0.5.scaled, line.low, x + 0.5.scaled, line.high)
-            }
+            fun cursorRect(): Rect? =
+                cursorRectAt(cursorPos, alignedLines, instance.rect.left, ctx.scale)
+
+            // ── Render ──────────────────────────────────────────────────
 
             context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
@@ -249,10 +176,7 @@ fun EditableText(
                         var index = 0
                         forEach { (line, chars) ->
                             chars.forEach {
-                                if (index in range) backend.fillRect(
-                                    Rect(it,line),
-                                    selectedColor
-                                )
+                                if (index in range) backend.fillRect(Rect(it, line), selectedColor)
                                 index++
                             }
                             index++
@@ -270,21 +194,21 @@ fun EditableText(
                 }
             }
 
+            // ── Character input ─────────────────────────────────────────
+
             override fun charTyped(c: Char): Boolean {
                 if (!instance.isFocused) return false
                 editable.insert(c)
                 return true
             }
 
-            /** Report the cursor rectangle for IME candidate window positioning. */
-            override val preeditArea get() = cursorRect()
+            // ── IME ─────────────────────────────────────────────────────
 
-            /** Whether IME preedit is rendered by this component (rather than the framework overlay). */
+            override val preeditArea get() = cursorRect()
             override val selfRenderPreedit get() = selfRenderPreedit
 
-            /** Insert the preedit composition text at the cursor, preserving selection state. */
             override fun globalPreedit(info: PreeditInfo) {
-                if(selfRenderPreedit && instance.isFocused) {
+                if (selfRenderPreedit && instance.isFocused) {
                     val text = info.toString()
                     val cursor = editable.cursor2 ?: editable.cursor
                     editable.insert(text)
@@ -292,106 +216,81 @@ fun EditableText(
                 }
             }
 
+            // ── Keyboard ────────────────────────────────────────────────
+
             context(eventModifier: KeyModifiers)
             override fun keyDown(key: Key, scanCode: Int): Boolean {
                 fun default() = delegate.keyDown(key, scanCode)
                 if (!instance.isFocused) return default()
                 editable.check()
                 blinkBeginNano = System.nanoTime()
-                fun EditableString.checkCursor2() {
-                    if (eventModifier.shift) {
-                        if (cursor2 == null) cursor2 = cursor
-                    } else cursor2 = null
-                }
+
                 when (key) {
-                    Key.BACKSPACE -> editable.ifNothingChanged({ return default() }) {
-                        backspace()
-                    }
-
-                    Key.DELETE -> editable.ifNothingChanged({ return default() }) {
-                        delete()
-                    }
-
-                    Key.LEFT -> editable.ifCursorUnChanged({ return default() }) {
-                        if (eventModifier.shift) {
-                            if (cursor2 == null) cursor2 = cursor
-                            cursor = max(0, cursor - 1)
-                        } else {
-                            cursor = min(cursor, cursor2 ?: (max(0, cursor - 1)))
-                            cursor2 = null
-                        }
-                    }
-
-                    Key.RIGHT -> editable.ifCursorUnChanged({ return default() }) {
-                        if (eventModifier.shift) {
-                            if (cursor2 == null) cursor2 = cursor
-                            cursor = min(maxCursor, cursor + 1)
-                        } else {
-                            cursor = max(cursor, cursor2 ?: (min(maxCursor, cursor + 1)))
-                            cursor2 = null
-                        }
-                    }
-
-                    Key.UP -> editable.ifCursorUnChanged({ return default() }) {
-                        checkCursor2()
-                        cursorPos = cursorPos?.let { CursorPos(it.line - 1, it.index) }
-                    }
-
-                    Key.DOWN -> editable.ifCursorUnChanged({ return default() }) {
-                        checkCursor2()
-                        cursorPos = cursorPos?.let { CursorPos(it.line + 1, it.index) }
-                    }
-
-                    Key.HOME -> editable.ifCursorUnChanged({ return default() }) {
-                        checkCursor2()
-                        cursorPos = cursorPos?.let { CursorPos(it.line, 0) }
-                    }
-
-                    Key.END -> editable.ifCursorUnChanged({ return default() }) {
-                        checkCursor2()
-                        cursorPos = cursorPos?.let { CursorPos(it.line, Int.MAX_VALUE) }
-                    }
-
-                    Key.ENTER -> editable.insert('\n')
-                    Key.V -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.backend.clipboard)
-                    Key.C -> if (eventModifier.ctrl) editable.range?.let {
-                        ctx.dataStore.backend.clipboard = string.substring(it)
-                    }
-
-                    Key.Z -> if (eventModifier.ctrl) {
-                        if (eventModifier.shift) editable.redo() else editable.undo()
-                    }
-
-                    Key.X -> if (eventModifier.ctrl) {
-                        editable.range?.let { ctx.dataStore.backend.clipboard = string.substring(it) }
-                        editable.insert()
-                    }
-
-                    Key.A -> if (eventModifier.ctrl) {
-                        editable.cursor = editable.maxCursor
-                        editable.cursor2 = 0
-                    }
-
-                    else -> return default()
+                    Key.BACKSPACE -> editable.ifNothingChanged({ return default() }) { backspace() }
+                    Key.DELETE    -> editable.ifNothingChanged({ return default() }) { delete() }
+                    Key.LEFT      -> moveCursorHorizontal(-1)
+                    Key.RIGHT     -> moveCursorHorizontal(+1)
+                    Key.UP        -> moveCursorVertical(-1)
+                    Key.DOWN      -> moveCursorVertical(+1)
+                    Key.HOME      -> moveCursorToLineStart()
+                    Key.END       -> moveCursorToLineEnd()
+                    Key.ENTER     -> editable.insert('\n')
+                    Key.V         -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.backend.clipboard)
+                    Key.C         -> if (eventModifier.ctrl) editable.range?.let { ctx.dataStore.backend.clipboard = string.substring(it) }
+                    Key.Z         -> if (eventModifier.ctrl) { if (eventModifier.shift) editable.redo() else editable.undo() }
+                    Key.X         -> if (eventModifier.ctrl) { editable.range?.let { ctx.dataStore.backend.clipboard = string.substring(it) }; editable.insert() }
+                    Key.A         -> if (eventModifier.ctrl) { editable.cursor = editable.maxCursor; editable.cursor2 = 0 }
+                    else          -> return default()
                 }
                 return true
             }
 
             context(eventModifier: KeyModifiers)
-            override fun keyUp(key: Key, scanCode: Int): Boolean {
-                return delegate.keyUp(key, scanCode)
+            override fun keyUp(key: Key, scanCode: Int): Boolean = delegate.keyUp(key, scanCode)
+
+            // ── Keyboard helpers ────────────────────────────────────────
+
+            context(eventModifier: KeyModifiers)
+            private fun checkCursor2() {
+                if (eventModifier.shift) {
+                    if (editable.cursor2 == null) editable.cursor2 = editable.cursor
+                } else editable.cursor2 = null
             }
 
-            fun mouseHitPos(mouse: Position): CursorPos {
-                val alignedLines = alignedLines
-                val selectedLine = alignedLines.ifEmpty { return CursorPos(0, 0) }.minBy {
-                    it.first.run { (low + high) / 2 - mouse.y }.absoluteValue
+            context(eventModifier: KeyModifiers)
+            private fun moveCursorHorizontal(delta: Int) = editable.ifCursorUnChanged({ delegate.keyDown(Key(0), 0); Unit }) {
+                checkCursor2()
+                if (eventModifier.shift) {
+                    if (editable.cursor2 == null) editable.cursor2 = editable.cursor
+                    editable.cursor = max(0, editable.cursor + delta)
+                } else {
+                    editable.cursor = if (delta < 0)
+                        min(editable.cursor, editable.cursor2 ?: max(0, editable.cursor + delta))
+                    else
+                        max(editable.cursor, editable.cursor2 ?: min(editable.maxCursor, editable.cursor + delta))
+                    editable.cursor2 = null
                 }
-                selectedLine.second.ifEmpty { return CursorPos(alignedLines.indexOf(selectedLine), 0) }
-                val xValues = selectedLine.second.map { it.low } + selectedLine.second.last().high
-                val selected = xValues.minBy { (it - mouse.x).absoluteValue }
-                return CursorPos(alignedLines.indexOf(selectedLine), xValues.indexOf(selected))
             }
+
+            context(eventModifier: KeyModifiers)
+            private fun moveCursorVertical(delta: Int) = editable.ifCursorUnChanged({ delegate.keyDown(Key(0), 0); Unit }) {
+                checkCursor2()
+                cursorPos = cursorPos?.let { CursorPos(it.line + delta, it.index) }
+            }
+
+            context(eventModifier: KeyModifiers)
+            private fun moveCursorToLineStart() = editable.ifCursorUnChanged({ delegate.keyDown(Key(0), 0); Unit }) {
+                checkCursor2()
+                cursorPos = cursorPos?.let { CursorPos(it.line, 0) }
+            }
+
+            context(eventModifier: KeyModifiers)
+            private fun moveCursorToLineEnd() = editable.ifCursorUnChanged({ delegate.keyDown(Key(0), 0); Unit }) {
+                checkCursor2()
+                cursorPos = cursorPos?.let { CursorPos(it.line, Int.MAX_VALUE) }
+            }
+
+            // ── Mouse ───────────────────────────────────────────────────
 
             context(eventModifier: KeyModifiers, mouse: Position)
             override fun mouseDown(mouseButton: MouseButton): Boolean {
@@ -399,15 +298,14 @@ fun EditableText(
                 editable.check()
                 blinkBeginNano = System.nanoTime()
                 mouseDown = Unit
-                cursorPos = mouseHitPos(mouse)
+                cursorPos = mouseHitPos(mouse, alignedLines)
                 editable.cursor2 = null
                 return true
             }
 
             context(eventModifier: KeyModifiers, mouse: Position)
-            override fun mouseUp(mouseButton: MouseButton): Boolean {
-                return delegate.mouseUp(mouseButton) || mouseDown == Unit.also { mouseDown = null }
-            }
+            override fun mouseUp(mouseButton: MouseButton): Boolean =
+                delegate.mouseUp(mouseButton) || mouseDown == Unit.also { mouseDown = null }
 
             context(mouse: Position)
             override fun mouseMove() {
@@ -415,7 +313,7 @@ fun EditableText(
                 editable.check()
                 blinkBeginNano = System.nanoTime()
                 editable.run { if (cursor2 == null) cursor2 = cursor }
-                cursorPos = mouseHitPos(mouse)
+                cursorPos = mouseHitPos(mouse, alignedLines)
                 delegate.mouseMove()
             }
         })
