@@ -1,14 +1,11 @@
 package io.github.u2894638479.kotlinmcui.input
 
 /**
- * Mouse button identifiers.
- *
- * The mapping to physical buttons follows the convention shared by GLFW and SDL:
- * [LEFT]=0, [RIGHT]=1, [MIDDLE]=2, then additional buttons 4–7. [LAST] is a
- * sentinel value equal to the highest valid index.
+ * Mouse button identifiers following the convention shared by GLFW and SDL:
+ * [LEFT]=0, [RIGHT]=1, [MIDDLE]=2, then additional buttons 4–7.
  */
 enum class MouseButton {
-    LEFT, RIGHT, MIDDLE, BUTTON4, BUTTON5, BUTTON6, BUTTON7, LAST;
+    LEFT, RIGHT, MIDDLE, BUTTON4, BUTTON5, BUTTON6, BUTTON7;
 
     companion object {
         /** Look up a [MouseButton] by its index. Throws for out-of-range values. */
