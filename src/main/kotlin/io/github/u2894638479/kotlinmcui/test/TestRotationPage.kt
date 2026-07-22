@@ -11,6 +11,7 @@ import io.github.u2894638479.kotlinmcui.dsl.ui.Column
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.dsl.ui.Row
 import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
+import io.github.u2894638479.kotlinmcui.dsl.ui.editBoxBackground
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
@@ -38,14 +39,14 @@ fun TestRotationPage() = ScrollableColumn {
         ColorRect(Modifier.height(50.scaled),Color.RED) {}
         Row(Modifier.weight(0.0)) {
             ColorRect(Modifier,Color.BLUE) {}
-            val integrated = local { false }
+            val selfRenderPreedit = local { false }
             Column {
                 Simple.Button("test2"){}.simpleTooltip("Nested Rotate!","nested")
-                Config.BoolButton(integrated,"integrated") {}
+                Config.BoolButton(selfRenderPreedit,"preedit") {}
             }.rotate(rad2.value)
             ColorRect(Modifier,Color.GREEN) {}
             val text = local { "editable" }
-            EditableText(Modifier,text, selfRenderPreedit = integrated.value) {}
+            EditableText(Modifier,text, selfRenderPreedit = selfRenderPreedit.value) {}.editBoxBackground()
         }.move(x.scaled,y.scaled)
     }.rotate(rad).scale(scale)
 }

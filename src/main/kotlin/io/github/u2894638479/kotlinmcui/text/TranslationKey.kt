@@ -191,7 +191,7 @@ class KeyProperty<T : BaseKey>(val key: T, val string: String? = null) : ReadOnl
  *
  * ### Example
  * ```kotlin
- * object MyKeys : KeyNode() {
+ * class MyKeys : KeyNode() {
  *     val button by name        // path: "...MyKeys.button"
  *     val title by name         // path: "...MyKeys.title"
  * }

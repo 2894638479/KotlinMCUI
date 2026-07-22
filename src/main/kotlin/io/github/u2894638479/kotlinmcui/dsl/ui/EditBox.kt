@@ -245,9 +245,6 @@ fun EditableText(
                 return true
             }
 
-            context(eventModifier: KeyModifiers)
-            override fun keyUp(key: Key, scanCode: Int): Boolean = delegate.keyUp(key, scanCode)
-
             // ── Keyboard helpers ────────────────────────────────────────
 
             context(eventModifier: KeyModifiers)
