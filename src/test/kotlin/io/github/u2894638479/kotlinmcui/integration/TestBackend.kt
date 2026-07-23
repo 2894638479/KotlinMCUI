@@ -59,12 +59,12 @@ private object TestRenderer : DslBackendRenderer<Unit> {
     override val guiScale = 1.0
     context(renderParam: Unit) override fun flush() {}
     context(renderParam: Unit) override fun renderVertices(vertices: List<Pair<Position, Color>>) {}
+    context(renderParam: Unit) override fun renderVertices(vertices: List<Pair<Position, Color>>, image: ImageHolder, uv: List<Position>) {}
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderButton(rect: Rect, highlighted: Boolean, active: Boolean, color: Color) {}
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderSlot(rect: Rect) {}
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderContainer(rect: Rect) {}
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderTooltip(rect: Rect) {}
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderItem(rect: Rect, item: String, count: Int, damage: Double?, enchanted: Boolean) {}
-    context(renderParam: Unit) override fun renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color) {}
     context(ctx: DslScaleContext, renderParam: Unit) override fun renderDefaultBackground(rect: Rect) {}
     context(renderParam: Unit) override fun withScissor(rect: Rect, block: () -> Unit) { block() }
     context(renderParam: Unit) override fun withTransform(transform: Transform, block: () -> Unit) { block() }

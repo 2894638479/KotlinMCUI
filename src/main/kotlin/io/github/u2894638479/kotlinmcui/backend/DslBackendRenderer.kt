@@ -92,11 +92,32 @@ interface DslBackendRenderer<RP> {
     fun renderItem(rect: Rect, item: String, count: Int, damage: Double?, enchanted: Boolean)
 
     /**
-     * Render an image with optional UV mapping and tint.
-     * @param uv The UV rectangle within the image texture, or the full image rect to use the entire texture.
+     * Render textured, colored vertices. Each [uv] entry corresponds to a
+     * vertex in [vertices]. UV coordinates are in image pixel space.
      */
     context(renderParam: RP)
-    fun renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE)
+    fun renderVertices(vertices: List<Pair<Position, Color>>, image: ImageHolder, uv: List<Position>)
+
+    /**
+     * Render an image with optional UV mapping and tint.
+     * Default implementation delegates to [renderVertices] with two triangles.
+     */
+    context(renderParam: RP)
+    fun renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE) {
+        val (l, t, r, b) = rect.run { listOf(left, top, right, bottom) }
+        val (ul, ut, ur, ub) = uv.run { listOf(left, top, right, bottom) }
+        renderVertices(
+            listOf(
+                Position(l, t) to color, Position(r, t) to color, Position(l, b) to color,
+                Position(r, t) to color, Position(r, b) to color, Position(l, b) to color,
+            ),
+            image,
+            listOf(
+                Position(ul, ut), Position(ur, ut), Position(ul, ub),
+                Position(ur, ut), Position(ur, ub), Position(ul, ub),
+            ),
+        )
+    }
 
     /** Render the default screen background (e.g. dirt texture in Minecraft). */
     context(ctx: DslScaleContext, renderParam: RP)
