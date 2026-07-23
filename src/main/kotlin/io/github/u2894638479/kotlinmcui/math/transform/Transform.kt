@@ -77,6 +77,26 @@ data class Transform(
         }
 
         fun rotate(center: Position,rad: Double) = rotate(center.x,center.y,rad)
+
+        /** Shear (skew) around a center point.
+         * @param shx Horizontal shear factor: x' = x + shx*(y - cy).
+         * @param shy Vertical shear factor: y' = shy*(x - cx) + y. */
+        fun shear(centerX: Measure, centerY: Measure, shx: Double, shy: Double) = Transform(
+            1f, shx.toFloat(), (-shx * centerY.raw).toFloat(),
+            shy.toFloat(), 1f, (-shy * centerX.raw).toFloat(),
+            0f, 0f, 1f
+        )
+
+        fun shear(center: Position, shx: Double, shy: Double) = shear(center.x, center.y, shx, shy)
+
+        /** Perspective projection via the third matrix row.
+         * @param px X perspective factor — maps to m20 of the 3×3 matrix.
+         * @param py Y perspective factor — maps to m21 of the 3×3 matrix. */
+        fun perspective(px: Double, py: Double) = Transform(
+            1f, 0f, 0f,
+            0f, 1f, 0f,
+            px.toFloat(), py.toFloat(), 1f
+        )
     }
     private class Vec(val x: Num,val y: Num,val w: Num) {
         constructor(pos: Position):this(pos.x.raw.toFloat(),pos.y.raw.toFloat(),1f)

@@ -241,3 +241,14 @@ fun DslChild.move(x: Measure,y: Measure) = if(x == 0.px && y == 0.px) this else 
 
 context(ctx: DslContext)
 fun DslChild.move(pos: Position) = move(pos.x,pos.y)
+
+context(ctx: DslContext)
+fun DslChild.shear(shx: Double, shy: Double) = if (shx == 0.0 && shy == 0.0) this else transform {
+    val center = it.transform * instance.rect.center
+    Transform.shear(center, shx, shy)
+}
+
+context(ctx: DslContext)
+fun DslChild.perspective(px: Double, py: Double) = if (px == 0.0 && py == 0.0) this else transform {
+    Transform.perspective(px, py)
+}
