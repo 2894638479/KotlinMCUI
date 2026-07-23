@@ -31,18 +31,14 @@ interface DslBackendRenderer<RP> {
     fun flush()
 
     /**
-     * Render a list of colored vertices as a filled shape.
+     * Render a list of colored vertices as filled triangles.
      *
-     * This is the primitive fill operation — backends should implement this
-     * directly. The [topology] determines how vertices are connected.
-     *
-     * @param vertices Position–color pairs. Minimum count depends on topology.
-     * @param topology How vertices are connected to form triangles. Defaults to
-     *                 [PrimitiveTopology.TRIANGLE_FAN] which suits convex polygons
-     *                 and rectangles (vertices[0] as hub).
+     * Every 3 consecutive vertices form one triangle. The vertex count must
+     * be a multiple of 3. This is the primitive fill operation — backends
+     * should implement this directly.
      */
     context(renderParam: RP)
-    fun renderVertices(vertices: List<Pair<Position, Color>>, topology: PrimitiveTopology = PrimitiveTopology.TRIANGLE_FAN)
+    fun renderVertices(vertices: List<Pair<Position, Color>>)
 
     /**
      * Draw a gradient-filled rectangle. Default implementation delegates to
@@ -50,11 +46,12 @@ interface DslBackendRenderer<RP> {
      */
     context(renderParam: RP)
     fun fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color) {
+        val (l, t, r, b) = listOf(rect.left, rect.top, rect.right, rect.bottom)
         renderVertices(listOf(
-            Position(rect.left, rect.top) to lt,
-            Position(rect.right, rect.top) to rt,
-            Position(rect.right, rect.bottom) to rb,
-            Position(rect.left, rect.bottom) to lb,
+            // Triangle 1: left-top → right-top → left-bottom
+            Position(l, t) to lt, Position(r, t) to rt, Position(l, b) to lb,
+            // Triangle 2: right-top → right-bottom → left-bottom
+            Position(r, t) to rt, Position(r, b) to rb, Position(l, b) to lb,
         ))
     }
 
