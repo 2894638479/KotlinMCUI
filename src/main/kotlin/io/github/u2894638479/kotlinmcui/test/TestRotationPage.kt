@@ -3,8 +3,10 @@ package io.github.u2894638479.kotlinmcui.test
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.decorator.move
+import io.github.u2894638479.kotlinmcui.dsl.decorator.perspective
 import io.github.u2894638479.kotlinmcui.dsl.decorator.rotate
 import io.github.u2894638479.kotlinmcui.dsl.decorator.scale
+import io.github.u2894638479.kotlinmcui.dsl.decorator.shear
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.ui.ColorRect
 import io.github.u2894638479.kotlinmcui.dsl.ui.Column
@@ -49,4 +51,26 @@ fun TestRotationPage() = ScrollableColumn {
             EditableText(Modifier,text, selfRenderPreedit = selfRenderPreedit.value) {}.editBoxBackground()
         }.move(x.scaled,y.scaled)
     }.rotate(rad).scale(scale)
+
+    // ── Shear ──────────────────────────────────────────────────────────
+    Simple.Text { "shear" }
+    val shxProp = Config.Slider(-1.0..1.0, "shearX", id = "shx")
+    val shyProp = Config.Slider(-1.0..1.0, "shearY", id = "shy")
+    var shx by shxProp; var shy by shyProp
+    Row {
+        ColorRect(Modifier.height(80.scaled), Color.RED) {}
+        ColorRect(Modifier.height(80.scaled), Color.GREEN) {}
+        ColorRect(Modifier.height(80.scaled), Color.BLUE) {}
+    }.shear(shx, shy)
+
+    // ── Perspective ────────────────────────────────────────────────────
+    Simple.Text { "perspective" }
+    val pxProp = Config.Slider(-0.01..0.01, "perspectiveX", id = "px")
+    val pyProp = Config.Slider(-0.01..0.01, "perspectiveY", id = "py")
+    var px by pxProp; var py by pyProp
+    Row {
+        ColorRect(Modifier.height(80.scaled), Color.RED) {}
+        ColorRect(Modifier.height(80.scaled), Color.GREEN) {}
+        ColorRect(Modifier.height(80.scaled), Color.BLUE) {}
+    }.perspective(px, py)
 }
