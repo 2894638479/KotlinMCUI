@@ -65,8 +65,8 @@ fun TestRotationPage() = ScrollableColumn {
 
     // ── Perspective ────────────────────────────────────────────────────
     Simple.Text { "perspective" }
-    val pxProp = Config.Slider(-0.01..0.01, "perspectiveX", id = "px")
-    val pyProp = Config.Slider(-0.01..0.01, "perspectiveY", id = "py")
+    val pxProp = Config.Slider(-0.005..0.005, "perspectiveX", id = "px")
+    val pyProp = Config.Slider(-0.005..0.005, "perspectiveY", id = "py")
     var px by pxProp; var py by pyProp
     Row {
         ColorRect(Modifier.height(80.scaled), Color.RED) {}
