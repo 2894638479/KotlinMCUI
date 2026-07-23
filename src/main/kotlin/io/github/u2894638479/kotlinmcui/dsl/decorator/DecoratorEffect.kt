@@ -250,5 +250,6 @@ fun DslChild.shear(shx: Double, shy: Double) = if (shx == 0.0 && shy == 0.0) thi
 
 context(ctx: DslContext)
 fun DslChild.perspective(px: Double, py: Double) = if (px == 0.0 && py == 0.0) this else transform {
-    Transform.perspective(px, py)
+    val center = it.transform * instance.rect.center
+    Transform.perspective(center, px, py)
 }

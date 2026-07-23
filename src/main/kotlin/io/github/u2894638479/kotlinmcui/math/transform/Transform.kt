@@ -89,14 +89,27 @@ data class Transform(
 
         fun shear(center: Position, shx: Double, shy: Double) = shear(center.x, center.y, shx, shy)
 
-        /** Perspective projection via the third matrix row.
-         * @param px X perspective factor — maps to m20 of the 3×3 matrix.
-         * @param py Y perspective factor — maps to m21 of the 3×3 matrix. */
+        /** Perspective projection via the third matrix row (origin-centric).
+         * Use [perspective]\(center, px, py\) for a centered version. */
         fun perspective(px: Double, py: Double) = Transform(
             1f, 0f, 0f,
             0f, 1f, 0f,
             px.toFloat(), py.toFloat(), 1f
         )
+
+        /** Perspective projection around a center point.
+         * Translates center to origin, applies projection, translates back. */
+        fun perspective(centerX: Measure, centerY: Measure, px: Double, py: Double): Transform {
+            val cx = centerX.raw; val cy = centerY.raw
+            val dot = px * cx + py * cy
+            return Transform(
+                (1f + px * cx).toFloat(), (py * cx).toFloat(), (-cx * dot).toFloat(),
+                (px * cy).toFloat(), (1f + py * cy).toFloat(), (-cy * dot).toFloat(),
+                px.toFloat(), py.toFloat(), (1f - dot).toFloat()
+            )
+        }
+
+        fun perspective(center: Position, px: Double, py: Double) = perspective(center.x, center.y, px, py)
     }
     private class Vec(val x: Num,val y: Num,val w: Num) {
         constructor(pos: Position):this(pos.x.raw.toFloat(),pos.y.raw.toFloat(),1f)
