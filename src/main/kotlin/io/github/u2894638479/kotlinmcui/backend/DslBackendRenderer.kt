@@ -31,14 +31,18 @@ interface DslBackendRenderer<RP> {
     fun flush()
 
     /**
-     * Render a list of colored vertices as a filled polygon.
+     * Render a list of colored vertices as a filled shape.
      *
      * This is the primitive fill operation — backends should implement this
-     * directly. Order determines the shape: vertices are connected in sequence
-     * to form a triangle fan where vertices[0] is the hub.
+     * directly. The [topology] determines how vertices are connected.
+     *
+     * @param vertices Position–color pairs. Minimum count depends on topology.
+     * @param topology How vertices are connected to form triangles. Defaults to
+     *                 [PrimitiveTopology.TRIANGLE_FAN] which suits convex polygons
+     *                 and rectangles (vertices[0] as hub).
      */
     context(renderParam: RP)
-    fun renderVertices(vertices: List<Pair<Position, Color>>)
+    fun renderVertices(vertices: List<Pair<Position, Color>>, topology: PrimitiveTopology = PrimitiveTopology.TRIANGLE_FAN)
 
     /**
      * Draw a gradient-filled rectangle. Default implementation delegates to
