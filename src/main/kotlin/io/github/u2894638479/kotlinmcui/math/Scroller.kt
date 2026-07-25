@@ -275,23 +275,25 @@ fun Scroller.scrollTo(id: DslId, align: Align) = scrollTo(items.indexOfFirst { i
  */
 fun Scroller.scrollTo(index: Int, constraint: ScrollConstraint) {
     if (index !in items.indices) return
-    val viewport = size.unscaled
-    var itemOffset = offset
-    var i = scrollIndex
-    while (i != index) {
-        val step = (index - i).sign.toInt()
-        itemOffset += step * items[i].size.unscaled
-        i += step
-    }
-    val itemTop = itemOffset
-    val itemBottom = itemTop + items[index].size.unscaled
     when (constraint) {
         ScrollConstraint.MINIMAL -> {
+            val viewport = size.unscaled
+            var itemOffset = offset
+            var i = scrollIndex
+            while (i != index) {
+                val step = (index - i).sign.toInt()
+                itemOffset += step * items[i].size.unscaled
+                i += step
+            }
+            val itemTop = itemOffset
+            val itemBottom = itemTop + items[index].size.unscaled
             if (itemTop >= scroll && itemBottom <= scroll + viewport) return
             if (itemTop < scroll) scroll(itemTop - scroll)
             else scroll(itemBottom - (scroll + viewport))
         }
+        ScrollConstraint.LOW -> scrollTo(index, Align.LOW)
         ScrollConstraint.CENTER -> scrollTo(index, Align.MID)
+        ScrollConstraint.HIGH -> scrollTo(index, Align.HIGH)
     }
 }
 
