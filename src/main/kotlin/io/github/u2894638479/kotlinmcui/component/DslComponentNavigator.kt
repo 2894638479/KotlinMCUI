@@ -1,11 +1,11 @@
 package io.github.u2894638479.kotlinmcui.component
 
 import io.github.u2894638479.kotlinmcui.identity.DslId
-import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.center
 import io.github.u2894638479.kotlinmcui.math.rect.ifEmpty
+import kotlin.experimental.ExperimentalTypeInference
 
 /**
  * Focus traversal navigation for a component tree.
@@ -32,7 +32,9 @@ interface DslComponentNavigator {
  * @param view Extracts the 2D navigation view from a [DslComponentNavigator].
  * @return The next focusable component, or `null` if none is found.
  */
-fun DslComponent.nextFocusable(focused: DslId?, reverse:Boolean = false, view:(DslComponentNavigator) -> List<List<DslComponent>>): DslComponent? {
+@OptIn(ExperimentalTypeInference::class)
+@OverloadResolutionByLambdaReturnType
+internal fun DslComponent.nextFocusable(focused: DslId?, reverse:Boolean = false, view:(DslComponentNavigator) -> List<List<DslComponent>>): DslComponent? {
     var center: Position? = null
     fun <T> List<T>.rev() = if (reverse) asReversed() else this
     fun DslComponent.iterate(): DslComponent? {
@@ -75,7 +77,9 @@ fun DslComponent.nextFocusable(focused: DslId?, reverse:Boolean = false, view:(D
  * @param view Extracts the flat list view from a [DslComponentNavigator].
  * @return The next focusable component, or `null`.
  */
-fun DslComponent.nextFocusable(focused: DslId?, view:(DslComponentNavigator) -> List<DslComponent>): DslComponent? {
+@OptIn(ExperimentalTypeInference::class)
+@OverloadResolutionByLambdaReturnType
+internal fun DslComponent.nextFocusable(focused: DslId?, view:(DslComponentNavigator) -> List<DslComponent>): DslComponent? {
     fun DslComponent.flattenView(): List<DslComponent> = buildList {
         fun flatten(component: DslComponent) {
             for (child in view(component)) {

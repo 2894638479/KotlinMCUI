@@ -26,5 +26,5 @@ data class Position(
         Axis.Vertical -> y
     }
 
-    fun distanceTo(other: Position) = sqrt((x.raw - other.x.raw).pow(2) + (y.raw - other.y.raw).pow(2)).px.px
+    fun distanceTo(other: Position) = sqrt((x.raw - other.x.raw).pow(2) + (y.raw - other.y.raw).pow(2)).px
 }
