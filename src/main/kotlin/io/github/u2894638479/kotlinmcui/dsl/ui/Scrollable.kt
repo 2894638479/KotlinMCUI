@@ -138,8 +138,8 @@ fun Scrollable(
                 return scroller.scroll(remain * -sensitivity) / -sensitivity
             }
 
-            override val viewHorizontal get() = listOf(children)
-            override val viewVertical get() = children.mapView { listOf(it) }
+            override val viewHorizontal get() = if (axis == Axis.Horizontal) children.mapView { listOf(it) } else listOf(children)
+            override val viewVertical get() = if (axis == Axis.Vertical) children.mapView { listOf(it) } else listOf(children)
         }
     ).scissor()
 }
