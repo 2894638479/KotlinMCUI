@@ -18,6 +18,7 @@ import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.ScrollOnFocus
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.math.align.Align
+import io.github.u2894638479.kotlinmcui.math.scroll
 import io.github.u2894638479.kotlinmcui.math.scrollToView
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.align.align
@@ -78,8 +79,7 @@ fun Scrollable(
             override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
                 super.globalFocusChanged(newFocus, source)
                 if (newFocus == null || scrollOnFocus == null || source !in scrollOnFocus.sources) return
-                val focused = testHit { it.takeIf { it.identity == newFocus && it !== this } } ?: return
-                scroller.scrollToView(focused.rect, scrollOnFocus.constraint)
+                scroller.scrollToView(newFocus, scrollOnFocus.constraint)
             }
 
             override val contentMinWidth by lazy {
