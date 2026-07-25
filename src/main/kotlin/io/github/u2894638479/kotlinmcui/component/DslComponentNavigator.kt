@@ -1,6 +1,9 @@
 package io.github.u2894638479.kotlinmcui.component
 
 import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.rect.center
+import io.github.u2894638479.kotlinmcui.math.rect.ifEmpty
 
 /**
  * Focus traversal navigation for a component tree.
@@ -28,17 +31,20 @@ interface DslComponentNavigator {
  * @return The next focusable component, or `null` if none is found.
  */
 fun DslComponent.nextFocusableList(focused: DslId?, reverse:Boolean = false, view:(DslComponentNavigator) -> List<List<DslComponent>>): DslComponent? {
-    var hit = false
+    var center: Position? = null
     fun <T> List<T>.rev() = if (reverse) asReversed() else this
     fun DslComponent.iterate(): DslComponent? {
         for (list in view(this).rev()) {
-            for(it in list.rev()) {
-                if (it.identity == focused) {
-                    hit = true
+            val list = center?.let { center ->
+                list.sortedBy { it.rect.ifEmpty { return@sortedBy Double.MAX_VALUE }.center.distanceTo(center).raw }
+            } ?: list.rev()
+            for(it in list) {
+                if (center == null && it.identity == focused) {
+                    center = it.rect.center
                     break
                 }
                 it.iterate()?.let { return it }
-                if(hit && it.focusable) return it
+                if(center != null && it.focusable) return it
             }
         }
         return null

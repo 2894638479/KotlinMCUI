@@ -1,6 +1,8 @@
 package io.github.u2894638479.kotlinmcui.math
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
 import kotlinx.serialization.Serializable
+import kotlin.math.pow
+import kotlin.math.sqrt
 
 @Serializable
 data class Position(
@@ -23,4 +25,6 @@ data class Position(
         Axis.Horizontal -> x
         Axis.Vertical -> y
     }
+
+    fun distanceTo(other: Position) = sqrt((x.raw - other.x.raw).pow(2) + (y.raw - other.y.raw).pow(2)).px
 }
