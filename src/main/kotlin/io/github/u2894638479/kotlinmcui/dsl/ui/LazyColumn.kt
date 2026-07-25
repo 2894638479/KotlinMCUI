@@ -19,7 +19,9 @@ import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.ScrollOnFocus
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.math.scroll
-import io.github.u2894638479.kotlinmcui.math.scrollToView
+import io.github.u2894638479.kotlinmcui.math.scrollTo
+import io.github.u2894638479.kotlinmcui.math.updateIndex
+import io.github.u2894638479.kotlinmcui.math.updateScroll
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.align.align
@@ -85,7 +87,7 @@ private fun LazyScrollable(
         override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
             super.globalFocusChanged(newFocus, source)
             if (newFocus == null || scrollOnFocus == null || source !in scrollOnFocus.sources) return
-            scroller.scrollToView(newFocus, scrollOnFocus.constraint)
+            scroller.scrollTo(newFocus, scrollOnFocus.constraint)
         }
 
         override fun build() {
