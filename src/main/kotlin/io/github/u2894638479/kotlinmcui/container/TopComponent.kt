@@ -5,7 +5,6 @@ import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.component.nextFocusable
-import io.github.u2894638479.kotlinmcui.component.nextFocusableList
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.input.Key
@@ -95,10 +94,10 @@ object TopComponent: DslScope {
     override fun keyDown(key: Key, scanCode: Int): Boolean {
         if(super.keyDown(key, scanCode)) return true
         val next = when(key) {
-            Key.LEFT -> instance.nextFocusableList(focused,true) { it.viewHorizontal }
-            Key.RIGHT -> instance.nextFocusableList(focused) { it.viewHorizontal }
-            Key.UP -> instance.nextFocusableList(focused,true) { it.viewVertical }
-            Key.DOWN -> instance.nextFocusableList(focused) { it.viewVertical }
+            Key.LEFT -> instance.nextFocusable(focused,true) { it.viewHorizontal }
+            Key.RIGHT -> instance.nextFocusable(focused) { it.viewHorizontal }
+            Key.UP -> instance.nextFocusable(focused,true) { it.viewVertical }
+            Key.DOWN -> instance.nextFocusable(focused) { it.viewVertical }
             Key.TAB -> if(eventModifier.shift) instance.nextFocusable(focused) { it.viewSequential.asReversed() }
             else instance.nextFocusable(focused) { it.viewSequential }
             Key.HOME -> instance.nextFocusable(null) { it.viewSequential }

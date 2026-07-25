@@ -1,7 +1,9 @@
 package io.github.u2894638479.kotlinmcui.component
 
 import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.center
 import io.github.u2894638479.kotlinmcui.math.rect.ifEmpty
 
@@ -30,13 +32,13 @@ interface DslComponentNavigator {
  * @param view Extracts the 2D navigation view from a [DslComponentNavigator].
  * @return The next focusable component, or `null` if none is found.
  */
-fun DslComponent.nextFocusableList(focused: DslId?, reverse:Boolean = false, view:(DslComponentNavigator) -> List<List<DslComponent>>): DslComponent? {
+fun DslComponent.nextFocusable(focused: DslId?, reverse:Boolean = false, view:(DslComponentNavigator) -> List<List<DslComponent>>): DslComponent? {
     var center: Position? = null
     fun <T> List<T>.rev() = if (reverse) asReversed() else this
     fun DslComponent.iterate(): DslComponent? {
         for (list in view(this).rev()) {
             val list = center?.let { center ->
-                list.sortedBy { it.rect.ifEmpty { return@sortedBy Double.MAX_VALUE }.center.distanceTo(center).raw }
+                list.sortedBy { it.rect.ifEmpty { return@sortedBy Double.MAX_VALUE.px }.center.distanceTo(center) }
             } ?: list.rev()
             for(it in list) {
                 if (center == null && it.identity == focused) {
