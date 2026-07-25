@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.dsl.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.component.alignable
 import io.github.u2894638479.kotlinmcui.component.childrenMaxHeight
 import io.github.u2894638479.kotlinmcui.component.childrenMaxWidth
@@ -10,11 +11,14 @@ import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.dsl.*
 import io.github.u2894638479.kotlinmcui.dsl.decorator.scissor
+import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.ScrollOnFocus
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.math.align.Align
+import io.github.u2894638479.kotlinmcui.math.scrollToView
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.align.align
 import io.github.u2894638479.kotlinmcui.math.px
@@ -37,9 +41,10 @@ fun ScrollableColumn(
     scrollerProp: StableRW<Scroller> = local { Scroller.empty },
     scrollProp: StableRW<Double> = local.animatable { 0.0 },
     sensitivity: Double = 30.0,
+    scrollOnFocus: ScrollOnFocus? = ScrollOnFocus(setOf(FocusSource.KEYBOARD)),
     id:Any? = null,
     function: DslFunction
-) = Scrollable(modifier,Axis.Vertical,scrollerProp,scrollProp,sensitivity,id,function)
+) = Scrollable(modifier,Axis.Vertical,scrollerProp,scrollProp,sensitivity,scrollOnFocus,id,function)
 
 
 context(ctx: DslContext)
@@ -48,9 +53,10 @@ fun ScrollableRow(
     scrollerProp: StableRW<Scroller> = local { Scroller.empty },
     scrollProp: StableRW<Double> = local.animatable { 0.0 },
     sensitivity: Double = 30.0,
+    scrollOnFocus: ScrollOnFocus? = ScrollOnFocus(setOf(FocusSource.KEYBOARD)),
     id:Any? = null,
     function: DslFunction
-) = Scrollable(modifier,Axis.Horizontal,scrollerProp,scrollProp,sensitivity,id,function)
+) = Scrollable(modifier,Axis.Horizontal,scrollerProp,scrollProp,sensitivity,scrollOnFocus,id,function)
 
 
 context(ctx: DslContext)
@@ -60,6 +66,7 @@ fun Scrollable(
     scrollerProp: StableRW<Scroller> = local { Scroller.empty },
     scrollProp: StableRW<Double> = local.animatable { 0.0 },
     sensitivity: Double = 30.0,
+    scrollOnFocus: ScrollOnFocus? = ScrollOnFocus(setOf(FocusSource.KEYBOARD)),
     id:Any? = null,
     function: DslFunction
 ) = withId(id ?: function::class) {
@@ -67,6 +74,13 @@ fun Scrollable(
     collect(
         object : DslScope by delegate {
             var scroller by scrollerProp
+
+            override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
+                super.globalFocusChanged(newFocus, source)
+                if (newFocus == null || scrollOnFocus == null || source !in scrollOnFocus.sources) return
+                val focused = testHit { it.takeIf { it.identity == newFocus && it !== this } } ?: return
+                scroller.scrollToView(focused.rect, scrollOnFocus.constraint)
+            }
 
             override val contentMinWidth by lazy {
                 max(if(axis == Axis.Horizontal) 0.px else instance.childrenMaxWidth,super.contentMinWidth)

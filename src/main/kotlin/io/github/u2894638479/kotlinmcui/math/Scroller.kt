@@ -10,6 +10,7 @@ import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.rect.Bound
+import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.math.rect.size
 import io.github.u2894638479.kotlinmcui.prop.StableRW
@@ -29,6 +30,26 @@ fun Scroller.scrollTo(id: DslId, align: Align) = scrollTo(items.indexOfFirst { i
 
 /** Scroll to the item whose [DslId.topElement] equals [id]. */
 fun Scroller.scrollToId(id: Any?, align: Align) = scrollTo(items.indexOfFirst { it.identity.topElement == id }, align)
+
+/**
+ * Scroll [rect] into the viewport according to [constraint].
+ * [rect] must be in unscaled logical coordinates matching the scroll axis.
+ */
+fun Scroller.scrollToView(rect: Rect, constraint: ScrollConstraint) {
+    val viewport = size.unscaled
+    val top = rect.top.unscaled
+    val bottom = rect.bottom.unscaled
+    when (constraint) {
+        ScrollConstraint.MINIMAL -> {
+            if (top >= scroll && bottom <= scroll + viewport) return // already visible
+            if (top < scroll) scroll(top - scroll)
+            else scroll(bottom - (scroll + viewport))
+        }
+        ScrollConstraint.CENTER -> {
+            scroll(top - (viewport - (bottom - top)) / 2 - scroll)
+        }
+    }
+}
 
 // ── Interface ────────────────────────────────────────────────────────────────
 
