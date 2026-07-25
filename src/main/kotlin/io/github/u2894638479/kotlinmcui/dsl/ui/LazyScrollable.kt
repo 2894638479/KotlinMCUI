@@ -6,7 +6,6 @@ import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.input.Key
 import io.github.u2894638479.kotlinmcui.component.alignable
 import io.github.u2894638479.kotlinmcui.component.attachInstance
-import io.github.u2894638479.kotlinmcui.component.contentMinSize
 import io.github.u2894638479.kotlinmcui.component.outerMinSize
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
@@ -87,7 +86,8 @@ private fun LazyScrollable(
         override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
             super.globalFocusChanged(newFocus, source)
             if (newFocus == null || scrollOnFocus == null || source !in scrollOnFocus.sources) return
-            scroller.scrollTo(newFocus, scrollOnFocus.constraint)
+            val child = children.firstOrNull { it.testHit { it.takeIf { it.identity == newFocus } } != null } ?: return
+            scroller.scrollTo(child.identity, scrollOnFocus.constraint)
         }
 
         override fun build() {

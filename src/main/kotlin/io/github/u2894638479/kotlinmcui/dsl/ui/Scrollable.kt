@@ -63,7 +63,7 @@ fun ScrollableRow(
 
 
 context(ctx: DslContext)
-fun Scrollable(
+private fun Scrollable(
     modifier: Modifier = Modifier,
     axis: Axis,
     scrollerProp: StableRW<Scroller> = local { Scroller.empty },
@@ -81,7 +81,8 @@ fun Scrollable(
             override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
                 super.globalFocusChanged(newFocus, source)
                 if (newFocus == null || scrollOnFocus == null || source !in scrollOnFocus.sources) return
-                scroller.scrollTo(newFocus, scrollOnFocus.constraint)
+                val child = children.firstOrNull { it.testHit { it.takeIf { it.identity == newFocus } } != null } ?: return
+                scroller.scrollTo(child.identity, scrollOnFocus.constraint)
             }
 
             override val contentMinWidth by lazy {
