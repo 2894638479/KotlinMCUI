@@ -17,8 +17,9 @@ interface DslComponentGlobalEvent {
     /**
      * The globally focused component has changed.
      * @param newFocus The identity of the newly focused component, or `null`.
+     * @param source What triggered the change ([FocusSource.KEYBOARD], [FocusSource.MOUSE], or [FocusSource.CODE]).
      */
-    fun globalFocusChanged(newFocus: DslId?) {}
+    fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {}
 
     /**
      * The globally hovered component has changed.

@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.dsl.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
@@ -136,8 +137,8 @@ fun Slider(
 
         override val focusable get() = true
 
-        override fun globalFocusChanged(newFocus: DslId?) {
-            super.globalFocusChanged(newFocus)
+        override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
+            super.globalFocusChanged(newFocus, source)
             if(keyFocused != null && newFocus != instance.identity) {
                 keyFocused = null
             }

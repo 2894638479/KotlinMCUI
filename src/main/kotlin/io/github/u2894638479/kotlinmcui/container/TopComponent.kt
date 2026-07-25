@@ -3,6 +3,7 @@ package io.github.u2894638479.kotlinmcui.container
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.component.nextFocusable
 import io.github.u2894638479.kotlinmcui.component.nextFocusableList
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
@@ -39,8 +40,8 @@ object TopComponent: DslScope {
         }
     }
 
-    override fun globalFocusChanged(newFocus: DslId?) {
-        fun DslChild.Group.f():Unit = forEach { it.children.f();it.globalFocusChanged(newFocus) }
+    override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
+        fun DslChild.Group.f():Unit = forEach { it.children.f();it.globalFocusChanged(newFocus, source) }
         instance.children.f()
     }
 
@@ -50,10 +51,12 @@ object TopComponent: DslScope {
     }
 
     var focused: DslId? = null
-        internal set(value) {
-            field = value
-            globalFocusChanged(value)
-        }
+        private set
+
+    internal fun setFocus(newFocus: DslId?, source: FocusSource) {
+        focused = newFocus
+        globalFocusChanged(newFocus, source)
+    }
     var hovered: DslId? = null
         internal set(value) {
             field = value
@@ -84,7 +87,7 @@ object TopComponent: DslScope {
 
     context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton): Boolean {
-        focused = instance.testHit(mouse) { it.takeIf { it.focusable } }?.identity
+        setFocus(instance.testHit(mouse) { it.takeIf { it.focusable } }?.identity, FocusSource.MOUSE)
         return super.mouseDown(mouseButton)
     }
 
@@ -103,7 +106,7 @@ object TopComponent: DslScope {
             else -> return false
         }
         if(this.focused != next?.identity) {
-            this.focused = next?.identity
+            setFocus(next?.identity, FocusSource.KEYBOARD)
             this.keyboardNarration = next?.narration
             return true
         }
