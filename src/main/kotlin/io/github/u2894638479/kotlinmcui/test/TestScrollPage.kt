@@ -1,10 +1,13 @@
 package io.github.u2894638479.kotlinmcui.test
 
+import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.decorator.clickable
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
+import io.github.u2894638479.kotlinmcui.math.ScrollConstraint
+import io.github.u2894638479.kotlinmcui.math.ScrollOnFocus
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
@@ -79,7 +82,14 @@ fun TestScrollPage() = Row {
     val scrollerProp3 = local { Scroller.empty }
     Column {
         TextAutoFold(Modifier.weight(0.0)) { "this is a lazy column".emit() }
-        LazyColumn(Modifier, scrollerProp3) {
+        LazyColumn(
+            Modifier,
+            scrollerProp3,
+            scrollOnFocus = ScrollOnFocus(
+                setOf(FocusSource.KEYBOARD),
+                ScrollConstraint.KeepInRatio(0.1)
+            )
+        ) {
             var toggle by local { false }
             for (i in 1..20) {
                 if (i % 3 == 0) TextFlatten(id = i) { "item$i".emit() }

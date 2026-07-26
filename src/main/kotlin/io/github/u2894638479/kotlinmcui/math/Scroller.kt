@@ -277,26 +277,14 @@ fun Scroller.scrollTo(id: DslId, align: Align) = scrollTo(items.indexOfFirst { i
 fun Scroller.scrollTo(index: Int, constraint: ScrollConstraint) {
     if (index !in items.indices) return
     when (constraint) {
-        is ScrollConstraint.KeepIn -> {
-            val viewport = size.unscaled
-            val pad = constraint.padding.unscaled
-            var itemOffset = offset
-            var i = scrollIndex
-            while (i != index) {
-                val step = (index - i).sign
-                itemOffset += step * items[i].size.unscaled
-                i += step
-            }
-            val itemTop = itemOffset
-            val itemBottom = itemTop + items[index].size.unscaled
-            val rawScroll = rawScroll
-            if (itemTop >= rawScroll + pad && itemBottom <= rawScroll + viewport - pad) return
-            if (itemTop < rawScroll + pad) scroll(itemTop - (rawScroll + pad))
-            else scroll(itemBottom - (rawScroll + viewport - pad))
-        }
+        is ScrollConstraint.KeepIn,
         is ScrollConstraint.KeepInRatio -> {
             val viewport = size.unscaled
-            val pad = viewport * constraint.ratio
+            val pad = when (constraint) {
+                is ScrollConstraint.KeepIn -> constraint.padding.unscaled
+                is ScrollConstraint.KeepInRatio -> viewport * constraint.ratio
+                else -> 0.0
+            }
             var itemOffset = offset
             var i = scrollIndex
             while (i != index) {
@@ -306,10 +294,10 @@ fun Scroller.scrollTo(index: Int, constraint: ScrollConstraint) {
             }
             val itemTop = itemOffset
             val itemBottom = itemTop + items[index].size.unscaled
-            val rawScroll = rawScroll
-            if (itemTop >= rawScroll + pad && itemBottom <= rawScroll + viewport - pad) return
-            if (itemTop < rawScroll + pad) scroll(itemTop - (rawScroll + pad))
-            else scroll(itemBottom - (rawScroll + viewport - pad))
+            val rs = rawScroll
+            if (itemTop >= rs + pad && itemBottom <= rs + viewport - pad) return
+            if (itemTop < rs + pad) scroll(itemTop - (rs + pad))
+            else scroll(itemBottom - (rs + viewport - pad))
         }
         is ScrollConstraint.AlignTo -> scrollTo(index, constraint.align)
     }

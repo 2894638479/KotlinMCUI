@@ -8,7 +8,7 @@ sealed interface ScrollConstraint {
     data class KeepIn(val padding: Measure) : ScrollConstraint
 
     /** Like [KeepIn], but [ratio] is a fraction of the viewport size (0.1 = 10%). */
-    data class KeepInRatio(val ratio: Float) : ScrollConstraint
+    data class KeepInRatio(val ratio: Double) : ScrollConstraint
 
     /** Always scroll the item to [align] in the viewport. */
     data class AlignTo(val align: Align) : ScrollConstraint
