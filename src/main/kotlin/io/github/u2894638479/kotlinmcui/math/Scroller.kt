@@ -223,9 +223,7 @@ fun Scroller.scrollTo(align: Align) {
             rawScroll = off
         }
         Align.MID -> {
-            val mid = idx / 2
-            scrollTo(mid, Align.MID)
-            if (idx % 2 == 1) rawScroll += items[mid].size.unscaled / 2
+            return scrollTo(idx / 2, Align.MID)
         }
         Align.HIGH -> {
             val viewport = size.unscaled
@@ -234,6 +232,7 @@ fun Scroller.scrollTo(align: Align) {
             rawScroll = off
         }
     }
+    updateScroll()
 }
 
 /**
@@ -242,17 +241,18 @@ fun Scroller.scrollTo(align: Align) {
  */
 fun Scroller.scrollTo(index: Int, align: Align) {
     if (index !in items.indices) return
+
     var idx = scrollIndex
     var off = offset
+    while (idx != index) {
+        val step = (index - idx).sign.toInt()
+        off += step * items[idx].size.unscaled
+        idx += step
+    }
+    rawScroll = off
+
     when (align) {
-        Align.LOW -> {
-            while (idx != index) {
-                val step = (index - idx).sign.toInt()
-                off += step * items[idx].size.unscaled
-                idx += step
-            }
-            rawScroll = off
-        }
+        Align.LOW -> {}
         Align.MID -> {
             scrollTo(index, Align.LOW)
             scroll(-(high - low - items[index].size).unscaled / 2)
@@ -262,6 +262,7 @@ fun Scroller.scrollTo(index: Int, align: Align) {
             scroll(-(high - low - items[index].size).unscaled)
         }
     }
+    updateScroll()
 }
 
 /** Scroll to the item identified by [id]. */
@@ -281,15 +282,16 @@ fun Scroller.scrollTo(index: Int, constraint: ScrollConstraint) {
             var itemOffset = offset
             var i = scrollIndex
             while (i != index) {
-                val step = (index - i).sign.toInt()
+                val step = (index - i).sign
                 itemOffset += step * items[i].size.unscaled
                 i += step
             }
             val itemTop = itemOffset
             val itemBottom = itemTop + items[index].size.unscaled
-            if (itemTop >= scroll && itemBottom <= scroll + viewport) return
-            if (itemTop < scroll) scroll(itemTop - scroll)
-            else scroll(itemBottom - (scroll + viewport))
+            val rawScroll = rawScroll
+            if (itemTop >= rawScroll && itemBottom <= rawScroll + viewport) return
+            if (itemTop < rawScroll) scroll(itemTop - rawScroll)
+            else scroll(itemBottom - (rawScroll + viewport))
         }
         ScrollConstraint.LOW -> scrollTo(index, Align.LOW)
         ScrollConstraint.CENTER -> scrollTo(index, Align.MID)
