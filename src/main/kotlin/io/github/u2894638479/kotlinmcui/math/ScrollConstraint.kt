@@ -1,13 +1,15 @@
 package io.github.u2894638479.kotlinmcui.math
 
+import io.github.u2894638479.kotlinmcui.math.align.Align
+
 /** How to scroll a focused item into the viewport. */
-enum class ScrollConstraint {
-    /** If already fully visible, do nothing. If above, snap top. If below, snap bottom. */
-    MINIMAL,
-    /** Scroll the item to the top of the viewport. */
-    LOW,
-    /** Scroll the item to the center of the viewport. */
-    CENTER,
-    /** Scroll the item to the bottom of the viewport. */
-    HIGH,
+sealed interface ScrollConstraint {
+    /** Keep the item within the viewport with at least [padding] inset on each side. */
+    data class KeepIn(val padding: Measure) : ScrollConstraint
+
+    /** Like [KeepIn], but [ratio] is a fraction of the viewport size (0.1 = 10%). */
+    data class KeepInRatio(val ratio: Float) : ScrollConstraint
+
+    /** Always scroll the item to [align] in the viewport. */
+    data class AlignTo(val align: Align) : ScrollConstraint
 }
