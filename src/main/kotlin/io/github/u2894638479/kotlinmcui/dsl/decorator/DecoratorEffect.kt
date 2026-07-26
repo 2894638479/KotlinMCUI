@@ -136,7 +136,7 @@ fun DslChild.animateHeight(duration: Duration = 0.5.seconds, interpolator: Inter
 = change { object: DslComponent by it {
     override val contentMinHeight: Measure get() {
         val unscaled = it.contentMinHeight.unscaled
-        val value by local.autoAnimate(duration, interpolator) { unscaled }
+        val value by local.autoAnimate(duration = duration, interpolator = interpolator) { unscaled }
         return value.scaled
     }
 }}
@@ -146,7 +146,7 @@ fun DslChild.animateWidth(duration: Duration = 0.5.seconds, interpolator: Interp
 = change { object: DslComponent by it {
     override val contentMinWidth: Measure get() {
         val unscaled = it.contentMinWidth.unscaled
-        val value by local.autoAnimate(duration, interpolator) { unscaled }
+        val value by local.autoAnimate(duration = duration, interpolator = interpolator) { unscaled }
         return value.scaled
     }
 }}

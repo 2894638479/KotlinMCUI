@@ -9,6 +9,7 @@ import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
 import io.github.u2894638479.kotlinmcui.math.animate.InterpolatableDouble
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
 import io.github.u2894638479.kotlinmcui.math.animate.interpolate
+import io.github.u2894638479.kotlinmcui.math.animate.toInterpolatable
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -235,6 +236,7 @@ class PropertyLifeScope internal constructor(
      */
     context(ctx: DslIdContext)
     fun <T : Interpolatable<T>> autoAnimate(
+        init: T? = null,
         duration: Duration = 0.5.seconds,
         interpolator: Interpolator = Interpolator.default,
         id:Any? = null,
@@ -243,7 +245,7 @@ class PropertyLifeScope internal constructor(
         val id = id ?: value::class
         val value = context(DslExecuteContext(dataStore), value)
         val animator by property(id) {
-            Animator(value, duration.inWholeNanoseconds, interpolator)
+            Animator(init ?: value, duration.inWholeNanoseconds, interpolator)
         }
         return animator.also { it.value = value }
     }
@@ -251,12 +253,13 @@ class PropertyLifeScope internal constructor(
     @JvmName("autoAnimateD")
     context(ctx: DslIdContext)
     fun autoAnimate(
+        init: Double? = null,
         duration: Duration = 0.5.seconds,
         interpolator: Interpolator = Interpolator.default,
         id:Any? = null,
         value:context(DslExecuteContext)() -> Double
-    ) = autoAnimate<InterpolatableDouble>(duration, interpolator, id ?: value::class) {
-        InterpolatableDouble(value())
+    ) = autoAnimate(init?.toInterpolatable(), duration, interpolator, id ?: value::class) {
+        value().toInterpolatable()
     }.remap { it.toDouble() }
 
     /**
