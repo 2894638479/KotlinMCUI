@@ -15,7 +15,7 @@ import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.identity.DslId
-import io.github.u2894638479.kotlinmcui.math.ScrollOnFocus
+import io.github.u2894638479.kotlinmcui.math.AutoScroll
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.math.scroll
 import io.github.u2894638479.kotlinmcui.math.scrollTo
@@ -44,10 +44,10 @@ fun LazyColumn(
     scrollerProp: StableRW<Scroller> = local { Scroller.empty },
     scrollProp: StableRW<Double> = local.animatable { 0.0 },
     sensitivity: Double = 30.0,
-    scrollOnFocus: ScrollOnFocus? = ScrollOnFocus(setOf(FocusSource.KEYBOARD)),
+    autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id: Any? = null,
     function: DslFunction
-) = LazyScrollable(Axis.Vertical, modifier, scrollerProp, scrollProp, sensitivity, scrollOnFocus, id, function)
+) = LazyScrollable(Axis.Vertical, modifier, scrollerProp, scrollProp, sensitivity, autoScroll, id, function)
 
 context(ctx: DslContext)
 fun LazyRow(
@@ -55,10 +55,10 @@ fun LazyRow(
     scrollerProp: StableRW<Scroller> = local { Scroller.empty },
     scrollProp: StableRW<Double> = local.animatable { 0.0 },
     sensitivity: Double = 30.0,
-    scrollOnFocus: ScrollOnFocus? = ScrollOnFocus(setOf(FocusSource.KEYBOARD)),
+    autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id: Any? = null,
     function: DslFunction
-) = LazyScrollable(Axis.Horizontal, modifier, scrollerProp, scrollProp, sensitivity, scrollOnFocus, id, function)
+) = LazyScrollable(Axis.Horizontal, modifier, scrollerProp, scrollProp, sensitivity, autoScroll, id, function)
 
 // ── Implementation ───────────────────────────────────────────────────────────
 
@@ -74,7 +74,7 @@ private fun LazyScrollable(
     scrollerProp: StableRW<Scroller> = local { Scroller.empty },
     scrollProp: StableRW<Double> = local.animatable { 0.0 },
     sensitivity: Double = 30.0,
-    scrollOnFocus: ScrollOnFocus? = ScrollOnFocus(setOf(FocusSource.KEYBOARD)),
+    autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id: Any? = null,
     function: DslFunction
 ): DslChild = withId(id ?: function::class) {
@@ -85,9 +85,9 @@ private fun LazyScrollable(
 
         override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
             super.globalFocusChanged(newFocus, source)
-            if (newFocus == null || scrollOnFocus == null || source !in scrollOnFocus.sources) return
+            if (newFocus == null || autoScroll == null || source !in autoScroll.sources) return
             val child = children.firstOrNull { it.testHit { it.takeIf { it.identity == newFocus } } != null } ?: return
-            scroller.scrollTo(child.identity, scrollOnFocus.constraint)
+            scroller.scrollTo(child.identity, autoScroll.constraint)
         }
 
         override fun build() {

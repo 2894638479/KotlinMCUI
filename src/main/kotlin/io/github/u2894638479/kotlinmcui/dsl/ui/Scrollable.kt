@@ -15,7 +15,7 @@ import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.ScrollOnFocus
+import io.github.u2894638479.kotlinmcui.math.AutoScroll
 import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.scroll
@@ -44,10 +44,10 @@ fun ScrollableColumn(
     scrollerProp: StableRW<Scroller> = local { Scroller.empty },
     scrollProp: StableRW<Double> = local.animatable { 0.0 },
     sensitivity: Double = 30.0,
-    scrollOnFocus: ScrollOnFocus? = ScrollOnFocus(setOf(FocusSource.KEYBOARD)),
+    autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id:Any? = null,
     function: DslFunction
-) = Scrollable(modifier,Axis.Vertical,scrollerProp,scrollProp,sensitivity,scrollOnFocus,id,function)
+) = Scrollable(modifier,Axis.Vertical,scrollerProp,scrollProp,sensitivity,autoScroll,id,function)
 
 
 context(ctx: DslContext)
@@ -56,10 +56,10 @@ fun ScrollableRow(
     scrollerProp: StableRW<Scroller> = local { Scroller.empty },
     scrollProp: StableRW<Double> = local.animatable { 0.0 },
     sensitivity: Double = 30.0,
-    scrollOnFocus: ScrollOnFocus? = ScrollOnFocus(setOf(FocusSource.KEYBOARD)),
+    autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id:Any? = null,
     function: DslFunction
-) = Scrollable(modifier,Axis.Horizontal,scrollerProp,scrollProp,sensitivity,scrollOnFocus,id,function)
+) = Scrollable(modifier,Axis.Horizontal,scrollerProp,scrollProp,sensitivity,autoScroll,id,function)
 
 
 context(ctx: DslContext)
@@ -69,7 +69,7 @@ private fun Scrollable(
     scrollerProp: StableRW<Scroller> = local { Scroller.empty },
     scrollProp: StableRW<Double> = local.animatable { 0.0 },
     sensitivity: Double = 30.0,
-    scrollOnFocus: ScrollOnFocus? = ScrollOnFocus(setOf(FocusSource.KEYBOARD)),
+    autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id:Any? = null,
     function: DslFunction
 ) = withId(id ?: function::class) {
@@ -80,9 +80,9 @@ private fun Scrollable(
 
             override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
                 super.globalFocusChanged(newFocus, source)
-                if (newFocus == null || scrollOnFocus == null || source !in scrollOnFocus.sources) return
+                if (newFocus == null || autoScroll == null || source !in autoScroll.sources) return
                 val child = children.firstOrNull { it.testHit { it.takeIf { it.identity == newFocus } } != null } ?: return
-                scroller.scrollTo(child.identity, scrollOnFocus.constraint)
+                scroller.scrollTo(child.identity, autoScroll.constraint)
             }
 
             override val contentMinWidth by lazy {
