@@ -4,7 +4,7 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
-import io.github.u2894638479.kotlinmcui.math.Axis
+import io.github.u2894638479.kotlinmcui.math.*
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
 import io.github.u2894638479.kotlinmcui.modifier.width
@@ -53,5 +53,22 @@ fun TestSliderPage() = Row {
         TextAutoFold {
             "Vertical?\n$value".emit()
         }
+    }
+
+    val colorProp = local { Color.WHITE }
+    val color by colorProp
+    Column {
+        TextFlatten { "color prop sliders".emit() }
+        ColorRect(Modifier.height(30.scaled).width(60.scaled), color) {}
+        TextFlatten { "r:${color.rInt} g:${color.gInt} b:${color.bInt} a:${color.aInt}".emit() }
+        TextFlatten { "#${color.hexStringARGB}".emit() }
+        Slider(Modifier.height(20.scaled), Axis.Horizontal, RDouble, colorProp) {}
+        Slider(Modifier.height(20.scaled), Axis.Horizontal, GDouble, colorProp) {}
+        Slider(Modifier.height(20.scaled), Axis.Horizontal, BDouble, colorProp) {}
+        Slider(Modifier.height(20.scaled), Axis.Horizontal, ADouble, colorProp) {}
+        TextFlatten { "hsv sliders".emit() }
+        Slider(Modifier.height(20.scaled), Axis.Horizontal, HDouble, colorProp) {}
+        Slider(Modifier.height(20.scaled), Axis.Horizontal, SDouble, colorProp) {}
+        Slider(Modifier.height(20.scaled), Axis.Horizontal, VDouble, colorProp) {}
     }
 }
