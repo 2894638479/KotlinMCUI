@@ -20,6 +20,7 @@ import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.*
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.rect.contains
+import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.math.rect.height
 import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.math.set
@@ -77,13 +78,29 @@ fun Slider(
         local { SliderImpl.Status() }
     }
     val progress = color.remap({ prop.get(it) }, { prop.set(color.value, it) })
-    object : SliderImpl(delegate, axis, progress, 1.0 / 255, color.value, buttonSize, status) {
+    object : SliderImpl(delegate, axis, progress, 0.0 /* arrows owned by stepUp/stepDown below */, color.value, buttonSize, status) {
         override val knobColor get() = color.value
 
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> renderBackground() {
-            drawGradient(axis, instance.rect, gradientStops(color.value, prop))
+            val rect = instance.rect
+            backend.renderButton(rect, keyFocused, false, Color.WHITE)
+            drawGradient(axis, rect.expand(-(3.px * instance.scale)), gradientStops(color.value, prop))
             backend.flush()
+        }
+
+        context(eventModifier: KeyModifiers)
+        override fun keyDown(key: Key, scanCode: Int): Boolean {
+            if(!instance.isFocused || !keyFocused) return super.keyDown(key, scanCode)
+            val direction = when (key) {
+                Key.LEFT -> if (axis == Axis.Horizontal) -1 else return super.keyDown(key, scanCode)
+                Key.RIGHT -> if (axis == Axis.Horizontal) 1 else return super.keyDown(key, scanCode)
+                Key.UP -> if (axis == Axis.Vertical) -1 else return super.keyDown(key, scanCode)
+                Key.DOWN -> if (axis == Axis.Vertical) 1 else return super.keyDown(key, scanCode)
+                else -> return super.keyDown(key, scanCode)
+            }
+            color.value = if (direction > 0) prop.stepUp(color.value) else prop.stepDown(color.value)
+            return true
         }
     }
 }

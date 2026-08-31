@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.math
 
+import kotlin.math.abs
 import kotlin.test.*
 
 class ColorTest {
@@ -192,4 +193,114 @@ class ColorTest {
         // ARGB = a(32)=0x20, r(255)=0xFF, g(128)=0x80, b(64)=0x40
         assertEquals("20ff8040", c.hexStringARGB)
     }
+
+    // ── Keyboard stepping (uint8-only) ───────────────────────────────────────
+
+    @Test
+    fun `step RGBA by one byte, clamped at the ends`() {
+        val c = Color(254u, 1u, 0u, 128u)
+        assertEquals(Color(255u, 1u, 0u, 128u), RDouble.stepUp(c))
+        assertEquals(Color(253u, 1u, 0u, 128u), RDouble.stepDown(c))
+        assertEquals(Color(254u, 2u, 0u, 128u), GDouble.stepUp(c))
+        assertEquals(Color(254u, 0u, 0u, 128u), GDouble.stepDown(c))
+        assertEquals(Color(254u, 1u, 1u, 128u), BDouble.stepUp(c))
+        assertEquals(Color(254u, 1u, 0u, 128u), BDouble.stepDown(c)) // b already 0: clamped
+        assertEquals(Color(254u, 1u, 0u, 129u), ADouble.stepUp(c))
+        assertEquals(Color(254u, 1u, 0u, 127u), ADouble.stepDown(c))
+        // boundaries never wrap
+        assertEquals(Color(255, 255, 255), RDouble.stepUp(Color.WHITE))
+        assertEquals(Color.BLACK, RDouble.stepDown(Color.BLACK))
+        assertEquals(Color(255, 255, 255), ADouble.stepUp(Color.WHITE))
+        assertEquals(Color.TRANSPARENT_BLACK, ADouble.stepDown(Color.TRANSPARENT_BLACK))
+    }
+
+    @Test
+    fun `step value moves the max byte together`() {
+        // unique max: only it moves
+        assertEquals(Color(201, 100, 50), VDouble.stepUp(Color(200, 100, 50)))
+        assertEquals(Color(199, 100, 50), VDouble.stepDown(Color(200, 100, 50)))
+        // tied max: all tied channels move, keeping the colour axis
+        assertEquals(Color(201, 201, 50), VDouble.stepUp(Color(200, 200, 50)))
+        assertEquals(Color(128, 128, 128), VDouble.stepUp(Color(127, 127, 127)))
+        assertEquals(Color(254, 254, 254), VDouble.stepDown(Color(255, 255, 255)))
+    }
+
+    @Test
+    fun `step saturation moves the min byte together, value stays fixed`() {
+        assertEquals(Color(200, 99, 99), SDouble.stepUp(Color(200, 100, 100)))
+        assertEquals(Color(200, 101, 101), SDouble.stepDown(Color(200, 100, 100)))
+        // both max and min unchanged value-wise after a saturation step
+        assertEquals(200, SDouble.stepUp(Color(200, 100, 100)).maxByte)
+        assertEquals(200, SDouble.stepDown(Color(200, 100, 100)).maxByte)
+        // fully saturated / achromatic clamp and break
+        assertEquals(Color(200, 100, 0), SDouble.stepUp(Color(200, 100, 0)))
+        assertEquals(Color(127, 128, 128), SDouble.stepUp(Color(128, 128, 128)))
+        assertEquals(Color(128, 128, 128), SDouble.stepDown(Color(128, 128, 128)))
+    }
+
+    @Test
+    fun `step hue chooses the closest different hue`() {
+        // red (hue 0): the nearest representable hue above is one green tick
+        assertEquals(Color(255, 1, 0), HDouble.stepUp(Color.RED))
+        // step either direction always yields a distinct colour
+        val mid = Color(200, 100, 0) // hue 30°
+        val up = HDouble.stepUp(mid)
+        val down = HDouble.stepDown(mid)
+        assertNotEquals(mid, up)
+        assertNotEquals(mid, down)
+        assertTrue(up.hDouble > mid.hDouble)
+        assertTrue(down.hDouble < mid.hDouble)
+    }
+
+    @Test
+    fun `step hue wraps around the circular wheel`() {
+        // stepping down from red (hue 0) wraps to just below 360°
+        val down = HDouble.stepDown(Color.RED)
+        assertNotEquals(Color.RED, down)
+        assertTrue(down.hDouble > 0.9) // hue just below 360°/1.0
+        // stepping up from just below 360° wraps to just above 0°
+        val top = Color(200, 0, 1) // hue ≈ 359.4°
+        val up = HDouble.stepUp(top)
+        assertTrue(up.hDouble < 0.1)
+    }
+
+    @Test
+    fun `step hue keeps S and V exactly fixed`() {
+        for (color in listOf(Color(200, 100, 0), Color(200, 200, 50), Color(120, 30, 30), Color(200, 199, 50))) {
+            val up = HDouble.stepUp(color)
+            val down = HDouble.stepDown(color)
+            for (stepped in listOf(up, down)) {
+                assertEquals(color.maxByte, stepped.maxByte, "V drifted for $color")
+                assertEquals(color.sDouble, stepped.sDouble, "S drifted for $color")
+            }
+        }
+        // achromatic colours have no hue to step
+        assertEquals(Color(128, 128, 128), HDouble.stepUp(Color(128, 128, 128)))
+        assertEquals(Color(128, 128, 128), HDouble.stepDown(Color(128, 128, 128)))
+    }
+
+    @Test
+    fun `step value keeps hue untouched when the max is tied`() {
+        // symmetric max stays symmetric, so hue is preserved exactly
+        val c = Color(200, 200, 50)
+        val up = VDouble.stepUp(c)
+        val down = VDouble.stepDown(c)
+        assertEquals(c.hDouble, up.hDouble)
+        assertEquals(c.hDouble, down.hDouble)
+        assertEquals(Color(201, 201, 50), up)
+        assertEquals(Color(199, 199, 50), down)
+        // S cannot be preserved exactly: max±1 with min fixed needs min' = min±min/max
+        assertNotEquals(c.sDouble, up.sDouble)
+        assertTrue(abs(up.sDouble - c.sDouble) < 0.01)
+    }
+
+    @Test
+    fun `step saturation keeps V fixed`() {
+        for (color in listOf(Color(200, 100, 100), Color(200, 150, 100), Color(128, 128, 128), Color(255, 128, 0))) {
+            assertEquals(color.maxByte, SDouble.stepUp(color).maxByte)
+            assertEquals(color.maxByte, SDouble.stepDown(color).maxByte)
+        }
+    }
+
+    private val Color.maxByte: Int get() = maxOf(rInt, gInt, bInt)
 }
