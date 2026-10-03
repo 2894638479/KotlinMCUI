@@ -189,4 +189,91 @@ class AlignerTest {
         assertEquals(10.px, items[0].low)
         assertEquals(20.px, items[0].high)
     }
+
+    // --- weighted ---
+
+    @Test
+    fun `weighted distributes the space left by fixed items`() {
+        val items = listOf(
+            TestAlignable(size = 20.px, weight = 1.0),
+            TestAlignable(size = Measure.AUTO, weight = 1.0, minSize = 0.px),
+            TestAlignable(size = Measure.AUTO, weight = 3.0, minSize = 0.px)
+        )
+        Aligner.weighted.align(0.px, 100.px, items)
+        // fixed item takes 20, leaving 80 shared 1:3
+        assertEquals(0.px, items[0].low)
+        assertEquals(20.px, items[0].high)
+        assertEquals(20.px, items[1].low)
+        assertEquals(40.px, items[1].high)
+        assertEquals(40.px, items[2].low)
+        assertEquals(100.px, items[2].high)
+    }
+
+    @Test
+    fun `weighted with only auto items stays finite`() {
+        val items = listOf(
+            TestAlignable(size = Measure.AUTO, weight = 1.0),
+            TestAlignable(size = Measure.AUTO, weight = 1.0)
+        )
+        Aligner.weighted.align(0.px, 100.px, items)
+        assertEquals(0.px, items[0].low)
+        assertEquals(50.px, items[0].high)
+        assertEquals(100.px, items[1].high)
+    }
+
+    @Test
+    fun `weighted falls back to minSize when no weight is available`() {
+        val items = listOf(
+            TestAlignable(size = Measure.AUTO, weight = 0.0, minSize = 30.px),
+            TestAlignable(size = Measure.AUTO, weight = 0.0, minSize = 30.px)
+        )
+        Aligner.weighted.align(0.px, 100.px, items)
+        assertEquals(0.px, items[0].low)
+        assertEquals(30.px, items[0].high)
+        assertEquals(30.px, items[1].low)
+        assertEquals(60.px, items[1].high)
+    }
+
+    @Test
+    fun `weighted falls back to minSize when fixed items already exceed the range`() {
+        val items = listOf(
+            TestAlignable(size = 120.px, weight = 1.0),
+            TestAlignable(size = Measure.AUTO, weight = 1.0, minSize = 25.px)
+        )
+        Aligner.weighted.align(0.px, 100.px, items)
+        assertEquals(120.px, items[0].high)
+        // Nothing left to distribute, so the auto item keeps its minimum.
+        assertEquals(120.px, items[1].low)
+        assertEquals(145.px, items[1].high)
+    }
+
+    // --- weightedExtend (degenerate inputs) ---
+
+    @Test
+    fun `weightedExtend with no auto items stays finite`() {
+        val items = listOf(
+            TestAlignable(size = 10.px),
+            TestAlignable(size = 20.px)
+        )
+        Aligner.weightedExtend.align(0.px, 100.px, items)
+        assertEquals(0.px, items[0].low)
+        assertEquals(10.px, items[0].high)
+        assertEquals(10.px, items[1].low)
+        assertEquals(30.px, items[1].high)
+    }
+
+    // --- equalWeightedExtend (minimum size) ---
+
+    @Test
+    fun `equalWeightedExtend keeps auto items at or above their minSize`() {
+        val items = listOf(
+            TestAlignable(size = Measure.AUTO, weight = 1.0, minSize = 80.px),
+            TestAlignable(size = Measure.AUTO, weight = 1.0, minSize = 0.px)
+        )
+        Aligner.equalWeightedExtend.align(0.px, 100.px, items)
+        assertEquals(0.px, items[0].low)
+        assertTrue(items[0].high >= 80.px, "item must not fall below its minSize")
+        assertEquals(items[0].high, items[1].low)
+        assertEquals(100.px, items[1].high)
+    }
 }

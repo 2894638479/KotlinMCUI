@@ -75,21 +75,29 @@ fun interface Aligner {
             }
         }
 
+        /**
+         * Fixed-size items keep their size; everything left over is shared by the
+         * automatic items according to [Alignable.weight].
+         *
+         * When no weight is available, or when fixed-size items already use up the
+         * whole range, automatic items fall back to their minimum size instead of
+         * receiving a zero (or negative) slice.
+         */
         val weighted = Aligner { low,high,alignable ->
-            var remain = 0.px
-            var remainWeightSum = 0.0
-            alignable.forEachIndexed { i,it ->
-                if(it.size.isNumber) {
-                    remain += it.size
-                    remainWeightSum += it.weight
-                }
+            var fixedSum = 0.px
+            var weightSum = 0.0
+            alignable.forEach {
+                if(it.size.isNumber) fixedSum += it.size else weightSum += it.weight
             }
 
+            // Only the space left over by the fixed-size items can be distributed.
+            val remain = (high - low) - fixedSum
+            val factor = if(weightSum > 0.0 && remain > 0.px) remain / weightSum else null
             var current = low
-            alignable.forEachIndexed { i,it ->
-                val size = it.size
+            alignable.forEach {
                 it.low = current
-                current += if(size.isNumber) size else remain * (it.weight / remainWeightSum)
+                current += if(it.size.isNumber) it.size
+                    else factor?.let { f -> f * it.weight } ?: it.autoSizeMin
                 it.high = current
             }
         }
@@ -148,34 +156,39 @@ fun interface Aligner {
             }
         }
 
+        /**
+         * Every item keeps at least its minimum size; the leftover space is shared
+         * among the automatic items proportionally to [Alignable.weight].
+         */
         val weightedExtend = Aligner { low,high,alignable ->
             val sum = alignable.sumOf { it.autoSizeMin }
             val remain = high - low - sum
             fun Alignable.exactWeight() = if(size.isNumber) 0.0 else weight
             val sumWeight = alignable.sumOf { it.exactWeight() }
+            val factor = if(sumWeight > 0.0 && remain > 0.px) remain / sumWeight else 0.px
             var current = low
-            val factor = remain / sumWeight
             alignable.forEach {
                 it.low = current
                 current += factor * it.exactWeight()
-                current += it.size.ifNan { it.minSize.ifNan { 0.px } }
+                current += it.autoSizeMin
                 it.high = current
             }
         }
 
+        /**
+         * Like [weightedExtend], but the leftover space is split equally among the
+         * automatic items, ignoring [Alignable.weight].
+         */
         val equalWeightedExtend = Aligner { low,high,alignable ->
             val sum = alignable.sumOf { it.autoSizeMin }
             val remain = high - low - sum
             val weightCount = alignable.count { !it.size.isNumber }
-            val space = if (weightCount == 0) 0.px else remain / weightCount
+            val space = if (weightCount == 0 || remain <= 0.px) 0.px else remain / weightCount
             var current = low
             alignable.forEach {
                 it.low = current
-                if (!it.size.isNumber) {
-                    current += space
-                } else {
-                    current += it.autoSizeMin
-                }
+                current += it.autoSizeMin
+                if (!it.size.isNumber) current += space
                 it.high = current
             }
         }
