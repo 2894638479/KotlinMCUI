@@ -8,6 +8,8 @@ parent: Advanced
 建议参考[默认后端实现(default backend)](https://github.com/2894638479/KotlinMCUI-backend/)，并可以fork其中的代码
 
 不要求代码包名，但是需要模组id为`kotlinmcuibackend`
+
+官方实现是怎么做的、怎么在本地构建与验证、升级游戏版本要动哪些地方，见[后端](../backend/index)一章；后端需要满足的接口契约本身见[后端接口](../dev/backend)。
 ## 什么时候需要制作
 - 你的mod想支持的版本没有现成的后端
 - 想为现有后端修复bug、改进功能、提升性能
