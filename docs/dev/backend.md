@@ -103,6 +103,5 @@ UI 构建状态是线程受限的：`DslContext` 记录创建它的线程，所�
 
 测试用的假后端是这方面最可靠的样本：它把各接口分别委托给独立的小实现类，`create` 直接构造 `DslDataStore` 与 `DslScreen`，并提供一个"跑一帧"的辅助函数（设置鼠标、设置根矩形、渲染、帧后清理）。它也展示了如何用固定的字体度量（字宽与行高）让文本布局可断言。
 
-## 已知不一致
-- 官方文档里写的 `DslEntryService.loadServices()` 在实际代码中并不存在，真正的 API 是 `DslEntryLoader.init(Environment)`。
+## 未使用的接口成员
 - `isMouseDown` 的裸索引入口没有调用点，`isInWorld`、`forceLoadLocalImage`、`openUri` 在主代码中也没有调用点；它们要么是给真实后端用的，要么需要按"接口最小"原则重新评估。

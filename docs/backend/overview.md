@@ -36,6 +36,7 @@ parent: Backend
 | Fabric Loader | 0.19.5 起 |
 | Fabric Language Kotlin | 1.14.1+kotlin.2.4.20 起 |
 | KotlinMCUI（核心库） | 必须与后端版本号第一段完全一致 |
+| kotlinx-serialization-json | 1.11.0；核心库用它读写配置文件。Fabric 上由 Fabric Language Kotlin 提供（其打包版本已与核心一致）；缺少该库的加载器需要后端把它打进 jar |
 | Mod Menu | 可选；装了之后后端的配置页会出现在 Mod Menu 里 |
 | Java | 25 |
 

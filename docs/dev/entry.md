@@ -71,7 +71,13 @@ DslEntryLoader.init(environment)
 GUI 列表页就是靠这组标志给每个入口标注徽章，并据此决定点击是否打开界面、是否显示 Overlay 开关。同一套标志也用于在开发时确认"某个入口是否真的在当前环境被加载和调用"。
 
 ## Overlay 的启用
-Overlay 默认**不启用**。`enabledOverlays` 是一个有序列表：只有列在其中的 Overlay 才会被渲染，列表顺序即层叠顺序（越靠前越上层）。GUI 列表页提供开关与"置顶"操作。
+Overlay 默认**不启用**。启用状态是一个**有序 id 列表**：只有列在其中的 Overlay 才会被渲染，列表顺序即层叠顺序（越靠前越上层）。GUI 列表页的开关与"置顶"分别调用 `setOverlayEnabled` / `bringOverlayToTop`，两者都会立刻写回配置。
+
+配置存放在 `<configDir>/kotlinmcui/overlays.json`，内容就是 `DslEntryService.id` 的有序数组（模型见 `OverlayConfig`），由[配置工具](config)读写。读取是**惰性**的：文件位置来自后端的配置目录，而后端在模组初始化期间不可用——框架自己的规则（初始化阶段不要碰 `dslBackend`）对框架自己同样成立，所以第一次真正需要 Overlay 列表时才读文件。三点设计意图：
+
+- 用 **id** 而不是实例或列表下标做标识：下标会随登记顺序变，实例每次启动都会重建，只有 id 在两次启动之间稳定；
+- **未安装模组的 id 保留在文件里**：临时卸掉一个模组不会丢掉它的开关状态，装回来仍然按原来的顺序渲染；
+- 两个 Overlay 共用同一个 id 时无法区分，所以登记时对重复 id 打一条警告（框架自己的演示入口就曾共用 `TestEntry` 的 id，为此拆成了各自的 id）。
 
 根节点的 Overlay 层每帧执行：
 
@@ -79,12 +85,9 @@ Overlay 默认**不启用**。`enabledOverlays` 是一个有序列表：只有�
 enabledOverlays.forEachWithId { Box { it.overlay() } }
 ```
 
-两点设计意图：
+`enabledOverlays` 是"当前已登记的 Overlay 按启用顺序解析"的结果快照，因此文件里存在但当前没安装的 id 不会出现在这里。两点设计意图：
 
 - 用 `forEachWithId` 让每个 Overlay 的身份由 Overlay 对象本身决定，而不是由书写位置决定——这样调整列表顺序不会让某个 Overlay 的状态串到别的 Overlay 上；
 - 每个 Overlay 各自包一层 `Box`，使它们成为互相独立的层叠容器，一个 Overlay 内部的布局不会影响另一个。
 
 这条路径是在根节点的 `DslScreen` 里执行的，而那个 Screen 只被建立、从不 `show()`——它是常驻的 Overlay 承载层，不是普通界面。
-
-## 已知不一致
-- 官方文档里写的 `DslEntryService.loadServices()` 在代码中不存在，实际 API 是 `DslEntryLoader.init(Environment)`；文档里给出的服务文件路径也写成 `...kotlinmcui.backend`，而真实包名是 `...kotlinmcui.entry`。
