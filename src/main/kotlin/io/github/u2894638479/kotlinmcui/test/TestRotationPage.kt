@@ -48,7 +48,7 @@ fun TestRotationPage() = ScrollableColumn {
             }.rotate(rad2.value)
             ColorRect(Modifier,Color.GREEN) {}
             val text = local { "editable" }
-            EditableText(Modifier,text, selfRenderPreedit = selfRenderPreedit.value) {}.editBoxBackground()
+            EditableText(Modifier,text, preeditSelfRendered = selfRenderPreedit.value) {}.editBoxBackground()
         }.move(x.scaled,y.scaled)
     }.rotate(rad).scale(scale)
 

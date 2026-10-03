@@ -15,7 +15,7 @@ data class KeyInfo(
     val parents: List<String>
 ) {
     /** The full dot-separated translation path (e.g. `"kotlinmcui.narration.button"`). */
-    val path = parents.joinToString(".") + "." + name
+    val path = (parents + name).joinToString(".")
 }
 
 // ── Interfaces ──────────────────────────────────────────────────────────────

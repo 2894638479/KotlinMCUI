@@ -133,7 +133,7 @@ fun EditableText(
     verticalAligner: Aligner = Aligner.close(Align.MID),
     blinkCycle: Duration = 0.5.seconds,
     undoDepth: Int = 10,
-    selfRenderPreedit: Boolean = true,
+    preeditSelfRendered: Boolean = true,
     id: Any
 ) = context(object : DslIdContext {
     override val identity = newChildId(id)
@@ -211,10 +211,10 @@ fun EditableText(
             // ── IME ─────────────────────────────────────────────────────
 
             override val preeditArea get() = cursorRect()
-            override val selfRenderPreedit get() = selfRenderPreedit
+            override val selfRenderPreedit get() = preeditSelfRendered
 
             override fun globalPreedit(info: PreeditInfo) {
-                if (selfRenderPreedit && instance.isFocused) {
+                if (preeditSelfRendered && instance.isFocused) {
                     val text = info.toString()
                     val cursor = editable.cursor2 ?: editable.cursor
                     editable.insert(text)
@@ -242,9 +242,9 @@ fun EditableText(
                     Key.END       -> if (!moveCursorToLineEnd()) return default()
                     Key.ENTER     -> editable.insert('\n')
                     Key.V         -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.backend.clipboard)
-                    Key.C         -> if (eventModifier.ctrl) editable.range?.let { ctx.dataStore.backend.clipboard = string.substring(it) }
+                    Key.C         -> if (eventModifier.ctrl) editable.range?.let { ctx.dataStore.backend.clipboard = editable.codePoints.substring(it) }
                     Key.Z         -> if (eventModifier.ctrl) { if (eventModifier.shift) editable.redo() else editable.undo() }
-                    Key.X         -> if (eventModifier.ctrl) { editable.range?.let { ctx.dataStore.backend.clipboard = string.substring(it) }; editable.insert() }
+                    Key.X         -> if (eventModifier.ctrl) { editable.range?.let { ctx.dataStore.backend.clipboard = editable.codePoints.substring(it) }; editable.insert() }
                     Key.A         -> if (eventModifier.ctrl) { editable.cursor = editable.maxCursor; editable.cursor2 = 0 }
                     else          -> return default()
                 }
@@ -268,7 +268,7 @@ fun EditableText(
                 checkCursor2()
                 if (eventModifier.shift) {
                     if (editable.cursor2 == null) editable.cursor2 = editable.cursor
-                    editable.cursor = max(0, editable.cursor + delta)
+                    editable.cursor = min(editable.maxCursor, max(0, editable.cursor + delta))
                 } else {
                     editable.cursor = if (delta < 0)
                         min(editable.cursor, editable.cursor2 ?: max(0, editable.cursor + delta))

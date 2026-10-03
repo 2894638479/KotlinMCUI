@@ -38,6 +38,12 @@ value class CodePoints(val arr: IntArray) {
         return replace(range.first, range.last + 1, value)
     }
 
+    /** The text covered by [range]. Unlike [String.substring] the range counts code points. */
+    fun substring(range: IntRange): String {
+        val slice = arr.sliceArray(range)
+        return String(slice, 0, slice.size)
+    }
+
     /** Insert [value] at [index]. */
     fun insert(index: Int, value: IntArray) = replace(index, index, value)
 

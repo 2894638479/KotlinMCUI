@@ -106,9 +106,16 @@ internal class EditableString(private val stringProp: StableRW<String>) {
         }
     }
 
+    /**
+     * Step back one entry.
+     *
+     * Maintains the invariant that [undoList] starts with the current state: the
+     * entry being left is dropped, and [redo] is filled in by the [undo] setter.
+     */
     fun undo() {
         check()
-        redo = undoList.removeFirstOrNull()
-        undo = undoList.firstOrNull() ?: return
+        val previous = undoList.getOrNull(1) ?: return
+        undoList.removeAt(0)
+        undo = previous
     }
 }

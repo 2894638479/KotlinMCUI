@@ -116,7 +116,7 @@ fun TestTextPage() = ScrollableColumn {
             val textProp = local { "you can edit this text" }
             EditableText(Modifier.padding(5.scaled), textProp, fontName = fontName, style = style, size = size, color = color) {}
             TextFlatten { "with ime box:".emit() }
-            EditableText(Modifier.padding(5.scaled), textProp, fontName = fontName, style = style, size = size, color = color, selfRenderPreedit = false) {}
+            EditableText(Modifier.padding(5.scaled), textProp, fontName = fontName, style = style, size = size, color = color, preeditSelfRendered = false) {}
         }
     }
 }
