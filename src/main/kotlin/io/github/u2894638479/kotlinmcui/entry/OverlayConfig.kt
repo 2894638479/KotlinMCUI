@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.entry
 
-import io.github.u2894638479.kotlinmcui.backend.dslBackend
+import io.github.u2894638479.kotlinmcui.backend.dslMetadata
 import io.github.u2894638479.kotlinmcui.config.configFormat
 import io.github.u2894638479.kotlinmcui.config.loadConfig
 import io.github.u2894638479.kotlinmcui.config.saveConfig
@@ -18,7 +18,7 @@ import java.nio.file.Path
 data class OverlayConfig(val enabled: List<String> = emptyList())
 
 /** Where the framework keeps the overlay configuration: `<configDir>/kotlinmcui/overlays.json`. */
-internal fun overlayConfigPath(): Path = dslBackend.configDir.resolve("kotlinmcui/overlays.json")
+internal fun overlayConfigPath(): Path = dslMetadata.configDir.resolve("kotlinmcui/overlays.json")
 
 internal fun readOverlayIds(path: Path = overlayConfigPath()): List<String> =
     loadConfig(path,configFormat) { OverlayConfig() }.enabled

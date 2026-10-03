@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.config
 
-import io.github.u2894638479.kotlinmcui.backend.dslBackend
+import io.github.u2894638479.kotlinmcui.backend.dslMetadata
 import io.github.u2894638479.kotlinmcui.logger.dslLogger
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.SerializationStrategy
@@ -75,8 +75,8 @@ inline fun <reified T> loadConfig(path: Path, format: StringFormat, noinline def
 
 /** Save [obj] as [name] inside the backend's configuration directory. */
 inline fun <reified T> saveConfig(name: String, obj: T, format: StringFormat) =
-    saveConfig(dslBackend.configDir.resolve(name),obj,format,serializer<T>())
+    saveConfig(dslMetadata.configDir.resolve(name),obj,format,serializer<T>())
 
 /** Load [name] from the backend's configuration directory. */
 inline fun <reified T> loadConfig(name: String, format: StringFormat, noinline default: () -> T): T =
-    loadConfig(dslBackend.configDir.resolve(name),format,default,serializer<T>())
+    loadConfig(dslMetadata.configDir.resolve(name),format,default,serializer<T>())
