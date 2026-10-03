@@ -14,6 +14,7 @@ fun DslChild.defaultBackground() = change { object:DslComponent by it {
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         backend.renderDefaultBackground(instance.rect)
+        backend.flush()
         it.render()
     }
 } }

@@ -38,7 +38,7 @@ fun renderVertices(vertices: List<Pair<Position, Color>>)
 - **`guiScale` 必须在运行期保持稳定**。组件持有的 `scale` 是建树那一刻的快照，若中途改变缩放，已建好的组件仍会按旧值计算。
 - **`withScissor` 嵌套求交，`withTransform` 嵌套复合**。进入这两个作用域前必须先 `flush()`，否则已经排队的顶点会用错裁剪/变换。
 - **`getFont(name)` 必须对同一名称返回同一实例**。文本行在布局期与渲染期分别取字体，并用引用比较判断"字体是否被换掉了"。
-- **帧末必须有兜底 `flush()`**。部分内置装饰器（如默认背景）调用绘制原语后不会自行 flush，必须由帧循环收尾。
+- **帧末必须有兜底 `flush()`**。内置装饰器都会在提交自己的绘制后自行 flush，但这是约定而非框架保证：后端自己排队的顶点仍需在帧末统一提交。
 
 `TransformStack` 是给后端参考的变换栈实现（当前主代码与测试都没有引用它）；后端也可以自行用平台原生的变换/裁剪栈，只要满足上述语义。
 
@@ -103,7 +103,4 @@ UI 构建状态是线程受限的：`DslContext` 记录创建它的线程，所�
 
 ## 已知不一致
 - 官方文档里写的 `DslEntryService.loadServices()` 在实际代码中并不存在，真正的 API 是 `DslEntryLoader.init(Environment)`。
-- 测试后端的 `mainDispatcher` 用的是并行调度器，与线程不变量不符；这掩盖了线程校验，照抄会随机崩溃。
-- `DslDataStore` 构造时已经建立了 `dslScreen`，而部分 holder 又新建一个 `DslScreen`，导致每次 `create` 构造两个（一个是孤儿）。
-- `DslBackendInput.mouse` 的注释写作"逻辑像素"，容易误导；它应当与 `Measure`、根节点矩形处于同一空间。
-- `isMouseDown`、`isInWorld`、`forceLoadLocalImage`、`openUri` 等成员在主代码中没有任何调用点，需要按"接口最小"原则重新评估。
+- `isMouseDown` 的裸索引入口没有调用点，`isInWorld`、`forceLoadLocalImage`、`openUri` 在主代码中也没有调用点；它们要么是给真实后端用的，要么需要按"接口最小"原则重新评估。
