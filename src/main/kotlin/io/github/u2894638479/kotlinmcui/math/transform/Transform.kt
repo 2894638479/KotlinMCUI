@@ -46,7 +46,7 @@ data class Transform(
         private fun fma(a: Float,b: Float,c: Float): Float = if(useFma) Math.fma(a,b,c) else a * b + c
         private fun fma(a: Double,b: Double,c: Double): Double = if(useFma) Math.fma(a,b,c) else a * b + c
 
-        fun translate(x: Measure,y: Measure) = Transform(
+        fun translate(x: Measure,y: Measure) = if(x == 0.px && y == 0.px) empty else Transform(
             1f,0f,x.raw.toFloat(),
             0f,1f,y.raw.toFloat(),
             0f,0f,1f
@@ -54,7 +54,8 @@ data class Transform(
 
         fun translate(pos: Position) = translate(pos.x,pos.y)
 
-        fun scale(centerX: Measure,centerY: Measure,x: Double,y: Double) = Transform(
+        fun scale(centerX: Measure,centerY: Measure,x: Double,y: Double) =
+            if(x == 1.0 && y == 1.0) empty else Transform(
             x.toFloat(),0f,fma(centerX.raw,-x,centerX.raw).toFloat(),
             0f,y.toFloat(),fma(centerY.raw,-y,centerY.raw).toFloat(),
             0f,0f,1f
@@ -63,6 +64,7 @@ data class Transform(
         fun scale(center: Position,x: Double,y: Double) = scale(center.x,center.y,x,y)
 
         fun rotate(centerX: Measure,centerY: Measure,rad: Double): Transform {
+            if(rad == 0.0) return empty
             val cos = cos(rad)
             val sin = sin(rad)
             val cosF = cos.toFloat()
@@ -81,7 +83,8 @@ data class Transform(
         /** Shear (skew) around a center point.
          * @param shx Horizontal shear factor: x' = x + shx*(y - cy).
          * @param shy Vertical shear factor: y' = shy*(x - cx) + y. */
-        fun shear(centerX: Measure, centerY: Measure, shx: Double, shy: Double) = Transform(
+        fun shear(centerX: Measure, centerY: Measure, shx: Double, shy: Double) =
+            if(shx == 0.0 && shy == 0.0) empty else Transform(
             1f, shx.toFloat(), (-shx * centerY.raw).toFloat(),
             shy.toFloat(), 1f, (-shy * centerX.raw).toFloat(),
             0f, 0f, 1f
@@ -91,7 +94,7 @@ data class Transform(
 
         /** Perspective projection via the third matrix row (origin-centric).
          * Use [perspective]\(center, px, py\) for a centered version. */
-        fun perspective(px: Double, py: Double) = Transform(
+        fun perspective(px: Double, py: Double) = if(px == 0.0 && py == 0.0) empty else Transform(
             1f, 0f, 0f,
             0f, 1f, 0f,
             px.toFloat(), py.toFloat(), 1f
@@ -100,6 +103,7 @@ data class Transform(
         /** Perspective projection around a center point.
          * Translates center to origin, applies projection, translates back. */
         fun perspective(centerX: Measure, centerY: Measure, px: Double, py: Double): Transform {
+            if(px == 0.0 && py == 0.0) return empty
             val cx = centerX.raw; val cy = centerY.raw
             val dot = px * cx + py * cy
             return Transform(
@@ -142,6 +146,9 @@ data class Transform(
         val c02 = fma(m10, m21, -(m11 * m20))
 
         val det = fma(m00, c00, fma(m01, c01, m02 * c02))
+        // A singular matrix (e.g. scale(0, 0)) has no inverse. Returning the
+        // identity keeps hit testing finite instead of spreading NaN everywhere.
+        if(det == 0f || !det.isFinite()) return empty
         val invDet = 1 / det
 
         return Transform (
