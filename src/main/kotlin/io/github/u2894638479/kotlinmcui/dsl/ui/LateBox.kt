@@ -18,9 +18,17 @@ import io.github.u2894638479.kotlinmcui.container.DslScopeImpl
 context(ctx: DslContext)
 fun LateBox(modifier: Modifier = Modifier,id:Any? = null,content:context(DslContext) Rect.() -> Unit) = collect(
     object : DslScope by DslScopeImpl(newChildId(id ?: content::class),modifier,ctx,{}) {
+        /** Frame the content was last executed in, so a second layout pass is a no-op. */
+        private var builtFrame = ULong.MAX_VALUE
+
         override fun build() {}
         override fun layoutHorizontal() {}
         override fun layoutVertical() {
+            // Some parents lay their children out more than once per frame; running
+            // the content again would collect the same children a second time.
+            if(builtFrame == ctx.dataStore.frameIndex) return
+            builtFrame = ctx.dataStore.frameIndex
+
             val children = instance.children
             children.buildThis(ctx) { instance.rect.content() }
             children.forEach { it.attachInstance();it.build() }

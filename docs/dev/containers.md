@@ -50,7 +50,7 @@ Row {
 
 它的垂直 aligner 是硬编码的，不可配置。
 
-由于内容函数在纵向布局里执行，如果同一帧内布局被触发两次，内容会被执行两次；在内容里声明状态时需要注意这一点（状态属性本身是按帧存活的，所以不会累积，但重复注册子节点会产生重复组件）。
+由于内容函数在纵向布局里执行，它用一个帧戳保证**同一帧内的第二次布局是空操作**：某些父容器（例如惰性列表在测量条目尺寸时）会在一帧内多次触发布局，若不设防，内容函数会再执行一遍，把同一批子节点重复注册进去。
 
 ## Overlay
 `Overlay` 与其它容器最根本的差别是：它**不注册到父节点的子节点列表**，而是注册到上下文里的一个独立的 `overlays` 收集槽。
@@ -104,7 +104,6 @@ Screen 每帧自动构建两层 Overlay：
 `ColorRect` 接受 `modifier` 与 `color`，`id` 必填。仓库中的调用惯例是写 `ColorRect(modifier, color) { }`——尾随 lambda 落进 `id` 槽，充当声明位置标识（见 [身份与属性](identity)）。这是刻意借用约定而非冗余代码，但它确实容易被误读，且一旦把该调用点的 lambda 提取或内联，身份就会改变。
 
 ## 已知问题
-- `Overlay` 用的是**绝对身份** `DslId(id ?: content::class)`，没有以当前身份为前缀。因此位于不同位置的同类 Overlay 会得到相同身份，进而可能共享 `local` 状态。其它容器都通过 `newChildId` 派生身份。
 - `LateBox` 的横向布局为空实现，与"先横后纵"的全局约定冲突；同时它的垂直 aligner 不可配置。
-- `AutoToPoint` 不做视口钳制，`AutoToRect` 的垂直判据只看单侧。
-- `ShrinkBox`、`LateBox`、`MouseTip`、`DefaultBackground`、`ColorRect` 目前没有自动化测试。
+- `AutoToPoint` 只在一侧做钳制，`AutoToRect` 的垂直判据只看单侧。
+- `ShrinkBox`、`LateBox`、`MouseTip`、`DefaultBackground`、`ColorRect` 目前缺少自动化测试。

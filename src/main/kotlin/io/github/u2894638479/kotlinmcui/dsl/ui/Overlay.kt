@@ -5,7 +5,7 @@ import io.github.u2894638479.kotlinmcui.component.childrenMaxHeight
 import io.github.u2894638479.kotlinmcui.component.childrenMaxWidth
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
-import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.dsl.newChildId
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.align.OverlayAlign
@@ -21,7 +21,7 @@ fun Overlay(
     id: Any? = null,
     content: DslFunction
 ) {
-    val delegate = DslScopeImpl(DslId(id ?: content::class),modifier,ctx,content)
+    val delegate = DslScopeImpl(newChildId(id ?: content::class),modifier,ctx,content)
     ctx.overlays.collect(
         object : DslComponent by delegate {
             override val contentMinWidth by lazy {
