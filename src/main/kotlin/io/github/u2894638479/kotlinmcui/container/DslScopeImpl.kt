@@ -22,6 +22,15 @@ internal class DslScopeImpl(
     val alignerVertical: Aligner = Aligner.simplePlace,
 ) : DslScope {
     override val scale = ctx.scale
+
+    /**
+     * The theme colour that was in effect where this scope was declared.
+     *
+     * The body runs later — for overlays in a separate pass — by which time the
+     * caller's colour scope has been left, so it is captured here and re-applied.
+     */
+    private val color = ctx.color
+
     override val rect = MutRect()
     override val children = DslChild.Group()
     private var _instance: DslComponent? = null
@@ -41,7 +50,7 @@ internal class DslScopeImpl(
     }
 
     override fun build() {
-        instance.children.buildThis(ctx,dslFunction)
+        ctx.withColor(color) { instance.children.buildThis(ctx,dslFunction) }
         instance.children.forEach { it.attachInstance();it.build() }
     }
 }

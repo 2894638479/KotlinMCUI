@@ -21,6 +21,9 @@ fun LateBox(modifier: Modifier = Modifier,id:Any? = null,content:context(DslCont
         /** Frame the content was last executed in, so a second layout pass is a no-op. */
         private var builtFrame = ULong.MAX_VALUE
 
+        /** Theme colour in effect where this LateBox was declared; the content runs much later. */
+        private val color = ctx.color
+
         override fun build() {}
         override fun layoutHorizontal() {}
         override fun layoutVertical() {
@@ -30,7 +33,7 @@ fun LateBox(modifier: Modifier = Modifier,id:Any? = null,content:context(DslCont
             builtFrame = ctx.dataStore.frameIndex
 
             val children = instance.children
-            children.buildThis(ctx) { instance.rect.content() }
+            ctx.withColor(color) { children.buildThis(ctx) { instance.rect.content() } }
             children.forEach { it.attachInstance();it.build() }
             Aligner.simplePlace.align(rect.bound(Axis.Horizontal),children.map { it.alignable(Axis.Horizontal) })
             children.forEach { it.layoutHorizontal() }
