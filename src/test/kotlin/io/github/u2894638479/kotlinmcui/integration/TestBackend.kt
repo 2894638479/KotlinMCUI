@@ -68,27 +68,32 @@ private object TestRenderer : DslBackendRenderer<Unit> {
     context(ctx: DslScaleContext, renderParam: Unit) override fun renderDefaultBackground(rect: Rect) {}
     context(renderParam: Unit) override fun withScissor(rect: Rect, block: () -> Unit) { block() }
     context(renderParam: Unit) override fun withTransform(transform: Transform, block: () -> Unit) { block() }
-    override fun getFont(name: String?) = object : DslFont<Unit> {
+
+    private val glyph = object : DslGlyph {
+        override val normalAdvance = 9.px
+        override val boldOffset = 0.px
+        override val shadowOffset = 1.px
+    }
+
+    // A real backend must hand out the same instance for the same name: text lines
+    // compare font identity between layout and render.
+    private val font = object : DslFont<Unit> {
         override val lineHeight = 9.px
-        override fun glyph(code: Int) = object : DslGlyph {
-            override val normalAdvance = 9.px
-            override val boldOffset = 0.px
-            override val shadowOffset = 1.px
-        }
+        override fun glyph(code: Int) = glyph
         context(renderParam: Unit) override fun renderChar(char: DslRenderableChar, x: Measure, y: Measure, effectLeft: Measure, effectRight: Measure) {}
     }
+    override fun getFont(name: String?) = font
 }
 
 // ── Screen factory ───────────────────────────────────────────────────────────
 
 private object TestScreenFactory : DslBackendScreenFactory<Unit> {
     override fun create(title: String, dslFunction: DslFunction) = object : DslBackendScreenHolder<Unit> {
+        private val store = DslDataStore(TestBackend, title, {}, dslFunction)
         override fun show() {}
         override val screen: Unit = Unit
-        override val dslScreen = DslScreen(
-            DslDataStore(TestBackend, title, {}, dslFunction),
-            dslFunction
-        )
+        // The data store has already built its screen; reusing it avoids a second one.
+        override val dslScreen = store.dslScreen
     }
 }
 
@@ -103,7 +108,9 @@ private object TestUtils : DslBackendUtils {
     override fun forceLoadLocalImage(file: File) = ImageHolder.empty
     override fun playButtonSound() {}
     override fun openUri(uri: String) {}
-    override val mainDispatcher: CoroutineDispatcher = Dispatchers.Default
+    // UI state is confined to the thread that builds it, so "the main thread"
+    // dispatcher here must run continuations on the caller rather than a pool.
+    override val mainDispatcher: CoroutineDispatcher = Dispatchers.Unconfined
 }
 
 // ── Metadata ─────────────────────────────────────────────────────────────────
