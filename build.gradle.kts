@@ -1,25 +1,26 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     kotlin("jvm")
     id("org.jetbrains.kotlin.plugin.serialization")
-    id("me.modmuss50.mod-publish-plugin") version "0.8.1"
+    id("me.modmuss50.mod-publish-plugin") version "2.2.1"
 }
 
-val maven_group: String by project
-val archives_base_name: String by project
-val license: String by project
-val mod_version: String by project
-val mod_id: String by project
-val mod_name: String by project
-val mod_description: String by project
-val mod_authors: String by project
-val mod_github: String by project
-val mod_issues: String by project
-val mod_mcmod: String by project
-val mod_modrinth: String by project
-val mod_cuseforge: String by project
-val icon: String by project
+/** Reads a value from `gradle.properties`, failing the build when it is missing. */
+fun gradleProperty(name: String) = providers.gradleProperty(name).get()
+
+val maven_group = gradleProperty("maven_group")
+val archives_base_name = gradleProperty("archives_base_name")
+val license = gradleProperty("license")
+val mod_version = gradleProperty("mod_version")
+val mod_id = gradleProperty("mod_id")
+val mod_name = gradleProperty("mod_name")
+val mod_description = gradleProperty("mod_description")
+val mod_authors = gradleProperty("mod_authors")
+val mod_github = gradleProperty("mod_github")
+val mod_issues = gradleProperty("mod_issues")
+val mod_mcmod = gradleProperty("mod_mcmod")
+val mod_modrinth = gradleProperty("mod_modrinth")
+val mod_cuseforge = gradleProperty("mod_cuseforge")
+val icon = gradleProperty("icon")
 
 group = maven_group
 version = mod_version
@@ -30,10 +31,10 @@ repositories {
 }
 
 dependencies {
-    implementation("org.slf4j:slf4j-api:2.0.1")
-    implementation("it.unimi.dsi:fastutil:8.5.18")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.10.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("org.slf4j:slf4j-api:2.0.20")
+    implementation("it.unimi.dsi:fastutil:8.5.19")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
     testImplementation(kotlin("test"))
 }
 
@@ -54,7 +55,7 @@ java {
     targetCompatibility = JavaVersion.VERSION_1_8
 }
 
-val sourcesJar: org.gradle.jvm.tasks.Jar by tasks
+val sourcesJar = tasks.named<org.gradle.jvm.tasks.Jar>("sourcesJar").get()
 sourcesJar.exclude("fabric.mod.json")
 sourcesJar.exclude("META-INF/mods.toml")
 sourcesJar.exclude("META-INF/neoforge.mods.toml")
@@ -100,7 +101,7 @@ tasks.configureEach {
 
 publishMods {
     file = tasks.jar.get().archiveFile
-    additionalFiles = files(sourcesJar.archiveFile)
+    additionalFiles.from(sourcesJar.archiveFile)
     changelog = "no changelog."
     type = when {
         mod_version.contains("SNAPSHOT",true) -> ALPHA
@@ -126,8 +127,8 @@ publishMods {
         projectId = "1460598"
         optional("fabric-language-kotlin","kotlin-for-forge")
         requires("kotlinmcui-backend")
-        clientRequired = true
-        serverRequired = false
+        client = true
+        server = false
         minecraftVersionRange {
             start = "1.14"
             end = "latest"
