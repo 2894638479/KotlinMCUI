@@ -15,6 +15,7 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.size
 import io.github.u2894638479.kotlinmcui.utils.Simple
+import java.nio.file.Path
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -143,5 +144,31 @@ class DslDecoratorTest {
         // must show up as -30px inside the transformed subtree.
         assertEquals(-30.px, seen.x)
         assertEquals(0.px, seen.y)
+    }
+
+    @Test
+    fun `transform converts the mouse for scroll and drop events too`() {
+        // Scroll and file drops carry the mouse as well; a subtree that only
+        // converted press/move/release would see the parent's coordinates here and
+        // disagree with the rects it laid out.
+        var scrolled: Position? = null
+        var dropped: Position? = null
+        val screen = buildScreen {
+            val box = Box(Modifier.size(50.px, 50.px)) {}.change { object : DslComponent by it {
+                context(mouse: Position)
+                override fun mouseScrollVertical(amount: Double): Double { scrolled = mouse; return amount }
+                context(mouse: Position)
+                override fun dropFiles(files: Array<Path>): Boolean { dropped = mouse; return true }
+            } }
+            box.move(10.px, 20.px)
+        }
+        val target = Position(30.px, 50.px)
+        context(target) { screen.children[0].mouseScrollVertical(1.0) }
+        context(target) { screen.children[0].dropFiles(emptyArray()) }
+
+        assertEquals(20.px, assertNotNull(scrolled).x)
+        assertEquals(30.px, assertNotNull(scrolled).y)
+        assertEquals(20.px, assertNotNull(dropped).x)
+        assertEquals(30.px, assertNotNull(dropped).y)
     }
 }
