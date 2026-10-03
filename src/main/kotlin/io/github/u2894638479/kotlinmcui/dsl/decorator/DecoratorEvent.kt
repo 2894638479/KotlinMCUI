@@ -41,6 +41,9 @@ fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext)
     context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton): Boolean {
         if(it.mouseDown(mouseButton)) return true
+        // Only the primary button activates; other buttons stay available to
+        // whatever is behind this component.
+        if(mouseButton != MouseButton.LEFT) return false
         if(mouse !in instance.rect) return false
         click()
         return true
@@ -83,9 +86,10 @@ fun DslChild.onFocused(
     action: context(DslExecuteContext) CoroutineScope.(Boolean) -> Unit
 ) = change {
     object: DslComponent by it {
+        val coroutineScope = local.coroutineScope
         override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
             it.globalFocusChanged(newFocus, source)
-            action(executeContext,local.coroutineScope,instance.identity == newFocus)
+            action(executeContext,coroutineScope,instance.identity == newFocus)
         }
     }
 }
@@ -143,6 +147,15 @@ fun DslChild.scissor() = change {
     object:DslComponent by it {
         context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton) = mouse in instance.rect && it.mouseDown(mouseButton)
+
+        context(eventModifier: KeyModifiers, mouse: Position)
+        override fun mouseUp(mouseButton: MouseButton) = mouse in instance.rect && it.mouseUp(mouseButton)
+
+        context(mouse: Position)
+        override fun mouseMove() { if(mouse in instance.rect) it.mouseMove() }
+
+        context(mouse: Position)
+        override fun dropFiles(files: Array<Path>) = mouse in instance.rect && it.dropFiles(files)
 
         context(mouse: Position)
         override fun mouseScrollHorizontal(amount: Double): Double {

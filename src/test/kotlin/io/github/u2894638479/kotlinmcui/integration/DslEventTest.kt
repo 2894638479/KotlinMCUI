@@ -4,6 +4,7 @@ import io.github.u2894638479.kotlinmcui.component.*
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.*
 import io.github.u2894638479.kotlinmcui.dsl.decorator.clickable
+import io.github.u2894638479.kotlinmcui.dsl.decorator.scissor
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
@@ -123,6 +124,43 @@ class DslEventTest {
         context(center) {
             val unconsumed = button.mouseScrollVertical(10.0)
             assertEquals(10.0, unconsumed, "unhandled scroll should pass through")
+        }
+    }
+
+    @Test
+    fun `clickable only reacts to the primary button`() {
+        var clicked = false
+        val screen = buildScreen {
+            val spacer = Spacer(Modifier.size(50.px, 50.px), id = "click")
+            spacer.clickable { clicked = true }
+        }
+        val button = screen.children[0]
+        val pos = Position(button.rect.left + 1.px, button.rect.top + 1.px)
+
+        context(KeyModifiers(), pos) {
+            assertFalse(button.mouseDown(MouseButton.RIGHT), "right click should not be consumed")
+        }
+        assertFalse(clicked, "right click must not run the click handler")
+
+        context(KeyModifiers(), pos) {
+            assertTrue(button.mouseDown(MouseButton.LEFT))
+        }
+        assertTrue(clicked, "left click should run the click handler")
+    }
+
+    @Test
+    fun `scissor blocks mouse events outside its rect`() {
+        val screen = buildScreen {
+            Box(Modifier.size(50.px, 50.px)) {
+                Simple.Button("inside") {}.clickable {}
+            }.scissor()
+        }
+        val box = screen.children[0]
+        val outside = Position(9999.px, 9999.px)
+
+        context(KeyModifiers(), outside) {
+            assertFalse(box.mouseDown(MouseButton.LEFT), "mouseDown outside a scissor must not pass through")
+            assertFalse(box.mouseUp(MouseButton.LEFT), "mouseUp outside a scissor must not pass through")
         }
     }
 }

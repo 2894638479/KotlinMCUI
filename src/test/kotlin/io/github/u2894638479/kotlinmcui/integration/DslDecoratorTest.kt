@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
+import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.*
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.*
@@ -112,5 +113,35 @@ class DslDecoratorTest {
             spacer.scissor()
         }
         assertEquals(1, screen.children.size)
+    }
+
+    @Test
+    fun `tooltipBackground applies the requested padding`() {
+        val screen = buildScreen {
+            val spacer = Spacer(Modifier.size(50.px, 50.px), id = "tooltip")
+            spacer.tooltipBackground(10.px)
+        }
+        val child = screen.children[0]
+        assertEquals(10.px, child.modifier.paddingLeft)
+        assertEquals(10.px, child.modifier.paddingTop)
+        assertEquals(10.px, child.modifier.paddingRight)
+        assertEquals(10.px, child.modifier.paddingBottom)
+    }
+
+    @Test
+    fun `transform converts the render mouse into the subtree space`() {
+        var observed: Position? = null
+        val screen = buildScreen {
+            val box = Box(Modifier.size(50.px, 50.px)) {}.change { object : DslComponent by it {
+                context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+                override fun <RP> render() { observed = mouse }
+            } }
+            box.move(30.px, 0.px)
+        }
+        assertNotNull(observed)
+        // The frame renders with the mouse at the origin, so a 30px translation
+        // must show up as -30px inside the transformed subtree.
+        assertEquals(-30.px, observed!!.x)
+        assertEquals(0.px, observed!!.y)
     }
 }

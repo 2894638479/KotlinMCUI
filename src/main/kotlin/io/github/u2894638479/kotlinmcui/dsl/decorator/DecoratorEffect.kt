@@ -35,6 +35,7 @@ import io.github.u2894638479.kotlinmcui.container.DslChild
 import io.github.u2894638479.kotlinmcui.container.DslChild.Companion.reverseRead
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import java.nio.file.Path
 
 
 context(ctx: DslContext)
@@ -198,7 +199,7 @@ fun DslChild.tooltipBackground(padding: Measure = 3.px) = change {
             it.render()
         }
 
-        override val modifier = it.modifier.padding(3.px)
+        override val modifier get() = it.modifier.padding(padding)
     }
 }
 
@@ -213,15 +214,30 @@ context(ctx: DslContext)
 private fun DslChild.transform(getTransform:DslComponent.(DslComponent) -> Transform) = change {
     object : DslComponent by it {
         override val transform by lazy { it.transform * getTransform(it) }
+
+        // Every entry point that carries a mouse position must convert it into the
+        // subtree's own coordinate space, otherwise hit testing and rendering would
+        // disagree about where the component is.
         context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton) = context(getTransform(it).invert() * mouse) { it.mouseDown(mouseButton) }
         context(mouse: Position)
         override fun mouseMove() = context(getTransform(it).invert() * mouse) { it.mouseMove() }
         context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseUp(mouseButton: MouseButton) = context(getTransform(it).invert() * mouse) { it.mouseUp(mouseButton) }
+        context(mouse: Position)
+        override fun mouseScrollVertical(amount: Double) = context(getTransform(it).invert() * mouse) { it.mouseScrollVertical(amount) }
+        context(mouse: Position)
+        override fun mouseScrollHorizontal(amount: Double) = context(getTransform(it).invert() * mouse) { it.mouseScrollHorizontal(amount) }
+        context(mouse: Position)
+        override fun dropFiles(files: Array<Path>) = context(getTransform(it).invert() * mouse) { it.dropFiles(files) }
         override fun <T> testHit(mouse: Position, get: (DslComponent) -> T?) = it.testHit(getTransform(it).invert() * mouse,get)
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-        override fun <RP> render() { backend.withTransform(getTransform(it)) { it.render() } }
+        override fun <RP> render() {
+            val t = getTransform(it)
+            backend.withTransform(t) {
+                context(t.invert() * mouse) { it.render() }
+            }
+        }
     }
 }
 
