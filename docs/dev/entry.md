@@ -29,7 +29,7 @@ parent: Dev
 
 把客户端专属逻辑放进实现 `DslEntryClient` 的类里，服务端就不会去碰它。
 
-但这套切分**只覆盖初始化钩子**：`DslEntryGui` 与 `DslEntryOverlay` 在任何环境都会被加载登记，因为它们是扩展点而不是环境钩子。所以一个同时实现 `DslEntryClient` 与 `DslEntryGui` 的类，在服务端**仍会被加载**，只是 `initializeClient()` 不会被调用。需要严格隔离时应当拆成两个类。
+但这套切分**只覆盖初始化方法**：`DslEntryGui` 与 `DslEntryOverlay` 在任何环境都会被加载登记，因为它们是扩展点而不是环境相关的方法。所以一个同时实现 `DslEntryClient` 与 `DslEntryGui` 的类，在服务端**仍会被加载**，只是 `initializeClient()` 不会被调用。需要严格隔离时应当拆成两个类。
 
 ## 注册方式
 在 `META-INF/services/` 下按接口全名建文件，每行写一个实现类的全限定名。例如：
@@ -41,23 +41,31 @@ META-INF/services/io.github.u2894638479.kotlinmcui.entry.DslEntryGui
 ### 为什么不用 `java.util.ServiceLoader`
 `ServiceLoader` 要求实现类有可访问的无参构造器。Kotlin 的 `object` 声明没有公开构造器，于是最自然的写法（`object MyEntry : DslEntryGui`）会直接不可用。
 
-自建加载器先尝试无参构造，失败后回退到查找 `INSTANCE` 静态字段，因此两种写法都能注册。它同时用 `Class.forName(..., initialize = false)` 只解析类而不初始化，把"是否真的使用"推迟到实例化时。
+自建加载器两种写法都能注册：无参构造器**可访问**时用它构造，否则改用 `INSTANCE` 静态字段——而后者才是 Kotlin `object` 的常规路径，因此不把它当成"回退"来告警。构造器存在但**抛异常**时也不会被 `INSTANCE` 悄悄顶替：那会把失败藏在一个没人要的第二个实例后面，直接跳过这个入口并带上异常打日志才是对的。
+
+加载一个条目的失败被隔离在该条目内：`Exception` 与 `LinkageError`（类缺失、静态初始化块抛错等 `Error`）都只让这一个入口出局，其余照常注册——否则一个引用客户端专属类的入口就能让整套入口加载不出来。
+
+它同时用 `Class.forName(..., initialize = false)` 只解析类而不初始化，把"是否真的使用"推迟到实例化时。
 
 ## 加载顺序
 ```kotlin
 DslEntryLoader.init(environment)
 ```
 
-一次 `init` 的动作是：清空缓存 → 加载公共入口并调用 `initialize()` → 按环境调用 `initializeClient()` 或 `initializeServer()` → 登记 GUI 入口 → 登记 Overlay 入口。
+首次 `init` 的动作是：加载公共入口并调用 `initialize()` → 按环境调用 `initializeClient()` 或 `initializeServer()` → 登记 GUI 入口 → 登记 Overlay 入口。
 
-只有初始化钩子会被**调用**；GUI 与 Overlay 入口只被**登记**，等到用户打开列表或 Overlay 被启用时才执行其内容。
+**`init` 应由后端在启动时调用一次**，重复调用只刷新登记并打一条警告：既不重跑初始化，也不会让谁的 `initializeClient()` 跑第二遍。缓存里的实例也不会被清空重建，所以 `enabledOverlays` 里的对象始终是当前这批实例。
+
+只有初始化方法会被**调用**；GUI 与 Overlay 入口只被**登记**，等到用户打开列表或 Overlay 被启用时才执行其内容。
+
+`DslEntryLoader.entries` 返回的是登记结果的**快照**，调用方（列表页每帧遍历它）可以安全持有与遍历，不会因为重新 `init` 而看到半截状态。
 
 ### 缓存与标志
 实例按类缓存，同一个类无论通过几个接口被发现都只实例化一次。缓存项附带一组标志：
 
 | 标志 | 含义 |
 | --- | --- |
-| `isCommon` / `isClient` / `isServer` | 对应的初始化钩子已经执行过 |
+| `isCommon` / `isClient` / `isServer` | 对应的初始化方法已经执行过 |
 | `isGui` / `isOverlay` | 该入口提供了对应的扩展点 |
 
 GUI 列表页就是靠这组标志给每个入口标注徽章，并据此决定点击是否打开界面、是否显示 Overlay 开关。同一套标志也用于在开发时确认"某个入口是否真的在当前环境被加载和调用"。
