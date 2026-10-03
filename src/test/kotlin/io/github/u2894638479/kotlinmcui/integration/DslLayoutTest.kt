@@ -8,6 +8,7 @@ import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.height
 import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
+import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.size
 import io.github.u2894638479.kotlinmcui.modifier.weight
 import io.github.u2894638479.kotlinmcui.utils.Simple
@@ -127,5 +128,52 @@ class DslLayoutTest {
         // top row has 2 children side by side
         assertEquals(2, topRow.children.size)
         assertTrue(topRow.children[0].rect.left < topRow.children[1].rect.left)
+    }
+
+    @Test
+    fun `alignable bounds are padding-inclusive on both axes`() {
+        val screen = buildScreen {
+            Box(Modifier.size(50.px, 60.px).padding(3.px, 5.px, 11.px, 7.px)) {
+                Spacer(Modifier.size(10.px, 20.px), id = "child")
+            }
+        }
+        val box = screen.children[0]
+        assertEquals(50.px, box.rect.width)
+        assertEquals(60.px, box.rect.height)
+
+        val horizontal = box.alignableHorizontal
+        assertEquals(box.rect.left - 3.px, horizontal.low)
+        assertEquals(box.rect.right + 11.px, horizontal.high)
+        assertEquals(64.px, horizontal.size)
+
+        val vertical = box.alignableVertical
+        assertEquals(box.rect.top - 5.px, vertical.low)
+        assertEquals(box.rect.bottom + 7.px, vertical.high)
+        assertEquals(72.px, vertical.size)
+    }
+
+    @Test
+    fun `writing back read alignable bounds does not move the component`() {
+        val screen = buildScreen {
+            Box(Modifier.padding(3.px, 5.px, 11.px, 7.px)) {
+                Spacer(Modifier.size(10.px, 20.px), id = "child")
+            }
+        }
+        val box = screen.children[0]
+        val expected = box.rect.let { listOf(it.left, it.top, it.right, it.bottom) }
+
+        for (alignable in listOf(box.alignableHorizontal, box.alignableVertical)) {
+            val low = alignable.low
+            val high = alignable.high
+            alignable.low = low
+            alignable.high = high
+            assertEquals(low, alignable.low)
+            assertEquals(high, alignable.high)
+        }
+
+        assertEquals(expected[0], box.rect.left)
+        assertEquals(expected[1], box.rect.top)
+        assertEquals(expected[2], box.rect.right)
+        assertEquals(expected[3], box.rect.bottom)
     }
 }

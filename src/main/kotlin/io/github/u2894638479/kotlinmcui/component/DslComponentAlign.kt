@@ -49,7 +49,7 @@ interface DslComponentAlign: DslComponentMetadata {
             override val weight get() = modifier.weight
             override var low get() = rect.top - modifier.paddingTop
                 set(value) { rect.top = value + modifier.paddingTop }
-            override var high get() = rect.bottom - modifier.paddingBottom
+            override var high get() = rect.bottom + modifier.paddingBottom
                 set(value) { rect.bottom = value - modifier.paddingBottom }
             override val align get() = modifier.alignment.vertical
         }
