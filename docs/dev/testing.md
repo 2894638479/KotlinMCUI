@@ -57,11 +57,13 @@ parent: Dev
 ## 覆盖缺口
 这是当前最需要警惕的部分。
 
-**完全无测试的组件**：`ShrinkBox`、`LateBox`、`MouseTip`、`DefaultBackground`、`ColorRect`、`ScrollBar`、`Slider`、`EditableText`、`Button`、`AutoScroll`。
+**完全无测试的组件**：`ShrinkBox`、`MouseTip`、`DefaultBackground`、`ColorRect`、`ScrollBar`、`Slider`、`EditableText`、`Button`、`AutoScroll`。
+
+**只覆盖了行为的一小部分**：`LateBox` 只验证了"同帧重复布局不重复构建内容"；滚动容器只验证了身份查找、`scrollTo` 的三种对齐与默认属性是否互相独立；Overlay 只验证了身份与"Screen 有子节点"。
 
 **有测试但只测了弱语义**：
 - 装饰器测试不验证绘制输出、绘制顺序，也不验证修饰符内边距的叠加；
-- Overlay 只断言了身份与"Screen 有子节点"，没有断言位置与层叠顺序。
+- 颜色作用域只验证了取值，没有验证渲染结果。
 
 **契约存在但零断言**：反向渲染顺序、正向命中优先、首个消费者胜出、Overlay 的迭代构建、层叠顺序（提示层 > Overlay 层 > 主树）、文本折行、图像 UV 映射。
 

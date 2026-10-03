@@ -81,7 +81,7 @@ Screen 的构建分三个阶段：主树 → 循环处理 Overlay 批次（每�
 `DslChild.Overlay` 重载是常用封装：它以当前组件的矩形作为 `FixRect`，也就是"把这个组件的副本画到同一个位置"。
 
 ### `MouseTip`
-`MouseTip` 就是 `Overlay` 加 `ToPoint(鼠标位置)`。它不跟随屏幕边界——超出屏幕时不会自动翻转，需要的话应当用 `AutoToPoint`。
+`MouseTip` 就是 `Overlay` 加 `ToPoint(鼠标位置)`：它始终贴在鼠标旁，**不跟随屏幕边界**，超出屏幕时不会自动翻转。需要自动避让时应改用 `AutoToPoint`。
 
 ### 提示层
 Screen 每帧自动构建两层 Overlay：

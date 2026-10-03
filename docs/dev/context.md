@@ -88,7 +88,7 @@ typealias DslFunction = context(DslContext) () -> Unit
 | `showScreen(title, function)` | 新建并展示一个 Screen |
 | `imageFile(file)` / `imageResource(location, w, h)` | 构造图像引用 |
 
-## 颜色作用域及其时间边界
+## 颜色作用域
 主题色是构建期概念。组件在自己的构造表达式里读取 `Color.WHITE.mixed` 把它**立刻求解成一个普通 `Color` 值**并保存；渲染阶段不再做任何颜色运算。所以颜色不是响应式的——`withColor` 换色只影响当帧新建的组件树，而树本来就每帧重建，因此实际表现仍然是即时生效。
 
 `mixedWith` 是逐通道相乘（`a*b/255`），所以：
@@ -97,12 +97,12 @@ typealias DslFunction = context(DslContext) () -> Unit
 - `withColor(Color.RED.mixed) { }` 是把红色**混入**当前主题色，得到偏红的色调；
 - `withColor(Color.RED) { }` 则是**绝对设色**，与之前的作用域无关。
 
-混色刻意放在调用点完成，框架不做隐式的事后处理。
+混色刻意放在调用点完成，框架不做隐式的事后处理。作用域在离开 `withColor` 的那一行就被恢复，不会污染后续代码。
 
-### 颜色作用域的时间边界
-颜色作用域是**构建期**的作用域，而容器的 body 是延迟执行的：`Box{}` 在被书写时只创建组件，它的 body 要等到自己的 `build()` 阶段才执行，Overlay 的 body 更是排在单独的构建阶段。
+### 作用域如何穿过延迟构建的容器
+容器是延迟构建的：`Box{}` 在被书写时只创建组件，它的 body 要等到自己的 `build()` 阶段才执行，Overlay 的 body 更是排在单独的构建阶段。此时调用者的颜色作用域早已离开。
 
-因此容器会在**创建时**记下当时的主题色，在执行 body 时重新应用。这正是身份与缩放已有的做法（组件在创建时记下身份与缩放，执行 body 时再放回去），颜色沿用同一套约定，于是
+因此容器在**创建时**记下当时的主题色，在执行 body 时重新应用。这与身份、缩放的处理完全一致（组件在创建时记下身份与缩放，执行 body 时再放回去），于是
 
 ```kotlin
 withColor(Color.RED) {
@@ -110,4 +110,4 @@ withColor(Color.RED) {
 }
 ```
 
-符合直觉。作用域在离开 `withColor` 的那一行就被恢复，不会污染后续代码。
+符合直觉。
