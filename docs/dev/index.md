@@ -76,7 +76,7 @@ nav_order: 7
 | `math/align` | `Alignable`、`Aligner`、`Alignment`、`OverlayAlign` |
 | `math/animate` | `Interpolatable`、`Interpolator` |
 | `math/transform` | `Transform`、`TransformStack` |
-| `text` | 文本构建器、文本布局、字形、可编辑字符串、翻译键 |
+| `text` | 文本构建器、文本布局、字形、可编辑字符串、翻译 |
 | `image` | `ImageHolder` 与绘制策略 |
 | `backend` | 后端接口、渲染原语、线程调度 |
 | `entry` | 加载器入口接口与入口发现 |
