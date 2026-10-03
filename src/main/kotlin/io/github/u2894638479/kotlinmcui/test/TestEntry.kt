@@ -25,6 +25,7 @@ object TestEntry: DslEntryService {
         }
     }
     object TestPage: DslEntryOverlay, DslEntryGui, DslEntryService by TestEntry {
+        override val id get() = "kotlinmcui:testpage"
         override val name get() = translateGlobal("kotlinmcui.testpage")
         context(ctx: DslContext)
         override fun content() {
@@ -50,6 +51,7 @@ object TestEntry: DslEntryService {
         }
     }
     object DebugOverlay: DslEntryOverlay, DslEntryService by TestEntry {
+        override val id get() = "kotlinmcui:debugoverlay"
         override val name get() = translateGlobal("kotlinmcui.debugoverlay")
         context(ctx: DslContext)
         override fun overlay() {

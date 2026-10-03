@@ -61,16 +61,14 @@ fun DslEntryPage() = Row {
                 }
                 if(flags.isOverlay) Column(Modifier.weight(0.0)) {
                     it as DslEntryOverlay
-                    val list = DslEntryLoader.enabledOverlays
                     val prop = object: StableRW<Boolean> {
-                        override fun getValue() = it in list
-                        override fun setValue(value: Boolean) { if(!list.remove(it)) list += it }
+                        override fun getValue() = DslEntryLoader.isOverlayEnabled(it)
+                        override fun setValue(value: Boolean) { DslEntryLoader.setOverlayEnabled(it,value) }
                     }
                     Config.BoolButton(prop,translate("kotlinmcui.entrypage.overlay")) {}
                     if(prop.getValue()) {
-                        Simple.Button("bring to top",list.getOrNull(0) != it) {
-                            list.remove(it)
-                            list.addFirst(it)
+                        Simple.Button("bring to top",DslEntryLoader.enabledOverlays.firstOrNull() !== it) {
+                            DslEntryLoader.bringOverlayToTop(it)
                         }
                     }
                 }

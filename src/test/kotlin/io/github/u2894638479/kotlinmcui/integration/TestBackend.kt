@@ -116,7 +116,8 @@ private object TestUtils : DslBackendUtils {
 // ── Metadata ─────────────────────────────────────────────────────────────────
 
 private object TestMetadata : DslBackendMetadata {
-    override val configDir = Path.of(".")
+    // Configuration written during tests belongs under build/, not in the checkout.
+    override val configDir = Path.of("build", "test-config")
     override val gameDir = Path.of(".")
     override val gameVersion = "test"
     override val gameLoader = "test"
