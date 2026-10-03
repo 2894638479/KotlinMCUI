@@ -11,6 +11,7 @@ import io.github.u2894638479.kotlinmcui.dsl.ui.Image
 import io.github.u2894638479.kotlinmcui.dsl.ui.Row
 import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
 import io.github.u2894638479.kotlinmcui.dsl.ui.TextFlatten
+import io.github.u2894638479.kotlinmcui.dsl.withColor
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.px
@@ -56,11 +57,11 @@ fun TestImagePage() = ScrollableColumn {
             Config.String(localImageProp,"localImage") {}
             TextFlatten(Modifier.height(30.scaled)) { "drop files here".emit() }.hoverMask()
                 .onFilesDropped { localImageProp.value = it.firstOrNull()?.toString() ?: "" }
-            Image(Modifier.size(width.scaled, height.scaled), localImage, color, strategy) {}
+            withColor(color) { Image(Modifier.size(width.scaled, height.scaled), localImage, strategy) {} }
         }
         Mode.RESOURCE -> {
             Config.String(resourceImageProp,"resource") {}
-            Image(Modifier.size(width.scaled, height.scaled), resourceImage, color, strategy) {}
+            withColor(color) { Image(Modifier.size(width.scaled, height.scaled), resourceImage, strategy) {} }
         }
     }
 }

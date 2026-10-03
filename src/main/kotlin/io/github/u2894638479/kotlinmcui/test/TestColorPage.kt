@@ -17,9 +17,7 @@ fun TestColorPage() = ScrollableColumn {
     val colorProp = local { Color.WHITE }
     var color by colorProp
     ColorRect(Modifier.height(50.scaled),color) {}
-    Row(Modifier.height(20.scaled)) {
-        Button(color = color) {  }
-    }
+    Button {  }
 
     Slider(Modifier.height(20.scaled),Axis.Horizontal,0..255,
         colorProp.remap({ it.r.toInt() }, { color.change(r = it) })

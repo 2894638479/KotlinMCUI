@@ -11,6 +11,7 @@ import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.context.mixed
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.dsl.local
@@ -47,10 +48,10 @@ fun DslChild.mask(color: Color) = change { object: DslComponent by it {
 }}
 
 context(ctx: DslContext)
-fun DslChild.background(color: Color) = change { object: DslComponent by it {
+fun DslChild.background(color: Color? = null) = change { val c = color ?: Color.WHITE.mixed; object: DslComponent by it {
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
-        backend.fillRect(instance.rect,color)
+        backend.fillRect(instance.rect,c)
         backend.flush()
         it.render()
     }
@@ -59,12 +60,12 @@ fun DslChild.background(color: Color) = change { object: DslComponent by it {
 context(ctx: DslContext)
 fun DslChild.backgroundImage(
     image: ImageHolder,
-    color: Color = Color.WHITE,
+    color: Color? = null,
     strategy: ImageStrategy = ImageStrategy.clip,
-) = change { object: DslComponent by it {
+) = change { val c = color ?: Color.WHITE.mixed; object: DslComponent by it {
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
-        strategy.render(instance.rect,image,color)
+        strategy.render(instance.rect,image,c)
         backend.flush()
         it.render()
     }
@@ -80,25 +81,25 @@ private fun <RP> renderOutline(rect: Rect, widthIn: Measure, widthOut: Measure, 
 }
 
 context(ctx: DslContext)
-fun DslChild.highlightBox(widthIn: Measure = 0.px, widthOut: Measure = 1.scaled, color: Color = Color.WHITE) = change { object : DslComponent by it {
+fun DslChild.highlightBox(widthIn: Measure = 0.px, widthOut: Measure = 1.scaled, color: Color? = null) = change { val c = color ?: Color.WHITE.mixed; object : DslComponent by it {
     override val highlightable get() = true
 
     override val modifier get() = it.modifier.padding(widthOut)
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
-        if(instance.isHighlighted) renderOutline(instance.rect, widthIn, widthOut, color)
+        if(instance.isHighlighted) renderOutline(instance.rect, widthIn, widthOut, c)
         it.render()
     }
 }}
 
 context(ctx: DslContext)
-fun DslChild.outline(widthIn: Measure = 0.px, widthOut: Measure = 1.scaled, color: Color = Color.WHITE) = change { object : DslComponent by it {
+fun DslChild.outline(widthIn: Measure = 0.px, widthOut: Measure = 1.scaled, color: Color? = null) = change { val c = color ?: Color.WHITE.mixed; object : DslComponent by it {
     override val modifier get() = it.modifier.padding(widthOut)
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
-        renderOutline(instance.rect, widthIn, widthOut, color)
+        renderOutline(instance.rect, widthIn, widthOut, c)
         it.render()
     }
 }}

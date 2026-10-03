@@ -7,6 +7,7 @@ import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslTextBuilderContext
+import io.github.u2894638479.kotlinmcui.context.mixed
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.*
 import io.github.u2894638479.kotlinmcui.input.Key
@@ -45,17 +46,21 @@ import kotlin.time.Duration.Companion.seconds
 
 context(ctx: DslContext)
 fun DslChild.editBoxBackground(width: Measure = 1.scaled, padding: Measure = width + 1.scaled)
-= change { object: DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-    override fun <RP> render() {
-        backend.fillRect(instance.rect.expand(padding),
-            if(instance.isHighlighted) Color(255,255,255) else Color(0xA0,0xA0,0xA0))
-        backend.fillRect(instance.rect.expand(padding - width),Color.BLACK)
-        it.render()
-    }
+= change {
+    val highlightColor = Color.WHITE.mixed
+    val frameColor = Color(0xA0,0xA0,0xA0).mixed
+    val innerColor = Color.BLACK.mixed
+    object: DslComponent by it {
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() {
+            backend.fillRect(instance.rect.expand(padding), if(instance.isHighlighted) highlightColor else frameColor)
+            backend.fillRect(instance.rect.expand(padding - width), innerColor)
+            it.render()
+        }
 
-    override val modifier get() = it.modifier.padding(padding)
-}}
+        override val modifier get() = it.modifier.padding(padding)
+    }
+}
 
 // ── Internal cursor helpers ──────────────────────────────────────────────────
 
@@ -120,7 +125,7 @@ fun EditableText(
     modifier: Modifier = Modifier,
     stringProp: StableRW<String> = local { "" },
     style: DslCharStyle = DslCharStyle(),
-    color: Color = Color.WHITE,
+    color: Color? = null,
     selectedColor: Color = Color(20, 20, 200),
     size: Measure = 9.scaled,
     fontName: String? = null,
@@ -148,6 +153,7 @@ fun EditableText(
         DslTextBuilderContext(ctx).apply { string.emit(color, size, style) }.toChars(),
         size, horizontalAligner, verticalAligner
     )
+    val cursorColor = color ?: Color.WHITE.mixed
 
     info.run {
         collect(object : DslComponent by delegate {
@@ -189,7 +195,7 @@ fun EditableText(
 
                 if (!instance.isFocused) return
                 if (blink) {
-                    backend.fillRect(cursorRect() ?: return, color)
+                    backend.fillRect(cursorRect() ?: return, cursorColor)
                     backend.flush()
                 }
             }

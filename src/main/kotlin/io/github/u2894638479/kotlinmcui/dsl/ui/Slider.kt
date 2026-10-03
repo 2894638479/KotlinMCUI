@@ -8,6 +8,7 @@ import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
+import io.github.u2894638479.kotlinmcui.context.mixed
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local
@@ -40,14 +41,13 @@ fun Slider(
     range: ClosedFloatingPointRange<Double>,
     progress: StableRW<Double> = local { (range.start + range.endInclusive) / 2 },
     step: Double = 1.0/16, // for keyboard
-    color: Color = Color.WHITE,
     buttonSize: Measure = 8.scaled,
     id:Any? = null,
     function: DslFunction
 ) = Slider(modifier,axis,progress.remap(
     { (it - range.start) / (range.endInclusive - range.start) },
     { range.start + it * (range.endInclusive - range.start) }
-),step,color,buttonSize,id,function)
+),step,buttonSize,id,function)
 
 context(ctx: DslContext)
 fun Slider(
@@ -55,14 +55,13 @@ fun Slider(
     axis: Axis,
     range: IntProgression,
     progress: StableRW<Int> = local { range.first },
-    color: Color = Color.WHITE,
     buttonSize: Measure = 8.scaled,
     id:Any? = null,
     function: DslFunction
 ) = Slider(modifier,axis,progress.remap(
     { (it - range.first).toDouble() / (range.last - range.first) },
     { range.first() + range.step * (it * (range.last - range.first) / range.step).roundToInt() }
-), range.step.toDouble() / (range.last - range.first),color,buttonSize,id,function)
+), range.step.toDouble() / (range.last - range.first),buttonSize,id,function)
 
 context(ctx: DslContext)
 fun Slider(
@@ -78,13 +77,14 @@ fun Slider(
         local { SliderImpl.Status() }
     }
     val progress = color.remap({ prop.get(it) }, { prop.set(color.value, it) })
+    val backgroundColor = Color.WHITE.mixed
     object : SliderImpl(delegate, axis, progress, 0.0 /* arrows owned by stepUp/stepDown below */, color.value, buttonSize, status) {
         override val knobColor get() = color.value
 
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> renderBackground() {
             val rect = instance.rect
-            backend.renderButton(rect, keyFocused, false, Color.WHITE)
+            backend.renderButton(rect, keyFocused, false, backgroundColor)
             drawGradient(axis, rect.expand(-(3.px * instance.scale)), gradientStops(color.value, prop))
             backend.flush()
         }
@@ -111,7 +111,6 @@ fun Slider(
     axis: Axis,
     progress: StableRW<Double> = local { 0.5 },
     step: Double = 1.0/16, // for keyboard
-    color: Color = Color.WHITE,
     buttonSize: Measure = 8.scaled,
     id:Any? = null,
     function: DslFunction
@@ -119,7 +118,7 @@ fun Slider(
     val status by context(delegate as DslIdContext) {
         local { SliderImpl.Status() }
     }
-    SliderImpl(delegate, axis, progress, step, color, buttonSize, status)
+    SliderImpl(delegate, axis, progress, step, Color.WHITE.mixed, buttonSize, status)
 }
 
 private open class SliderImpl(

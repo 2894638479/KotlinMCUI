@@ -3,11 +3,12 @@ package io.github.u2894638479.kotlinmcui.context
 import io.github.u2894638479.kotlinmcui.container.DslDataStore
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.container.DslChild
+import io.github.u2894638479.kotlinmcui.math.Color
 
 @DslContextMarker
 open class DslContext(
     override val dataStore: DslDataStore,
-): DslScaleContext, DslDataStoreContext, DslIdContext, DslChildrenContext {
+): DslScaleContext, DslDataStoreContext, DslIdContext, DslChildrenContext, DslColorContext {
     @PublishedApi
     internal val thread = Thread.currentThread()
     @PublishedApi
@@ -22,6 +23,8 @@ open class DslContext(
     internal var _children: DslChild.Group? = null
     @PublishedApi
     internal var _scale: Double = Double.NaN
+    @PublishedApi
+    internal var _color: Color = Color.WHITE
     @PublishedApi
     internal var _overlays: DslChild.Group? = null
     @PublishedApi
@@ -38,9 +41,11 @@ open class DslContext(
     override val identity get() = _identity.checkThread() ?: error("undefined identity")
     override val children get() = _children.checkThread() ?: error("undefined children")
     override val scale get() = _scale.checkThread().also { require(!_scale.isNaN()) { "undefined scale" } }
+    override val color get() = _color.checkThread()
     val overlays get() = _overlays.checkThread() ?: error("undefined overlays")
     inline fun <R> withIdentity(identity:DslId, block: () -> R) = withField({_identity},{_identity = it},identity,block)
     inline fun <R> withChildren(children:DslChild.Group, block: () -> R) = withField({_children},{_children = it},children,block)
     inline fun <R> withScale(scale:Double, block: () -> R) = require(!scale.isNaN()).run { withField({_scale},{_scale = it},scale,block) }
+    inline fun <R> withColor(color:Color, block: () -> R) = withField({_color},{_color = it},color,block)
     inline fun <R> withOverlays(overlays:DslChild.Group, block: () -> R) = withField({_overlays},{_overlays = it},overlays,block)
 }

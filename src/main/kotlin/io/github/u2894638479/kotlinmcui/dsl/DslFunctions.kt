@@ -6,6 +6,7 @@ import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
+import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.container.DslChild
 import java.io.File
@@ -27,6 +28,15 @@ inline fun <T> withId(obj:Any?, block: () -> T) = ctx.withIdentity(identity + ob
 
 context(ctx: DslContext)
 inline fun <T> withScale(scale: Double, block: () -> T) = ctx.withScale(scale,block)
+
+/**
+ * Enter a colour scope for the enclosed UI: every component in [block]
+ * resolves its appearance colour against [color] (via `Color.mixed`).
+ * Do the blending at the call site, e.g. `withColor(Color.RED.mixed) { }`
+ * or `withColor(Color.WHITE.mixed.change(a = 128)) { }` for translucency.
+ */
+context(ctx: DslContext)
+inline fun <T> withColor(color: Color, block: () -> T) = ctx.withColor(color, block)
 
 context(ctx: DslContext)
 inline fun <T> Iterable<T>.forEachWithId(block: (T) -> Unit) = forEach { withId(it) { block(it) } }

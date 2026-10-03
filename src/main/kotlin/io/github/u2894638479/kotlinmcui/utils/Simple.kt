@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.utils
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
+import io.github.u2894638479.kotlinmcui.context.mixed
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.decorator.clickable
@@ -18,8 +19,8 @@ import kotlinx.coroutines.CoroutineScope
 
 object Simple {
     context(ctx: DslContext)
-    fun Splitter(color: Color = Color(180,180,180),size:Measure = 1.scaled, padding: Measure = 3.scaled, id: Any) =
-        ColorRect(Modifier.minSize(size,size).weight(0.0).padding(padding),color,id)
+    fun Splitter(size:Measure = 1.scaled, padding: Measure = 3.scaled, id: Any) =
+        ColorRect(Modifier.minSize(size,size).weight(0.0).padding(padding), Color(180,180,180).mixed,id)
 
     context(ctx: DslContext)
     fun Button(text: String, active: Boolean = true, id: Any? = null, onClick:context(DslExecuteContext) CoroutineScope.() -> Unit) = Button(Modifier.height(20.scaled).padding(2.scaled),id = id ?: onClick::class) {

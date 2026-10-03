@@ -41,7 +41,6 @@ fun Box(
 context(ctx: DslContext)
 fun Button(
     modifier: Modifier = Modifier,
-    color: Color = Color.WHITE,
     id:Any? = null,
     function: DslFunction
 ):DslChild
