@@ -1,0 +1,6 @@
+# Loader fixtures: comments and blank lines must be ignored.
+io.github.u2894638479.kotlinmcui.entry.FixtureGuiObject
+
+io.github.u2894638479.kotlinmcui.entry.FixtureThrowingConstructor
+io.github.u2894638479.kotlinmcui.entry.FixtureBrokenStaticInit
+io.github.u2894638479.kotlinmcui.entry.FixtureGuiClass
