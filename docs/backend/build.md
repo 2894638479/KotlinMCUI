@@ -55,7 +55,17 @@ parent: Backend
 ```
 KOTLINMCUI_VERIFY=transform ./gradlew runVerifyClient        # PowerShell: $env:KOTLINMCUI_VERIFY="transform"
 ```
-用 `KOTLINMCUI_VERIFY` 选择页面：缺省或 `1` 打开框架的测试页；`transform` 打开内置的变换演示页（旋转、透视、缩放+平移）。**透视是唯一会用到位姿矩阵第三行的路径**，改动变换相关代码后应当跑一次这个页面。
+用 `KOTLINMCUI_VERIFY` 选择页面：
+
+| 值 | 页面 |
+| --- | --- |
+| 缺省 / `1` | 框架的测试页 |
+| `transform` | 内置的变换演示页（旋转、透视、缩放+平移） |
+| `debug` | 框架的调试叠层 |
+
+**透视是唯一会用到位姿矩阵第三行的路径**，改动变换相关代码后应当跑一次 `transform`。
+
+判定标准有两条：截图内容正常（说明界面确实画出来了），以及日志里有 `input callbacks registered`（说明安装输入回调的那处注入生效了——它失效时游戏照常启动，只是框架收不到任何输入，很容易被当成"界面不响应"）。
 
 这个检查需要真实的显示与 GPU，无法在无头环境里运行。
 
