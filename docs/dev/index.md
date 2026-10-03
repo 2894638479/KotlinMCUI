@@ -1,0 +1,84 @@
+---
+title: Dev
+nav_order: 6
+---
+
+# 开发文档
+这一章记录 KotlinMCUI 的设计思路。正式文档面向使用者，只讲怎么调用；这一章面向维护者与后端实现者，讲**为什么这样设计**、有哪些不变量、以及扩展时需要遵守的约束。
+
+阅读顺序建议：`上下文` → `身份与属性` → `组件模型` → `布局` → `渲染` → `事件`，之后按需查阅其余章节。
+
+## 分层
+```
+        ┌──────────────────────────────────────────────┐
+        │ 用户 DSL（context(DslContext) 函数）          │
+        └──────────────────────────────────────────────┘
+   dsl/ui        组件实现（Box/Row/Column/Text/…）
+   dsl/decorator 行为装饰（clickable/background/…）
+        ┌──────────────────────────────────────────────┐
+        │ container   树与帧循环（TopComponent/DslScreen│
+        │             /DslDataStore/DslChild）         │
+        │ component   组件契约（事件/对齐/元数据/导航）  │
+        │ prop        属性生命周期与动画                 │
+        │ identity    身份链                            │
+        └──────────────────────────────────────────────┘
+   math           Measure/Rect/Bound/Color/Transform/…
+   text          文本与字形
+   image         图像引用与绘制策略
+        ┌──────────────────────────────────────────────┐
+        │ backend     渲染后端抽象（无 Minecraft 依赖）  │
+        │ entry       加载器入口与服务发现               │
+        └──────────────────────────────────────────────┘
+```
+核心库不含任何 Minecraft 类型。所有平台相关能力都收敛到 `backend` 包的接口，由配套后端 mod 实现；这也是同一个 jar 能同时服务 Fabric / Forge / NeoForge 的前提。
+
+## 一帧的完整流程
+后端每帧做两件事：把 `TopComponent.rect` 设为整屏尺寸，然后调用 `TopComponent.render()`。
+
+`TopComponent` 是进程内**唯一**的根节点，所有 Screen 与 Overlay 都是它的子节点。它按 `asReversed()` 渲染子节点——这意味着**声明靠前的组件绘制在更上层**，与直觉相反，但让 `Box{}` 的层叠语义与事件命中顺序保持一致（两者都按声明顺序从前往后）。
+
+单个 Screen 的一帧在 `DslScreen.render()` 中展开：
+
+1. `DslDataStore.frame { … }` 推进帧号、记录帧起始时间；
+2. `build()` 重新执行用户 DSL，重建整棵树并完成布局；
+3. `delegate.render()` 驱动后端绘制。
+
+`build()` 内部依次是：主树 → Overlay 层 → Tooltip/IME 层。Overlay 用循环构建，因为构建 Overlay 的过程可能产生新的 Overlay。Tooltip 层最终被**前插**到子节点列表头部，从而绘制在最上层。
+
+帧结束时（`frame` 的 `finally`）清理未被访问的局部属性。**属性是否存活，取决于它这一帧有没有被读到**——这是整个状态管理机制的基石。
+
+## 若干关键抉择
+| 抉择 | 理由 |
+| --- | --- |
+| 用 Kotlin **上下文参数**而非编译器插件传递 DSL 上下文 | 不引入编译器插件依赖；每个函数只声明自己需要的能力 |
+| 上下文对象**可变 + 保存/恢复**，而非每层新建 | 每帧都要遍历整棵树，避免逐层分配 |
+| `scale` 以 NaN 初始化 | 误读时得到明确报错，而不是静默的 0 |
+| 身份用 `DslId` 持久链表 + **lambda 的 `::class`** | 让重复书写的 `Column{}` 自动获得不同身份，无需手写 id |
+| 属性按**帧戳**存活（`clearOutdated`） | 无需显式 dispose，DSL 停止书写即自动回收 |
+| `Modifier` 不可变链 | 组合简单、无别名问题；代价是每个属性一层包装对象 |
+| 布局固定**先横后纵** | 纵向量算可能依赖横向结果（如文本换行需要先知道可用宽度） |
+| 组件用**接口委托**组合行为 | 可以在不修改类的情况下"覆写" `final` 类的成员 |
+| 全局焦点/悬停/IME 状态放在单例根节点 | 这些状态本来就是进程级的，不属于某个 Screen |
+
+## 模块地图
+| 包 | 职责 |
+| --- | --- |
+| `context` | 上下文参数类型、`DslContext`、单位换算 |
+| `identity` | `DslId` 身份链 |
+| `prop` | 局部/稳定/静态属性作用域、动画、属性组合子 |
+| `component` | `DslComponent` 契约、对齐适配、事件契约、焦点导航 |
+| `container` | `TopComponent`、`DslScreen`、`DslDataStore`、`DslChild`、`DslScope` |
+| `dsl` | `DslFunction`、DSL 辅助函数与属性快捷方式 |
+| `dsl/ui` | 内置组件 |
+| `dsl/decorator` | 效果装饰器与事件装饰器 |
+| `modifier` | `Modifier` 链 |
+| `math` | `Measure`、`Rect`/`Bound`、`Position`、`Color`、`Scroller` |
+| `math/align` | `Alignable`、`Aligner`、`Alignment`、`OverlayAlign` |
+| `math/animate` | `Interpolatable`、`Interpolator` |
+| `math/transform` | `Transform`、`TransformStack` |
+| `text` | 文本构建器、文本布局、字形、可编辑字符串、翻译键 |
+| `image` | `ImageHolder` 与绘制策略 |
+| `backend` | 后端接口、渲染原语、线程调度 |
+| `entry` | 加载器入口接口与入口发现 |
+| `utils` | 基于公开 DSL 编写的控件目录（用于演示扩展面） |
+| `test` | 内置演示页与调试叠层 |
