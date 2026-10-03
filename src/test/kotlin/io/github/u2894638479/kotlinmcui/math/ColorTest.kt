@@ -302,5 +302,46 @@ class ColorTest {
         }
     }
 
+    @Test
+    fun `mixedWith - channel-wise multiply, WHITE is identity`() {
+        val c = Color(100, 150, 200, 80)
+        assertEquals(c, Color.WHITE.mixedWith(c))
+        assertEquals(c, c.mixedWith(Color.WHITE))
+        // scaled by half
+        assertEquals(Color(50, 75, 100, 40), c.mixedWith(Color(128, 128, 128, 128)))
+    }
+
+    @Test
+    fun `screenWith - channel-wise screen, alpha included`() {
+        // BLACK has zero rgb: rgb is kept, while alpha screens to opaque
+        assertEquals(Color(100, 150, 200, 255), Color.BLACK.screenWith(Color(100, 150, 200)))
+        assertEquals(Color.WHITE, Color.WHITE.screenWith(Color(100, 150, 200)))
+        // 128 screen 128 = 255 - 127 * 127 / 255 = 192, on every channel including alpha
+        assertEquals(Color(192, 192, 192, 192), Color(128, 128, 128, 128).screenWith(Color(128, 128, 128, 128)))
+    }
+
+    @Test
+    fun `averageWith - channel-wise midpoint, alpha included`() {
+        assertEquals(Color(127, 127, 127, 255), Color.BLACK.averageWith(Color.WHITE))
+        assertEquals(Color(150, 100, 50, 255), Color(100, 200, 0, 255).averageWith(Color(200, 0, 100, 255)))
+        assertEquals(Color(0, 0, 0, 150), Color(0, 0, 0, 100).averageWith(Color(0, 0, 0, 200)))
+    }
+
+    @Test
+    fun `over - source-over alpha compositing`() {
+        // an opaque source covers the destination
+        assertEquals(Color.RED, Color.RED.over(Color.BLUE))
+        // a transparent source leaves the destination untouched
+        assertEquals(Color.BLUE, Color.TRANSPARENT_BLACK.over(Color.BLUE))
+        // two transparent colours stay transparent
+        assertEquals(Color.TRANSPARENT_BLACK, Color.TRANSPARENT_BLACK.over(Color.TRANSPARENT_BLACK))
+        // 50% white over opaque blue = light blue
+        assertEquals(Color(128, 128, 255, 255), Color.WHITE.change(a = 128).over(Color.BLUE))
+        // 50% white over opaque black = mid gray
+        assertEquals(Color(128, 128, 128, 255), Color.WHITE.change(a = 128).over(Color.BLACK))
+        // over a transparent destination the source keeps its own alpha
+        assertEquals(Color(255, 255, 255, 128), Color.WHITE.change(a = 128).over(Color.TRANSPARENT_BLACK))
+    }
+
     private val Color.maxByte: Int get() = maxOf(rInt, gInt, bInt)
 }

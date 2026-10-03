@@ -102,6 +102,37 @@ value class Color(val rgbaInt:Int): Interpolatable<Color> {
     override fun times(other: Double) = Color(rDouble*other,gDouble*other,bDouble*other,aDouble*other)
     override fun div(other: Double) = Color(rDouble/other,gDouble/other,bDouble/other,aDouble/other)
 
+    /**
+     * Mix [this] colour with [other] by integer channel-wise multiplication:
+     * each byte is `(a * b) / 255`, so `WHITE.mixedWith(c) == c`.
+     */
+    fun mixedWith(other: Color) = Color(rInt*other.rInt/255,gInt*other.gInt/255,bInt*other.bInt/255,aInt*other.aInt/255)
+
+    /**
+     * Channel-wise screen (lighten): `255 - (255-a)(255-b)/255`, applied to
+     * alpha too, so opacity unions where [mixedWith] intersects it.
+     */
+    fun screenWith(other: Color) = Color(
+        255-(255-rInt)*(255-other.rInt)/255, 255-(255-gInt)*(255-other.gInt)/255,
+        255-(255-bInt)*(255-other.bInt)/255, 255-(255-aInt)*(255-other.aInt)/255,
+    )
+
+    /** Channel-wise average: `(a + b) / 2`. */
+    fun averageWith(other: Color) = Color((rInt+other.rInt)/2,(gInt+other.gInt)/2,(bInt+other.bInt)/2,(aInt+other.aInt)/2)
+
+    /**
+     * Alpha-composite [this] (source) over [other] (destination), channel-wise
+     * and un-premultiplied. Two fully transparent colours stay transparent.
+     */
+    fun over(other: Color): Color {
+        val srcA = aInt
+        val dstA = other.aInt
+        val outA = srcA + dstA * (255 - srcA) / 255
+        if (outA == 0) return TRANSPARENT_BLACK
+        fun channel(src: Int, dst: Int) = (src * srcA + dst * dstA * (255 - srcA) / 255) / outA
+        return Color(channel(rInt,other.rInt), channel(gInt,other.gInt), channel(bInt,other.bInt), outA)
+    }
+
 
     val hexStringARGB get() = argbInt.toUInt().toString(16).padStart(8, '0')
 
