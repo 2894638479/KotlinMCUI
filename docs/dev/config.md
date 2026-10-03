@@ -24,7 +24,7 @@ val config = loadConfig("mymod/settings.json", configFormat) { MyConfig() }
 ## 三条约定
 - **写入**：先写到目标旁边的临时文件，再原子替换（个别文件系统不支持原子移动时退回普通替换）。失败只记日志、不抛出——保存一个设置不该把游戏带崩。
 - **读取**：文件不存在、读不了、解析失败，一律回落到调用方给的默认值并记日志。首次启动本来就没有文件；手改坏了配置也只该损失设置，不该拦住启动。
-- **路径**：按名字存取的版本解析到 `dslBackend.configDir`，框架自己的文件放在 `kotlinmcui/` 子目录里，避免和模组自己的配置混在一起。
+- **路径**：按名字存取的版本解析到 `dslMetadata.configDir`，框架自己的文件放在 `kotlinmcui/` 子目录里，避免和模组自己的配置混在一起。走的是**元数据**而不是后端本体，所以模组在初始化阶段就能读写配置——那时后端通常还构造不出来。
 
 ## 框架自己的用法
 入口这一层用它保存**已启用的 Overlay 列表**：`<configDir>/kotlinmcui/overlays.json`，内容是有序的 `DslEntryService.id` 数组。详见[入口](entry)一章的 Overlay 部分。

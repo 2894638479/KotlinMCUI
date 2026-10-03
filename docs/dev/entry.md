@@ -73,7 +73,7 @@ GUI 列表页就是靠这组标志给每个入口标注徽章，并据此决定�
 ## Overlay 的启用
 Overlay 默认**不启用**。启用状态是一个**有序 id 列表**：只有列在其中的 Overlay 才会被渲染，列表顺序即层叠顺序（越靠前越上层）。GUI 列表页的开关与"置顶"分别调用 `setOverlayEnabled` / `bringOverlayToTop`，两者都会立刻写回配置。
 
-配置存放在 `<configDir>/kotlinmcui/overlays.json`，内容就是 `DslEntryService.id` 的有序数组（模型见 `OverlayConfig`），由[配置工具](config)读写。读取是**惰性**的：文件位置来自后端的配置目录，而后端在模组初始化期间不可用——框架自己的规则（初始化阶段不要碰 `dslBackend`）对框架自己同样成立，所以第一次真正需要 Overlay 列表时才读文件。三点设计意图：
+配置存放在 `<configDir>/kotlinmcui/overlays.json`，内容就是 `DslEntryService.id` 的有序数组（模型见 `OverlayConfig`），由[配置工具](config)读写。目录来自 `dslMetadata`（元数据在模组初始化阶段就有效），读取仍然是**惰性**的：既避免没有 Overlay 的用户白读一次文件，也让"未按契约提供元数据的后端"不会因为读配置而提前构造重后端。三点设计意图：
 
 - 用 **id** 而不是实例或列表下标做标识：下标会随登记顺序变，实例每次启动都会重建，只有 id 在两次启动之间稳定；
 - **未安装模组的 id 保留在文件里**：临时卸掉一个模组不会丢掉它的开关状态，装回来仍然按原来的顺序渲染；

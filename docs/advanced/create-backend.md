@@ -18,6 +18,8 @@ parent: Advanced
 
 ## 需要实现的事
 - 将`DslBackend`提供给`dslBackendProvider`
+- 把**元数据**（配置目录、游戏版本、加载器、运行环境）提供给`dslMetadataProvider`。它必须在模组初始化阶段、后端还构造不出来的时候就能用，所以这个实现不能碰窗口、渲染器、语言数据这些平台状态
+- **构造`DslBackend`本身不能有副作用**：需要平台的部分放进框架会调用的时机里（创建界面、每帧渲染），不要在字段初始化器或`by`委托里就去建界面
 - 调用`DslEntryLoader.init(Environment)`来发现并初始化各个入口
 - 将`DslEntryPage()`注册到对应`loader`的配置页面
 - 实现`DslBackend`中的函数
