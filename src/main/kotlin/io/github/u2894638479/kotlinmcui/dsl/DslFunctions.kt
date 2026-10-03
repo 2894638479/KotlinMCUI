@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.dsl
 
+import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
@@ -16,6 +17,12 @@ typealias DslFunction = context(DslContext) ()->Unit
 
 context(ctx: DslDataStoreContext)
 fun translate(string: String,vararg args: Any) = backend.translate(string,*args) ?: string
+
+/**
+ * [translate] for code that runs outside a DSL context, such as entry metadata.
+ * Falls back to [key] when the backend has no translation for it.
+ */
+fun translateGlobal(key: String,vararg args: Any) = dslBackend.translate(key,*args) ?: key
 
 context(_: DslExecuteContext)
 fun showScreen(title:String = "DSL Screen",function: DslFunction) = dataStore.backend.create(title,function).show()

@@ -9,6 +9,7 @@ import io.github.u2894638479.kotlinmcui.dsl.forEachWithId
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.showScreen
 import io.github.u2894638479.kotlinmcui.dsl.static
+import io.github.u2894638479.kotlinmcui.dsl.translate
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Scroller
@@ -24,7 +25,6 @@ import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
-import io.github.u2894638479.kotlinmcui.text.kotlinmcui
 import io.github.u2894638479.kotlinmcui.utils.Config
 import io.github.u2894638479.kotlinmcui.utils.Simple
 import io.github.u2894638479.kotlinmcui.utils.Simple.simpleTooltip
@@ -39,8 +39,8 @@ fun DslEntryPage() = Row {
         val showDetails = local { false }
         Row {
             Spacer(Modifier weight Double.MAX_VALUE) {}
-            Config.BoolButton(showCodeEntry,kotlinmcui.entrypage.show_code_entry()) {}
-            Config.BoolButton(showDetails,kotlinmcui.entrypage.show_details()) {}
+            Config.BoolButton(showCodeEntry,translate("kotlinmcui.entrypage.show_code_entry")) {}
+            Config.BoolButton(showDetails,translate("kotlinmcui.entrypage.show_details")) {}
         }
         DslEntryLoader.entries.forEachWithId { (it, flags) ->
             if(!showCodeEntry.value && !flags.isGui && !flags.isOverlay) return@forEachWithId
@@ -66,7 +66,7 @@ fun DslEntryPage() = Row {
                         override fun getValue() = it in list
                         override fun setValue(value: Boolean) { if(!list.remove(it)) list += it }
                     }
-                    Config.BoolButton(prop,kotlinmcui.entrypage.overlay()) {}
+                    Config.BoolButton(prop,translate("kotlinmcui.entrypage.overlay")) {}
                     if(prop.getValue()) {
                         Simple.Button("bring to top",list.getOrNull(0) != it) {
                             list.remove(it)
@@ -104,12 +104,11 @@ fun DslEntryPage() = Row {
                         }
                     }
                     TextAutoFold(Modifier.width(200.scaled),horizontalAligner = Aligner.close(Align.LOW)) {
-                        val key = kotlinmcui.entrypage.tooltip
-                        if(flags.isServer) enter().also { key.server().emit(Color(200,30,30)) }
-                        if(flags.isClient) enter().also { key.client().emit(Color(30,200,30)) }
-                        if(flags.isCommon) enter().also { key.common().emit(Color(200,200,200)) }
-                        if(flags.isGui) enter().also { key.gui().emit(Color(150,150,240)) }
-                        if(flags.isOverlay) enter().also { key.overlay().emit(Color(200,200,20)) }
+                        if(flags.isServer) enter().also { translate("kotlinmcui.entrypage.tooltip.server").emit(Color(200,30,30)) }
+                        if(flags.isClient) enter().also { translate("kotlinmcui.entrypage.tooltip.client").emit(Color(30,200,30)) }
+                        if(flags.isCommon) enter().also { translate("kotlinmcui.entrypage.tooltip.common").emit(Color(200,200,200)) }
+                        if(flags.isGui) enter().also { translate("kotlinmcui.entrypage.tooltip.gui").emit(Color(150,150,240)) }
+                        if(flags.isOverlay) enter().also { translate("kotlinmcui.entrypage.tooltip.overlay").emit(Color(200,200,20)) }
                     }
                 }
             }

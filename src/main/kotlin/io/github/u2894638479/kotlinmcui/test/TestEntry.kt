@@ -8,15 +8,15 @@ import io.github.u2894638479.kotlinmcui.entry.*
 import io.github.u2894638479.kotlinmcui.dsl.dataStore
 import io.github.u2894638479.kotlinmcui.dsl.decorator.background
 import io.github.u2894638479.kotlinmcui.dsl.decorator.outline
+import io.github.u2894638479.kotlinmcui.dsl.translateGlobal
 import io.github.u2894638479.kotlinmcui.dsl.ui.TextFlatten
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.logger.dslLogger
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.px
-import io.github.u2894638479.kotlinmcui.text.kotlinmcui
 
 object TestEntry: DslEntryService {
-    override val name get() = kotlinmcui.testentry()
+    override val name get() = translateGlobal("kotlinmcui.testentry")
     override val id get() = "kotlinmcui"
     override val icon get() = ImageHolder("kotlinmcui:icon.png",16.px,16.px)
     object Common: DslEntryCommon, DslEntryService by TestEntry {
@@ -25,7 +25,7 @@ object TestEntry: DslEntryService {
         }
     }
     object TestPage: DslEntryOverlay, DslEntryGui, DslEntryService by TestEntry {
-        override val name get() = kotlinmcui.testpage()
+        override val name get() = translateGlobal("kotlinmcui.testpage")
         context(ctx: DslContext)
         override fun content() {
             TestPage()
@@ -50,7 +50,7 @@ object TestEntry: DslEntryService {
         }
     }
     object DebugOverlay: DslEntryOverlay, DslEntryService by TestEntry {
-        override val name get() = kotlinmcui.debugoverlay()
+        override val name get() = translateGlobal("kotlinmcui.debugoverlay")
         context(ctx: DslContext)
         override fun overlay() {
             val screen = TopComponent.children.getOrNull(1) as? DslScreen

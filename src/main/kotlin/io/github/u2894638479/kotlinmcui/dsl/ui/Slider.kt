@@ -12,7 +12,7 @@ import io.github.u2894638479.kotlinmcui.context.mixed
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local
-import io.github.u2894638479.kotlinmcui.dsl.translate
+import io.github.u2894638479.kotlinmcui.dsl.translateGlobal
 import io.github.u2894638479.kotlinmcui.input.Key
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
 import io.github.u2894638479.kotlinmcui.input.MouseButton
@@ -31,7 +31,6 @@ import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.remap
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import io.github.u2894638479.kotlinmcui.text.kotlinmcui
 import kotlin.math.roundToInt
 
 context(ctx: DslContext)
@@ -135,7 +134,7 @@ private open class SliderImpl(
         var keyFocused = false
     }
     override val narratable get() = true
-    override val narration get() = "${delegate.run { narration }} ${kotlinmcui.narration.slider()}"
+    override val narration get() = "${delegate.run { narration }} ${translateGlobal("kotlinmcui.narration.slider")}"
 
     /** Colour tinting the draggable knob. Overridable for reactive colours. */
     protected open val knobColor get() = buttonColor

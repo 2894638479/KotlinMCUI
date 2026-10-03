@@ -15,7 +15,6 @@ import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.onSet
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import io.github.u2894638479.kotlinmcui.text.kotlinmcui
 import kotlin.math.roundToInt
 
 context(ctx: DslContext)
@@ -26,7 +25,7 @@ fun TestTranslationPage() = ScrollableColumn {
     val doubleProp = local { 0.5 }
     var double by doubleProp
     TextAutoFold {
-        kotlinmcui.test_translate(string,(double*10).roundToInt(),double).emit()
+        translate("kotlinmcui.test_translate",string,(double*10).roundToInt(),double).emit()
     }
     Spacer(Modifier.height(10.scaled)) {}
     EditableText(Modifier.height(25.scaled),stringProp) {}.editBoxBackground()

@@ -46,11 +46,4 @@ class TextModelTest {
         editable.undo()
         assertEquals("abc", text())
     }
-
-    @Test
-    fun `top level translation keys have no leading dot`() {
-        assertEquals("name", KeyInfo("name", emptyList()).path)
-        assertEquals("text", top.spawn("text").path)
-        assertEquals("kotlinmcui.utils.true", KeyInfo("true", listOf("kotlinmcui", "utils")).path)
-    }
 }

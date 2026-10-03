@@ -36,7 +36,6 @@ import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 import io.github.u2894638479.kotlinmcui.text.DslText
 import io.github.u2894638479.kotlinmcui.text.DslTextLine
 import io.github.u2894638479.kotlinmcui.text.EditableString
-import io.github.u2894638479.kotlinmcui.text.kotlinmcui
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.time.Duration
@@ -158,7 +157,7 @@ fun EditableText(
     info.run {
         collect(object : DslComponent by delegate {
             override val narratable get() = true
-            override val narration get() = "${kotlinmcui.narration.editabletext()} $string"
+            override val narration get() = "${translate("kotlinmcui.narration.editabletext")} $string"
             override val focusable get() = true
 
             // ── Cursor state ────────────────────────────────────────────

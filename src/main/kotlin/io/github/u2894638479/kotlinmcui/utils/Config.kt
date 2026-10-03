@@ -5,6 +5,7 @@ import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.decorator.clickable
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.newChildId
+import io.github.u2894638479.kotlinmcui.dsl.translate
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
@@ -13,7 +14,6 @@ import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.*
 import io.github.u2894638479.kotlinmcui.container.DslChild
-import io.github.u2894638479.kotlinmcui.text.kotlinmcui
 import kotlin.reflect.KMutableProperty0
 
 object Config {
@@ -29,7 +29,7 @@ object Config {
             name.emit()
             ": ".emit()
             val bl = prop.value
-            val string = if(bl) kotlinmcui.utils.`true`() else kotlinmcui.utils.`false`()
+            val string = if(bl) translate("kotlinmcui.utils.true") else translate("kotlinmcui.utils.false")
             string.emit(if(bl) Color.GREEN else Color.RED)
         }
     }.clickable { prop.value = !prop.value }
