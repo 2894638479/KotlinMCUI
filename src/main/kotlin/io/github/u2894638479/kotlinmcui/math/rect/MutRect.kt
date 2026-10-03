@@ -40,7 +40,7 @@ fun MutRect.bound(axis: Axis) = when(axis) {
     }
 }
 
-operator fun MutRect.times(time: Double) = object: Rect {
+operator fun MutRect.times(time: Double) = object: MutRect {
     override var left get() = this@times.left * time
         set(value) { this@times.left = value / time }
     override var top get() = this@times.top * time
@@ -53,7 +53,7 @@ operator fun MutRect.times(time: Double) = object: Rect {
 
 operator fun MutRect.div(div: Double) = times(1/div)
 
-fun MutRect.expand(expand: Measure) = object: Rect {
+fun MutRect.expand(expand: Measure) = object: MutRect {
     override var left get() = this@expand.left - expand
         set(value) { this@expand.left = value + expand }
     override var top get() = this@expand.top - expand
