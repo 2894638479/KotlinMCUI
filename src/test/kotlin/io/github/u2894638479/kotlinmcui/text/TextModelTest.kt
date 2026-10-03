@@ -6,12 +6,12 @@ import kotlin.test.*
 class TextModelTest {
 
     private fun editable(initial: String): Pair<EditableString, () -> String> {
-        var value = initial
+        var text = initial
         val prop = object : StableRW<String> {
-            override fun getValue() = value
-            override fun setValue(v: String) { value = v }
+            override fun getValue() = text
+            override fun setValue(value: String) { text = value }
         }
-        return EditableString(prop).apply { undoDepth = 10 } to { value }
+        return EditableString(prop).apply { undoDepth = 10 } to { text }
     }
 
     @Test

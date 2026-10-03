@@ -41,3 +41,7 @@ replay_*.log
 
 .kotlin/
 .profileconfig.json
+
+# scratch documents
+/temp/
+/docs/temp/

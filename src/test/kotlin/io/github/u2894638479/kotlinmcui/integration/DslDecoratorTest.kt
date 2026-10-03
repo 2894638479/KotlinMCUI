@@ -138,10 +138,10 @@ class DslDecoratorTest {
             } }
             box.move(30.px, 0.px)
         }
-        assertNotNull(observed)
+        val seen = assertNotNull(observed)
         // The frame renders with the mouse at the origin, so a 30px translation
         // must show up as -30px inside the transformed subtree.
-        assertEquals(-30.px, observed!!.x)
-        assertEquals(0.px, observed!!.y)
+        assertEquals(-30.px, seen.x)
+        assertEquals(0.px, seen.y)
     }
 }
