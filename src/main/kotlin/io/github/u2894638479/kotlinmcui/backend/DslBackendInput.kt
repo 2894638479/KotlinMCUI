@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.input.Key
+import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 
@@ -19,7 +20,10 @@ interface DslBackendInput {
     /** Returns `true` while the given mouse button index is held down. */
     fun isMouseDown(mouse: Int): Boolean
 
-    /** The current mouse cursor position in logical pixels. */
+    /** Returns `true` while the given mouse [button] is held down. */
+    fun isMouseDown(button: MouseButton): Boolean = isMouseDown(button.ordinal)
+
+    /** The current mouse cursor position, in the same space as [Rect] and the root's rect. */
     val mouse: Position
 
     /**

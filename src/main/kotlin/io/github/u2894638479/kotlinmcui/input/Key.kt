@@ -66,7 +66,20 @@ value class Key(val code: Int) {
         val F21 = Key(90); val F22 = Key(91); val F23 = Key(92); val F24 = Key(93)
         val F25 = Key(94)
 
-        /** Create a [Key] with a platform-specific raw code. Use for keys not in the standard set. */
-        fun custom(code: Int) = Key(code)
+        /** First code of the extension range reserved for [custom]. */
+        const val CUSTOM_RANGE_START = 1000
+
+        /**
+         * Create a [Key] with a platform-specific raw code. Use for keys not in the standard set.
+         *
+         * The code must lie in the extension range, otherwise it would silently be
+         * indistinguishable from a standard key.
+         */
+        fun custom(code: Int): Key {
+            require(code >= CUSTOM_RANGE_START) {
+                "custom key codes must be in the extension range ($CUSTOM_RANGE_START and above), but was $code"
+            }
+            return Key(code)
+        }
     }
 }
