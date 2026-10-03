@@ -39,7 +39,11 @@ class DslScreen private constructor(
         },
     )
 
-    fun close() { dataStore.onClose() }
+    /** Release this screen's properties and hand control back to the backend. */
+    fun close() {
+        dataStore.dispose()
+        dataStore.onClose()
+    }
 
     init { instance = this }
 

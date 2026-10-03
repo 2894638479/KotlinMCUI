@@ -16,8 +16,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
  * Holds the backend reference, frame timing, and three [PropertyLifeScope]
  * instances with different lifetimes:
  * - [localLifeScope]: cleared every frame (properties not accessed this frame are disposed)
- * - [stableLifeScope]: persists across frames as long as accessed each frame
- * - [staticLifeScope]: persists for the lifetime of the process
+ * - [stableLifeScope]: survives while the screen lives, even across frames in which
+ *   the declaring UI code did not run; released by [dispose] when the screen closes
+ * - [staticLifeScope]: persists for the lifetime of the process and is never released
  *
  * Global UI state (focus, hover, narration, IME) lives on
  * [TopComponent] rather than here, since it is shared across all screens
@@ -63,6 +64,17 @@ class DslDataStore(
         inFrame = false
         debugOverlay.frameRenderTimeMs = (System.nanoTime() - frameBeginNano) / 1e6
         debugOverlay.backendRenderTimeMs = debugOverlay.frameRenderTimeMs - debugOverlay.dslRenderTimeMs
+    }
+
+    /**
+     * Release this screen's per-screen state, running the cleanup actions of every
+     * remaining [stableLifeScope] and [localLifeScope] entry.
+     *
+     * The static scope is process-wide and is deliberately left alone.
+     */
+    fun dispose() {
+        stableLifeScope.clear()
+        localLifeScope.clear()
     }
 
     var pauseGame = true

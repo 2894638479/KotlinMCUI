@@ -48,16 +48,23 @@ class PropertyLifeScope internal constructor(
 
         fun setWithTime(value:T,timeNano: Long) {
             if(targetValue == value) return
+            // Read the current (possibly interpolated) value first, then drop the
+            // frame memo: a later read in the same frame must see the new segment,
+            // not the result that was cached before the target changed.
             beginValue = getValue()
             targetValue = value
             beginTimeNano = timeNano
+            lastResultNano = Long.MIN_VALUE
         }
 
         override fun getValue():T {
             val frameTimeNano = dataStore.frameBeginNano
             if(frameTimeNano == lastResultNano) return lastResult
             return when {
-                frameTimeNano > beginTimeNano + durationNano -> targetValue
+                // A zero-length animation must land on its target immediately;
+                // interpolating would divide by zero and yield NaN.
+                durationNano <= 0L -> targetValue
+                frameTimeNano >= beginTimeNano + durationNano -> targetValue
                 frameTimeNano < beginTimeNano -> beginValue
                 else -> interpolator.interpolate(beginValue,targetValue,(frameTimeNano - beginTimeNano)/durationNano.toDouble())
             }.also {
@@ -75,6 +82,12 @@ class PropertyLifeScope internal constructor(
             val bl = it.frameStamp != frameIndex
             bl.apply { if(bl) it.onClear() }
         }
+    }
+
+    /** Drop every entry, running [TimedProperty.onClear] on each. */
+    fun clear() {
+        map.values.forEach { it.onClear() }
+        map.clear()
     }
 
     private fun coroutineScope(
@@ -267,11 +280,11 @@ class PropertyLifeScope internal constructor(
      * Useful for cleanup (e.g. cancelling coroutines, releasing resources).
      */
     context(ctx: DslIdContext)
-    fun dispose(id:Any? = null, action: context(DslExecuteContext)() -> Unit) {
+    fun dispose(id:Any? = null, action: () -> Unit) {
         val identity = getId(id ?: action::class)
         map.getOrPut(identity) {
             object : TimedProperty<Unit>(Unit) {
-                override fun onClear() { context(DslExecuteContext(dataStore)) { action() } }
+                override fun onClear() { action() }
             }
         }
     }
