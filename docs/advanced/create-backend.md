@@ -16,7 +16,7 @@ parent: Advanced
 
 ## 需要实现的事
 - 将`DslBackend`提供给`dslBackendProvider`
-- 调用`DslEntryService.loadServices()`并执行它们的`initialize()`
+- 调用`DslEntryLoader.init(Environment)`来发现并初始化各个入口
 - 将`DslEntryPage()`注册到对应`loader`的配置页面
 - 实现`DslBackend`中的函数
   - 渲染：矩形、图片、背景、按钮、物品等ui

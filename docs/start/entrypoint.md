@@ -16,7 +16,7 @@ parent: Start
 object Entry : DslEntryCommon, DslEntryGui
 ```
 ### service注册
-创建`resources/META-INF/services/io.github.u2894638479.kotlinmcui.backend.DslEntryXXX`文件，向其中写入注册类的全限定名。
+创建`resources/META-INF/services/io.github.u2894638479.kotlinmcui.entry.DslEntryXXX`文件，向其中写入注册类的全限定名。
 其中的`XXX`替换为你需要注册的接口。
 
 文件内容示例
@@ -45,7 +45,7 @@ object Entry : DslEntryCommon, DslEntryGui, DslEntryOverlay {
 ```
 展示了一种推荐写法。你也可以把这些类完全拆开，甚至放入不同源集。注意每个类都要注册在service中。
 
-把在Client环境会加载`DslEntryCommon`和`DslEntryClient`，
+在Client环境会加载`DslEntryCommon`和`DslEntryClient`，
 在Server环境会加载`DslEntryCommon`和`DslEntryServer`。从而避免引用到不存在的类。
 
 注意，以上区分仅对运行环境进行区分，Server环境没有`minecraft`的渲染相关类，不表示无法显示gui。Server环境下仍可能通过其它后端实现ui渲染，因此Gui和Overlay仍然会被加载。**因此，如果一个入口类同时继承了`DslEntryClient`和`DslEntryGui`，那么在Server环境下虽然`initializeClient()`不会被执行，但是这个类会被加载。**

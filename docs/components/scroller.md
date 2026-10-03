@@ -7,9 +7,9 @@ parent: Components
 # 滚动
 可滚动的控件（`ScrollableColumn`、`LazyColumn`）和滚动条（`ScrollBar`）是分开的。如果需要使用，应该用`Row`或`Column`把它们排在一起。
 
-`ScrollableRow`目前还没有实现。
+`ScrollableColumn`、`ScrollableRow`、`LazyColumn`、`LazyRow`都有实现。
 ## `Scroller`
-可以向`ScrollableColumn`传入`scrollerProp`和`scrollProp`。
+可以向`ScrollableColumn`传入`scrollerProp`和`scrollProp`；不传时每个滚动容器会自动创建一份属于自己的，容器之间不会互相影响。
 ```kotlin
 val scrollerProp by local { Scroller.empty }
 val scrollProp by local.animatable { 0.0 }
