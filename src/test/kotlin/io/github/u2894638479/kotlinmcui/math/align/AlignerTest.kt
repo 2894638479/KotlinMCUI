@@ -195,7 +195,10 @@ class AlignerTest {
     @Test
     fun `weighted distributes the space left by fixed items`() {
         val items = listOf(
-            TestAlignable(size = 20.px, weight = 1.0),
+            // The fixed item carries a weight of its own. It must not take part in
+            // the split: an implementation that divides the fixed items' total (or
+            // their weight sum) would hand the automatic items 10 and 30 instead.
+            TestAlignable(size = 20.px, weight = 2.0),
             TestAlignable(size = Measure.AUTO, weight = 1.0, minSize = 0.px),
             TestAlignable(size = Measure.AUTO, weight = 3.0, minSize = 0.px)
         )

@@ -13,6 +13,7 @@ import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.size
 import io.github.u2894638479.kotlinmcui.utils.Simple
+import java.nio.file.Path
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -150,9 +151,27 @@ class DslEventTest {
 
     @Test
     fun `scissor blocks mouse events outside its rect`() {
+        // The child answers `true` to everything, so only the decorator's own rect
+        // check can stop these events: a child that declined them by default would
+        // hide a scissor that never gated the event at all.
+        var down = false
+        var up = false
+        var moved = false
+        var dropped = false
         val screen = buildScreen {
             Box(Modifier.size(50.px, 50.px)) {
-                Simple.Button("inside") {}.clickable {}
+                Spacer(Modifier.size(20.px, 20.px), id = "inside").change {
+                    object : DslComponent by it {
+                        context(eventModifier: KeyModifiers, mouse: Position)
+                        override fun mouseDown(mouseButton: MouseButton): Boolean { down = true; return true }
+                        context(eventModifier: KeyModifiers, mouse: Position)
+                        override fun mouseUp(mouseButton: MouseButton): Boolean { up = true; return true }
+                        context(mouse: Position)
+                        override fun mouseMove() { moved = true }
+                        context(mouse: Position)
+                        override fun dropFiles(files: Array<Path>): Boolean { dropped = true; return true }
+                    }
+                }
             }.scissor()
         }
         val box = screen.children[0]
@@ -161,6 +180,22 @@ class DslEventTest {
         context(KeyModifiers(), outside) {
             assertFalse(box.mouseDown(MouseButton.LEFT), "mouseDown outside a scissor must not pass through")
             assertFalse(box.mouseUp(MouseButton.LEFT), "mouseUp outside a scissor must not pass through")
+            assertFalse(box.dropFiles(emptyArray()), "dropFiles outside a scissor must not pass through")
         }
+        context(outside) { box.mouseMove() }
+        assertFalse(down, "the child must not see a mouseDown outside the clip rect")
+        assertFalse(up, "the child must not see a mouseUp outside the clip rect")
+        assertFalse(moved, "the child must not see a mouseMove outside the clip rect")
+        assertFalse(dropped, "the child must not see a file drop outside the clip rect")
+
+        val inside = Position(box.rect.left + 1.px, box.rect.top + 1.px)
+        context(KeyModifiers(), inside) {
+            assertTrue(box.mouseDown(MouseButton.LEFT))
+            assertTrue(box.mouseUp(MouseButton.LEFT))
+        }
+        context(inside) { box.mouseMove() }
+        assertTrue(down, "events inside the clip rect must reach the child")
+        assertTrue(up)
+        assertTrue(moved)
     }
 }
