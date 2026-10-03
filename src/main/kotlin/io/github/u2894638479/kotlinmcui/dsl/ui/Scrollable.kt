@@ -41,8 +41,8 @@ import io.github.u2894638479.kotlinmcui.input.Key
 context(ctx: DslContext)
 fun ScrollableColumn(
     modifier: Modifier = Modifier,
-    scrollerProp: StableRW<Scroller> = local { Scroller.empty },
-    scrollProp: StableRW<Double> = local.animatable { 0.0 },
+    scrollerProp: StableRW<Scroller>? = null,
+    scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
     autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id:Any? = null,
@@ -53,8 +53,8 @@ fun ScrollableColumn(
 context(ctx: DslContext)
 fun ScrollableRow(
     modifier: Modifier = Modifier,
-    scrollerProp: StableRW<Scroller> = local { Scroller.empty },
-    scrollProp: StableRW<Double> = local.animatable { 0.0 },
+    scrollerProp: StableRW<Scroller>? = null,
+    scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
     autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id:Any? = null,
@@ -66,13 +66,18 @@ context(ctx: DslContext)
 private fun Scrollable(
     modifier: Modifier = Modifier,
     axis: Axis,
-    scrollerProp: StableRW<Scroller> = local { Scroller.empty },
-    scrollProp: StableRW<Double> = local.animatable { 0.0 },
+    scrollerProp: StableRW<Scroller>? = null,
+    scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
     autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id:Any? = null,
     function: DslFunction
 ) = withId(id ?: function::class) {
+    // Resolve the defaults inside this container's own identity scope. A default
+    // evaluated at the call site would be keyed by the *caller*, so every container
+    // that omitted the argument would end up sharing one scroller.
+    val scrollerProp = scrollerProp ?: local { Scroller.empty }
+    val scrollProp = scrollProp ?: local.animatable { 0.0 }
     val delegate = DslScopeImpl(identity, modifier, ctx, function)
     collect(
         object : DslScope by delegate {

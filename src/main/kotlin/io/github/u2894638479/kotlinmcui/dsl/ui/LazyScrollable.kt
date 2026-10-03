@@ -41,8 +41,8 @@ import io.github.u2894638479.kotlinmcui.container.DslScopeImpl
 context(ctx: DslContext)
 fun LazyColumn(
     modifier: Modifier = Modifier,
-    scrollerProp: StableRW<Scroller> = local { Scroller.empty },
-    scrollProp: StableRW<Double> = local.animatable { 0.0 },
+    scrollerProp: StableRW<Scroller>? = null,
+    scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
     autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id: Any? = null,
@@ -52,8 +52,8 @@ fun LazyColumn(
 context(ctx: DslContext)
 fun LazyRow(
     modifier: Modifier = Modifier,
-    scrollerProp: StableRW<Scroller> = local { Scroller.empty },
-    scrollProp: StableRW<Double> = local.animatable { 0.0 },
+    scrollerProp: StableRW<Scroller>? = null,
+    scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
     autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id: Any? = null,
@@ -71,13 +71,18 @@ context(ctx: DslContext)
 private fun LazyScrollable(
     axis: Axis,
     modifier: Modifier = Modifier,
-    scrollerProp: StableRW<Scroller> = local { Scroller.empty },
-    scrollProp: StableRW<Double> = local.animatable { 0.0 },
+    scrollerProp: StableRW<Scroller>? = null,
+    scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
     autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id: Any? = null,
     function: DslFunction
 ): DslChild = withId(id ?: function::class) {
+    // Resolve the defaults inside this container's own identity scope. A default
+    // evaluated at the call site would be keyed by the *caller*, so every container
+    // that omitted the argument would end up sharing one scroller.
+    val scrollerProp = scrollerProp ?: local { Scroller.empty }
+    val scrollProp = scrollProp ?: local.animatable { 0.0 }
     val delegate = DslScopeImpl(identity, modifier, ctx, function)
     collect(object : DslScope by delegate {
         var scroller by scrollerProp
@@ -185,6 +190,10 @@ private fun LazyScrollable(
             override var rawScroll by local { 0.0 }
             override var scroll by scrollProp
             override var scrollIndex by local { 0 }
+
+            // Resolve identities against the child list: asking an item for its
+            // identity would load it, which would defeat the whole point.
+            override fun indexOf(identity: DslId) = children.indexOfFirst { it.identity == identity }
         }
 
         private fun loadItem(index: Int): Scroller.Item {

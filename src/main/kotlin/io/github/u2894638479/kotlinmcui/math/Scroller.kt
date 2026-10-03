@@ -129,6 +129,14 @@ interface Scroller : DslScaleContext, Bound {
     }
 
     fun isScrollable() = spaceBefore() + spaceAfter() > 0
+
+    /**
+     * Index of the item identified by [identity], or `-1`.
+     *
+     * The default implementation walks [items]. Lazy scrollers override it so that
+     * locating an item does not force every preceding item to load.
+     */
+    fun indexOf(identity: DslId): Int = items.indexOfFirst { it.identity == identity }
 }
 
 // ── Core algorithms ──────────────────────────────────────────────────────────
@@ -213,7 +221,12 @@ fun Scroller.scroll(value: Double): Double {
     return (value - (after - before))
 }
 
-/** Scroll the current visible item according to [align]. */
+/**
+ * Scroll to the start, middle or end of the whole content.
+ *
+ * [Align.LOW] goes to the first item, [Align.HIGH] to the last, and [Align.MID]
+ * centres the item halfway through the list.
+ */
 fun Scroller.scrollTo(align: Align) {
     var idx = scrollIndex
     var off = offset
@@ -223,7 +236,7 @@ fun Scroller.scrollTo(align: Align) {
             rawScroll = off
         }
         Align.MID -> {
-            return scrollTo(idx / 2, Align.MID)
+            return scrollTo(items.size / 2, Align.MID)
         }
         Align.HIGH -> {
             val viewport = size.unscaled
@@ -265,14 +278,20 @@ fun Scroller.scrollTo(index: Int, align: Align) {
     updateScroll()
 }
 
-/** Scroll to the item identified by [id]. */
-fun Scroller.scrollTo(id: DslId, align: Align) = scrollTo(items.indexOfFirst { it.identity == id }, align)
+/**
+ * Scroll to the item identified by [id].
+ *
+ * Uses [Scroller.indexOf], so lazy scrollers can resolve the index without
+ * loading the items in between.
+ */
+fun Scroller.scrollTo(id: DslId, align: Align) = scrollTo(indexOf(id), align)
 
 /**
  * Scroll the item at [index] into the viewport according to [constraint].
- * [ScrollConstraint.MINIMAL] does nothing if already visible, otherwise
- * pushes the minimum amount to bring the item into view.
- * [ScrollConstraint.CENTER] centers the item.
+ *
+ * [ScrollConstraint.KeepIn] and [ScrollConstraint.KeepInRatio] do nothing when the
+ * item is already visible and otherwise push the minimum amount needed to bring it
+ * into view; [ScrollConstraint.AlignTo] always aligns the item.
  */
 fun Scroller.scrollTo(index: Int, constraint: ScrollConstraint) {
     if (index !in items.indices) return
@@ -305,4 +324,4 @@ fun Scroller.scrollTo(index: Int, constraint: ScrollConstraint) {
 
 /** Scroll the item identified by [id] into the viewport. */
 fun Scroller.scrollTo(id: DslId, constraint: ScrollConstraint) =
-    scrollTo(items.indexOfFirst { it.identity == id }, constraint)
+    scrollTo(indexOf(id), constraint)
