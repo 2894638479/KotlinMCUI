@@ -12,28 +12,16 @@ import java.lang.reflect.Modifier
 object DslEntryLoader {
     private val cache = mutableMapOf<Class<*>, Pair<DslEntryService, Flags>>()
     private var snapshot: List<Pair<DslEntryService, Flags>> = emptyList()
-    private var initialized = false
 
     private val registeredOverlays = mutableMapOf<String, DslEntryOverlay>()
     private val enabledIds = mutableListOf<String>()
     private var enabledSnapshot: List<DslEntryOverlay> = emptyList()
-    private var overlaysLoaded = false
 
     /** Registered entries and their discovery flags. A snapshot, so callers may iterate it safely. */
     val entries: Collection<Pair<DslEntryService, Flags>> get() = snapshot
 
-    /**
-     * Enabled overlays in stacking order: the first one is the topmost layer.
-     *
-     * The stored list is read the first time it is needed rather than during [init]:
-     * reading it needs the backend's config directory, and the backend is not usable
-     * during mod initialisation.
-     */
-    val enabledOverlays: List<DslEntryOverlay>
-        get() {
-            ensureOverlaysLoaded()
-            return enabledSnapshot
-        }
+    /** Enabled overlays in stacking order: the first one is the topmost layer. */
+    val enabledOverlays: List<DslEntryOverlay> get() = enabledSnapshot
 
     class Flags {
         var isClient = false
@@ -50,40 +38,33 @@ object DslEntryLoader {
 
     /**
      * Discover every entry on the classpath and initialise the ones the current
-     * environment applies to.
+     * environment applies to, then read the stored overlay list.
      *
-     * Call this **once**, from the backend's initialiser. A repeated call is ignored
-     * apart from a warning: registering is idempotent, the enabled overlays are read
-     * only once, and initialising a mod twice is never what anyone wants.
+     * Called by [io.github.u2894638479.kotlinmcui.backend.DslRuntime.install], which
+     * runs it exactly once and guarantees that metadata (and therefore the config
+     * directory) is already available.
      */
-    fun init(environment: Environment) {
-        if (initialized) {
-            dslLogger.warn("DslEntryLoader.init was already called, ignoring the $environment call")
-        } else {
-            initialized = true
-            initCommon()
-            when(environment) {
-                Environment.CLIENT -> initClient()
-                Environment.SERVER -> initServer()
-                Environment.COMMON -> {}
-            }
+    internal fun discover(environment: Environment) {
+        initCommon()
+        when(environment) {
+            Environment.CLIENT -> initClient()
+            Environment.SERVER -> initServer()
+            Environment.COMMON -> {}
         }
         initGui()
         initOverlay()
         snapshot = cache.values.toList()
         collectOverlays()
+        enabledIds.clear()
+        enabledIds += readOverlayIds()
         refreshEnabledOverlays()
     }
 
     /** Whether [overlay] is currently enabled. */
-    fun isOverlayEnabled(overlay: DslEntryOverlay): Boolean {
-        ensureOverlaysLoaded()
-        return overlay.id in enabledIds
-    }
+    fun isOverlayEnabled(overlay: DslEntryOverlay): Boolean = overlay.id in enabledIds
 
     /** Enable or disable [overlay], storing the new list. */
     fun setOverlayEnabled(overlay: DslEntryOverlay, enabled: Boolean) {
-        ensureOverlaysLoaded()
         if (enabled == (overlay.id in enabledIds)) return
         if (enabled) enabledIds += overlay.id else enabledIds -= overlay.id
         refreshEnabledOverlays()
@@ -92,7 +73,6 @@ object DslEntryLoader {
 
     /** Move [overlay] to the front of the stack, storing the new order. */
     fun bringOverlayToTop(overlay: DslEntryOverlay) {
-        ensureOverlaysLoaded()
         if (enabledIds.firstOrNull() == overlay.id) return
         enabledIds.remove(overlay.id)
         enabledIds.add(0,overlay.id)
@@ -102,20 +82,11 @@ object DslEntryLoader {
 
     context(ctx: DslContext)
     fun overlays(): Unit {
-        ensureOverlaysLoaded()
         enabledSnapshot.forEachWithId {
             Box {
                 it.overlay()
             }
         }
-    }
-
-    private fun ensureOverlaysLoaded() {
-        if (overlaysLoaded) return
-        overlaysLoaded = true
-        enabledIds.clear()
-        enabledIds += readOverlayIds()
-        refreshEnabledOverlays()
     }
 
     private fun collectOverlays() {

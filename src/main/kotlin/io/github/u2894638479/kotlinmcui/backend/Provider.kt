@@ -1,42 +1,29 @@
 package io.github.u2894638479.kotlinmcui.backend
 
-import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
+// Both providers are deliberately not public. A platform installs itself through
+// DslRuntime, which is what turns "install once while the mod initialises, publish the
+// backend when the platform is ready" into a property of the framework rather than a
+// convention every backend has to remember.
+internal var dslBackendProvider: (() -> DslBackend<*, *>)? = null
+internal var dslMetadataProvider: (() -> DslBackendMetadata)? = null
 
-/**
- * Global backend provider.
- *
- * Set [dslBackendProvider] before any DSL screens are created (typically during
- * mod initialization). Once set, the backend is accessed via [dslBackend].
- */
-var dslBackendProvider: (() -> DslBackend<*, *>)? = null
-
-/**
- * Global metadata provider.
- *
- * Install this during mod initialisation, **before** the platform is ready to build
- * a backend. Everything in [DslBackendMetadata] is readable from the first moment,
- * while building the backend itself may need a platform that does not exist yet
- * (a window, a narrator, loaded resources). The provider must be side-effect free.
- *
- * Callers that only need metadata read [dslMetadata], so they never force a backend
- * to be constructed.
- */
-var dslMetadataProvider: (() -> DslBackendMetadata)? = null
-
-/** The current backend instance. Throws if no provider has been registered. */
+/** The current backend instance. Throws until the platform has published one. */
 val dslBackend get() = dslBackendProvider?.invoke() ?: throw dslNoBackendError()
 
 /**
  * Metadata of the current platform.
  *
- * Falls back to the backend's own metadata for platforms that did not install a
- * separate provider, in which case reading metadata does build the backend.
+ * Falls back to the backend for platforms installed without a separate metadata
+ * provider, in which case reading metadata does build the backend.
  */
 val dslMetadata: DslBackendMetadata
     get() = dslMetadataProvider?.invoke() ?: dslBackend
 
 private fun dslNoBackendError() = IllegalStateException(
-    "DSL failed to find a backend. You should install a mod to provide it, or you are trying to use DSL before initialization."
+    if (DslRuntime.installedButNotReady)
+        "The backend is installed, but the platform is not ready to build it yet. Mod initialisation must not use the DSL; do it once screens can be created."
+    else
+        "DSL failed to find a backend. You should install a mod to provide it, or you are trying to use DSL before initialization."
 )
 
 /**

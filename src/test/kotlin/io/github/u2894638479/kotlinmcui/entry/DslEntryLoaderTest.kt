@@ -1,8 +1,6 @@
 package io.github.u2894638479.kotlinmcui.entry
 
-import io.github.u2894638479.kotlinmcui.backend.Environment
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
-import io.github.u2894638479.kotlinmcui.integration.TestBackend
+import io.github.u2894638479.kotlinmcui.integration.TestRuntime
 import java.nio.file.Files
 import kotlin.io.path.exists
 import kotlin.io.path.readText
@@ -19,8 +17,8 @@ import org.junit.jupiter.api.TestMethodOrder
  * The framework's own entries are registered from `src/main/resources` as well, so
  * these cases look only at the fixtures declared in `src/test/resources`.
  *
- * Everything lives in one class on purpose: the loader initialises once per process,
- * so the counting cases must be the first ones to call [DslEntryLoader.init].
+ * The installed platform is JVM-wide ([TestRuntime]), which is what the loader's
+ * single-shot discovery needs; `DslRuntimeTest` owns the sequence itself.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class DslEntryLoaderTest {
@@ -29,9 +27,8 @@ class DslEntryLoaderTest {
 
     @BeforeEach
     fun setUp() {
-        dslBackendProvider = { TestBackend }
+        TestRuntime.install()
         Files.deleteIfExists(configPath)
-        DslEntryLoader.init(Environment.CLIENT)
         // The loader is process-wide, so earlier cases may have left overlays on.
         DslEntryLoader.enabledOverlays.forEach { DslEntryLoader.setOverlayEnabled(it,false) }
         // The stored config is a case's own business: start each one without a file.
@@ -41,24 +38,12 @@ class DslEntryLoaderTest {
     @AfterEach
     fun tearDown() {
         Files.deleteIfExists(configPath)
-        dslBackendProvider = null
     }
 
     // ── loading ──────────────────────────────────────────────────────────────
 
     @Test
     @Order(1)
-    fun `initialisation methods run once however often init is called`() {
-        assertEquals(1, FixtureCommon.runs)
-        assertEquals(1, FixtureClient.runs)
-
-        DslEntryLoader.init(Environment.CLIENT)
-        assertEquals(1, FixtureCommon.runs, "a second init must not run the common initialisation again")
-        assertEquals(1, FixtureClient.runs, "a second init must not run the client initialisation again")
-    }
-
-    @Test
-    @Order(2)
     fun `entries register whether they are declared as objects or as classes`() {
         val registered = DslEntryLoader.entries.map { it.first::class }
         assertTrue(FixtureGuiObject::class in registered, "a Kotlin object entry must register")

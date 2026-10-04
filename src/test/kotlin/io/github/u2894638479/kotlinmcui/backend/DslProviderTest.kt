@@ -4,6 +4,7 @@ import io.github.u2894638479.kotlinmcui.config.configFormat
 import io.github.u2894638479.kotlinmcui.config.loadConfig
 import io.github.u2894638479.kotlinmcui.config.saveConfig
 import io.github.u2894638479.kotlinmcui.integration.TestBackend
+import io.github.u2894638479.kotlinmcui.integration.TestRuntime
 import kotlinx.serialization.Serializable
 import java.nio.file.Files
 import java.nio.file.Path
@@ -34,8 +35,9 @@ class DslProviderTest {
     @AfterEach
     fun tearDown() {
         dslMetadataProvider = null
-        dslBackendProvider = null
         Files.walk(OnlyMetadata.configDir).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
+        // Leave the shared platform the way the other cases expect to find it.
+        TestRuntime.install()
     }
 
     @Test
@@ -51,6 +53,7 @@ class DslProviderTest {
     @Test
     fun `metadata is readable while no backend exists at all`() {
         dslMetadataProvider = { OnlyMetadata }
+        dslBackendProvider = null
 
         assertEquals(OnlyMetadata.configDir, dslMetadata.configDir)
         assertFailsWith<IllegalStateException>("the backend itself must still be unavailable") { dslBackend }
@@ -66,6 +69,7 @@ class DslProviderTest {
 
     @Test
     fun `metadata falls back to the backend when no provider is installed`() {
+        dslMetadataProvider = null
         dslBackendProvider = { TestBackend }
         assertEquals(TestBackend.configDir, dslMetadata.configDir)
     }
