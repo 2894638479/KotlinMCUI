@@ -95,3 +95,19 @@ override val focusable get() = true
 子控件需要实现`outerMinHeight`和`outerMinWidth`供外部读取，让父控件在layout时给它分配至少这么多空间（不一定遵循）。
 
 先水平布局再竖直布局的原因是`TextAutoFold`需要先确定宽度，才知道高度。如果反过来调用，会导致`outerMinHeight`不能正确计算。
+
+## 画矩形以外的形状
+框架的绘制原语是一个四边形：矩形、贴图、九宫格都由它表达。**任意三角形与多边形不在其中**——仿射映射只能把矩形映成平行四边形，所以三角形需要后端实现另一个可选能力：
+
+```kotlin
+context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+override fun <RP> render() {
+    val triangles = backend.triangles() ?: return
+    // 凸多边形：一个顶点一种颜色，内部展开成三角扇
+    triangles.fillPolygon(points, colors)
+    // 任意三角形表：每三个顶点一个三角形，`vertices`每顶点 2 个 float
+    triangles.renderTriangles(vertices, colors)
+}
+```
+
+`fillPolygon`每次调用都会重建数组，适合偶尔绘制的图形；每帧都画的多边形应当自己复用`renderTriangles`的数组。后端没有实现这个能力时`triangles()`返回`null`，组件什么都不画——这是契约，不是错误。

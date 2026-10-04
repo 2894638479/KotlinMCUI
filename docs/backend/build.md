@@ -62,9 +62,10 @@ KOTLINMCUI_VERIFY=transform ./gradlew runVerifyClient        # PowerShell: $env:
 | 缺省 / `1` | 框架的测试页 |
 | `transform` | 内置的变换演示页（旋转、透视、缩放+平移） |
 | `translate` | 内置的翻译演示页 |
+| `polygon` | 内置的多边形演示页（可选三角表能力：六边形与三角形） |
 | `debug` | 框架的调试叠层 |
 
-**透视是唯一会用到位姿矩阵第三行的路径**，改动变换相关代码后应当跑一次 `transform`。
+**透视是唯一会用到位姿矩阵第三行的路径**，改动变换相关代码后应当跑一次 `transform`；`polygon` 是唯一走 `DslBackendTriangles` 这条可选能力的页面，改动顶点提交路径后应当跑一次它。
 
 判定标准有两条：截图内容正常（说明界面确实画出来了），以及日志里有 `input callbacks registered`（说明安装输入回调的那处注入生效了——它失效时游戏照常启动，只是框架收不到任何输入，很容易被当成"界面不响应"）。
 
