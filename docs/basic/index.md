@@ -24,7 +24,7 @@ Column {
     Row(Modifier.height(50.scaled)) {
         TextFlatten { "buttons: ".emit() }
         strings.forEachWithId {
-            val weight by autoAnimate(if(chosen == it) 2.0 else 1.0)
+            val weight by local.autoAnimate { if(chosen == it) 2.0 else 1.0 }
             Button(Modifier.weight(weight).padding(5.scaled)) {
                 TextFlatten { it.emit(color = if(chosen == it) Color.GREEN else Color.RED) }
             }.clickable {
@@ -32,7 +32,7 @@ Column {
             }
         }
     }
-    var color by animatable(Color.RED)
+    var color by local.animatable<Color> { Color.RED }
     TextFlatten(Modifier.padding(5.scaled).weight(0.0)) {
         "the second item in column".emit(color = color)
     }.clickable {

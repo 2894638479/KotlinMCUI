@@ -61,6 +61,7 @@ KOTLINMCUI_VERIFY=transform ./gradlew runVerifyClient        # PowerShell: $env:
 | --- | --- |
 | 缺省 / `1` | 框架的测试页 |
 | `transform` | 内置的变换演示页（旋转、透视、缩放+平移） |
+| `translate` | 内置的翻译演示页 |
 | `debug` | 框架的调试叠层 |
 
 **透视是唯一会用到位姿矩阵第三行的路径**，改动变换相关代码后应当跑一次 `transform`。

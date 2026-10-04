@@ -19,11 +19,11 @@ repositories {
 在`dependencies`中添加本模组作为依赖：
 ```groovy
 dependencies {
-    implementation "com.github.2894638479:KotlinMCUI:v1.0.0-alpha.5"
-    modImplementation "com.github.2894638479:KotlinMCUI-backend:v1.0.0-alpha.3-fabric-1.20.1"
+    implementation "com.github.2894638479:KotlinMCUI:v1.0.0-alpha.32"
+    modImplementation "com.github.2894638479:KotlinMCUI-backend:v1.0.0-alpha.19-fabric-26.2"
 }
 ```
-`fabric-1.20.1`替换成你需要的分支。如果不是`fabric`，要用`implementation`代替`modImplementation`。
+上面示例用的是当前维护的分支`fabric-26.2`（Minecraft `26.2`、Fabric、Java 25）。切换到其它分支时两个版本号必须一起换成该分支上成对发布过的版本，因为后端对核心库的依赖是精确版本，不匹配会在加载时直接报依赖不满足。其它Minecraft版本的分支不再更新；各分支上发布过哪些版本见上面的JitPack徽章。如果不是`fabric`，要用`implementation`代替`modImplementation`。
 
 适配情况查看：
 
@@ -37,4 +37,4 @@ dependencies {
 ## loader中的依赖
 在`fabric.mod.json`或`mods.toml`等文件中添加依赖。具体到对应加载器官网了解。
 
-你只需要依赖`kotlinmcui`，因为`kotlinmcui`会依赖`kotlinmcuibackend`。
+安装时要同时放入`kotlinmcui`与`kotlinmcuibackend`两个模组，后端会精确校验核心库的版本。你自己的模组只依赖`kotlinmcui`就够了。

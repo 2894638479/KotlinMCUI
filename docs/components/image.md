@@ -11,7 +11,7 @@ parent: Components
 - `width`、`height`：图像的宽高。应该以`1.px`为单位。是为了在渲染时计算纹理uv。
 
 ## 资源图像
-可以手动构造，例子：`ImageHolder(minecraft:textures/block/dirt.png,16.px,16.px)`
+可以手动构造，例子：`ImageHolder("minecraft:textures/block/dirt.png",16.px,16.px)`
 
 也可以调用`imageResource()`，效果是一样的
 

@@ -23,12 +23,12 @@ var a by local { 3 }
 val b by local(customId) { "alice" }
 var c by local.animatable { 20.0 }
 
-val size by local.autoAnimate { if(expanded) 50.px else 25.px }
+val size by local.autoAnimate<Measure> { if(expanded) 50.px else 25.px }
 val data by stable { loadData() }
 var count by static { 0 }
 // ...
 ```
-`local{}`是`local.property{}`的简写。`property{}`为普通变量，`animatable{}`和`autoAnimate{}`是动画变量，`cached(key){}`为缓存变量。
+`local{}`是`local.property{}`的简写。`property{}`为普通变量，`animatable{}`和`autoAnimate{}`是动画变量，`cached(key){}`为缓存变量。它们都必须以`local`为接收者调用。
 
 `local`,`stable`,`static`表示变量的生命周期。
 
@@ -66,23 +66,25 @@ var b by local { 0 }
 
 ## 动画
 `animatable`和`autoAnimate`能自动给可以插值的变量插值。它们都可以指定插值函数和时长。
+
+两者都同时提供`Double`版本和泛型版本，泛型版本要求目标类型实现`Interpolatable`。当目标值不是`Double`时必须显式写出类型参数，否则会解析到`Double`版本而报类型不符，例如`local.animatable<Measure> { ... }`。
 ### animatable
 ```kotlin
-var height by animatable(10.px)
+var height by local.animatable<Measure> { 10.px }
 //...
     .clickable { height = 30.px }
 ```
 点击后，读取`height`的值，会发现读到的值从`10`随着时间平滑变化到`30`。
 ### autoAnimate
 
-和前者类似，但是只能委托给只读属性，用法略有不同。
+和前者类似，但是只能委托给只读属性，用法略有不同。初始值和目标值都以lambda给出。
 ```kotlin
-val height by autoAnimate { if(bl) width else 30.px }
+val height by local.autoAnimate<Measure> { if(bl) width else 30.px }
 ```
 ## 缓存
 使用`cached`可以缓存一个计算开销较大的值。普通的加减乘除不建议使用。
 ```kotlin
-val result by cached(key) {
+val result by local.cached(key) {
     // compute...
 }
 ```

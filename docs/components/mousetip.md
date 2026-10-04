@@ -18,16 +18,12 @@ MouseTip {
 可以正常在里面编写ui。
 
 ## `Tooltip`
-```kotlin
-Tooltip(id)
-Tooltip {}
-```
-会把鼠标悬停/键盘选中的控件上的`.tooltip {}`中的内容渲染出来，并自动调整位置到屏幕内。就像原版`minecraft`中那样。
+`Tooltip`图层由框架为每个`Screen`自动创建，不需要也无法手动调用。
+
+只要给组件加上`.tooltip {}`，当鼠标悬停或键盘选中该组件时，其中的内容就会渲染出来，并自动调整位置到屏幕内。就像原版`minecraft`中那样。
 
 ### 为组件声明`tooltip`
 ```kotlin
-Tooltip {}
-
 Button(Modifier.size(50.scaled,20.scaled)) {
     
 }.clickable {  }.tooltip {
@@ -38,4 +34,4 @@ Button(Modifier.size(50.scaled,20.scaled)) {
     }.tooltipBackground()
 }
 ```
-只有`Tooltip{}`存在时，组件的`.tooltip{}`内的ui才有机会出现。`.tooltipBackground()`会让一个组件具有原版`minecraft`的`tooltip`背景框。
+`.tooltip{}`的内容只在该组件被悬停或选中时才会渲染。`.tooltipBackground()`会让一个组件具有原版`minecraft`的`tooltip`背景框。

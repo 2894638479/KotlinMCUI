@@ -9,9 +9,9 @@ parent: Custom
 
 事件会从上到下依次传递。`children`中靠前的位于上层。
 ## 鼠标/键盘
-`KeyDown`，`KeyUp`，`MouseDown`，`MouseUp`，`charTyped`，`dropFiles`的返回值是`Boolean`。如果你返回了`true`，事件将不会再继续传递下去。
+`keyDown`，`keyUp`，`mouseDown`，`mouseUp`，`charTyped`，`dropFiles`的返回值是`Boolean`。如果你返回了`true`，事件将不会再继续传递下去。
 
-`MouseMove`无返回值。他会始终传递下去。
+`mouseMove`无返回值。他会始终传递下去。
 
 `mouseScrollVertical`/`mouseScrollHorizontal`接收一个`Double`参数，返回一个`Double`。参数代表滚轮剩余的滚动量，返回值代表处理后剩余的滚动量。如果消耗了所有滚动量那么应该返回`0.0`，如果没有处理应该原样返回参数。如果已经返回了0，事件不会继续传递。
 

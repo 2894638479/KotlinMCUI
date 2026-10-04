@@ -12,8 +12,22 @@ parent: Start
 入口类继承对应的接口即可。可以同时继承多个接口。
 
 更推荐使用`object`而不是`class`，虽然二者都能处理。
+
+所有入口接口都继承`DslEntryService`，因此每个入口类都必须实现`name`、`id`、`icon`三个成员。没有图标时`icon`可以写`ImageHolder.empty`。
+
 ```kotlin
-object Entry : DslEntryCommon, DslEntryGui
+object Entry : DslEntryCommon, DslEntryGui {
+    override val name = "Example"
+    override val id = "example"
+    override val icon = ImageHolder.empty
+
+    override fun initialize() {}
+
+    context(ctx: DslContext)
+    override fun content() {
+        // ...
+    }
+}
 ```
 ### service注册
 创建`resources/META-INF/services/io.github.u2894638479.kotlinmcui.entry.DslEntryXXX`文件，向其中写入注册类的全限定名。
@@ -29,16 +43,28 @@ a.b.c.Entry$Client
 `forge`和`fabric`等加载器都会对环境进行区分，因为某些类只存在于Client或Server其中一侧。防止引用到不存在的类（在类加载时就直接崩溃）。
 ```kotlin
 object Entry : DslEntryCommon, DslEntryGui, DslEntryOverlay {
+    override val name = "Example"
+    override val id = "example"
+    override val icon = ImageHolder.empty
+
     override fun initialize() {}
     // ...
 
     // 包含对Client特有类的调用
     object Client : DslEntryClient {
+        override val name = "Example Client"
+        override val id = "example.client"
+        override val icon = ImageHolder.empty
+
         override fun initializeClient() {}
     }
 
     // 包含对Server特有类的调用
     object Server : DslEntryServer {
+        override val name = "Example Server"
+        override val id = "example.server"
+        override val icon = ImageHolder.empty
+
         override fun initializeServer() {}
     }
 }
@@ -52,6 +78,9 @@ object Entry : DslEntryCommon, DslEntryGui, DslEntryOverlay {
 
 ## 接口
 目前有5种。分别为Client、Server、Common、Gui、Overlay。
+
+这5种接口都继承`DslEntryService`，所以`name`、`id`、`icon`三个成员每个入口类都要实现：`name`显示在配置页的列表里，`id`用来区分入口，`icon`没有时写`ImageHolder.empty`。
+
 ### Client
 需要实现`DslEntryClient.initializeClient()`。此为逻辑代码执行的入口点。在Client环境下会被调用一次。
 ### Server

@@ -11,7 +11,7 @@ permalink: /
 
 [默认后端实现(default backend)](https://github.com/2894638479/KotlinMCUI-backend/)
 
-如果后端没有你所需要的版本，可以自行fork并自行做些许修改，目前一个后端大约共500行代码。
+如果后端没有你所需要的版本，可以自行fork并自行做些许修改，目前一个后端大约共一千行代码。
 ## 简介
 `KotlinMCUI`是使用`Kotlin DSL`制作的ui框架。
 
@@ -37,7 +37,7 @@ permalink: /
     - 资源图片
     - 本地图片
     - 多种裁切策略
-    - `NineSlice`
+    - `nineSlice`
   - 焦点管理、悬停高亮
   - 无障碍朗读
   - 状态实时刷新
@@ -46,7 +46,8 @@ permalink: /
   - 常用基本组件
     - `Button`
     - `Slider`
-    - `Container`、`Slot`、`Item`
+    - `Item`
+    - `containerBackground()`、`slotBackground()`
     - `EditableText`
     - `Row`
     - `Column`

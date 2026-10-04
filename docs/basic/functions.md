@@ -56,7 +56,7 @@ fun DslChild.animateHeight(
 context(ctx: DslContext)
 fun DslChild.clickable(
     enabled: Boolean = true,
-    block: context(DslPreventContext, DslDataStoreContext) DslComponent.()->Unit
+    block: context(DslExecuteContext) CoroutineScope.()->Unit
 ): DslChild
 ```
 
