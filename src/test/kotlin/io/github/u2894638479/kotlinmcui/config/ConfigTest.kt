@@ -89,6 +89,8 @@ class ConfigTest {
         val path = dir.resolve("a-directory")
         Files.createDirectories(path)
         saveConfig(path, Settings("doomed"), configFormat)
-        // Nothing to assert beyond "did not throw": the failure is logged by design.
+
+        assertTrue(Files.isDirectory(path), "the original directory must survive the failed save")
+        assertFalse(dir.resolve("a-directory.tmp").exists(), "a failed save must not leave a temporary file")
     }
 }

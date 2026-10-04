@@ -30,9 +30,9 @@ val configFormat: StringFormat = Json {
  * logged rather than thrown: saving a setting should never take the game down.
  */
 fun <T> saveConfig(path: Path, obj: T, format: StringFormat, serializer: SerializationStrategy<T>) {
+    val temp = path.resolveSibling("${path.fileName}.tmp")
     try {
         path.parent?.let { Files.createDirectories(it) }
-        val temp = path.resolveSibling("${path.fileName}.tmp")
         Files.write(temp, format.encodeToString(serializer, obj).toByteArray(Charsets.UTF_8))
         try {
             Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
@@ -41,6 +41,8 @@ fun <T> saveConfig(path: Path, obj: T, format: StringFormat, serializer: Seriali
             Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING)
         }
     } catch (e: IOException) {
+        // Leave no half-written file next to the target: it would look like a real one.
+        try { Files.deleteIfExists(temp) } catch (_: IOException) {}
         dslLogger.error("failed to save config $path", e)
     }
 }
