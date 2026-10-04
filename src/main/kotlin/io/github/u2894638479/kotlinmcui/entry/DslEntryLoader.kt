@@ -131,9 +131,14 @@ object DslEntryLoader {
                             if (className.isEmpty() || className.startsWith("#")) continue
                             try {
                                 val clazz = Class.forName(className, false, classLoader)
-                                val item = cache.getOrPut(clazz) { getObject(clazz,serviceInterface) to Flags() }
+                                val item = cache.getOrPut(clazz) { getObject(clazz) to Flags() }
+                                // The cache is keyed by class alone, and `as T` would be erased
+                                // to the type parameter's bound - the JVM cannot check a type
+                                // variable - so the interface is checked here, by name. A wrong
+                                // listing has to fail inside this catch: the caller's loop over
+                                // the result has no catch, and would take the startup down.
+                                result += serviceInterface.cast(item.first)
                                 item.second.flagAction()
-                                result += item.first as T
                             } catch (e: Exception) {
                                 dslLogger.error("failed to load entry $className", e)
                             } catch (e: LinkageError) {
@@ -152,24 +157,25 @@ object DslEntryLoader {
         return result
     }
 
-    private fun <T> getObject(clazz: Class<*>, service: Class<T>): T {
+    private fun getObject(clazz: Class<*>): DslEntryService {
         // A Kotlin `object` has a private constructor, which is the recommended way to
         // declare an entry, so `INSTANCE` is the ordinary path rather than a fallback
         // worth warning about. A constructor that exists but throws is not silently
         // replaced by `INSTANCE` either: that would hide the failure behind a second
         // instance nobody asked for.
         val constructor = runCatching { clazz.getDeclaredConstructor() }.getOrNull()
+        val instance: Any
         if (constructor != null && Modifier.isPublic(constructor.modifiers)) {
-            return service.cast(constructor.newInstance()).also {
-                dslLogger.info("loaded class: $clazz")
-            }
-        }
-        val instance = clazz.declaredFields
-            .firstOrNull { it.name == "INSTANCE" && Modifier.isStatic(it.modifiers) }
-            ?.get(null)
-            ?: error("$clazz has neither a public no-argument constructor nor an INSTANCE field")
-        return service.cast(instance).also {
+            instance = constructor.newInstance()
+            dslLogger.info("loaded class: $clazz")
+        } else {
+            instance = clazz.declaredFields
+                .firstOrNull { it.name == "INSTANCE" && Modifier.isStatic(it.modifiers) }
+                ?.get(null)
+                ?: error("$clazz has neither a public no-argument constructor nor an INSTANCE field")
             dslLogger.info("loaded Kotlin object: $clazz")
         }
+        return instance as? DslEntryService
+            ?: error("$clazz does not implement DslEntryService")
     }
 }
