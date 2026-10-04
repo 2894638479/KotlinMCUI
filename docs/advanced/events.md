@@ -21,3 +21,19 @@ parent: Custom
 
 ## 全局事件
 `DslComponentGlobalEvent`中的事件，它们不需要手动向下传递，而是统一从根节点向下调用。
+
+## 焦点
+焦点是**进程级**状态（同一时刻整个游戏只有一个焦点组件），保存在根节点上。组件覆写`focusable`声明自己能否获得焦点，用`isFocused`查询，用`onFocused`/`onFocusChanged`（或`globalFocusChanged`）观察变化。
+
+也可以由代码主动设置焦点，这在"开屏就把光标放进输入框"这类场景里必须用：
+
+```kotlin
+val field = EditableText(stringProp = prop) {}
+// 在任何帧、任何位置都可以调用；传 null 表示清除焦点
+TopComponent.setFocus(field.currentComponent().identity)
+
+// 需要区分"是谁设的焦点"时显式给来源，默认就是 CODE
+TopComponent.setFocus(field.currentComponent().identity, FocusSource.CODE)
+```
+
+有几条语义值得注意：这是鼠标与键盘之外**唯一**的设焦点方式，也是它们内部调用的同一个入口；它**不**筛选`focusable`，一个不能获得焦点的目标照样会被记录，只是它的`isFocused`仍为`false`；`identity`（`DslId`）是结构化比较的，所以上一帧取到的`DslChild`这一帧依然能匹配到重建后的组件；焦点变化从根节点向下**后序**广播（子组件先知道，父容器最后），与键盘导航一致。
