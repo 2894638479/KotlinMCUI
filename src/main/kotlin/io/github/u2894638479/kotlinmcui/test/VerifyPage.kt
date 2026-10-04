@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.entry.DslEntryPage
 
 
 /** The page [spec] names, falling back to the framework's test page. */
@@ -10,5 +11,6 @@ fun verifyPage(spec: String) = when (spec) {
     "translate" -> TestTranslationPage()
     "polygon" -> TestPolygonPage()
     "debug" -> TestEntry.DebugOverlay.overlay()
+    "entrypage" -> DslEntryPage()
     else -> TestEntry.TestPage.content()
 }

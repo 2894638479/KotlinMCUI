@@ -49,4 +49,29 @@ class EntryListingTest {
         assertFalse(common.isClient, "FixtureCommon is listed in the client file but is not a DslEntryClient")
         assertEquals(clientRuns + 1, FixtureSilentClient.runs, "the entries listed after it are still initialised")
     }
+
+    @Test
+    fun `a listing that cannot be loaded is recorded with a reason instead of only logged`() {
+        dslMetadataProvider = { TestMetadata }
+        DslEntryLoader.discover(Environment.CLIENT)
+
+        val broken = DslEntryLoader.brokenEntries.associateBy { it.className }
+        assertEquals(
+            "does not implement DslEntryClient",
+            broken["io.github.u2894638479.kotlinmcui.entry.FixtureCommon"]?.reason,
+            "a class listed under the wrong hook says so"
+        )
+        assertTrue(
+            broken.keys.any { it.endsWith("FixtureThrowingConstructor") },
+            "a constructor that throws is recorded, not only logged"
+        )
+        assertTrue(
+            broken.keys.any { it.endsWith("FixtureBrokenStaticInit") },
+            "a static initialiser that throws is recorded, not only logged"
+        )
+        assertTrue(
+            broken.values.all { it.hookName.isNotBlank() && it.reason.isNotBlank() },
+            "every record says which service file and why"
+        )
+    }
 }

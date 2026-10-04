@@ -111,6 +111,28 @@ fun DslEntryPage() = Row {
                 }
             }
         }
+
+        // Listings that could not be loaded: no instance, so no icon and no controls. One compact
+        // line each, appended after the working entries and never hidden by the code-entry toggle
+        // - a listing that fails is exactly what has to stay visible.
+        DslEntryLoader.brokenEntries.forEachWithId { broken ->
+            Row(Modifier.padding(2.scaled)) {
+                TextAutoFold {
+                    "! ".emit(Color(230,80,80))
+                    broken.className.emit(Color(200,140,140))
+                    "  ".emit()
+                    broken.hookName.emit(Color(150,150,150))
+                    "  ".emit()
+                    broken.reason.emit(Color(200,200,200))
+                }
+            }.simpleTooltip {
+                TextAutoFold {
+                    broken.className.emit()
+                    enter()
+                    broken.reason.emit()
+                }
+            }
+        }
     }
     ScrollBarVertical(Modifier.width(10.scaled),scrollerProp) {}
     Spacer(Modifier.width(10.scaled)) {}

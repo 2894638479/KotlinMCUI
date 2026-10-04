@@ -37,6 +37,26 @@ object DslEntryLoader {
     }
 
     /**
+     * A listing that could not be turned into a service: the class is missing, does not implement
+     * the hook it is listed under, or cannot be constructed.
+     *
+     * The log keeps the whole stack; this is what the config page shows as a placeholder, so
+     * [reason] stays one short line.
+     */
+    class Failure internal constructor(
+        val className: String,
+        /** The hook interface whose service file lists it. */
+        val hookName: String,
+        val reason: String,
+    )
+
+    private val failures = LinkedHashMap<String, Failure>()
+    private var failureSnapshot: List<Failure> = emptyList()
+
+    /** Listings that could not be loaded, in discovery order. A snapshot, like [entries]. */
+    val brokenEntries: List<Failure> get() = failureSnapshot
+
+    /**
      * Discover every entry on the classpath and initialise the ones the current
      * environment applies to, then read the stored overlay list.
      *
@@ -45,6 +65,7 @@ object DslEntryLoader {
      * directory) is already available.
      */
     internal fun discover(environment: Environment) {
+        failures.clear()
         initCommon()
         when(environment) {
             Environment.CLIENT -> initClient()
@@ -54,6 +75,7 @@ object DslEntryLoader {
         initGui()
         initOverlay()
         snapshot = cache.values.toList()
+        failureSnapshot = failures.values.toList()
         collectOverlays()
         enabledIds.clear()
         enabledIds += readOverlayIds()
@@ -141,10 +163,12 @@ object DslEntryLoader {
                                 item.second.flagAction()
                             } catch (e: Exception) {
                                 dslLogger.error("failed to load entry $className", e)
+                                recordFailure(className, serviceInterface, e)
                             } catch (e: LinkageError) {
                                 // A missing dependency or a failed static initialiser takes
                                 // down this entry only, never the rest of the load.
                                 dslLogger.error("failed to load entry $className", e)
+                                recordFailure(className, serviceInterface, e)
                             }
                         }
                     }
@@ -155,6 +179,26 @@ object DslEntryLoader {
             return emptyList()
         }
         return result
+    }
+
+    /**
+     * Keep a short, page-readable record of a listing that could not be turned into a service.
+     * The same class listed wrongly under two hooks is two records: which file is wrong is
+     * exactly what has to be fixed.
+     */
+    private fun recordFailure(className: String, serviceInterface: Class<*>, e: Throwable) {
+        val hook = serviceInterface.simpleName
+        val reason = when {
+            e is ClassCastException -> "does not implement $hook"
+            e is ClassNotFoundException -> "class not found"
+            e is LinkageError -> "could not be initialised (missing dependency?)"
+            e is java.lang.reflect.InvocationTargetException ->
+                "constructor failed: ${e.cause?.let { cause -> cause::class.simpleName } ?: "unknown"}"
+            else -> e.message?.lineSequence()?.firstOrNull()?.trim()?.take(120)?.takeIf { it.isNotEmpty() }
+                ?: e::class.simpleName
+                ?: "failed to load"
+        }
+        failures.putIfAbsent("$className|$hook",Failure(className,hook,reason))
     }
 
     private fun getObject(clazz: Class<*>): DslEntryService {
