@@ -11,10 +11,10 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
  *
  * Provides the minimal wiring: identity, modifier, scale from context,
  * a mutable rectangle, and the self-referencing [instance] property.
- * Use this as a delegate for simple components:
- * ```
- * object : DslComponent by DslComponentImpl(id, modifier, ctx) { ... }
- * ```
+ *
+ * Components are built from the public factory ([io.github.u2894638479.kotlinmcui.dsl.ui.Spacer]
+ * for this class, [io.github.u2894638479.kotlinmcui.dsl.ui.Scope] for scopes) rather
+ * than from this constructor directly.
  */
 internal class DslComponentImpl(
     override val identity: DslId,
