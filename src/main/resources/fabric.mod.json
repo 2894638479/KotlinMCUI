@@ -21,7 +21,9 @@
         "fabricloader": "*",
         "minecraft": "*",
         "java": "*",
-        "fabric-language-kotlin": "*",
+        "fabric-language-kotlin": ">=1.13.12"
+    },
+    "recommends": {
         "kotlinmcuibackend": "*"
     }
 }
