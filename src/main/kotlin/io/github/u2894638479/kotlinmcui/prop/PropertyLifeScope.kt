@@ -32,6 +32,25 @@ class PropertyLifeScope internal constructor(
     context(_: DslIdContext)
     private fun getId(id:Any) = if(isStatic) DslId(id) else identity + id
 
+    /**
+     * Storage key of one declaration site.
+     *
+     * The declaring lambda's class is part of the key in the per-screen scopes, so two
+     * different call sites that pass the same explicit [id] — possibly with different
+     * value types — get separate slots instead of silently sharing (and corrupting) one.
+     * Static keys stay the bare id: that scope is process global and is meant to be
+     * reachable across mods by id alone.
+     */
+    context(_: DslIdContext)
+    private fun getKey(id: Any?, site: Any) = if(isStatic) getId(id ?: site) else identity + id + site
+
+    /**
+     * The slot's value type is fixed by the declaration site that created it, and that
+     * site is part of the storage key, so this erased cast cannot fail at runtime.
+     */
+    @Suppress("UNCHECKED_CAST")
+    private fun <T> TimedProperty<*>.stable(): StableRW<T> = this as StableRW<T>
+
     private inner class Animator<T: Interpolatable<T>> (
         beginValue: T,
         private val durationNano: Long,
@@ -152,11 +171,11 @@ class PropertyLifeScope internal constructor(
      */
     context(ctx: DslIdContext)
     fun <T> property(id:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T): StableRW<T> {
-        val identity = getId(id ?: init::class)
+        val identity = getKey(id, init::class)
         val coroutineScope = coroutineScope(identity)
         return map.getOrPut(identity) {
             TimedProperty(context(DslExecuteContext(dataStore)) { coroutineScope.init() })
-        }.also { it.frameStamp = dataStore.frameIndex } as StableRW<T>
+        }.also { it.frameStamp = dataStore.frameIndex }.stable()
     }
 
     /**
@@ -189,12 +208,12 @@ class PropertyLifeScope internal constructor(
      */
     context(ctx: DslIdContext)
     fun <K,V> cached(key: K,id: Any? = null, init:context(DslExecuteContext) CoroutineScope.(K)->V) : StableRW<V> {
-        val identity = getId(id ?: init::class)
+        val identity = getKey(id, init::class)
         val coroutineScope = coroutineScope(identity)
-        val property = map[identity]?.let { it as CachedProperty<K,V> }
-        if(property != null && property.key == key) return property
+        val previous = map[identity]
+        if(previous is CachedProperty<*,*> && previous.key == key) return previous.stable()
         return CachedProperty(key,context(DslExecuteContext(dataStore)){ coroutineScope.init(key) }).also {
-            property?.onClear()
+            previous?.onClear()
             map[identity] = it
         }
     }
@@ -281,7 +300,7 @@ class PropertyLifeScope internal constructor(
      */
     context(ctx: DslIdContext)
     fun dispose(id:Any? = null, action: () -> Unit) {
-        val identity = getId(id ?: action::class)
+        val identity = getKey(id, action::class)
         map.getOrPut(identity) {
             object : TimedProperty<Unit>(Unit) {
                 override fun onClear() { action() }
