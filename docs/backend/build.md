@@ -64,6 +64,7 @@ KOTLINMCUI_VERIFY=transform ./gradlew runVerifyClient        # PowerShell: $env:
 | `translate` | 内置的翻译演示页 |
 | `polygon` | 内置的多边形演示页（可选三角表能力：六边形与三角形） |
 | `debug` | 框架的调试叠层 |
+| `entrypage` | 后端的入口配置页（已注册入口，以及加载失败的占位行） |
 
 **透视是唯一会用到位姿矩阵第三行的路径**，改动变换相关代码后应当跑一次 `transform`；`polygon` 是唯一走 `DslBackendTriangles` 这条可选能力的页面，改动顶点提交路径后应当跑一次它。
 

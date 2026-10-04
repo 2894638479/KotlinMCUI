@@ -45,22 +45,35 @@ META-INF/services/io.github.u2894638479.kotlinmcui.entry.DslEntryGui
 
 加载每个条目时会用 `Class.cast` 按**它被列在的那个接口**做一次真正的检查，不匹配就跳过并记日志（发现标志位也只在被接受之后才设置）。这一步不能省，也不能写成 `as T`：实例缓存只按类索引（同一个类经由几个接口被发现也只实例化一次），而 `as T` 对非 reified 的类型参数会被擦除成它的**上界**（编译器会给 `Unchecked cast` 警告），于是列错接口的实例会混进结果列表，真正按接口类型的检查被推迟到调用方的循环里——那里没有 `catch`，`ClassCastException` 会直接冲出整个启动流程。
 
-加载一个条目的失败被隔离在该条目内：`Exception` 与 `LinkageError`（类缺失、静态初始化块抛错等 `Error`）都只让这一个入口出局，其余照常注册——否则一个引用客户端专属类的入口就能让整套入口加载不出来。
+加载一个条目的失败被隔离在该条目内：`Exception` 与 `LinkageError`（类缺失、静态初始化块抛错等 `Error`）都只让这一个入口出局，其余照常注册——否则一个引用客户端专属类的入口就能让整套入口加载不出来。出局的条目**不会消失**：它变成一条 `brokenEntries` 记录（见[加载不出来的条目](#加载不出来的条目)）。
 
 它同时用 `Class.forName(..., initialize = false)` 只解析类而不初始化，把"是否真的使用"推迟到实例化时。
 
 ## 加载顺序
 ```kotlin
-DslEntryLoader.init(environment)
+DslRuntime.install({ Metadata })   // 内部调用 DslEntryLoader.discover(environment)
 ```
 
-首次 `init` 的动作是：加载公共入口并调用 `initialize()` → 按环境调用 `initializeClient()` 或 `initializeServer()` → 登记 GUI 入口 → 登记 Overlay 入口。
+首次 `discover` 的动作是：加载公共入口并调用 `initialize()` → 按环境调用 `initializeClient()` 或 `initializeServer()` → 登记 GUI 入口 → 登记 Overlay 入口。
 
-**`init` 应由后端在启动时调用一次**，重复调用只刷新登记并打一条警告：既不重跑初始化，也不会让谁的 `initializeClient()` 跑第二遍。缓存里的实例也不会被清空重建，所以 `enabledOverlays` 里的对象始终是当前这批实例。
+**`discover` 不由后端直接调用**：它由 `DslRuntime.install` 在启动时调用一次，`install` 自己保证单次（重复调用会直接报错，见[后端](backend)）。缓存里的实例不会被清空重建，所以 `enabledOverlays` 里的对象始终是当前这批实例。
 
 只有初始化方法会被**调用**；GUI 与 Overlay 入口只被**登记**，等到用户打开列表或 Overlay 被启用时才执行其内容。
 
-`DslEntryLoader.entries` 返回的是登记结果的**快照**，调用方（列表页每帧遍历它）可以安全持有与遍历，不会因为重新 `init` 而看到半截状态。
+`DslEntryLoader.entries` 返回的是登记结果的**快照**，调用方（列表页每帧遍历它）可以安全持有与遍历，不会因为重新 `discover` 而看到半截状态。
+
+### 加载不出来的条目
+服务文件里列了、但用不了的条目不会静默消失。三种情形——类找不到、没实现它被列在的那个接口、构造不出来（没有可用构造器 / 没有 `INSTANCE` / 构造器或静态初始化块抛错）——都会在 `brokenEntries` 里留下一条 `Failure`：
+
+```kotlin
+class Failure(val className: String, val hookName: String, val reason: String)
+```
+
+`reason` 是给页面看的一行话（`does not implement DslEntryGui`、`class not found`、`could not be initialised (missing dependency?)`、`constructor failed: RuntimeException` 之类），完整堆栈仍然在日志里。记录按"类名 + 接口名"去重：同一个类被列错在两个文件里就是两条记录，因为需要修的正是那个文件。`brokenEntries` 与 `entries` 一样是快照，并在每次 `discover` 开始时清空。
+
+配置页把这些记录**追加在列表末尾**，每条一行矮行：没有图标、没有开关、也不受"显示代码入口"开关影响——一个加载失败的条目正是最该被看见的东西。它比正常入口矮，因为正常入口的高度由那个 40 scaled 的图标撑着，而它只有一个自动定高的文本行加 2 scaled 内边距。
+
+这一块解决了一个真实痛点：Overlay 的启用状态是按 **id** 存在 `overlays.json` 里的，如果那个 Overlay 的入口坏了，以前会静默什么都不画；现在能在列表里看到"你启用的那个入口坏了，原因是什么"。
 
 ### 缓存与标志
 实例按类缓存，同一个类无论通过几个接口被发现都只实例化一次。缓存项附带一组标志：

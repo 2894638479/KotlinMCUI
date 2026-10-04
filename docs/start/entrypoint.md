@@ -39,6 +39,12 @@ a.b.c.Entry
 a.b.c.Entry$Client
 ```
 这一写法与java的标准service是相同的，但是为了兼容`kotlin object`，没有直接使用`ServiceLoader`进行加载。
+### 注册错了会怎样
+加载器对失败逐条隔离：类找不到、没实现它被列在的那个接口、构造不出来（没有可用的无参构造器也没有`INSTANCE`，或者构造器、静态初始化块抛异常），都只让**这一个**入口出局，其余照常加载，游戏不会崩。
+
+出局的条目不会静默消失：它会以一行**占位项**出现在`kotlinmcui-backend`配置页列表的**末尾**——比正常入口矮，没有图标和开关，也不受"显示代码入口"开关影响。行上写着类名、它被列在哪个接口的服务文件里，以及一句原因（如`does not implement DslEntryGui`、`class not found`、`constructor failed: RuntimeException`），完整异常仍然打在日志里。
+
+这一条对 Overlay 尤其有用：Overlay 的启用状态是按`id`存在配置里的，入口坏了以前会静默什么都不画，现在能在列表里直接看到是哪个入口坏了、为什么。
 ### Client与Server区分
 `forge`和`fabric`等加载器都会对环境进行区分，因为某些类只存在于Client或Server其中一侧。防止引用到不存在的类（在类加载时就直接崩溃）。
 ```kotlin
