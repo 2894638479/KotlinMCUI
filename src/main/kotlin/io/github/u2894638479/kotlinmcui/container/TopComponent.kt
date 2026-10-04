@@ -52,7 +52,18 @@ object TopComponent: DslScope {
     var focused: DslId? = null
         private set
 
-    internal fun setFocus(newFocus: DslId?, source: FocusSource) {
+    /**
+     * Move the focus to the component with this [DslId], as if the user had done it; `null`
+     * clears the focus.
+     *
+     * This is the low-level entry point the mouse and keyboard paths use too, so it does not
+     * filter by [DslComponentMetadata.focusable]: a target that cannot take focus is still
+     * recorded, it just keeps reporting itself unfocused. The change is broadcast to the whole
+     * tree ([DslComponentGlobalEvent.globalFocusChanged], children before parents), and the
+     * identity is compared structurally, so one captured on an earlier frame still matches the
+     * component rebuilt this frame.
+     */
+    fun setFocus(newFocus: DslId?, source: FocusSource = FocusSource.CODE) {
         focused = newFocus
         globalFocusChanged(newFocus, source)
     }
