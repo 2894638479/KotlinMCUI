@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.dsl.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.fillRect
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.component.isHighlighted

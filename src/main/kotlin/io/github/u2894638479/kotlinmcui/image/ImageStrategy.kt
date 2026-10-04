@@ -1,6 +1,8 @@
 package io.github.u2894638479.kotlinmcui.image
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.fillRect
+import io.github.u2894638479.kotlinmcui.backend.renderImage
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.align.Align

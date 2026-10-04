@@ -31,19 +31,26 @@ interface DslBackendRenderer<RP> {
     fun flush()
 
     /**
-     * The drawing primitive: one quad, optionally textured.
+     * Draw one quad, optionally textured.
      *
-     * The four corners of [rect] are shaded individually — [lt], [rt], [lb], [rb]
-     * are left-top, right-top, left-bottom and right-bottom — and drawn as the two
-     * triangles `(lt, rt, lb)` and `(rt, rb, lb)`.
+     * This is the only drawing primitive a backend has to implement: everything the
+     * framework draws is a quad, and the helpers below are written in terms of it
+     * (see [fillRectGradient], [fillRect], [renderImage]). Overriding those instead
+     * would fork the contract, so a backend that wants a platform fast path for solid
+     * rectangles should recognise the case here — an untextured quad whose four colours
+     * are equal.
+     *
+     * The four corners of [rect] are shaded individually — [lt], [rt], [lb], [rb] are
+     * left-top, right-top, left-bottom and right-bottom — and drawn as the two triangles
+     * `(lt, rt, lb)` and `(rt, rb, lb)`.
      *
      * [image] and [uv] describe the texture: [uv] is the source rectangle inside the
-     * image, in image pixel space (top-left origin). Pass `null` for both to draw
-     * colour only.
+     * image, in image pixel space (top-left origin). Pass `null` for both to draw colour
+     * only.
      *
      * Every parameter is a value class or an existing reference, so a call allocates
-     * nothing. Anything else the framework draws is expressed through this method:
-     * keep it free of collections, or the per-frame cost comes back with it.
+     * nothing. Keep it that way: a per-vertex object graph here costs hundreds of bytes
+     * per rectangle, and a frame draws hundreds of them.
      */
     context(renderParam: RP)
     fun renderQuad(
@@ -55,30 +62,6 @@ interface DslBackendRenderer<RP> {
         image: ImageHolder? = null,
         uv: Rect? = null,
     )
-
-    /**
-     * Draw a gradient-filled rectangle.
-     * Convenience for [renderQuad]; it adds no allocation.
-     */
-    context(renderParam: RP)
-    fun fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color) {
-        renderQuad(rect, lt, rt, lb, rb)
-    }
-
-    /** Draw a solid filled rectangle. Convenience for [renderQuad]. */
-    context(renderParam: RP)
-    fun fillRect(rect: Rect, color: Color) {
-        renderQuad(rect, color, color, color, color)
-    }
-
-    /**
-     * Draw [image] into [rect], taking its pixels from [uv] (image pixel space) and
-     * tinting them with [color]. Convenience for [renderQuad].
-     */
-    context(renderParam: RP)
-    fun renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE) {
-        renderQuad(rect, color, color, color, color, image, uv)
-    }
 
     /**
      * Render a Minecraft-style button background.
@@ -136,3 +119,28 @@ interface DslBackendRenderer<RP> {
      */
     fun getFont(name: String? = null): DslFont<RP>
 }
+
+/**
+ * Draw a gradient-filled rectangle.
+ *
+ * One of the drawing helpers written in terms of [DslBackendRenderer.renderQuad]. It is
+ * an extension rather than an interface member so that the interface keeps a single
+ * drawing primitive: a backend that wants its own solid-rectangle path does it inside
+ * `renderQuad`, where every caller benefits. Allocates nothing.
+ */
+context(renderParam: RP)
+fun <RP> DslBackendRenderer<RP>.fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color) =
+    renderQuad(rect, lt, rt, lb, rb)
+
+/** Draw a solid filled rectangle. See [fillRectGradient] for why this is an extension. */
+context(renderParam: RP)
+fun <RP> DslBackendRenderer<RP>.fillRect(rect: Rect, color: Color) =
+    renderQuad(rect, color, color, color, color)
+
+/**
+ * Draw [image] into [rect], taking its pixels from [uv] (image pixel space) and tinting
+ * them with [color]. See [fillRectGradient] for why this is an extension.
+ */
+context(renderParam: RP)
+fun <RP> DslBackendRenderer<RP>.renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE) =
+    renderQuad(rect, color, color, color, color, image, uv)
