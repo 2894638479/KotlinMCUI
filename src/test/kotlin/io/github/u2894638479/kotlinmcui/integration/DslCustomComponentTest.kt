@@ -7,6 +7,7 @@ import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.container.DslScope
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
+import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.ui.Box
 import io.github.u2894638479.kotlinmcui.dsl.ui.Scope
 import io.github.u2894638479.kotlinmcui.dsl.ui.Spacer
@@ -19,6 +20,8 @@ import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.size
+import io.github.u2894638479.kotlinmcui.prop.getValue
+import io.github.u2894638479.kotlinmcui.prop.setValue
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -34,6 +37,26 @@ private fun ClickableSpacer(modifier: Modifier = Modifier, id: Any, onClick: () 
             override fun mouseDown(mouseButton: MouseButton): Boolean {
                 if (mouseButton != MouseButton.LEFT) return it.mouseDown(mouseButton)
                 onClick()
+                return true
+            }
+        }
+    }
+
+/** Where the counted clicks are read back from. */
+private class Counter { var value = 0 }
+
+/** The same recipe, with the state kept in the component's own property scope. */
+context(ctx: DslContext)
+private fun CountingSpacer(modifier: Modifier = Modifier, id: Any, counter: Counter) =
+    Spacer(modifier, id).change {
+        object : DslComponent by it {
+            var clicks by local { 0 }
+
+            context(eventModifier: KeyModifiers, mouse: Position)
+            override fun mouseDown(mouseButton: MouseButton): Boolean {
+                if (mouseButton != MouseButton.LEFT) return it.mouseDown(mouseButton)
+                clicks += 1
+                counter.value = clicks
                 return true
             }
         }
@@ -89,8 +112,27 @@ class DslCustomComponentTest {
     }
 
     @Test
-    fun `a Scope based container uses the aligners it was given`() {
-        val far = buildScreen {
+    fun `a component can keep state of its own`() {
+        val counter = Counter()
+        val screen = buildScreen {
+            CountingSpacer(Modifier.size(20.px, 20.px), "counting", counter)
+        }
+        val inside = Position(screen.children.single().rect.left + 1.px, screen.children.single().rect.top + 1.px)
+        context(KeyModifiers(), inside) {
+            assertTrue(screen.children.single().mouseDown(MouseButton.LEFT))
+        }
+        assertEquals(1, counter.value)
+
+        // The component object is rebuilt every frame; its state must not be.
+        TestBackend.renderFrame(screen)
+        context(KeyModifiers(), inside) {
+            assertTrue(screen.children.single().mouseDown(MouseButton.LEFT))
+        }
+        assertEquals(2, counter.value, "state declared inside the component must survive a frame")
+    }
+
+    @Test
+    fun `a Scope based container uses the aligners it was given`() {        val far = buildScreen {
             Scope(Modifier.size(100.px, 100.px), "far", Aligner.close(Align.HIGH), Aligner.close(Align.HIGH)) {
                 Box(Modifier.size(10.px, 10.px)) {}
             }
