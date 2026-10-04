@@ -3,6 +3,7 @@ package io.github.u2894638479.kotlinmcui.entry
 import io.github.u2894638479.kotlinmcui.backend.Environment
 import io.github.u2894638479.kotlinmcui.integration.TestRuntime
 import java.nio.file.Files
+import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
+import org.junit.jupiter.api.io.TempDir
 
 /**
  * The framework's own entries are registered from `src/main/resources` as well, so
@@ -25,6 +27,10 @@ import org.junit.jupiter.api.TestMethodOrder
 class DslEntryLoaderTest {
 
     private val configPath get() = overlayConfigPath()
+
+    /** JUnit creates and removes this one, so the cases leave nothing behind. */
+    @TempDir
+    lateinit var tempDir: Path
 
     @BeforeEach
     fun setUp() {
@@ -81,7 +87,7 @@ class DslEntryLoaderTest {
     @Test
     @Order(5)
     fun `ids are stored and read back in order`() {
-        val file = Files.createTempDirectory("overlay-config").resolve("overlays.json")
+        val file = tempDir.resolve("overlays.json")
         writeOverlayIds(listOf("a","b","c"),file)
         assertEquals(listOf("a","b","c"), readOverlayIds(file))
     }
@@ -89,14 +95,14 @@ class DslEntryLoaderTest {
     @Test
     @Order(6)
     fun `a missing file reads as no overlays`() {
-        val file = Files.createTempDirectory("overlay-config").resolve("absent.json")
+        val file = tempDir.resolve("absent.json")
         assertEquals(emptyList(), readOverlayIds(file))
     }
 
     @Test
     @Order(7)
     fun `a malformed file reads as no overlays`() {
-        val file = Files.createTempDirectory("overlay-config").resolve("broken.json")
+        val file = tempDir.resolve("broken.json")
         file.writeText("{ not json")
         assertEquals(emptyList(), readOverlayIds(file))
     }
