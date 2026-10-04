@@ -117,7 +117,7 @@ contentMinHeight = height.ifNan { minHeight }
 - `Rect(horizontal, vertical)` 用委托属性把两个 `Bound` 拼成一个 `Rect`，不复制数值——改 `Bound` 就能看到 `Rect` 变化；
 - `Rect.fixed` 返回一个写入被忽略的 `MutRect` 视图，用来把不可变矩形接到需要可变矩形的位置；
 - `Rect.empty` 是一个零尺寸sentinel；`Rect.vertices` 是只读视图而不是列表；
-- `Rect.toInt()` / `toFloat()` / `toDouble()` 在任一边不是数值时返回空矩形（静默）。
+- `Rect.toInt()` / `toFloat()` / `toDouble()` 在任一边不是数值时返回空矩形（静默）——注意是**整个矩形**一起塌成 `(0,0,0,0)`，而不是只把坏掉的那一边填 0。
 
 `transformedMaxBound` 在变换为单位矩阵时直接返回 `this`（引用相等短路），否则把四个顶点变换后取轴对齐包围盒。它服务于"旋转/缩放后的实际占位矩形"这一类需求。
 

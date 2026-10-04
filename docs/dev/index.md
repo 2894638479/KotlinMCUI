@@ -73,13 +73,16 @@ nav_order: 7
 | `dsl/ui` | 内置组件 |
 | `dsl/decorator` | 效果装饰器与事件装饰器 |
 | `modifier` | `Modifier` 链 |
+| `input` | 输入类型：`Key`、`KeyModifiers`、`MouseButton`、`PreeditInfo` |
 | `math` | `Measure`、`Rect`/`Bound`、`Position`、`Color`、`Scroller` |
+| `math/rect` | `Rect`/`Bound` 及 `MutRect`/`MutBound`（可写视图）、`Int`/`Float`/`Double` 专用矩形 |
 | `math/align` | `Alignable`、`Aligner`、`Alignment`、`OverlayAlign` |
 | `math/animate` | `Interpolatable`、`Interpolator` |
 | `math/transform` | `Transform`、`TransformStack` |
 | `text` | 文本构建器、文本布局、字形、可编辑字符串、翻译 |
 | `image` | `ImageHolder` 与绘制策略 |
 | `backend` | 后端接口、渲染原语、线程调度 |
+| `logger` | 全库共用的 slf4j 日志器 |
 | `config` | 配置文件的读写工具，框架自身的配置也走这里 |
 | `entry` | 加载器入口接口与入口发现 |
 | `widget` | 高层包装控件（`Simple` 便捷函数、`Controls` 属性编辑控件）：只用公开 API 写成，与 `dsl` 一样对用户暴露 |

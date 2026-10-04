@@ -173,4 +173,4 @@ fun <T> testHit(mouse: Position, get: (DslComponent) -> T?): T?
 
 ## 已知问题
 - `clickable` 在矩形内**无条件消费**左键按下，即使回调什么也不做，也会挡住同层的其它组件。
-- `animateHeight` / `animateWidth` 在属性 getter 里注册生命周期属性；如果某一帧布局没有读取该 getter，动画属性会被回收，下一帧以新目标值重新开始（表现为跳变而非过渡）。
+- `autoAnimate` 在属性 getter 里注册生命周期属性；如果某一帧布局没有读取该 getter，动画属性会被回收，下一帧以新目标值重新开始（表现为跳变而非过渡）。
