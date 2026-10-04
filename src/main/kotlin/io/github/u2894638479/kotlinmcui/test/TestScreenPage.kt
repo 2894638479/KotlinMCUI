@@ -13,7 +13,7 @@ import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.weight
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
-import io.github.u2894638479.kotlinmcui.utils.Simple
+import io.github.u2894638479.kotlinmcui.widget.Simple
 
 context(ctx: DslContext)
 fun TestScreenPage() = Column {

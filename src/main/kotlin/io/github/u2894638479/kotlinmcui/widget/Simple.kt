@@ -1,4 +1,4 @@
-package io.github.u2894638479.kotlinmcui.utils
+package io.github.u2894638479.kotlinmcui.widget
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext

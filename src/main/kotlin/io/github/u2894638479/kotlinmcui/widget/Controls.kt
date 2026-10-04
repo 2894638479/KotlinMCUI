@@ -1,4 +1,4 @@
-package io.github.u2894638479.kotlinmcui.utils
+package io.github.u2894638479.kotlinmcui.widget
 
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
@@ -16,7 +16,7 @@ import io.github.u2894638479.kotlinmcui.prop.*
 import io.github.u2894638479.kotlinmcui.container.DslChild
 import kotlin.reflect.KMutableProperty0
 
-object Config {
+object Controls {
     context(ctx: DslContext)
     private val defaultModifier get() = Modifier.height(20.scaled).padding(2.scaled)
 
@@ -29,7 +29,7 @@ object Config {
             name.emit()
             ": ".emit()
             val bl = prop.value
-            val string = if(bl) translate("kotlinmcui.utils.true") else translate("kotlinmcui.utils.false")
+            val string = if(bl) translate("kotlinmcui.widget.true") else translate("kotlinmcui.widget.false")
             string.emit(if(bl) Color.GREEN else Color.RED)
         }
     }.clickable { prop.value = !prop.value }

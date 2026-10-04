@@ -10,7 +10,7 @@ import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.size
-import io.github.u2894638479.kotlinmcui.utils.Simple
+import io.github.u2894638479.kotlinmcui.widget.Simple
 import kotlin.test.*
 
 import org.junit.jupiter.api.AfterEach

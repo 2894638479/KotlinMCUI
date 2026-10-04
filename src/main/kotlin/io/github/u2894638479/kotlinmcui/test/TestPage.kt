@@ -9,7 +9,7 @@ import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
-import io.github.u2894638479.kotlinmcui.utils.Simple.simpleTooltip
+import io.github.u2894638479.kotlinmcui.widget.Simple.simpleTooltip
 
 context(ctx: DslContext)
 fun TestPage(): DslChild = Row {

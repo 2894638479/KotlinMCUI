@@ -14,7 +14,7 @@ import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.size
-import io.github.u2894638479.kotlinmcui.utils.Simple
+import io.github.u2894638479.kotlinmcui.widget.Simple
 import java.nio.file.Path
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach

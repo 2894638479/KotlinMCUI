@@ -12,9 +12,9 @@ import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import io.github.u2894638479.kotlinmcui.utils.Config
-import io.github.u2894638479.kotlinmcui.utils.Simple
-import io.github.u2894638479.kotlinmcui.utils.Simple.simpleTooltip
+import io.github.u2894638479.kotlinmcui.widget.Controls
+import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Simple.simpleTooltip
 
 
 context(ctx: DslContext)
@@ -31,14 +31,14 @@ fun TestMouseTipPage() = Column {
         Spacer {}.containerBackground()
     }
     Row {
-        Config.EnumButton(alignH,"horizontal") {}
-        Config.EnumButton(alignV,"vertical") {}
+        Controls.EnumButton(alignH,"horizontal") {}
+        Controls.EnumButton(alignV,"vertical") {}
     }
     Row {
-        Config.Slider(width,0..200,"width") {}
-        Config.Slider(height,0..200,"height") {}
+        Controls.Slider(width,0..200,"width") {}
+        Controls.Slider(height,0..200,"height") {}
     }
-    Config.BoolButton(tip2,"tip2") {}
+    Controls.BoolButton(tip2,"tip2") {}
     var tooltipCounter by local { 2 }
 
     Simple.Button("this button has a tooltip") { tooltipCounter++ }.simpleTooltip("Tooltip Test: $tooltipCounter") {

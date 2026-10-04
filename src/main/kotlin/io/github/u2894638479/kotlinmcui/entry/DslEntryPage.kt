@@ -25,9 +25,9 @@ import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
-import io.github.u2894638479.kotlinmcui.utils.Config
-import io.github.u2894638479.kotlinmcui.utils.Simple
-import io.github.u2894638479.kotlinmcui.utils.Simple.simpleTooltip
+import io.github.u2894638479.kotlinmcui.widget.Controls
+import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Simple.simpleTooltip
 
 context(ctx: DslContext)
 fun DslEntryPage() = Row {
@@ -39,8 +39,8 @@ fun DslEntryPage() = Row {
         val showDetails = local { false }
         Row {
             Spacer(Modifier weight Double.MAX_VALUE) {}
-            Config.BoolButton(showCodeEntry,translate("kotlinmcui.entrypage.show_code_entry")) {}
-            Config.BoolButton(showDetails,translate("kotlinmcui.entrypage.show_details")) {}
+            Controls.BoolButton(showCodeEntry,translate("kotlinmcui.entrypage.show_code_entry")) {}
+            Controls.BoolButton(showDetails,translate("kotlinmcui.entrypage.show_details")) {}
         }
         DslEntryLoader.entries.forEachWithId { (it, flags) ->
             if(!showCodeEntry.value && !flags.isGui && !flags.isOverlay) return@forEachWithId
@@ -65,7 +65,7 @@ fun DslEntryPage() = Row {
                         override fun getValue() = DslEntryLoader.isOverlayEnabled(it)
                         override fun setValue(value: Boolean) { DslEntryLoader.setOverlayEnabled(it,value) }
                     }
-                    Config.BoolButton(prop,translate("kotlinmcui.entrypage.overlay")) {}
+                    Controls.BoolButton(prop,translate("kotlinmcui.entrypage.overlay")) {}
                     if(prop.getValue()) {
                         Simple.Button("bring to top",DslEntryLoader.enabledOverlays.firstOrNull() !== it) {
                             DslEntryLoader.bringOverlayToTop(it)

@@ -32,7 +32,7 @@
     "kotlinmcui.entrypage.overlay": "叠加层",
     "kotlinmcui.entrypage.show_code_entry": "显示代码入口",
     "kotlinmcui.entrypage.show_details": "显示详情",
-    "kotlinmcui.utils.true": "开",
-    "kotlinmcui.utils.false": "关",
+    "kotlinmcui.widget.true": "开",
+    "kotlinmcui.widget.false": "关",
     "kotlinmcui.debugoverlay": "调试叠加层"
 }

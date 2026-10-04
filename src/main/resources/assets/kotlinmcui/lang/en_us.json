@@ -32,7 +32,7 @@
     "kotlinmcui.entrypage.overlay": "overlay",
     "kotlinmcui.entrypage.show_code_entry": "Show code entry",
     "kotlinmcui.entrypage.show_details": "Show details",
-    "kotlinmcui.utils.true": "true",
-    "kotlinmcui.utils.false": "false",
+    "kotlinmcui.widget.true": "true",
+    "kotlinmcui.widget.false": "false",
     "kotlinmcui.debugoverlay": "Debug Overlay"
 }

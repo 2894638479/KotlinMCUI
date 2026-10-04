@@ -22,7 +22,7 @@ import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.remap
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import io.github.u2894638479.kotlinmcui.utils.Config
+import io.github.u2894638479.kotlinmcui.widget.Controls
 import java.io.File
 
 private enum class Mode{ LOCAL,RESOURCE }
@@ -45,22 +45,22 @@ fun TestImagePage() = ScrollableColumn {
 
     val mode = local { Mode.LOCAL }
 
-    Config.ColorEdit(colorProp) {}
+    Controls.ColorEdit(colorProp) {}
     Row {
-        Config.Slider(widthProp,0..500,"width") {}
-        Config.Slider(heightProp,0..500,"height") {}
+        Controls.Slider(widthProp,0..500,"width") {}
+        Controls.Slider(heightProp,0..500,"height") {}
     }
-    Config.EnumButton(mode,"mode") {}
+    Controls.EnumButton(mode,"mode") {}
 
     when(mode.value) {
         Mode.LOCAL -> {
-            Config.String(localImageProp,"localImage") {}
+            Controls.String(localImageProp,"localImage") {}
             TextFlatten(Modifier.height(30.scaled)) { "drop files here".emit() }.hoverMask()
                 .onFilesDropped { localImageProp.value = it.firstOrNull()?.toString() ?: "" }
             withColor(color) { Image(Modifier.size(width.scaled, height.scaled), localImage, strategy) {} }
         }
         Mode.RESOURCE -> {
-            Config.String(resourceImageProp,"resource") {}
+            Controls.String(resourceImageProp,"resource") {}
             withColor(color) { Image(Modifier.size(width.scaled, height.scaled), resourceImage, strategy) {} }
         }
     }

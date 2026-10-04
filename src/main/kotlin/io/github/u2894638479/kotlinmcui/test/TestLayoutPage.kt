@@ -20,7 +20,7 @@ import io.github.u2894638479.kotlinmcui.prop.StableRO
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import io.github.u2894638479.kotlinmcui.utils.Simple
+import io.github.u2894638479.kotlinmcui.widget.Simple
 
 context(ctx: DslContext)
 fun TestLayoutPage() = Column {

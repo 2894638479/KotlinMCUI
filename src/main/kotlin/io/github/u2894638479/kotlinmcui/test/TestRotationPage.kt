@@ -21,21 +21,21 @@ import io.github.u2894638479.kotlinmcui.modifier.weight
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import io.github.u2894638479.kotlinmcui.utils.Config
-import io.github.u2894638479.kotlinmcui.utils.Simple
-import io.github.u2894638479.kotlinmcui.utils.Simple.simpleTooltip
+import io.github.u2894638479.kotlinmcui.widget.Controls
+import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Simple.simpleTooltip
 import kotlin.math.PI
 
 context(ctx: DslContext)
 fun TestRotationPage() = ScrollableColumn {
-    var rad by Config.Slider(0.0..PI,"rotation rad") {}
-    var scale by Config.Slider(0.5..2.0,"scale") {}
-    var x by Config.Slider(-100..100,"moveX") {}
-    var y by Config.Slider(-100..100,"moveY") {}
+    var rad by Controls.Slider(0.0..PI,"rotation rad") {}
+    var scale by Controls.Slider(0.5..2.0,"scale") {}
+    var x by Controls.Slider(-100..100,"moveX") {}
+    var y by Controls.Slider(-100..100,"moveY") {}
     Column {
         val rad2 = local { 0.0 }
         Row {
-            Config.Slider(rad2,0.0..1.0,"test") {}
+            Controls.Slider(rad2,0.0..1.0,"test") {}
             Simple.Button("test") {}.simpleTooltip("Rotate!","rotate")
         }
         ColorRect(Modifier.height(50.scaled),Color.RED) {}
@@ -44,7 +44,7 @@ fun TestRotationPage() = ScrollableColumn {
             val selfRenderPreedit = local { false }
             Column {
                 Simple.Button("test2"){}.simpleTooltip("Nested Rotate!","nested")
-                Config.BoolButton(selfRenderPreedit,"preedit") {}
+                Controls.BoolButton(selfRenderPreedit,"preedit") {}
             }.rotate(rad2.value)
             ColorRect(Modifier,Color.GREEN) {}
             val text = local { "editable" }
@@ -54,8 +54,8 @@ fun TestRotationPage() = ScrollableColumn {
 
     // ── Shear ──────────────────────────────────────────────────────────
     Simple.Text { "shear" }
-    val shxProp = Config.Slider(-1.0..1.0, "shearX", id = "shx")
-    val shyProp = Config.Slider(-1.0..1.0, "shearY", id = "shy")
+    val shxProp = Controls.Slider(-1.0..1.0, "shearX", id = "shx")
+    val shyProp = Controls.Slider(-1.0..1.0, "shearY", id = "shy")
     var shx by shxProp; var shy by shyProp
     Row {
         ColorRect(Modifier.height(80.scaled), Color.RED) {}
@@ -65,8 +65,8 @@ fun TestRotationPage() = ScrollableColumn {
 
     // ── Perspective ────────────────────────────────────────────────────
     Simple.Text { "perspective" }
-    val pxProp = Config.Slider(-0.005..0.005, "perspectiveX", id = "px")
-    val pyProp = Config.Slider(-0.005..0.005, "perspectiveY", id = "py")
+    val pxProp = Controls.Slider(-0.005..0.005, "perspectiveX", id = "px")
+    val pyProp = Controls.Slider(-0.005..0.005, "perspectiveY", id = "py")
     var px by pxProp; var py by pyProp
     Row {
         ColorRect(Modifier.height(80.scaled), Color.RED) {}
