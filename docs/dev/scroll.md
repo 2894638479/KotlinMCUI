@@ -105,5 +105,6 @@ parent: Dev
 
 ## 已知问题
 - **循环里声明的条目共享身份**：惰性列表的条目通常写在 `repeat` / `forEach` 里，而身份取自**书写位置**，因此每一轮都会得到同一个身份。需要按键值区分条目时必须用 `forEachWithId` 或显式传 `id`，否则按身份定位只会命中第一个。
-- `ScrollConstraint` 的 `KeepInRatio` 与 `AlignTo` 没有直接测试。
-- `ScrollBar`、`Slider`、`EditableText`、`Button`、`AutoScroll` 均无自动化测试。
+- `ScrollConstraint` 的 `KeepIn`、`KeepInRatio`、`AlignTo` 三个分支已有直接测试。
+- `ScrollBar` 的三段 Spacer 权重在 build 期用**上一帧**的 scroller 计算，因此第一帧的旋钮高度是 0，要到第二帧才能拖（针对它的测试也因此跑两帧）。
+- `AutoScroll` 没有测试；`Button` 只有"宽高大于 0"这一级 smoke。
