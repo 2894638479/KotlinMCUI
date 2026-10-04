@@ -79,7 +79,7 @@ HUD 从第一帧就画（加载界面上也会画覆盖层），所以它正是�
 - **HUD 注入点**：`GameRendererMixin` 重定向 `GuiGraphics.flush()`（26.2 是在 `Gui.extractRenderState` 里重定向 `applyCursor`）；注入时把位姿按 `1/guiScale` 缩放，框架的坐标因此仍是物理像素。
 - **截图**：`Screenshot.grab(gameDirectory, name, target, consumer)` 的第一个参数是**游戏目录**，平台自己会拼 `screenshots/` 并创建它。
 - **输入法**：GLFW 3.3（1.20.1）没有预编辑光标 API，`setPreeditArea` 是空实现（26.2 会调 `glfwSetPreeditCursorRectangle`）；键盘事件、字符输入与文件拖放的行为一致。
-- **未知键码**：GLFW 键码要显式映射进框架的 custom 区间（`Key.custom` 只接受 `CUSTOM_RANGE_START` 起），否则按一个空格都会抛异常。
+- **未知键码**：GLFW 键码到框架 `Key` 的映射是一张"码 → 码"的表，未列出的码原样透传，再用 `Key(code)` 构造——`Key(code)` 不校验，而 `Key.custom(code)` 只接受框架自己的 custom 区间（`CUSTOM_RANGE_START` 起）。**不要用 `Key.custom(Key.A.code + i)` 这类写法**：它的参数应是平台码，传框架自己的键码既错又会抛。另外别把这张表的构造放进会被输入回调触发的顶层初始化器里：一旦它抛异常，`InputKt.<clinit>` 失败，**任何一次输入都会崩**（表现为 `ExceptionInInitializerError` + `custom key codes must be in the extension range`）。1.20.1 后端在 `register` 里主动构造并记录映射条数，正是为了让这种表在启动时就暴露问题。
 - **类初始化顺序**：`Input` 的调度器取自 `Utils` 而不是聚合对象 `DefaultBackend`，否则两个类会互相初始化并留下半个对象。
 
 ## 已知问题
