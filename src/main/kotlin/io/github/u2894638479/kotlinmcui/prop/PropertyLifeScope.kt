@@ -29,9 +29,6 @@ class PropertyLifeScope internal constructor(
         open fun onClear() {}
     }
 
-    context(_: DslIdContext)
-    private fun getId(id:Any) = if(isStatic) DslId(id) else identity + id
-
     /**
      * Storage key of one declaration site.
      *
@@ -42,7 +39,14 @@ class PropertyLifeScope internal constructor(
      * reachable across mods by id alone.
      */
     context(_: DslIdContext)
-    private fun getKey(id: Any?, site: Any) = if(isStatic) getId(id ?: site) else identity + id + site
+    private fun getKey(id: Any?, site: Any) = when {
+        // The bare id is what makes a static slot reachable across mods.
+        isStatic -> DslId(id ?: site)
+        // Without an explicit id the declaring site alone already is the key, and this
+        // is the per-frame path: do not grow the identity chain for nothing.
+        id == null -> identity + site
+        else -> identity + id + site
+    }
 
     /**
      * The slot's value type is fixed by the declaration site that created it, and that
