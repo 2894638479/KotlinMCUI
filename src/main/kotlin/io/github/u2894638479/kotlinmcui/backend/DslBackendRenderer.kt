@@ -31,34 +31,53 @@ interface DslBackendRenderer<RP> {
     fun flush()
 
     /**
-     * Render a list of colored vertices as filled triangles.
+     * The drawing primitive: one quad, optionally textured.
      *
-     * Every 3 consecutive vertices form one triangle. The vertex count must
-     * be a multiple of 3. This is the primitive fill operation — backends
-     * should implement this directly.
+     * The four corners of [rect] are shaded individually — [lt], [rt], [lb], [rb]
+     * are left-top, right-top, left-bottom and right-bottom — and drawn as the two
+     * triangles `(lt, rt, lb)` and `(rt, rb, lb)`.
+     *
+     * [image] and [uv] describe the texture: [uv] is the source rectangle inside the
+     * image, in image pixel space (top-left origin). Pass `null` for both to draw
+     * colour only.
+     *
+     * Every parameter is a value class or an existing reference, so a call allocates
+     * nothing. Anything else the framework draws is expressed through this method:
+     * keep it free of collections, or the per-frame cost comes back with it.
      */
     context(renderParam: RP)
-    fun renderVertices(vertices: List<Pair<Position, Color>>)
+    fun renderQuad(
+        rect: Rect,
+        lt: Color,
+        rt: Color,
+        lb: Color,
+        rb: Color,
+        image: ImageHolder? = null,
+        uv: Rect? = null,
+    )
 
     /**
-     * Draw a gradient-filled rectangle. Default implementation delegates to
-     * [renderVertices] with the four corner vertices.
+     * Draw a gradient-filled rectangle.
+     * Convenience for [renderQuad]; it adds no allocation.
      */
     context(renderParam: RP)
     fun fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color) {
-        val (l, t, r, b) = listOf(rect.left, rect.top, rect.right, rect.bottom)
-        renderVertices(listOf(
-            // Triangle 1: left-top → right-top → left-bottom
-            Position(l, t) to lt, Position(r, t) to rt, Position(l, b) to lb,
-            // Triangle 2: right-top → right-bottom → left-bottom
-            Position(r, t) to rt, Position(r, b) to rb, Position(l, b) to lb,
-        ))
+        renderQuad(rect, lt, rt, lb, rb)
     }
 
-    /** Draw a solid filled rectangle. Default delegates to [fillRectGradient]. */
+    /** Draw a solid filled rectangle. Convenience for [renderQuad]. */
     context(renderParam: RP)
     fun fillRect(rect: Rect, color: Color) {
-        fillRectGradient(rect, color, color, color, color)
+        renderQuad(rect, color, color, color, color)
+    }
+
+    /**
+     * Draw [image] into [rect], taking its pixels from [uv] (image pixel space) and
+     * tinting them with [color]. Convenience for [renderQuad].
+     */
+    context(renderParam: RP)
+    fun renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE) {
+        renderQuad(rect, color, color, color, color, image, uv)
     }
 
     /**
@@ -92,34 +111,8 @@ interface DslBackendRenderer<RP> {
     fun renderItem(rect: Rect, item: String, count: Int, damage: Double?, enchanted: Boolean)
 
     /**
-     * Render textured, colored vertices. Each [uv] entry corresponds to a
-     * vertex in [vertices]. UV coordinates are in image pixel space.
+     * Render the default screen background (e.g. dirt texture in Minecraft).
      */
-    context(renderParam: RP)
-    fun renderVertices(vertices: List<Pair<Position, Color>>, image: ImageHolder, uv: List<Position>)
-
-    /**
-     * Render an image with optional UV mapping and tint.
-     * Default implementation delegates to [renderVertices] with two triangles.
-     */
-    context(renderParam: RP)
-    fun renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE) {
-        val (l, t, r, b) = rect.run { listOf(left, top, right, bottom) }
-        val (ul, ut, ur, ub) = uv.run { listOf(left, top, right, bottom) }
-        renderVertices(
-            listOf(
-                Position(l, t) to color, Position(r, t) to color, Position(l, b) to color,
-                Position(r, t) to color, Position(r, b) to color, Position(l, b) to color,
-            ),
-            image,
-            listOf(
-                Position(ul, ut), Position(ur, ut), Position(ul, ub),
-                Position(ur, ut), Position(ur, ub), Position(ul, ub),
-            ),
-        )
-    }
-
-    /** Render the default screen background (e.g. dirt texture in Minecraft). */
     context(ctx: DslScaleContext, renderParam: RP)
     fun renderDefaultBackground(rect: Rect)
 
