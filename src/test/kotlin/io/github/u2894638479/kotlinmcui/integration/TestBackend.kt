@@ -46,10 +46,15 @@ internal object TestBackend : DslBackend<Unit, Unit>,
         val child = TopComponent.children.collect(screen)
         val backend = this
         val renderParam: Unit = Unit
-        kotlin.context(backend, renderParam, mousePos) {
-            TopComponent.render<Unit>()
+        // Unmount even when the frame throws: a leftover child would be rendered by
+        // every following test in the same JVM.
+        try {
+            kotlin.context(backend, renderParam, mousePos) {
+                TopComponent.render<Unit>()
+            }
+        } finally {
+            TopComponent.children.remove(child)
         }
-        TopComponent.children.remove(child)
     }
 }
 
