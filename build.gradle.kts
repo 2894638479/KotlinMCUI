@@ -47,6 +47,10 @@ kotlin {
     jvmToolchain(21)
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
+        // Link against the JDK 8 API surface rather than the toolchain's. The library has
+        // to load on old Minecraft versions, and a JDK 9+ call would compile happily here
+        // only to fail with NoSuchMethodError on the game's older runtime.
+        freeCompilerArgs.add("-Xjdk-release=1.8")
     }
 }
 

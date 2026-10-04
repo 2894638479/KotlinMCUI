@@ -20,7 +20,7 @@ import io.github.u2894638479.kotlinmcui.text.DslRenderableChar
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import java.io.File
-import java.nio.file.Path
+import java.nio.file.Paths
 
 /**
  * Minimal mock backend for integration testing.
@@ -117,8 +117,8 @@ private object TestUtils : DslBackendUtils {
 
 internal object TestMetadata : DslBackendMetadata {
     // Configuration written during tests belongs under build/, not in the checkout.
-    override val configDir = Path.of("build", "test-config")
-    override val gameDir = Path.of(".")
+    override val configDir = Paths.get("build", "test-config")
+    override val gameDir = Paths.get(".")
     override val gameVersion = "test"
     override val gameLoader = "test"
     override val environment = Environment.COMMON

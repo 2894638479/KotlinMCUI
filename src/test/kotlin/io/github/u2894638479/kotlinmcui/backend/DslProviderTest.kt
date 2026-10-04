@@ -7,7 +7,7 @@ import io.github.u2894638479.kotlinmcui.integration.TestBackend
 import io.github.u2894638479.kotlinmcui.integration.TestRuntime
 import kotlinx.serialization.Serializable
 import java.nio.file.Files
-import java.nio.file.Path
+import java.nio.file.Paths
 import kotlin.io.path.exists
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach
@@ -20,8 +20,8 @@ class DslProviderTest {
 
     /** A provider that is nothing but metadata: reading it touches no platform. */
     private object OnlyMetadata : DslBackendMetadata {
-        override val configDir = Path.of("build", "test-config-metadata")
-        override val gameDir = Path.of("build")
+        override val configDir = Paths.get("build", "test-config-metadata")
+        override val gameDir = Paths.get("build")
         override val gameVersion = "test"
         override val gameLoader = "test"
         override val environment = Environment.COMMON
