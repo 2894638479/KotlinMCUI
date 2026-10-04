@@ -69,7 +69,7 @@ KOTLINMCUI_VERIFY=transform ./gradlew runVerifyClient        # PowerShell: $env:
 
 页面本身由**核心库**提供（`io.github.u2894638479.kotlinmcui.test.verifyPage` 按名字返回），它们只用 DSL 写成、检查的是框架自己的契约；后端这边只负责驱动平台：等窗口、开页、截图、退出。换一个后端时这部分不必重写。
 
-自检也**建议用 Vulkan 再跑一遍**：
+日常验证在 `fabric-1.20.1` 分支上做：`./gradlew runVerifyClient` 在两个分支上都可用，页面与用法相同。在 `fabric-26.2` 上，自检还**建议用 Vulkan 再跑一遍**：
 
 ```
 ./gradlew runVerifyClient --args="--graphicsBackend vulkan"      # PowerShell 同样写法

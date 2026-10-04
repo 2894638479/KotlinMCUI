@@ -6,7 +6,7 @@ parent: Dev
 
 # Fabric 后端实现
 
-这一页讲官方后端（独立仓库 `KotlinMCUI-backend`，当前分支 `fabric-26.2`）**为什么这么做**。契约本身见[后端接口](backend)，使用与构建见[后端](../backend/index)一章。
+这一页讲官方后端（独立仓库 `KotlinMCUI-backend`，维护 `fabric-26.2` 与 `fabric-1.20.1` 两个分支）**为什么这么做**。契约本身见[后端接口](backend)，使用与构建见[后端](../backend/index)一章；下文除 [`1.20.1` 分支的差异](#fabric-1201-分支的差异)一节外，描述的都是 `26.2` 这一支。
 
 ## 组装方式
 后端要填的是四个互相独立的职责接口：渲染、环境元数据、平台工具、输入。实现上是**一个薄聚合对象 + 接口委托**：
@@ -69,6 +69,20 @@ Mixin 解决"插进去"，访问扩大器解决"看得见"。后端需要访问�
 HUD 从第一帧就画（加载界面上也会画覆盖层），所以它正是那个"过早的调用者"。把 HUD 推迟到游戏加载完成之后，问题根除；这个顺序约束对每个后端都成立，见[后端接口](backend)的契约列表。
 
 复现与验收：`./gradlew runVerifyClient --args="--graphicsBackend vulkan"`（`--graphicsBackend` 是原版启动参数，取值 `default`/`opengl`/`vulkan`，强制后游戏忽略选项里的 `preferredGraphicsBackend`）。
+## `fabric-1.20.1` 分支的差异
+同一套契约在两个 Minecraft 版本上的落地方式不同。这里只列**必须按版本改写**的部分：
+
+- **HUD 就绪门控**：1.20.1 没有 `isGameLoadFinished`，用 `Minecraft.getOverlay() != null`（加载覆盖层在场）等价表达。
+- **绘制原语**：1.20.1 的 `RenderType` 既没有三角形类型、`create` 也不公开（`NO_CULL`/`NO_DEPTH_TEST` 等还是 protected），所以热路径用原版批处理——未贴图走 `RenderType.gui()` 的一个四边形，贴图且四角同色走 `innerBlit`；只有"贴图 + 逐顶点颜色"和可选能力 `DslBackendTriangles` 走公开的 `Tesselator` + `BufferBuilder` 立即模式。**立即模式不是 `RenderType`，必须自己 `disableCull()` / `disableDepthTest()`**，否则一个图形都画不出来（多边形自检页曾经只剩文字，就是这个原因）。
+- **四边形的对角线**：`RenderType.gui()` 是 QUADS，用哪条对角线切开由平台决定；框架产生的四角颜色都是轴仿射的（滑块轨道的 `(c0,c1,c0,c1)`、装饰器的单色），所以看不出来，但四角颜色完全任意的调用会看到差异。
+- **透视**：1.20.1 的位姿矩阵是 `Matrix4f`，后端直接用九参构造把 `m20/m21/m22` 带进去，不需要 26.2 那种给 JOML 二维矩阵补第三行的 mixin。
+- **HUD 注入点**：`GameRendererMixin` 重定向 `GuiGraphics.flush()`（26.2 是在 `Gui.extractRenderState` 里重定向 `applyCursor`）；注入时把位姿按 `1/guiScale` 缩放，框架的坐标因此仍是物理像素。
+- **截图**：`Screenshot.grab(gameDirectory, name, target, consumer)` 的第一个参数是**游戏目录**，平台自己会拼 `screenshots/` 并创建它。
+- **输入法**：GLFW 3.3（1.20.1）没有预编辑光标 API，`setPreeditArea` 是空实现（26.2 会调 `glfwSetPreeditCursorRectangle`）；键盘事件、字符输入与文件拖放的行为一致。
+- **未知键码**：GLFW 键码要显式映射进框架的 custom 区间（`Key.custom` 只接受 `CUSTOM_RANGE_START` 起），否则按一个空格都会抛异常。
+- **类初始化顺序**：`Input` 的调度器取自 `Utils` 而不是聚合对象 `DefaultBackend`，否则两个类会互相初始化并留下半个对象。
+
+## 已知问题
 - 字体只支持默认字体：取字体接口忽略名称参数，同一实例服务所有名称（满足核心的"同名同实例"要求，但不能按 `FontDescription` 切换）。
 - 本地图片通过自定义标识注册进纹理管理器，没有卸载路径；"强制重新加载"只是把缓存项删掉再走一遍加载流程。
 - 变换的最小粒度是整个子树：核心的变换语义是一棵子树共用一个矩阵，因此无法让同一容器内的不同子节点使用不同的透视中心。
