@@ -128,8 +128,8 @@ fun DslChild.background(color: Color? = null) = change {
 `preedit` 的派发规则特殊：文本非空时**只**发给当前焦点组件（避免所有输入框都显示同一段组合文本）；文本为空时**广播**给全部组件，作为"组合结束"的信号。
 
 ## 编写一个新组件
-1. 用 `object : DslComponent by DslComponentImpl(身份, modifier, ctx) { ... }` 起手，只覆写需要的成员；
-2. 需要一个容器就改用 `DslScope` 作为委托目标，并给它配置横向/纵向 aligner；
+1. 用 `Spacer(modifier, id).change { object : DslComponent by it { ... } }` 起手，只覆写需要的成员（`Spacer` 内部就是 `DslComponentImpl`，但它是 `internal`，用户侧只能走这个工厂）；
+2. 需要一个容器就用 `Scope(modifier, id, 横向 aligner, 纵向 aligner, function)`，再 `change { object : DslScope by it as DslScope { ... } }`；
 3. 想暴露自定义尺寸，覆写 `contentMinWidth` / `contentMinHeight`；需要让子节点参与测量，用 `instance.childrenMaxWidth` 之类的辅助属性；
 4. 需要在同一个组件上继续叠加行为，返回 `DslChild`（而不是 `Unit`），这样调用者能链式调用装饰器；
 5. 必须在构造期读取的东西（尺寸、颜色、主题）直接读；必须每帧保持的东西（状态、协程）走属性作用域。

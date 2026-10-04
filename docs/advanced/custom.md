@@ -7,30 +7,32 @@ parent: Advanced
 # 自定义
 手动处理事件、渲染，自由地制作DSL组件。
 
+框架提供两个公开的基座：`Spacer()` 构造一个空白组件（`DslComponent`），`Scope()` 构造一个容器（`DslScope`）。用 `change` 在基座上叠加自己的实现即可。
 ```kotlin
 context(ctx: DslContext)
 fun MyComponent(
     modifier: Modifier = Modifier,
     color: Color,
     id: Any
-) = collect(
-    object: DslComponent by DslComponentImpl(newChildId(id), modifier) {
+) = Spacer(modifier, id).change {
+    object: DslComponent by it {
         var prop by local { false }
 
         context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton): Boolean {
             //...
+            return it.mouseDown(mouseButton)
         }
     }
-)
+}
 ```
-向`collect()`传入一个`DslComponent`，就会把这个组件加入到外部的作用域中（如`Row`，`Box`）。在这里也可以使用`local`/`stable`/`static`等函数来存储状态。
+`Spacer(modifier, id)` 会创建组件并把它加入外部作用域（如`Row`，`Box`），`change` 则替换掉该组件的实现，槽位和身份都不变。在这里也可以使用`local`/`stable`/`static`等函数来存储状态。
+
+如果想给一个**已有**组件加上行为，而不是自己创建组件，就不需要基座：
 ```kotlin
 context(ctx: DslContext)
 fun DslChild.myDecorator(
-    modifier: Modifier = Modifier,
-    color: Color,
-    id: Any
+    color: Color
 ) = change {
     object: DslComponent by it {
         var prop by local { false }
@@ -38,18 +40,29 @@ fun DslChild.myDecorator(
         context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton): Boolean {
             //...
+            return it.mouseDown(mouseButton)
         }
     }
 }
 ```
 向`change`传入一个`(DslComponent) -> DslComponent`，能`override`其中的函数，给一个已有组件加上装饰。
 
-## 接口委托
-`DslComponent`是一个接口，`DslComponentImpl`是一个`final`类。接口委托可以达到接近于继承`final`类的效果。
+容器用`Scope()`，它的参数可以指定两个轴的空间分配方式（`Box`/`Row`/`Column` 就是常见的几种组合）：
 ```kotlin
-val component = object:DslComponent by DslComponentImpl(modifier,id) {}
+context(ctx: DslContext)
+fun MyColumn(
+    modifier: Modifier = Modifier,
+    id: Any,
+    function: DslFunction
+) = Scope(modifier, id, Aligner.close(Align.MID), Aligner.weightedStrictByMin, function).change {
+    object: DslScope by it as DslScope {
+        override val contentMinWidth get() = 100.scaled
+    }
+}
 ```
-接口委托把一个对象的接口函数转发到一个新对象上。无论原对象的类型是什么，包括`final class`，匿名`object`，还是普通的`open class`，都能转发并`override`其中的接口函数。
+
+## 接口委托
+`DslComponent`是一个接口，`DslComponentImpl`（`Spacer` 的返回值）是一个`final`类。接口委托可以达到接近于继承`final`类的效果：`object: DslComponent by it` 把一个对象的接口函数转发到另一个对象上，无论被转发的对象是`final class`，匿名`object`，还是普通的`open class`，都能转发并`override`其中的接口函数。
 
 这种模式的好处是委托并不侵入修改原对象，减少了逻辑上的混乱。缺点是委托是编译期产生，如果接口有修改，需要重新编译（建议执行`./gradlew clean`避免编译缓存造成的bug）。
 ## `this` `super` `instance` `delegate`的区别
@@ -61,7 +74,7 @@ override fun mouseDown(mouseButton: MouseButton): Boolean {
         // ...
         return true
     }
-    return delegate.mouseDown(mouse,mouseButton)
+    return delegate.mouseDown(mouseButton)
 }
 ```
 在下一级装饰中
@@ -72,7 +85,7 @@ override val focusable get() = true
 
 `instance`的值应该在`build()`前被正确设置，必须是已经加上全部装饰后的最终`DslComponent`对象。
 
-`delegate`访问的是前一级装饰后的对象。这个名称不是固定的，比如上一个例子里是`it`。`this`访问的是当前装饰产生的对象。`super`访问的是接口，调用的是接口中的默认实现。`instance`是最终装饰完成的对象。
+`delegate`访问的是前一级装饰后的对象。这个名称不是固定的，比如前面的例子里是`it`。`this`访问的是当前装饰产生的对象。`super`访问的是接口，调用的是接口中的默认实现。`instance`是最终装饰完成的对象。
 
 ## 布局过程
 `build()`，`layoutHorizontal()`，`layoutVertical()`，`render()`这四个函数会依次被调用。
@@ -81,4 +94,4 @@ override val focusable get() = true
 
 子控件需要实现`outerMinHeight`和`outerMinWidth`供外部读取，让父控件在layout时给它分配至少这么多空间（不一定遵循）。
 
-先水平布局再竖直布局的原因是`TextAutoFold`需要先确定宽度，才知道高度。如果反过来调用，会导致`outerMinHeight`不能正确计算。。
+先水平布局再竖直布局的原因是`TextAutoFold`需要先确定宽度，才知道高度。如果反过来调用，会导致`outerMinHeight`不能正确计算。
