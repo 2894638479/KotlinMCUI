@@ -47,7 +47,7 @@ fun LazyColumn(
     autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id: Any? = null,
     function: DslFunction
-) = LazyScrollable(Axis.Vertical, modifier, scrollerProp, scrollProp, sensitivity, autoScroll, id, function)
+) = LazyScrollable(modifier, Axis.Vertical, scrollerProp, scrollProp, sensitivity, autoScroll, id, function)
 
 context(ctx: DslContext)
 fun LazyRow(
@@ -58,7 +58,7 @@ fun LazyRow(
     autoScroll: AutoScroll? = AutoScroll(setOf(FocusSource.KEYBOARD)),
     id: Any? = null,
     function: DslFunction
-) = LazyScrollable(Axis.Horizontal, modifier, scrollerProp, scrollProp, sensitivity, autoScroll, id, function)
+) = LazyScrollable(modifier, Axis.Horizontal, scrollerProp, scrollProp, sensitivity, autoScroll, id, function)
 
 // ── Implementation ───────────────────────────────────────────────────────────
 
@@ -69,8 +69,8 @@ fun LazyRow(
  */
 context(ctx: DslContext)
 private fun LazyScrollable(
-    axis: Axis,
     modifier: Modifier = Modifier,
+    axis: Axis,
     scrollerProp: StableRW<Scroller>? = null,
     scrollProp: StableRW<Double>? = null,
     sensitivity: Double = 30.0,
