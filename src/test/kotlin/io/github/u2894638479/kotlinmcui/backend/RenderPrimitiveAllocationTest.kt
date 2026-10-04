@@ -3,6 +3,7 @@ package io.github.u2894638479.kotlinmcui.backend
 import com.sun.management.ThreadMXBean
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
+import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
@@ -67,12 +68,22 @@ class RenderPrimitiveAllocationTest {
     private val image = ImageHolder("probe", 16.px, 16.px)
     private val uv = Rect(0.px, 0.px, 16.px, 16.px)
 
+    /** Leaves room for measurement noise; a returned collection costs hundreds of bytes. */
+    private val limit = 32.0
+
+    /**
+     * A quad draw reads a handful of `Measure` values through the `Rect` interface, and
+     * those reads box; that is a property of the rectangle API, not of the strategies.
+     * What the bound has to catch is a cost that grows with the patch count: building a
+     * rectangle per patch used to cost hundreds of bytes each.
+     */
+    private val strategyLimit = 128.0
+
     @Test
     fun `the drawing entry points do not allocate`() {
         assumeTrue(bean.isThreadAllocatedMemorySupported, "this JVM cannot report per-thread allocation")
 
-        // 32 B/call leaves room for measurement noise; a returned collection costs hundreds.
-        val limit = 32.0
+        val before = Counting.quads
         val quad = bytesPerCall { Counting.renderQuad(rect, color, color, color, color, image, uv) }
         val fill = bytesPerCall { Counting.fillRect(rect, color) }
         val gradient = bytesPerCall { Counting.fillRectGradient(rect, color, Color.RED, Color.GREEN, Color.BLUE) }
@@ -82,6 +93,29 @@ class RenderPrimitiveAllocationTest {
         assertTrue(fill < limit, "fillRect allocated ${"%.1f".format(fill)} B/call")
         assertTrue(gradient < limit, "fillRectGradient allocated ${"%.1f".format(gradient)} B/call")
         assertTrue(textured < limit, "renderImage allocated ${"%.1f".format(textured)} B/call")
-        assertEquals(4 * 25 * batch, Counting.quads, "every call must reach the backend")
+        assertEquals(4 * 25 * batch, Counting.quads - before, "every call must reach the backend")
+    }
+
+    /**
+     * The image strategies multiply the primitive: a nine-slice draw sends nine quads
+     * (or more, when a band has to tile) and a tiled background sends one per tile.
+     * They used to build a rectangle per patch and per tile, so the per-frame cost grew
+     * with the patch count instead of staying flat.
+     */
+    @Test
+    fun `the image strategies do not allocate either`() {
+        assumeTrue(bean.isThreadAllocatedMemorySupported, "this JVM cannot report per-thread allocation")
+
+        val slice = ImageStrategy.nineSlice(
+            Rect(0.px, 0.px, 176.px, 166.px), Rect(3.px, 3.px, 173.px, 163.px), 1.0
+        )
+        val tiled = ImageStrategy.repeatUV(Rect(0.px, 0.px, 16.px, 16.px), 1.0)
+        val target = Rect(0.px, 0.px, 100.px, 40.px)
+
+        val sliceBytes = bytesPerCall { slice.render(target, image, color) }
+        val tiledBytes = bytesPerCall { tiled.render(target, image, color) }
+
+        assertTrue(sliceBytes < strategyLimit, "a nine-slice draw allocated ${"%.1f".format(sliceBytes)} B/call")
+        assertTrue(tiledBytes < strategyLimit, "a tiled draw allocated ${"%.1f".format(tiledBytes)} B/call")
     }
 }

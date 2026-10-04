@@ -7,6 +7,7 @@ import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Align.*
 import io.github.u2894638479.kotlinmcui.math.align.Alignment
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.rect.height
 import io.github.u2894638479.kotlinmcui.math.rect.ifEmpty
@@ -70,41 +71,73 @@ interface ImageStrategy {
             Rect(u0, v0, u0 + uWidth, v0 + vHeight)
         }
 
-        fun repeatUV(uv: Rect,scale: Double) = object : ImageStrategy {
-            private inline fun iter(a: Measure, b: Measure, step: Measure, action:(Measure, Measure,Boolean)->Unit) {
-                require(step > 0.px)
-                if(!a.isNumber || !b.isNumber) return
-                if(b <= a) return
-                var current = a
-                while (true) {
-                    val new = current + step
-                    if(new == b) {
-                        action(current,b,true)
-                        break
-                    } else if(new > b) {
-                        action(current,b,false)
-                        break
-                    } else {
-                        action(current,new,true)
-                        current = new
-                    }
-                }
-            }
-            context(backend: DslBackendRenderer<RP>, renderParam: RP)
-            override fun <RP> render(rect: Rect, image: ImageHolder, color: Color) {
-                val renderW = uv.width * scale
-                val renderH = uv.height * scale
-                iter(rect.left,rect.right,renderW) { l, r, bl1 ->
-                    iter(rect.top,rect.bottom,renderH) { t, b, bl2 ->
-                        val w = if(bl1) uv.width else uv.width * ((r-l) / renderW)
-                        val h = if(bl2) uv.height else uv.height * ((b-t) / renderH)
-                        backend.renderImage(image, Rect(l,t,r,b), Rect(uv.left,uv.top,uv.left + w,uv.top + h),color)
-                    }
+        /** Walk from [a] to [b] in [step]-sized pieces, reporting whether a piece is full. */
+        private inline fun iter(a: Measure, b: Measure, step: Measure, action:(Measure, Measure,Boolean)->Unit) {
+            require(step > 0.px)
+            if(!a.isNumber || !b.isNumber) return
+            if(b <= a) return
+            var current = a
+            while (true) {
+                val new = current + step
+                if(new == b) {
+                    action(current,b,true)
+                    break
+                } else if(new > b) {
+                    action(current,b,false)
+                    break
+                } else {
+                    action(current,new,true)
+                    current = new
                 }
             }
         }
 
+        /**
+         * Tile [uv] (scaled by [scale]) across [rect], cropping the last row and column.
+         *
+         * [tile] and [source] are the caller's scratch views: a tile's geometry is written
+         * into them and consumed by the draw call, so tiling allocates nothing per tile.
+         */
+        context(backend: DslBackendRenderer<RP>, renderParam: RP)
+        private fun <RP> drawTiled(
+            rect: Rect, uv: Rect, scale: Double, image: ImageHolder, color: Color,
+            tile: MutRect, source: MutRect,
+        ) {
+            val left = rect.left; val right = rect.right
+            val top = rect.top; val bottom = rect.bottom
+            val uvLeft = uv.left; val uvTop = uv.top
+            val uvWidth = uv.width; val uvHeight = uv.height
+            val renderW = uvWidth * scale
+            val renderH = uvHeight * scale
+            iter(left,right,renderW) { l, r, bl1 ->
+                iter(top,bottom,renderH) { t, b, bl2 ->
+                    val w = if(bl1) uvWidth else uvWidth * ((r-l) / renderW)
+                    val h = if(bl2) uvHeight else uvHeight * ((b-t) / renderH)
+                    tile.left = l; tile.top = t; tile.right = r; tile.bottom = b
+                    source.left = uvLeft; source.top = uvTop
+                    source.right = uvLeft + w; source.bottom = uvTop + h
+                    backend.renderImage(image, tile, source, color)
+                }
+            }
+        }
+
+        fun repeatUV(uv: Rect,scale: Double) = object : ImageStrategy {
+            private val tile = MutRect()
+            private val source = MutRect()
+
+            context(backend: DslBackendRenderer<RP>, renderParam: RP)
+            override fun <RP> render(rect: Rect, image: ImageHolder, color: Color) {
+                drawTiled(rect, uv, scale, image, color, tile, source)
+            }
+        }
+
         fun nineSlice(uvOuter:Rect,uvInner:Rect,scale:Double) = object:ImageStrategy {
+            private val inner = MutRect()
+            private val patch = MutRect()
+            private val tile = MutRect()
+            private val source = MutRect()
+            private val tileSource = MutRect()
+
             private inline fun getW(inner:Rect,outer:Rect,align: Align,action:(Measure, Measure)->Unit) = when(align) {
                 LOW -> action(outer.left,inner.left)
                 MID -> action(inner.left,inner.right)
@@ -127,16 +160,17 @@ interface ImageStrategy {
                 val w2 = (uvOuter.right - uvInner.right) * scale
                 val h1 = (uvInner.top - uvOuter.top) * scale
                 val h2 = (uvOuter.bottom - uvInner.bottom) * scale
-                val rectInner = Rect(rect.left + w1,rect.top + h1,rect.right - w2,rect.bottom - h2)
+                inner.left = rect.left + w1; inner.top = rect.top + h1
+                inner.right = rect.right - w2; inner.bottom = rect.bottom - h2
                 for(aw in Align.entries) {
                     for(ah in Align.entries) {
                         getW(uvInner,uvOuter,aw) { u1,u2 ->
                             getH(uvInner,uvOuter,ah) { v1,v2 ->
-                                val uv = Rect(u1,v1,u2,v2)
-                                getW(rectInner,rect,aw) { x1,x2 ->
-                                    getH(rectInner,rect,ah) { y1,y2 ->
-                                        val r = Rect(x1,y1,x2,y2)
-                                        repeatUV(uv,scale).render(r,image,color)
+                                source.left = u1; source.top = v1; source.right = u2; source.bottom = v2
+                                getW(inner,rect,aw) { x1,x2 ->
+                                    getH(inner,rect,ah) { y1,y2 ->
+                                        patch.left = x1; patch.top = y1; patch.right = x2; patch.bottom = y2
+                                        drawTiled(patch, source, scale, image, color, tile, tileSource)
                                     }
                                 }
                             }
