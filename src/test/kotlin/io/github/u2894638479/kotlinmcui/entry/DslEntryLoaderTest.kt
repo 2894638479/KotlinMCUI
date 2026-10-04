@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.entry
 
+import io.github.u2894638479.kotlinmcui.backend.Environment
 import io.github.u2894638479.kotlinmcui.integration.TestRuntime
 import java.nio.file.Files
 import kotlin.io.path.exists
@@ -139,5 +140,20 @@ class DslEntryLoaderTest {
         DslEntryLoader.bringOverlayToTop(FixtureOverlay)
         assertEquals(listOf(FixtureOverlay,other), DslEntryLoader.enabledOverlays)
         assertEquals(listOf(FixtureOverlay.id,other.id), readOverlayIds())
+    }
+
+    @Test
+    @Order(11)
+    fun `an id whose mod is not installed stays in the file and renders nothing`() {
+        val ghost = "absentmod:ghost"
+        Files.createDirectories(configPath.parent)
+        configPath.writeText("""{ "enabled": [ "$ghost" ] }""")
+
+        DslEntryLoader.discover(Environment.COMMON)
+        assertEquals(emptyList(), DslEntryLoader.enabledOverlays, "an id with no overlay behind it must not render")
+        assertEquals(listOf(ghost), readOverlayIds(), "but the stored list keeps it")
+
+        DslEntryLoader.setOverlayEnabled(FixtureOverlay,true)
+        assertTrue(ghost in readOverlayIds(), "rewriting the list must not drop the id of the absent mod")
     }
 }
