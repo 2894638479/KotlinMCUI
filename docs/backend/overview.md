@@ -20,12 +20,14 @@ parent: Backend
 后端版本号由四段用 `+` 连接，空段会被跳过：
 
 ```
-<核心库版本>+<加载器>[+<加载器后缀>]+<Minecraft 版本>
+<后端版本>+<加载器>[+<加载器后缀>]+<Minecraft 版本>
 ```
 
-例如 `1.0.0-alpha.19+fabric+26.2` 表示：核心库 `1.0.0-alpha.19`、Fabric、Minecraft `26.2`。同一个 Minecraft 版本下不同加载器是不同分支，同一加载器的不同 Minecraft 版本也是不同分支。
+例如 `1.0.0-alpha.19+fabric+26.2` 表示：后端 `1.0.0-alpha.19`、Fabric、Minecraft `26.2`。同一个 Minecraft 版本下不同加载器是不同分支，同一加载器的不同 Minecraft 版本也是不同分支。
 
-**后端与核心库是分开发布的，必须成对安装。** 模组元数据里对核心库的依赖是精确版本，装错版本会在加载时直接报依赖不满足，而不是运行时出错。
+后端版本与它依赖的核心库版本**无关**：核心库版本写在 `gradle.properties` 的 `kotlinmcui_version` 里，两者各自发布。
+
+**后端与核心库是分开发布的，必须成对安装。** 后端的元数据把核心库写成精确版本，装错会在加载时直接报依赖不满足，而不是运行时出错。核心库那边只能把后端写成 `recommends`：专用服务端上没有后端，硬依赖会让服务端拒绝加载核心库。
 
 ## 支持情况
 当前只维护 `fabric-26.2` 这一个分支：Minecraft `26.2`、Fabric、Java 25。其它 Minecraft 版本的分支不再更新；需要时按[移植](porting)的清单另开分支。
@@ -35,7 +37,7 @@ parent: Backend
 | --- | --- |
 | Fabric Loader | 0.19.5 起 |
 | Fabric Language Kotlin | 1.14.1+kotlin.2.4.20 起 |
-| KotlinMCUI（核心库） | 必须与后端版本号第一段完全一致 |
+| KotlinMCUI（核心库） | 由后端的 `kotlinmcui_version` 精确指定，与后端自身的版本号无关 |
 | kotlinx-serialization-json | 1.11.0；核心库用它读写配置文件。Fabric 上由 Fabric Language Kotlin 提供（其打包版本已与核心一致）；缺少该库的加载器需要后端把它打进 jar |
 | Mod Menu | 可选；装了之后后端的配置页会出现在 Mod Menu 里 |
 | Java | 25 |
