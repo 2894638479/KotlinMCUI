@@ -145,14 +145,12 @@ fun DslChild.onFilesDropped(action:context(DslExecuteContext) CoroutineScope.(Ar
 context(ctx: DslContext)
 fun DslChild.scissor() = change {
     object:DslComponent by it {
+        // Only the press is gated by the clip. Moves and the release are delegated
+        // untouched: a drag that starts inside the clip has to continue outside it, and
+        // above all it has to *end* there — a swallowed release leaves the component that
+        // owns the drag with its dragging state set forever.
         context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton) = mouse in instance.rect && it.mouseDown(mouseButton)
-
-        context(eventModifier: KeyModifiers, mouse: Position)
-        override fun mouseUp(mouseButton: MouseButton) = mouse in instance.rect && it.mouseUp(mouseButton)
-
-        context(mouse: Position)
-        override fun mouseMove() { if(mouse in instance.rect) it.mouseMove() }
 
         context(mouse: Position)
         override fun dropFiles(files: Array<Path>) = mouse in instance.rect && it.dropFiles(files)

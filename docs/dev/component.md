@@ -80,7 +80,7 @@ fun DslChild.background(color: Color? = null) = change {
 | `narrate` | 提供无障碍朗读文本 |
 | `tooltip` | 提供提示内容 |
 | `onFilesDropped` | 文件拖放 |
-| `scissor` | 事件裁剪（与 `renderScissor` 不同，它只裁事件） |
+| `scissor` | 裁绘制并裁输入；输入上只筛按下/拖放/滚轮，移动与松开透传 |
 
 `clickable` 的两个细节：`enabled = false` 时它**整体短路返回内层**，而不是产生一个"禁用态装饰器"；它命中后**无条件消费**事件，且不在意具体是哪个鼠标键——同一个矩形里如果叠了两个可点组件，靠后者会被挡住。
 

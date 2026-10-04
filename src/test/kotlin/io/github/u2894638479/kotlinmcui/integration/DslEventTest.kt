@@ -158,10 +158,12 @@ class DslEventTest {
     }
 
     @Test
-    fun `scissor blocks mouse events outside its rect`() {
-        // The child answers `true` to everything, so only the decorator's own rect
-        // check can stop these events: a child that declined them by default would
-        // hide a scissor that never gated the event at all.
+    fun `scissor gates the press but not the moves or the release`() {
+        // The child answers `true` to everything, so only the decorator's own rect check
+        // can stop these events: a child that declined them by default would hide a
+        // scissor that never gated the event at all. Moves and the release must get
+        // through even with the pointer outside the clip: a drag that leaves the clipped
+        // area has to keep working, and above all it has to be able to end.
         var down = false
         var up = false
         var moved = false
@@ -187,13 +189,13 @@ class DslEventTest {
 
         context(KeyModifiers(), outside) {
             assertFalse(box.mouseDown(MouseButton.LEFT), "mouseDown outside a scissor must not pass through")
-            assertFalse(box.mouseUp(MouseButton.LEFT), "mouseUp outside a scissor must not pass through")
+            assertTrue(box.mouseUp(MouseButton.LEFT), "the release must reach the child even outside the clip")
             assertFalse(box.dropFiles(emptyArray()), "dropFiles outside a scissor must not pass through")
         }
         context(outside) { box.mouseMove() }
         assertFalse(down, "the child must not see a mouseDown outside the clip rect")
-        assertFalse(up, "the child must not see a mouseUp outside the clip rect")
-        assertFalse(moved, "the child must not see a mouseMove outside the clip rect")
+        assertTrue(up, "the child must see the release: a drag that started inside has to end")
+        assertTrue(moved, "the child must see moves outside the clip rect")
         assertFalse(dropped, "the child must not see a file drop outside the clip rect")
 
         val inside = Position(box.rect.left + 1.px, box.rect.top + 1.px)
