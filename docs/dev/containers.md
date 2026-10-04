@@ -105,5 +105,5 @@ Screen 每帧自动构建两层 Overlay：
 
 ## 已知问题
 - `LateBox` 的横向布局为空实现，与"先横后纵"的全局约定冲突；同时它的垂直 aligner 不可配置。
-- `AutoToPoint` 只在一侧做钳制，`AutoToRect` 的垂直判据只看单侧。
+- `AutoToPoint` / `AutoToRect` 的结果都会被夹回 keep-in 矩形，但两者的取舍仍不对称：`AutoToPoint` 水平先试锚点右侧、竖直先试上方，放不下才贴 keep-in 的高边；`AutoToRect` 水平放不下就直接贴高边（没有左右翻转），竖直放不下则翻到锚点上方。
 - `ShrinkBox`、`LateBox`、`MouseTip`、`DefaultBackground`、`ColorRect` 目前缺少自动化测试。
