@@ -33,7 +33,7 @@ fun <T> saveConfig(path: Path, obj: T, format: StringFormat, serializer: Seriali
     try {
         path.parent?.let { Files.createDirectories(it) }
         val temp = path.resolveSibling("${path.fileName}.tmp")
-        Files.writeString(temp, format.encodeToString(serializer, obj))
+        Files.write(temp, format.encodeToString(serializer, obj).toByteArray(Charsets.UTF_8))
         try {
             Files.move(temp, path, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
         } catch (_: AtomicMoveNotSupportedException) {
@@ -60,7 +60,7 @@ fun <T> loadConfig(
 ): T {
     if (!Files.exists(path)) return default()
     return try {
-        format.decodeFromString(deserializer, Files.readString(path))
+        format.decodeFromString(deserializer, String(Files.readAllBytes(path), Charsets.UTF_8))
     } catch (e: Exception) {
         dslLogger.error("failed to read config $path, using defaults", e)
         default()

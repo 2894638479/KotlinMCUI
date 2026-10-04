@@ -37,14 +37,11 @@ data class Transform(
             0f,0f,1f
         )
 
-        private val useFma = try {
-            Math::class.java.getDeclaredMethod("fma", Float::class.javaPrimitiveType, Float::class.javaPrimitiveType, Float::class.javaPrimitiveType)
-            Math::class.java.getDeclaredMethod("fma", Double::class.javaPrimitiveType, Double::class.javaPrimitiveType, Double::class.javaPrimitiveType)
-            true
-        } catch (_: NoSuchMethodException) { false }
-
-        private fun fma(a: Float,b: Float,c: Float): Float = if(useFma) Math.fma(a,b,c) else a * b + c
-        private fun fma(a: Double,b: Double,c: Double): Double = if(useFma) Math.fma(a,b,c) else a * b + c
+        // Math.fma would be Java 9+, and this library has to load on Java 8. The single
+        // rounding it saves is far below anything a 2D UI coordinate can observe, so the
+        // plain expression is used instead of a reflective call.
+        private fun fma(a: Float,b: Float,c: Float): Float = a * b + c
+        private fun fma(a: Double,b: Double,c: Double): Double = a * b + c
 
         fun translate(x: Measure,y: Measure) = if(x == 0.px && y == 0.px) empty else Transform(
             1f,0f,x.raw.toFloat(),
