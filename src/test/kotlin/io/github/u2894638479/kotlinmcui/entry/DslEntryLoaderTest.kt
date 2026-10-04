@@ -20,8 +20,8 @@ import org.junit.jupiter.api.io.TempDir
  * The framework's own entries are registered from `src/main/resources` as well, so
  * these cases look only at the fixtures declared in `src/test/resources`.
  *
- * The installed platform is JVM-wide ([TestRuntime]), which is what the loader's
- * single-shot discovery needs; `DslRuntimeTest` owns the sequence itself.
+ * The platform is JVM-wide ([TestRuntime] installs it on demand) and discovery is
+ * repeatable, so no case here depends on another class having run before it.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class DslEntryLoaderTest {

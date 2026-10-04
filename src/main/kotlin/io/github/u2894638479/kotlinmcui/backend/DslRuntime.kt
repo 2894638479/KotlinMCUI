@@ -52,4 +52,18 @@ object DslRuntime {
         check(dslBackendProvider == null) { "DslRuntime.platformReady was already called" }
         dslBackendProvider = backend
     }
+
+    /**
+     * Restore the state the process starts in: nothing installed, no providers published.
+     *
+     * Exists for the test suite. "Exactly once" is a process-wide promise, so a case can
+     * only exercise the sequence from a defined starting point if something can put the
+     * singleton back into it — otherwise the cases only work when they run before every
+     * other class in the JVM. Tests only; nothing in the framework calls this.
+     */
+    internal fun resetForTest() = synchronized(lock) {
+        installed = false
+        dslMetadataProvider = null
+        dslBackendProvider = null
+    }
 }

@@ -1,5 +1,7 @@
 package io.github.u2894638479.kotlinmcui.integration
 
+import io.github.u2894638479.kotlinmcui.backend.DslBackend
+import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
@@ -15,7 +17,6 @@ import io.github.u2894638479.kotlinmcui.modifier.size
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Order
 
 /**
  * Contract tests for [OverlayAlign.AutoToRect] and [OverlayAlign.AutoToPoint].
@@ -25,17 +26,23 @@ import org.junit.jupiter.api.Order
  * coordinate is pinned, so these tests stay valid while the clamps themselves are
  * being reworked.
  *
- * Uses the process-global `dslBackendProvider` like every other integration test,
- * hence the explicit `@Order(10)` that keeps it clear of the ordered entry tests.
+ * Publishes the process-global `dslBackendProvider` like the other integration classes,
+ * and puts the previous value back afterwards, so neither this class nor any other one
+ * has to run first.
  */
-@Order(10)
 class OverlayAlignTest {
 
+    /** Process-wide state: put back whatever provider was published before the case. */
+    private var previousBackendProvider: (() -> DslBackend<*, *>)? = null
+
     @BeforeEach
-    fun setUp() { io.github.u2894638479.kotlinmcui.backend.dslBackendProvider = { TestBackend } }
+    fun setUp() {
+        previousBackendProvider = dslBackendProvider
+        dslBackendProvider = { TestBackend }
+    }
 
     @AfterEach
-    fun tearDown() { io.github.u2894638479.kotlinmcui.backend.dslBackendProvider = null }
+    fun tearDown() { dslBackendProvider = previousBackendProvider }
 
     private fun buildScreen(function: DslFunction): DslScreen {
         val screen = TestBackend.create("test", function).dslScreen

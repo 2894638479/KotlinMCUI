@@ -1,5 +1,7 @@
 package io.github.u2894638479.kotlinmcui.integration
 
+import io.github.u2894638479.kotlinmcui.backend.DslBackend
+import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local
@@ -21,7 +23,6 @@ import io.github.u2894638479.kotlinmcui.prop.value
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Order
 
 /**
  * Behavioural tests for [ScrollBarVertical]'s drag handling.
@@ -30,17 +31,23 @@ import org.junit.jupiter.api.Order
  * the drag delta by `0.0` — a scroll bar that can never scroll — kept the whole
  * suite green.
  *
- * `@Order(12)` keeps this class behind the ordered entry tests; it publishes the
- * process-global `dslBackendProvider` like the other integration classes.
+ * Publishes the process-global `dslBackendProvider` like the other integration classes,
+ * and puts the previous value back afterwards, so neither this class nor any other one
+ * has to run first.
  */
-@Order(12)
 class DslScrollBarTest {
 
+    /** Process-wide state: put back whatever provider was published before the case. */
+    private var previousBackendProvider: (() -> DslBackend<*, *>)? = null
+
     @BeforeEach
-    fun setUp() { io.github.u2894638479.kotlinmcui.backend.dslBackendProvider = { TestBackend } }
+    fun setUp() {
+        previousBackendProvider = dslBackendProvider
+        dslBackendProvider = { TestBackend }
+    }
 
     @AfterEach
-    fun tearDown() { io.github.u2894638479.kotlinmcui.backend.dslBackendProvider = null }
+    fun tearDown() { dslBackendProvider = previousBackendProvider }
 
     /**
      * The bar sizes its three spacers from the scroller's *previous* layout, so the

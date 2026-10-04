@@ -16,11 +16,13 @@ import org.junit.jupiter.api.TestMethodOrder
  * Three things shape the cases below. The client fixture has to stay untouched until
  * the client case runs, which is why "the client class was not loaded" is asserted on
  * [FixtureSilentClient]: reading a fixture's own fields loads it, so a counter can only
- * prove something about a class no other case mentions. The initialisation counters are
- * compared as deltas, because discovery may be repeated. And `DslRuntimeTest` runs
- * before this class with a COMMON platform already installed.
+ * prove something about a class no other case mentions. The initialisation counters move
+ * on every pass, so they are compared as deltas — an absolute count would make this class
+ * depend on the classes that happen to run before it. And discovery always reads the GUI
+ * service file, so a load counter can only ever say "the first pass that named this class
+ * was an earlier one, not this one"; the case that needs the positive statement asserts
+ * on the registered entry instead.
  */
-@Order(2)
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class EntryEnvironmentTest {
 
@@ -32,22 +34,26 @@ class EntryEnvironmentTest {
     @Test
     @Order(1)
     fun `a common platform loads neither the client nor the server entry`() {
+        val silentClientLoads = FixtureLoads.silentClient
+        val serverRuns = FixtureServer.runs
+
         DslEntryLoader.discover(Environment.COMMON)
 
-        assertEquals(0, FixtureLoads.silentClient, "a client entry must not be loaded on a common platform")
-        assertEquals(0, FixtureLoads.server, "a server entry must not be loaded on a common platform")
+        assertEquals(silentClientLoads, FixtureLoads.silentClient, "a client entry must not be loaded on a common platform")
+        assertEquals(serverRuns, FixtureServer.runs, "a server entry must not be initialised on a common platform")
     }
 
     @Test
     @Order(2)
     fun `a server platform loads the server entry and never touches the client one`() {
         val serverRuns = FixtureServer.runs
+        val silentClientLoads = FixtureLoads.silentClient
 
         DslEntryLoader.discover(Environment.SERVER)
 
         assertEquals(serverRuns + 1, FixtureServer.runs, "the server initialisation must run")
         // Nothing below may mention FixtureSilentClient: reading it would load it.
-        assertEquals(0, FixtureLoads.silentClient, "a client entry must not even be loaded on a server")
+        assertEquals(silentClientLoads, FixtureLoads.silentClient, "a client entry must not even be loaded on a server")
     }
 
     @Test
@@ -68,7 +74,11 @@ class EntryEnvironmentTest {
 
         DslEntryLoader.discover(Environment.SERVER)
 
-        assertEquals(1, FixtureLoads.mixed, "the GUI service file names it, so it is loaded")
+        // The GUI service file names FixtureMixed, so the entry — not a class-load
+        // counter, which a JVM only moves once, on whichever pass ran first — is what
+        // proves a server registers its screen and does not initialise it as a client.
+        val mixed = DslEntryLoader.entries.first { it.first === FixtureMixed }.second
+        assertTrue(mixed.isGui, "the GUI service file names it, so a server registers its screen")
         assertEquals(clientRuns, FixtureMixed.clientRuns, "its initializeClient must not run on a server")
     }
 
@@ -86,13 +96,16 @@ class EntryEnvironmentTest {
     fun `a client platform loads and initialises the client entries, and only those`() {
         val serverRuns = FixtureServer.runs
         val clientRuns = FixtureClient.runs
+        val silentClientRuns = FixtureSilentClient.runs
+        val mixedClientRuns = FixtureMixed.clientRuns
 
         DslEntryLoader.discover(Environment.CLIENT)
 
-        assertEquals(1, FixtureLoads.silentClient, "the client entry is loaded once a client is running")
-        assertEquals(1, FixtureSilentClient.runs, "and its initialisation runs")
+        val silentClient = DslEntryLoader.entries.first { it.first === FixtureSilentClient }.second
+        assertTrue(silentClient.isClient, "the client entry is registered once a client is running")
+        assertEquals(silentClientRuns + 1, FixtureSilentClient.runs, "and its initialisation runs")
         assertEquals(clientRuns + 1, FixtureClient.runs)
-        assertEquals(1, FixtureMixed.clientRuns, "the mixed entry initialises on a client")
+        assertEquals(mixedClientRuns + 1, FixtureMixed.clientRuns, "the mixed entry initialises on a client")
         assertEquals(serverRuns, FixtureServer.runs, "a client platform must not run the server initialisation")
     }
 

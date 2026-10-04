@@ -1,5 +1,7 @@
 package io.github.u2894638479.kotlinmcui.integration
 
+import io.github.u2894638479.kotlinmcui.backend.DslBackend
+import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.container.TopComponent
@@ -14,11 +16,17 @@ import org.junit.jupiter.api.BeforeEach
 
 class DslEditBoxTest {
 
+    /** Process-wide state: put back whatever provider was published before the case. */
+    private var previousBackendProvider: (() -> DslBackend<*, *>)? = null
+
     @BeforeEach
-    fun setUp() { io.github.u2894638479.kotlinmcui.backend.dslBackendProvider = { TestBackend } }
+    fun setUp() {
+        previousBackendProvider = dslBackendProvider
+        dslBackendProvider = { TestBackend }
+    }
 
     @AfterEach
-    fun tearDown() { io.github.u2894638479.kotlinmcui.backend.dslBackendProvider = null }
+    fun tearDown() { dslBackendProvider = previousBackendProvider }
 
     private fun buildScreen(function: DslFunction): DslScreen {
         val screen = TestBackend.create("test", function).dslScreen

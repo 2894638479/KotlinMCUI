@@ -1,5 +1,7 @@
 package io.github.u2894638479.kotlinmcui.integration
 
+import io.github.u2894638479.kotlinmcui.backend.DslBackend
+import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.container.TopComponent
@@ -16,7 +18,6 @@ import io.github.u2894638479.kotlinmcui.prop.StableRW
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Order
 
 /**
  * Behavioural tests for [Slider].
@@ -25,17 +26,23 @@ import org.junit.jupiter.api.Order
  * `setProgress` — which lets a drag write a progress outside 0..1 straight into the
  * caller's property — went unnoticed by the whole suite.
  *
- * `@Order(11)` keeps this class behind the ordered entry tests; it publishes the
- * process-global `dslBackendProvider` like the other integration classes.
+ * Publishes the process-global `dslBackendProvider` like the other integration classes,
+ * and puts the previous value back afterwards, so neither this class nor any other one
+ * has to run first.
  */
-@Order(11)
 class DslSliderTest {
 
+    /** Process-wide state: put back whatever provider was published before the case. */
+    private var previousBackendProvider: (() -> DslBackend<*, *>)? = null
+
     @BeforeEach
-    fun setUp() { io.github.u2894638479.kotlinmcui.backend.dslBackendProvider = { TestBackend } }
+    fun setUp() {
+        previousBackendProvider = dslBackendProvider
+        dslBackendProvider = { TestBackend }
+    }
 
     @AfterEach
-    fun tearDown() { io.github.u2894638479.kotlinmcui.backend.dslBackendProvider = null }
+    fun tearDown() { dslBackendProvider = previousBackendProvider }
 
     /** A hand-rolled [StableRW] so the test owns the value the slider writes into. */
     private class DoubleProp(var v: Double) : StableRW<Double> {
