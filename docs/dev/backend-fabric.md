@@ -61,7 +61,14 @@ Mixin 解决"插进去"，访问扩大器解决"看得见"。后端需要访问�
 
 **`DslFunction` 只在参数位置存在。** 框架里所有需要它的地方都把它当形参（`create(title, dslFunction)`、`showScreen(title, function)`、`tooltip(function)`），由调用方用尾随 lambda 填，框架在自己的上下文里调用它。不要在无 context 的函数里试图**构造**一个 `DslFunction` 值：Kotlin 只对参数位置与初始化器传播 context 类型，`when` 分支不会，函数引用也不行。需要"按名字选页面"时，正确写法是让选择函数自己带 context 并直接调用页面（`verifyPage` 就是这么写的）。
 
-## 已知问题
+## 为什么 HUD 要等游戏加载完成
+后端的每帧入口（`DefaultBackend.render`）在 `Minecraft.isGameLoadFinished()` 之前直接返回。这不是保守，而是**必须**的：
+
+框架的文字与贴图都走游戏自己的 GUI 管线（字体、文字管线等）。首次资源重载应用之前，`ShaderManager` 的 shader 源码缓存还是空的，此时向它要一个 shader 会拿到 `null`——`VulkanDevice.compileShader` 于是编出一个 shader 无效的管线，而**这个无效结果会被缓存整个进程**。OpenGL 对此宽容（管线懒编译，首次真正使用发生在缓存就绪之后），Vulkan 严格：真正要画文本时 `VulkanRenderPass.setPipeline` 直接抛 `Pipeline is not valid (may contain invalid shaders?)`，表现就是"切到 Vulkan 立刻崩"，日志里是 `Couldn't find source for VERTEX shader (minecraft:core/text)`。
+
+HUD 从第一帧就画（加载界面上也会画覆盖层），所以它正是那个"过早的调用者"。把 HUD 推迟到游戏加载完成之后，问题根除；这个顺序约束对每个后端都成立，见[后端接口](backend)的契约列表。
+
+复现与验收：`./gradlew runVerifyClient --args="--graphicsBackend vulkan"`（`--graphicsBackend` 是原版启动参数，取值 `default`/`opengl`/`vulkan`，强制后游戏忽略选项里的 `preferredGraphicsBackend`）。
 - 字体只支持默认字体：取字体接口忽略名称参数，同一实例服务所有名称（满足核心的"同名同实例"要求，但不能按 `FontDescription` 切换）。
 - 本地图片通过自定义标识注册进纹理管理器，没有卸载路径；"强制重新加载"只是把缓存项删掉再走一遍加载流程。
 - 变换的最小粒度是整个子树：核心的变换语义是一棵子树共用一个矩阵，因此无法让同一容器内的不同子节点使用不同的透视中心。

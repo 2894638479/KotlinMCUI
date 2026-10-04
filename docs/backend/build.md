@@ -69,6 +69,14 @@ KOTLINMCUI_VERIFY=transform ./gradlew runVerifyClient        # PowerShell: $env:
 
 页面本身由**核心库**提供（`io.github.u2894638479.kotlinmcui.test.verifyPage` 按名字返回），它们只用 DSL 写成、检查的是框架自己的契约；后端这边只负责驱动平台：等窗口、开页、截图、退出。换一个后端时这部分不必重写。
 
+自检也**建议用 Vulkan 再跑一遍**：
+
+```
+./gradlew runVerifyClient --args="--graphicsBackend vulkan"      # PowerShell 同样写法
+```
+
+Vulkan 对管线校验比 OpenGL 严格得多，绘制路径的问题它会更早暴露（例如"在游戏加载完成前就画 HUD"会让它在原版 shader 缓存就绪前编出无效管线，直接崩掉——细节见[开发文档](../dev/backend-fabric)）。OpenGL 能跑通不代表 Vulkan 能。
+
 判定标准有两条：截图内容正常（说明界面确实画出来了），以及日志里有 `input callbacks registered`（说明安装输入回调的那处注入生效了——它失效时游戏照常启动，只是框架收不到任何输入，很容易被当成"界面不响应"）。
 
 **截图只用来人眼看，不要拿它做像素比对。** 背景是动态的（模糊背景取自会转动的全景图），逐像素差异既可能来自渲染改动，也可能只是采样时刻不同，用它判断"改动是否生效/是否是 bug"会得出错误结论。
