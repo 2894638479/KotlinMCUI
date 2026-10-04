@@ -258,7 +258,7 @@ fun Scroller.scrollTo(index: Int, align: Align) {
     var idx = scrollIndex
     var off = offset
     while (idx != index) {
-        val step = (index - idx).sign.toInt()
+        val step = (index - idx).sign
         off += step * items[idx].size.unscaled
         idx += step
     }
@@ -302,7 +302,6 @@ fun Scroller.scrollTo(index: Int, constraint: ScrollConstraint) {
             val pad = when (constraint) {
                 is ScrollConstraint.KeepIn -> constraint.padding.unscaled
                 is ScrollConstraint.KeepInRatio -> viewport * constraint.ratio
-                else -> 0.0
             }
             var itemOffset = offset
             var i = scrollIndex
