@@ -26,6 +26,7 @@ jobs:
           name: Artifacts
           path: build/libs/
       - name: publish
+        if: github.event_name == 'push'
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
