@@ -13,7 +13,7 @@ val colorProp = local { Color(220,120,40) }
 Controls.ColorEdit(colorProp, id = "editor")
 ```
 
-从上到下依次是：预览色块与十六进制输入框；调色板与透明度；七个通道的竖向滑条（`r g b a h s v`）。
+从上到下依次是：预览色块与十六进制输入框；调色板、色相条与透明度；七个通道的竖向滑条（`r g b a h s v`）。
 
 - `picker` 参数选择初始调色板（`ColorPicker.Square` 或 `ColorPicker.Triangle`），旁边的按钮可以在两者间切换，选择按 `id` 记住。
 - 后端不具备三角表能力（`DslBackendTriangles`）时不会提供三角模式——画不出来的取色板比没有更糟。
@@ -24,6 +24,7 @@ Controls.ColorEdit(colorProp, id = "editor")
 | --- | --- |
 | `Controls.ColorSquare(prop, modifier, id)` | 色相固定的饱和度/明度方块 |
 | `Controls.ColorTriangle(prop, modifier, id)` | 顶角纯色相、左下白、右下黑的三角调色板；需要后端支持 |
+| `Controls.ColorHue(prop, modifier, axis, id)` | 色相条，只改色相，饱和度和明度保持不动 |
 | `Controls.ColorSlider(channel, prop, modifier, id)` | 单通道滑条（`ColorChannel`），右侧带该通道的读数 |
 | `Controls.ColorText(prop, modifier, id)` | 十六进制输入框 |
 

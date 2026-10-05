@@ -8,9 +8,12 @@ import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
 import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.integration.TestBackend
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.math.rect.height
+import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.size
 import io.github.u2894638479.kotlinmcui.prop.StableRW
@@ -197,6 +200,25 @@ class ColorEditTest {
             assertFalse(square.mouseUp(MouseButton.LEFT),"so the release must keep travelling")
         }
         assertEquals(start,assertNotNull(prop).value,"and none of it may change the colour")
+    }
+
+    @Test
+    fun `pressing the hue bar moves the hue and leaves the rest alone`() {
+        val start = Color(10,20,30,40)
+        var prop: StableRW<Color>? = null
+        val screen = buildScreen {
+            val p = local { start }
+            prop = p
+            Controls.ColorHue(p,Modifier.size(60.px,20.px),Axis.Horizontal,"hue")
+        }
+        val bar = screen.children.single()
+        val third = Position(bar.rect.left + bar.rect.width / 3,bar.rect.top + bar.rect.height / 2)
+        context(KeyModifiers(),third) { assertTrue(bar.mouseDown(MouseButton.LEFT)) }
+        val moved = assertNotNull(prop).value
+        assertEquals(1.0 / 3,moved.hDouble,0.02,"the hue follows the position")
+        assertEquals(40,moved.aInt,"the alpha is untouched")
+        assertEquals(start.sDouble,moved.sDouble,0.05,"so is the saturation")
+        assertEquals(start.vDouble,moved.vDouble,0.05,"and the value")
     }
 
     @Test

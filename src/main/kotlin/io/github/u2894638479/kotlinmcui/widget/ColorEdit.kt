@@ -361,6 +361,90 @@ fun Controls.ColorTriangle(
     })
 }
 
+/** The hue circle is not linear in RGB, but each 60° sector between two primary hues is. */
+private const val HUE_SECTORS = 6
+
+/**
+ * A hue bar: press or drag along it to move the hue, leaving saturation, value and alpha alone.
+ *
+ * Six quads, one per sector between neighbouring primary hues, are exact — the hue is nonlinear in
+ * RGB over the whole circle, but linear inside a sector.
+ */
+context(ctx: DslContext)
+fun Controls.ColorHue(
+    prop: StableRW<Color>,
+    modifier: Modifier = Modifier,
+    axis: Axis = Axis.Horizontal,
+    id: Any,
+): DslChild {
+    val dragging = local(newChildId(id)) { false }
+    val input = dslBackend
+    val unit = (ctx.scale * 2).px
+    return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx) {
+        private fun pick(mouse: Position, clamp: Boolean = false): Color? {
+            val rect = instance.rect
+            if(rect.width <= 0.px || rect.height <= 0.px) return null
+            val raw = if(axis == Axis.Horizontal) (mouse.x - rect.left) / rect.width
+            else (mouse.y - rect.top) / rect.height
+            if(!clamp && (raw < 0 || raw > 1)) return null
+            val color = prop.value.changeHSV(h = raw.coerceIn(0.0,1.0))
+            prop.value = color
+            return color
+        }
+
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() {
+            val rect = instance.rect
+            if(dragging.value && !input.isMouseDown(MouseButton.LEFT)) dragging.value = false
+            repeat(HUE_SECTORS) { index ->
+                val from = index.toDouble() / HUE_SECTORS
+                val to = (index + 1).toDouble() / HUE_SECTORS
+                val begin = Color.ofHSV(from,1.0,1.0)
+                val end = Color.ofHSV(to,1.0,1.0)
+                if(axis == Axis.Horizontal) backend.renderQuad(
+                    Rect(rect.left + rect.width * from,rect.top,rect.left + rect.width * to,rect.bottom),
+                    begin,begin,end,end,
+                ) else backend.renderQuad(
+                    Rect(rect.left,rect.top + rect.height * from,rect.right,rect.top + rect.height * to),
+                    begin,end,begin,end,
+                )
+            }
+            val hue = prop.value.hDouble
+            backend.paletteMarker(
+                rect,
+                if(axis == Axis.Horizontal) hue else 0.5,
+                if(axis == Axis.Horizontal) 0.5 else hue,
+                unit,
+            )
+        }
+
+        context(eventModifier: KeyModifiers, mouse: Position)
+        override fun mouseDown(mouseButton: MouseButton): Boolean {
+            if(mouseButton != MouseButton.LEFT) return false
+            if(pick(mouse) == null) return false
+            dragging.value = true
+            return true
+        }
+
+        context(mouse: Position)
+        override fun mouseMove() {
+            if(!dragging.value) return
+            if(!input.isMouseDown(MouseButton.LEFT)) {
+                dragging.value = false
+                return
+            }
+            pick(mouse, clamp = true)
+        }
+
+        context(eventModifier: KeyModifiers, mouse: Position)
+        override fun mouseUp(mouseButton: MouseButton): Boolean {
+            if(mouseButton != MouseButton.LEFT || !dragging.value) return false
+            dragging.value = false
+            return true
+        }
+    })
+}
+
 /** A horizontal slider editing one channel of [prop], labelled with its value. */
 context(ctx: DslContext)
 fun Controls.ColorSlider(
@@ -438,6 +522,8 @@ fun Controls.ColorEdit(
                 ColorPicker.Square -> ColorSquare(prop,Modifier.size(80.scaled,80.scaled),newChildId(id))
                 ColorPicker.Triangle -> ColorTriangle(prop,Modifier.size(80.scaled,80.scaled),newChildId(id))
             }
+            // The palettes only move saturation and value, so the hue needs its own handle.
+            ColorHue(prop,Modifier.size(14.scaled,80.scaled),Axis.Vertical,newChildId(id))
             Column(Modifier.padding(2.scaled)) {
                 if(canDrawTriangle) Controls.EnumButton(
                     mode,

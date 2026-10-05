@@ -5,6 +5,7 @@ import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.translate
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
+import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
@@ -12,6 +13,7 @@ import io.github.u2894638479.kotlinmcui.modifier.size
 import io.github.u2894638479.kotlinmcui.modifier.width
 import io.github.u2894638479.kotlinmcui.widget.ColorChannel
 import io.github.u2894638479.kotlinmcui.widget.ColorEdit
+import io.github.u2894638479.kotlinmcui.widget.ColorHue
 import io.github.u2894638479.kotlinmcui.widget.ColorSlider
 import io.github.u2894638479.kotlinmcui.widget.ColorSquare
 import io.github.u2894638479.kotlinmcui.widget.ColorText
@@ -32,6 +34,7 @@ fun TestColorPage() = ScrollableColumn(Modifier.padding(5.scaled)) {
     Row(Modifier.padding(5.scaled)) {
         Controls.ColorSquare(prop,Modifier.size(70.scaled,70.scaled),"square")
         Controls.ColorTriangle(prop,Modifier.size(70.scaled,64.scaled),"triangle")
+        Controls.ColorHue(prop,Modifier.size(14.scaled,70.scaled),Axis.Vertical,"hue")
         Controls.ColorText(prop,Modifier.width(80.scaled),"hex")
     }
 }
