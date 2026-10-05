@@ -147,6 +147,33 @@ class DslPreviewTest {
         assertEquals(emptyList(),TestBackend.captures)
     }
 
+    @Test
+    fun `a page with defaulted parameters resolves and is called with them`() {
+        DefaultedPreviewCalls.count = null
+        DefaultedPreviewCalls.name = null
+        val page = DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.DefaultedPreviewPage")
+        assertEquals(
+            "io.github.u2894638479.kotlinmcui.backend.DefaultedPreviewPageKt#DefaultedPreviewPage",
+            page.describe(),
+        )
+        assertTrue(page.defaulted,"the preview cannot pass arguments, so it uses the defaults")
+        runWithFrames {
+            DslPreview.run("io.github.u2894638479.kotlinmcui.backend.DefaultedPreviewPage",capture = false)
+        }
+        assertEquals(7,DefaultedPreviewCalls.count,"the first default arrived")
+        assertEquals("default",DefaultedPreviewCalls.name,"the second default arrived")
+        assertNull(TestBackend.quitCode,"opening a page without capture never stops the game")
+    }
+
+    @Test
+    fun `a page shaped function whose extra parameter is required is not a page`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.RequiredArgPreviewPage")
+        }
+        val message = assertNotNull(error.message)
+        assertTrue(message.contains("RequiredArgPreviewPageKt#RequiredArgPreviewPage"),message)
+    }
+
     /**
      * Runs [session] while rendering frames, because it waits on the frame clock rather than on a
      * wall clock: without a platform ticking [TopComponent] it would sit there until its timeout.

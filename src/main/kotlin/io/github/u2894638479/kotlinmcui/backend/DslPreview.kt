@@ -75,6 +75,9 @@ internal object DslPreview {
             backend.quit(1)
             return
         }
+        if(page.defaulted) {
+            dslLogger.info("preview: ${page.describe()} takes parameters, so it is called with all of them at their defaults")
+        }
         try {
             if(!awaitFirstFrame()) {
                 dslLogger.error("preview: the platform never rendered a frame, giving up on '$reference'")
@@ -152,28 +155,82 @@ internal object DslPreview {
     private fun staticPage(className: String, methodName: String): Page? =
         forName(className)?.declaredMethods
             ?.firstOrNull { it.name == methodName && Modifier.isStatic(it.modifiers) && isPage(it) }
-            ?.let { Page(it,null) }
+            ?.let { Page(it,null,defaultsFor(it)) }
 
     private fun entryPage(className: String): Page? = forName(className)?.let { type ->
         val instance = runCatching { type.getField("INSTANCE").get(null) }.getOrNull()
             ?: runCatching { type.getDeclaredConstructor().newInstance() }.getOrNull()
         val method = type.declaredMethods.firstOrNull { it.name == "content" && isPage(it) }
-        if(instance != null && method != null) Page(method,instance) else null
+        if(instance != null && method != null) Page(method,instance,defaultsFor(method)) else null
     }
 
     private fun forName(className: String): Class<*>? = runCatching { Class.forName(className) }.getOrNull()
 
-    /** A page draws into the DSL context, so it takes exactly that one parameter. */
+    /**
+     * A page draws into the DSL context, so its first parameter is that context and it is not
+     * abstract. It may take further parameters, but only defaulted ones: the compiler emits a
+     * synthetic `name$default` method for a function that has a default, and that method is the
+     * only trace of a default that reflection can see.
+     */
     private fun isPage(method: Method) =
-        method.parameterTypes.size == 1 &&
+        method.parameterCount >= 1 &&
             method.parameterTypes[0] == DslContext::class.java &&
-            !Modifier.isAbstract(method.modifiers)
+            !Modifier.isAbstract(method.modifiers) &&
+            (method.parameterCount == 1 || defaultsFor(method) != null)
 
-    /** A resolved page: the method to call and, for an entry member, the object to call it on. */
-    internal class Page internal constructor(private val method: Method,private val receiver: Any?) {
+    /** The `name$default` method of [method], or `null` when it takes no defaulted parameter. */
+    private fun defaultsFor(method: Method): Method? = runCatching {
+        method.declaringClass.getDeclaredMethod(
+            "${method.name}\$default",
+            *method.parameterTypes,
+            Int::class.java,
+            Any::class.java,
+        )
+    }.getOrNull()
+
+    /** The argument passed for a parameter that [defaultsFor]'s mask tells the method to ignore. */
+    private fun unusedArgument(type: Class<*>): Any? = when(type) {
+        Boolean::class.java -> false
+        Byte::class.java -> 0.toByte()
+        Short::class.java -> 0.toShort()
+        Char::class.java -> '\u0000'
+        Int::class.java -> 0
+        Long::class.java -> 0L
+        Float::class.java -> 0.0f
+        Double::class.java -> 0.0
+        else -> null
+    }
+
+    /**
+     * A resolved page: the method that draws it, the object it is a member of, and - when it takes
+     * parameters - the `name$default` method used to call it with every one of them defaulted.
+     */
+    internal class Page internal constructor(
+        private val method: Method,
+        private val receiver: Any?,
+        private val defaultMethod: Method?
+    ) {
+        /** Whether the page's own parameters were left to their defaults. */
+        internal val defaulted get() = defaultMethod != null
+
         context(ctx: DslContext)
         fun draw() {
-            method.invoke(receiver,ctx)
+            val target = defaultMethod ?: method
+            if(defaultMethod == null) {
+                target.invoke(receiver,ctx)
+                return
+            }
+            // `name$default` takes the page's parameters, then one bit per parameter saying which
+            // of them to leave alone, then the marker Kotlin passes when it has no value to pass.
+            // Those bits cover the context parameter as well, so the page's own parameters start
+            // at the second bit.
+            val extras = method.parameterCount - 1
+            val arguments = arrayOfNulls<Any?>(method.parameterCount + 2)
+            arguments[0] = ctx
+            for(index in 1..extras) arguments[index] = unusedArgument(method.parameterTypes[index])
+            arguments[extras + 1] = ((1 shl extras) - 1) shl 1
+            arguments[extras + 2] = null
+            target.invoke(receiver,*arguments)
         }
 
         fun describe() = "${method.declaringClass.name}#${method.name}"
