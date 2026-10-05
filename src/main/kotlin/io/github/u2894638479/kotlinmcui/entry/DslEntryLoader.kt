@@ -18,17 +18,22 @@ object DslEntryLoader {
     private var enabledSnapshot: List<DslEntryOverlay> = emptyList()
 
     /** Registered entries and their discovery flags. A snapshot, so callers may iterate it safely. */
-    internal val entries: Collection<Pair<DslEntryService, Flags>> get() = snapshot
+    val entries: Collection<Pair<DslEntryService, Flags>> get() = snapshot
 
     /** Enabled overlays in stacking order: the first one is the topmost layer. */
-    internal val enabledOverlays: List<DslEntryOverlay> get() = enabledSnapshot
+    val enabledOverlays: List<DslEntryOverlay> get() = enabledSnapshot
 
-    internal class Flags {
+    class Flags {
         var isClient = false
+            internal set
         var isServer = false
+            internal set
         var isCommon = false
+            internal set
         var isGui = false
+            internal set
         var isOverlay = false
+            internal set
     }
 
     /**
@@ -38,7 +43,7 @@ object DslEntryLoader {
      * The log keeps the whole stack; this is what the config page shows as a placeholder, so
      * [reason] stays one short line.
      */
-    internal class Failure(
+    class Failure internal constructor(
         val className: String,
         /** The hook interface whose service file lists it. */
         val hookName: String,
@@ -49,7 +54,7 @@ object DslEntryLoader {
     private var failureSnapshot: List<Failure> = emptyList()
 
     /** Listings that could not be loaded, in discovery order. A snapshot, like [entries]. */
-    internal val brokenEntries: List<Failure> get() = failureSnapshot
+    val brokenEntries: List<Failure> get() = failureSnapshot
 
     /**
      * Discover every entry on the classpath and initialise the ones the current
@@ -78,10 +83,10 @@ object DslEntryLoader {
     }
 
     /** Whether [overlay] is currently enabled. */
-    internal fun isOverlayEnabled(overlay: DslEntryOverlay): Boolean = overlay.id in enabledIds
+    fun isOverlayEnabled(overlay: DslEntryOverlay): Boolean = overlay.id in enabledIds
 
     /** Enable or disable [overlay], storing the new list. */
-    internal fun setOverlayEnabled(overlay: DslEntryOverlay, enabled: Boolean) {
+    fun setOverlayEnabled(overlay: DslEntryOverlay, enabled: Boolean) {
         if (enabled == (overlay.id in enabledIds)) return
         if (enabled) enabledIds += overlay.id else enabledIds -= overlay.id
         refreshEnabledOverlays()
@@ -89,7 +94,7 @@ object DslEntryLoader {
     }
 
     /** Move [overlay] to the front of the stack, storing the new order. */
-    internal fun bringOverlayToTop(overlay: DslEntryOverlay) {
+    fun bringOverlayToTop(overlay: DslEntryOverlay) {
         if (enabledIds.firstOrNull() == overlay.id) return
         enabledIds.remove(overlay.id)
         enabledIds.add(0,overlay.id)

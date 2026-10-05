@@ -42,10 +42,10 @@ open class DslContext(
     override val children get() = _children.checkThread() ?: error("undefined children")
     override val scale get() = _scale.checkThread().also { require(!_scale.isNaN()) { "undefined scale" } }
     override val color get() = _color.checkThread()
-    internal val overlays get() = _overlays.checkThread() ?: error("undefined overlays")
+    val overlays get() = _overlays.checkThread() ?: error("undefined overlays")
     inline fun <R> withIdentity(identity:DslId, block: () -> R) = withField({_identity},{_identity = it},identity,block)
     inline fun <R> withChildren(children:DslChild.Group, block: () -> R) = withField({_children},{_children = it},children,block)
     inline fun <R> withScale(scale:Double, block: () -> R) = require(!scale.isNaN()).run { withField({_scale},{_scale = it},scale,block) }
     inline fun <R> withColor(color:Color, block: () -> R) = withField({_color},{_color = it},color,block)
-    internal inline fun <R> withOverlays(overlays:DslChild.Group, block: () -> R) = withField({_overlays},{_overlays = it},overlays,block)
+    inline fun <R> withOverlays(overlays:DslChild.Group, block: () -> R) = withField({_overlays},{_overlays = it},overlays,block)
 }

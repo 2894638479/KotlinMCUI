@@ -149,7 +149,7 @@ interface Scroller : DslScaleContext, Bound {
  * Walks from the current [Scroller.scrollIndex] forward or backward,
  * only accessing items along the walk path.
  */
-internal fun Scroller.calculateIndex(scroll: Double): Pair<Int, Double> {
+fun Scroller.calculateIndex(scroll: Double): Pair<Int, Double> {
     val items = items.ifEmpty { return 0 to 0.0 }
     var index = scrollIndex.coerceIn(items.indices)
     var offset = offset
@@ -168,7 +168,7 @@ internal fun Scroller.calculateIndex(scroll: Double): Pair<Int, Double> {
 }
 
 /** Update [Scroller.scrollIndex] and [Scroller.offset], return the visible range. */
-internal fun Scroller.updateIndex(): IntRange {
+fun Scroller.updateIndex(): IntRange {
     val s = scroll
     val (beginIndex, offset) = calculateIndex(s)
     scrollIndex = beginIndex
@@ -185,7 +185,7 @@ internal fun Scroller.updateIndex(): IntRange {
 }
 
 /** Clamp [Scroller.rawScroll] to valid range and sync [Scroller.scroll] to it. */
-internal fun Scroller.updateScroll() {
+fun Scroller.updateScroll() {
     val (index, offset) = calculateIndex(rawScroll)
     val viewport = size.unscaled
     if (index == 0 && rawScroll < offset) rawScroll = offset

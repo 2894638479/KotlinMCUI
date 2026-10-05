@@ -42,7 +42,7 @@ value class Measure private constructor(val raw: Double):Comparable<Measure>, In
         fun ofRaw(raw: Double) = Measure(raw)
 
         /** Create a [Measure] from raw IEEE 754 bits. */
-        internal fun ofBits(bits: Long) = Measure(Double.fromBits(bits))
+        fun ofBits(bits: Long) = Measure(Double.fromBits(bits))
 
         /** Return the larger of two measures. */
         fun max(a: Measure,b: Measure) = Measure(max(a.raw,b.raw))
@@ -50,11 +50,9 @@ value class Measure private constructor(val raw: Double):Comparable<Measure>, In
         /** Return the smaller of two measures. */
         fun min(a: Measure,b: Measure) = Measure(min(a.raw,b.raw))
     }
-    // Published because the public inline [isAutoMin] below reads it.
-    @PublishedApi
-    internal inline val bits get() = raw.toRawBits()
+    inline val bits get() = raw.toRawBits()
     inline val isAutoMin get() = bits == AUTO_MIN.bits
-    internal inline val isQNaN get() = (bits and 0x7FF8000000000000L) == 0x7FF8000000000000L
+    inline val isQNaN get() = (bits and 0x7FF8000000000000L) == 0x7FF8000000000000L
     inline val isFinite get() = raw.isFinite()
     inline val isNumber get() = !raw.isNaN()
     inline val absoluteValue get() = raw.absoluteValue.px

@@ -12,8 +12,8 @@ import io.github.u2894638479.kotlinmcui.math.transform.Transform
  * An immutable 2D rectangle defined by its four edges.
  *
  * Factory function: `Rect(left, top, right, bottom)`. Use extension properties
- * ([width], [height], [center], [isEmpty]) and functions
- * ([contains], [expand], [bound]) for common operations.
+ * ([width], [height], [center], [isEmpty], [vertices]) and functions
+ * ([contains], [overlap], [expand], [bound]) for common operations.
  */
 interface Rect {
     val left: Measure
@@ -62,7 +62,7 @@ inline val Rect.height get() = bottom - top
 inline val Rect.center get() = Position((left + right) / 2,(top + bottom) / 2)
 inline val Rect.isEmpty get() = width <= 0.px || height <= 0.px
 inline fun Rect.ifEmpty(action: ()-> Rect) = if (isEmpty) action() else this
-internal val Rect.vertices:List<Position> get() = object: AbstractList<Position>() {
+val Rect.vertices:List<Position> get() = object: AbstractList<Position>() {
     override val size get() = 4
     override fun get(index: Int) = when(index) {
         0 -> Position(left,top)
@@ -104,7 +104,7 @@ fun Rect.expand(expand: Measure) = object: Rect {
     override val bottom get() = this@expand.bottom + expand
 }
 
-internal fun Rect.overlap(other: Rect): Boolean {
+fun Rect.overlap(other: Rect): Boolean {
     if(right < other.left || left > other.right) return false
     if(bottom < other.top || top > other.bottom) return false
     return true
@@ -114,7 +114,7 @@ internal fun Rect.overlap(other: Rect): Boolean {
  * Compute the axis-aligned bounding box of this rectangle after applying
  * [transform]. Returns `this` if the transform is identity.
  */
-internal fun Rect.transformedMaxBound(transform: Transform): Rect {
+fun Rect.transformedMaxBound(transform: Transform): Rect {
     if(transform.isEmpty) return this
     val vertices = vertices.map { transform * it }
     return Rect(vertices.minOf { it.x }, vertices.minOf { it.y }, vertices.maxOf { it.x }, vertices.maxOf { it.y })

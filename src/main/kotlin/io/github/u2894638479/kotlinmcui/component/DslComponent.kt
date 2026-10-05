@@ -63,12 +63,12 @@ val DslComponent.isFocused get() = focusable && TopComponent.focused == identity
 /**
  * Whether the mouse is currently hovering over this component.
  */
-internal val DslComponent.isHovered get() = TopComponent.hovered == identity
+val DslComponent.isHovered get() = TopComponent.hovered == identity
 
 /**
  * Whether this component is visually highlighted (focused or hovered).
  */
-internal val DslComponent.isHighlighted get() = highlightable && (isFocused || isHovered)
+val DslComponent.isHighlighted get() = highlightable && (isFocused || isHovered)
 
 /** Attach this component as its own [DslComponentMetadata.instance]. */
 internal fun DslComponent.attachInstance() { instance = this }

@@ -78,7 +78,7 @@ interface DslComponentMetadata {
  * Returns `null` if [parent] is not an ancestor of this component.
  * Returns [Transform.empty] if this component is [parent] itself.
  */
-internal fun DslComponent.relativeTransform(parent: DslComponent): Transform? {
+fun DslComponent.relativeTransform(parent: DslComponent): Transform? {
     if (parent.identity == identity) return Transform.empty
     return parent.children.firstNotNullOfOrNull { child ->
         relativeTransform(child)?.let { child.transform * it }

@@ -24,12 +24,12 @@ fun Bound(align: Align, pos: Measure, size: Measure) = when(align) {
     MID -> Bound(pos - size/2, pos + size/2)
     HIGH -> Bound(pos, pos + size)
 }
-internal fun Bound.alignIn(align: Align, size: Measure) = when(align) {
+fun Bound.alignIn(align: Align, size: Measure) = when(align) {
     LOW -> Bound(low, low + size)
     MID -> Bound(center - size/2, center + size/2)
     HIGH -> Bound(high - size, high)
 }
-internal fun Bound.alignOut(align: Align, size: Measure) = when(align) {
+fun Bound.alignOut(align: Align, size: Measure) = when(align) {
     LOW -> Bound(low - size, low)
     MID -> Bound(center - size/2, center + size/2)
     HIGH -> Bound(high, high + size)

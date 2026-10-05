@@ -23,13 +23,13 @@ class DslChild internal constructor(private var component: DslComponent) {
         fun collectAll(list: kotlin.collections.List<DslComponent>)
         fun remove(child: DslChild)
         companion object {
-            internal val empty: Group get() = GroupImpl.empty
+            val empty: Group get() = GroupImpl.empty
         }
     }
 
     companion object {
-        internal fun Group(): Group = GroupImpl()
-        internal fun Group.reverseRead(): Group = object : Group, kotlin.collections.List<DslComponent> by asReversed() {
+        fun Group(): Group = GroupImpl()
+        fun Group.reverseRead(): Group = object : Group, kotlin.collections.List<DslComponent> by asReversed() {
             override fun collect(child: DslComponent) = this@reverseRead.collect(child)
             override fun collectAll(list: kotlin.collections.List<DslComponent>) {
                this@reverseRead.collectAll(list)
