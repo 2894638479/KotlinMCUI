@@ -5,7 +5,6 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
-import io.github.u2894638479.kotlinmcui.prop.mapView
 
 /**
  * A mutable wrapper around a [DslComponent] in the child list.
@@ -14,7 +13,7 @@ import io.github.u2894638479.kotlinmcui.prop.mapView
  * without changing its identity. The [Group] interface is the managed collection
  * of children used throughout the tree.
  */
-class DslChild(private var component: DslComponent) {
+class DslChild internal constructor(private var component: DslComponent) {
     fun currentComponent() = component
     fun change(component: DslComponent) = apply { this.component = component }
     inline fun change(action: (DslComponent)-> DslComponent) = change(action(currentComponent()))
@@ -24,13 +23,13 @@ class DslChild(private var component: DslComponent) {
         fun collectAll(list: kotlin.collections.List<DslComponent>)
         fun remove(child: DslChild)
         companion object {
-            val empty: Group get() = GroupImpl.empty
+            internal val empty: Group get() = GroupImpl.empty
         }
     }
 
     companion object {
-        fun Group(): Group = GroupImpl()
-        fun Group.reverseRead(): Group = object : Group, kotlin.collections.List<DslComponent> by asReversed() {
+        internal fun Group(): Group = GroupImpl()
+        internal fun Group.reverseRead(): Group = object : Group, kotlin.collections.List<DslComponent> by asReversed() {
             override fun collect(child: DslComponent) = this@reverseRead.collect(child)
             override fun collectAll(list: kotlin.collections.List<DslComponent>) {
                this@reverseRead.collectAll(list)

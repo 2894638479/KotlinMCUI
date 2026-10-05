@@ -15,7 +15,7 @@ class DslTextLine(
     val horizontalAlign: Aligner,
     val defaultLineHeight: Measure
 ): Alignable {
-    fun <RP> alignedChars(font: DslFont<RP>) = chars.map {
+    internal fun <RP> alignedChars(font: DslFont<RP>) = chars.map {
         object : AlignableChar(it) {
             override val minSize get() = font.charAdvance(char)
             override val size get() = Measure.AUTO
@@ -27,7 +27,7 @@ class DslTextLine(
     }.also { horizontalAlign.align(rect.left,rect.right,it) }
 
     context(renderParam: RP)
-    fun <RP> renderChars(font: DslFont<RP>,chars:List<AlignableChar>) {
+    internal fun <RP> renderChars(font: DslFont<RP>,chars:List<AlignableChar>) {
         if(this.font !== font) dslLogger.warn("using different font for layout and render")
         chars.forEach { font.renderChar(it.char,(it.low+it.high-it.minSize)/2,rect.top,it.low,it.high) }
     }

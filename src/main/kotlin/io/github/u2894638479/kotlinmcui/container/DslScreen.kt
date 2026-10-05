@@ -27,10 +27,10 @@ import io.github.u2894638479.kotlinmcui.modifier.padding
  */
 class DslScreen private constructor(
     val dataStore: DslDataStore,
-    val dslFunction: DslFunction,
-    val delegate: DslScope
+    internal val dslFunction: DslFunction,
+    private val delegate: DslScope
 ) : DslScope by delegate {
-    constructor(dataStore: DslDataStore, dslFunction: DslFunction) : this(
+    internal constructor(dataStore: DslDataStore, dslFunction: DslFunction) : this(
         dataStore, dslFunction,
         with(DslContext(dataStore)) {
             withScale(0.0) {

@@ -63,16 +63,16 @@ val DslComponentAlign.outerMinWidth get() = contentMinWidth + modifier.paddingWi
 val DslComponentAlign.outerMinHeight get() = contentMinHeight + modifier.paddingHeight
 
 /** Sum of all children's outer minimum widths. */
-val DslComponent.childrenSumWidth get() = children.sumOf { it.outerMinWidth }
+internal val DslComponent.childrenSumWidth get() = children.sumOf { it.outerMinWidth }
 
 /** Sum of all children's outer minimum heights. */
-val DslComponent.childrenSumHeight get() = children.sumOf { it.outerMinHeight }
+internal val DslComponent.childrenSumHeight get() = children.sumOf { it.outerMinHeight }
 
 /** Maximum of children's outer minimum widths, or `0.px` if no children. */
-val DslComponent.childrenMaxWidth get() = children.maxOfOrNull { it.outerMinWidth } ?: 0.px
+internal val DslComponent.childrenMaxWidth get() = children.maxOfOrNull { it.outerMinWidth } ?: 0.px
 
 /** Maximum of children's outer minimum heights, or `0.px` if no children. */
-val DslComponent.childrenMaxHeight get() = children.maxOfOrNull { it.outerMinHeight } ?: 0.px
+internal val DslComponent.childrenMaxHeight get() = children.maxOfOrNull { it.outerMinHeight } ?: 0.px
 
 /** Content minimum size along the given [axis]. */
 fun DslComponentAlign.contentMinSize(axis: Axis) = when(axis) {
@@ -81,7 +81,7 @@ fun DslComponentAlign.contentMinSize(axis: Axis) = when(axis) {
 }
 
 /** Outer minimum size (content + padding) along the given [axis]. */
-fun DslComponentAlign.outerMinSize(axis: Axis) = when(axis) {
+internal fun DslComponentAlign.outerMinSize(axis: Axis) = when(axis) {
     Axis.Horizontal -> outerMinWidth
     Axis.Vertical -> outerMinHeight
 }

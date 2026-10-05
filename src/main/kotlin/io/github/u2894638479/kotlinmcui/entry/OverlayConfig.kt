@@ -15,7 +15,7 @@ import java.nio.file.Path
  * for a while does not forget that its overlay was switched on.
  */
 @Serializable
-data class OverlayConfig(val enabled: List<String> = emptyList())
+internal data class OverlayConfig(val enabled: List<String> = emptyList())
 
 /** Where the framework keeps the overlay configuration: `<configDir>/kotlinmcui/overlays.json`. */
 internal fun overlayConfigPath(): Path = dslMetadata.configDir.resolve("kotlinmcui/overlays.json")

@@ -11,9 +11,9 @@ class DslRenderableChar(
     val size: Measure
 )
 
-fun Collection<DslRenderableChar>.maxHeight(font: DslFont<*>) = maxOfOrNull { font.charHeight(it) }
-fun Collection<DslRenderableChar>.sumAdvance(font: DslFont<*>) = sumOf { font.charAdvance(it).pixelsOrElse { 0.0 } }.px
+internal fun Collection<DslRenderableChar>.maxHeight(font: DslFont<*>) = maxOfOrNull { font.charHeight(it) }
+internal fun Collection<DslRenderableChar>.sumAdvance(font: DslFont<*>) = sumOf { font.charAdvance(it).pixelsOrElse { 0.0 } }.px
 
-fun Collection<Collection<DslRenderableChar>>.totalHeight(font: DslFont<*>,defaultLineHeight: Measure) = sumOf {
+internal fun Collection<Collection<DslRenderableChar>>.totalHeight(font: DslFont<*>,defaultLineHeight: Measure) = sumOf {
     (it.maxOfOrNull { font.charHeight(it) } ?: defaultLineHeight).pixelsOrElse { 0.0 } }.px
-fun Collection<Collection<DslRenderableChar>>.totalWidth(font: DslFont<*>) = maxOfOrNull { it.sumAdvance(font) } ?: 0.px
+internal fun Collection<Collection<DslRenderableChar>>.totalWidth(font: DslFont<*>) = maxOfOrNull { it.sumAdvance(font) } ?: 0.px

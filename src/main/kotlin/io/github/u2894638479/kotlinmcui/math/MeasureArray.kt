@@ -3,7 +3,7 @@ package io.github.u2894638479.kotlinmcui.math
 import kotlin.experimental.ExperimentalTypeInference
 
 @JvmInline
-value class MeasureArray private constructor(val raw: DoubleArray) {
+internal value class MeasureArray private constructor(internal val raw: DoubleArray) {
     constructor(size: Int):this(DoubleArray(size))
     constructor(size: Int,init:(Int)-> Measure):this(DoubleArray(size){ init(it).raw })
     operator fun get(index:Int) = Measure.ofRaw(raw[index])
@@ -65,16 +65,16 @@ value class MeasureArray private constructor(val raw: DoubleArray) {
 @OptIn(ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
 @JvmName("sumOfDouble")
-inline fun MeasureArray.sumOf(selector: (Measure) -> Double) = raw.sumOf { selector(it.px) }
+internal inline fun MeasureArray.sumOf(selector: (Measure) -> Double) = raw.sumOf { selector(it.px) }
 @OptIn(ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
 @JvmName("sumOfInt")
-inline fun MeasureArray.sumOf(selector: (Measure) -> Int) = raw.sumOf { selector(it.px) }
+internal inline fun MeasureArray.sumOf(selector: (Measure) -> Int) = raw.sumOf { selector(it.px) }
 @OptIn(ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
 @JvmName("sumOfUInt")
-inline fun MeasureArray.sumOf(selector: (Measure) -> UInt) = raw.sumOf { selector(it.px) }
+internal inline fun MeasureArray.sumOf(selector: (Measure) -> UInt) = raw.sumOf { selector(it.px) }
 @OptIn(ExperimentalTypeInference::class)
 @OverloadResolutionByLambdaReturnType
 @JvmName("sumOfLong")
-inline fun MeasureArray.sumOf(selector: (Measure) -> Long) = raw.sumOf { selector(it.px) }
+internal inline fun MeasureArray.sumOf(selector: (Measure) -> Long) = raw.sumOf { selector(it.px) }

@@ -26,8 +26,8 @@ class DslId(private val obj: Any?,val prevNode: DslId? = null) : Iterable<DslId>
     override fun hashCode() = hash
     operator fun plus(other: Any?) = DslId(other,this)
     override fun toString() = "DslId{size=${size}, objs=${map { it.obj }.joinToString()}}"
-    val size:Int get() = prevNode?.size?.plus(1) ?: 1
-    val topElement get() = obj
+    internal val size:Int get() = prevNode?.size?.plus(1) ?: 1
+    internal val topElement get() = obj
     override fun iterator() = object : Iterator<DslId> {
         var node: DslId? = this@DslId
         override fun hasNext() = node != null

@@ -7,7 +7,7 @@ package io.github.u2894638479.kotlinmcui.text
  * The [Const] inner class is an immutable variant used by [io.github.u2894638479.kotlinmcui.input.PreeditInfo].
  */
 @JvmInline
-value class CodePoints(val arr: IntArray) {
+value class CodePoints(internal val arr: IntArray) {
     /** An immutable view of a code point array. */
     @JvmInline
     value class Const(private val arr: IntArray) {

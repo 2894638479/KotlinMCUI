@@ -62,7 +62,7 @@ fun MyColumn(
 ```
 
 ## 接口委托
-`DslComponent`是一个接口，`DslComponentImpl`（`Spacer` 的返回值）是一个`final`类。接口委托可以达到接近于继承`final`类的效果：`object: DslComponent by it` 把一个对象的接口函数转发到另一个对象上，无论被转发的对象是`final class`，匿名`object`，还是普通的`open class`，都能转发并`override`其中的接口函数。
+`DslComponent`是一个接口，`Spacer` 返回的是一个`final`类实现（容器的 `Scope` 同理）。接口委托可以达到接近于继承`final`类的效果：`object: DslComponent by it` 把一个对象的接口函数转发到另一个对象上，无论被转发的对象是`final class`，匿名`object`，还是普通的`open class`，都能转发并`override`其中的接口函数。
 
 这种模式的好处是委托并不侵入修改原对象，减少了逻辑上的混乱。缺点是委托是编译期产生，如果接口有修改，需要重新编译（建议执行`./gradlew clean`避免编译缓存造成的bug）。
 ## `this` `super` `instance` `delegate`的区别

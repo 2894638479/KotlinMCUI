@@ -19,7 +19,7 @@ fun MutRect(
     bottom: Measure = 0.px,
 ): MutRect = RectImpl(left,top,right,bottom)
 
-fun MutRect(horizontal: MutBound,vertical: MutBound) = object:MutRect {
+internal fun MutRect(horizontal: MutBound,vertical: MutBound) = object:MutRect {
     override var left by horizontal::low
     override var top by vertical::low
     override var right by horizontal::high

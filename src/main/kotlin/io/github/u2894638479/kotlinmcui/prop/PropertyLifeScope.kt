@@ -18,12 +18,12 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class PropertyLifeScope internal constructor(
-    val dataStore: DslDataStore,
-    val isStatic: Boolean = false,
+    internal val dataStore: DslDataStore,
+    internal val isStatic: Boolean = false,
     private val map: Object2ObjectOpenHashMap<DslId, TimedProperty<*>> = Object2ObjectOpenHashMap<DslId, TimedProperty<*>>()
 ) {
-    val size get() = map.size
-    open class TimedProperty<T> internal constructor(protected var _value:T, var frameStamp: ULong = 0uL) : StableRW<T> {
+    internal val size get() = map.size
+    internal open class TimedProperty<T>(private var _value:T, var frameStamp: ULong = 0uL) : StableRW<T> {
         override fun getValue() = _value
         override fun setValue(value: T) { this._value = value }
         open fun onClear() {}
@@ -99,7 +99,7 @@ class PropertyLifeScope internal constructor(
     }
 
     private class CachedProperty<K,V>(val key: K,value:V,frameStamp: ULong = 0uL): TimedProperty<V>(value,frameStamp)
-    fun clearOutdated() {
+    internal fun clearOutdated() {
         val frameIndex = dataStore.frameIndex
         map.values.removeIf {
             val bl = it.frameStamp != frameIndex
@@ -108,7 +108,7 @@ class PropertyLifeScope internal constructor(
     }
 
     /** Drop every entry, running [TimedProperty.onClear] on each. */
-    fun clear() {
+    internal fun clear() {
         map.values.forEach { it.onClear() }
         map.clear()
     }

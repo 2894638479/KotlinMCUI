@@ -4,6 +4,10 @@ package io.github.u2894638479.kotlinmcui.backend
 // DslRuntime, which is what turns "install once while the mod initialises, publish the
 // backend when the platform is ready" into a property of the framework rather than a
 // convention every backend has to remember.
+//
+// `internal` is a Kotlin-source-level restriction only: the JVM sees these as public
+// members with unmangled names, so a hand-written Java mod can still reach them. The
+// boundary this file draws is about what the framework promises, not about bytecode.
 internal var dslBackendProvider: (() -> DslBackend<*, *>)? = null
 internal var dslMetadataProvider: (() -> DslBackendMetadata)? = null
 
