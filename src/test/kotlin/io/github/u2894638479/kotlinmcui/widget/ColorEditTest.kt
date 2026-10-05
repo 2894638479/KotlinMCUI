@@ -158,6 +158,28 @@ class ColorEditTest {
     }
 
     @Test
+    fun `a point outside a palette is held at its nearest edge`() {
+        // The square clamps its own saturation and value.
+        assertEquals(Color.WHITE,squareColor(0.0,-0.5,-0.5,1.0),"left of and above the square is white")
+        assertEquals(Color.BLACK,squareColor(0.0,1.5,1.5,1.0),"right of and below it is black")
+
+        // The triangle drops whatever weight went negative and renormalises the rest, which lands
+        // on the closest corner when one of them dominates...
+        assertEquals(Color.RED,assertNotNull(triangleColor(0.0,0.5,-0.5,1.0,clamp = true)))
+        assertEquals(Color.WHITE,assertNotNull(triangleColor(0.0,-0.5,1.0,1.0,clamp = true)))
+        assertEquals(Color.BLACK,assertNotNull(triangleColor(0.0,1.5,1.4,1.0,clamp = true)))
+        // ...and on the closest edge otherwise.
+        val onEdge = assertNotNull(triangleColor(0.0,0.5,1.4,1.0,clamp = true))
+        assertEquals(0.5,onEdge.rDouble,0.01,"the middle of the bottom edge is half white, half black")
+        assertEquals(onEdge.rDouble,onEdge.gDouble,0.001)
+        assertEquals(onEdge.gDouble,onEdge.bDouble,0.001)
+
+        // None of those points is inside, so without clamping they are refused.
+        assertNull(triangleColor(0.0,0.5,-0.5,1.0))
+        assertNull(triangleColor(0.0,0.5,1.4,1.0))
+    }
+
+    @Test
     fun `a press outside the palette must not capture the release`() {
         var prop: StableRW<Color>? = null
         val screen = buildScreen {

@@ -47,18 +47,35 @@ enum class ColorChannel { Red, Green, Blue, Alpha, Hue, Saturation, Value }
 internal fun squareColor(hue: Double, x: Double, y: Double, alpha: Double): Color =
     Color.ofHSV(hue, x.coerceIn(0.0,1.0), (1.0 - y).coerceIn(0.0,1.0), alpha)
 
+/** The three weights of [x],[y] without asking whether the point is inside; negative means outside. */
+private fun rawWeights(x: Double, y: Double): Triple<Double,Double,Double> {
+    val hue = 1.0 - y
+    val white = 0.5 + 0.5 * y - x
+    return Triple(hue,white,1.0 - hue - white)
+}
+
+private fun Triple<Double,Double,Double>.isInside() =
+    first >= -1e-6 && second >= -1e-6 && third >= -1e-6
+
+/**
+ * Hold an outside point at the nearest point of the triangle: what is negative is dropped and the
+ * rest renormalised, which lands on the closest edge, or on a corner when one weight dominates.
+ */
+private fun Triple<Double,Double,Double>.clampedIntoTriangle(): Triple<Double,Double,Double>? {
+    val hue = maxOf(first,0.0)
+    val white = maxOf(second,0.0)
+    val black = maxOf(third,0.0)
+    val sum = hue + white + black
+    return if(sum <= 0.0) null else Triple(hue/sum,white/sum,black/sum)
+}
+
 /**
  * The barycentric weights of the point [x],[y] (0..1 of the picker rectangle) inside the hue
  * triangle — pure hue on top, white bottom-left, black bottom-right — or `null` when the point
  * is outside it.
  */
-internal fun triangleWeights(x: Double, y: Double): Triple<Double,Double,Double>? {
-    val hue = 1.0 - y
-    val white = 0.5 + 0.5 * y - x
-    val black = 1.0 - hue - white
-    val tolerance = 1e-6
-    return if(hue < -tolerance || white < -tolerance || black < -tolerance) null else Triple(hue,white,black)
-}
+internal fun triangleWeights(x: Double, y: Double): Triple<Double,Double,Double>? =
+    rawWeights(x,y).takeIf { it.isInside() }
 
 /**
  * The colour at [x],[y] inside the triangle, or `null` outside it.
@@ -66,9 +83,19 @@ internal fun triangleWeights(x: Double, y: Double): Triple<Double,Double,Double>
  * The three corners are mixed linearly because that is what the backend does across a triangle,
  * so the colour picked is the colour seen. White and black contribute to every channel equally,
  * which is why the mix can be written per channel as `hueWeight * pureHue + whiteWeight`.
+ *
+ * With [clamp] an outside point is held at the nearest point of the triangle instead of being
+ * rejected — a drag may leave the palette while the button is still down, and the colour should
+ * keep following the pointer along the edge rather than stop moving.
  */
-internal fun triangleColor(hue: Double, x: Double, y: Double, alpha: Double): Color? {
-    val (hueWeight, whiteWeight, _) = triangleWeights(x,y) ?: return null
+internal fun triangleColor(hue: Double, x: Double, y: Double, alpha: Double, clamp: Boolean = false): Color? {
+    val raw = rawWeights(x,y)
+    val weights = when {
+        raw.isInside() -> raw
+        clamp -> raw.clampedIntoTriangle() ?: return null
+        else -> return null
+    }
+    val (hueWeight,whiteWeight) = weights
     val pure = Color.ofHSV(hue,1.0,1.0)
     return Color(
         pure.rDouble * hueWeight + whiteWeight,
@@ -194,12 +221,17 @@ fun Controls.ColorSquare(
     val input = dslBackend
     val unit = (ctx.scale * 2).px
     return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier,ctx) {
-        private fun pick(mouse: Position): Color? {
+        /**
+         * Apply the colour under [mouse]. A press out of the palette is refused; a drag may leave
+         * it ([clamp]), and is then held at the nearest point inside — [squareColor] clamps the
+         * saturation and value itself.
+         */
+        private fun pick(mouse: Position, clamp: Boolean = false): Color? {
             val rect = instance.rect
             if(rect.width <= 0.px || rect.height <= 0.px) return null
             val x = (mouse.x - rect.left) / rect.width
             val y = (mouse.y - rect.top) / rect.height
-            if(x < 0 || x > 1 || y < 0 || y > 1) return null
+            if(!clamp && (x < 0 || x > 1 || y < 0 || y > 1)) return null
             val color = squareColor(hue.value,x,y,prop.value.aDouble)
             prop.value = color
             return color
@@ -235,7 +267,7 @@ fun Controls.ColorSquare(
                 dragging.value = false
                 return
             }
-            pick(mouse)
+            pick(mouse, clamp = true)
         }
 
         context(eventModifier: KeyModifiers, mouse: Position)
@@ -265,12 +297,14 @@ fun Controls.ColorTriangle(
     val input = dslBackend
     val unit = (ctx.scale * 2).px
     return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier,ctx) {
-        private fun pick(mouse: Position): Color? {
+        /** See the square's picker: a drag may leave the triangle, and is then held at its edge. */
+        private fun pick(mouse: Position, clamp: Boolean = false): Color? {
             val rect = instance.rect
             if(rect.width <= 0.px || rect.height <= 0.px) return null
             val x = (mouse.x - rect.left) / rect.width
             val y = (mouse.y - rect.top) / rect.height
-            val color = triangleColor(hue.value,x,y,prop.value.aDouble) ?: return null
+            if(!clamp && (x < 0 || x > 1 || y < 0 || y > 1)) return null
+            val color = triangleColor(hue.value,x,y,prop.value.aDouble,clamp) ?: return null
             prop.value = color
             return color
         }
@@ -315,7 +349,7 @@ fun Controls.ColorTriangle(
                 dragging.value = false
                 return
             }
-            pick(mouse)
+            pick(mouse, clamp = true)
         }
 
         context(eventModifier: KeyModifiers, mouse: Position)
