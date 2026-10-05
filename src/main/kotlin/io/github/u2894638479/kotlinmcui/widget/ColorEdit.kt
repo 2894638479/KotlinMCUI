@@ -18,11 +18,19 @@ import io.github.u2894638479.kotlinmcui.dsl.translate
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
 import io.github.u2894638479.kotlinmcui.input.MouseButton
+import io.github.u2894638479.kotlinmcui.math.ADouble
 import io.github.u2894638479.kotlinmcui.math.Axis
+import io.github.u2894638479.kotlinmcui.math.BDouble
 import io.github.u2894638479.kotlinmcui.math.Color
+import io.github.u2894638479.kotlinmcui.math.ColorProp
+import io.github.u2894638479.kotlinmcui.math.GDouble
+import io.github.u2894638479.kotlinmcui.math.HDouble
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.RDouble
+import io.github.u2894638479.kotlinmcui.math.SDouble
 import io.github.u2894638479.kotlinmcui.math.Scroller
+import io.github.u2894638479.kotlinmcui.math.VDouble
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.rect.height
@@ -34,8 +42,27 @@ import kotlin.reflect.KMutableProperty0
 /** Which palette a [Controls.ColorEdit] shows. */
 enum class ColorPicker { Square, Triangle }
 
-/** One channel of a colour, as edited by [Controls.ColorSlider]. */
-enum class ColorChannel { Red, Green, Blue, Alpha, Hue, Saturation, Value }
+/**
+ * One channel the editor edits: the [ColorProp] its slider writes, the letter it is labelled with,
+ * and how its value reads. Reading and writing a channel is [ColorProp]'s job, so only the label
+ * and the reading live here.
+ */
+private class Channel(val prop: ColorProp<Double>, val letter: String, private val scale: Double, private val suffix: String = "") {
+    /** The value of this channel as its slider's label shows it: bytes, degrees or percent. */
+    fun read(color: Color) = "${(prop.get(color) * scale).toInt()}$suffix"
+}
+
+/** The channels of the editor, in the order its strip shows them. */
+private object Channels {
+    val red = Channel(RDouble,"r",255.0)
+    val green = Channel(GDouble,"g",255.0)
+    val blue = Channel(BDouble,"b",255.0)
+    val alpha = Channel(ADouble,"a",255.0)
+    val hue = Channel(HDouble,"h",360.0,"°")
+    val saturation = Channel(SDouble,"s",100.0,"%")
+    val value = Channel(VDouble,"v",100.0,"%")
+    val all = listOf(red,green,blue,alpha,hue,saturation,value)
+}
 
 /**
  * The colour at [x] (saturation, 0..1) and [y] (from the top, so value is `1 - y`) of the
@@ -101,6 +128,10 @@ private fun Triple<Double,Double,Double>.isInside() =
 internal fun triangleWeights(x: Double, y: Double): Triple<Double,Double,Double>? =
     rawWeights(x,y).takeIf { it.isInside() }
 
+/** The point of the unit triangle: on it, or - while dragging - its nearest edge. */
+private fun unitTrianglePoint(x: Double, y: Double, clamp: Boolean) =
+    if(triangleWeights(x,y) != null) x to y else if(clamp) nearestOnUnitTriangle(x,y) else null
+
 /**
  * The colour at [x],[y] **on** the triangle, or `null` when the point is outside it.
  *
@@ -134,52 +165,19 @@ internal fun triangleMarker(color: Color): Pair<Double,Double> {
     return (0.5 * hueWeight + blackWeight) to (1.0 - hueWeight)
 }
 
-/** A view of one channel of [color] as a 0..1 value, for a slider to edit. */
-internal fun channelView(color: StableRW<Color>, channel: ColorChannel): StableRW<Double> = object : StableRW<Double> {
-    override fun getValue(): Double {
-        val value = color.value
-        return when(channel) {
-            ColorChannel.Red -> value.rDouble
-            ColorChannel.Green -> value.gDouble
-            ColorChannel.Blue -> value.bDouble
-            ColorChannel.Alpha -> value.aDouble
-            ColorChannel.Hue -> value.hDouble
-            ColorChannel.Saturation -> value.sDouble
-            ColorChannel.Value -> value.vDouble
-        }
-    }
-
-    override fun setValue(value: Double) {
-        val current = color.value
-        val v = value.coerceIn(0.0,1.0)
-        color.value = when(channel) {
-            ColorChannel.Red -> current.change(r = v)
-            ColorChannel.Green -> current.change(g = v)
-            ColorChannel.Blue -> current.change(b = v)
-            ColorChannel.Alpha -> current.change(a = v)
-            ColorChannel.Hue -> current.changeHSV(h = v)
-            ColorChannel.Saturation -> current.changeHSV(s = v)
-            ColorChannel.Value -> current.changeHSV(v = v)
-        }
-    }
-}
-
-/** The single letter a slider is labelled with; language-neutral, like the numeric readouts. */
-internal fun ColorChannel.letter() = when(this) {
-    ColorChannel.Red -> "r"
-    ColorChannel.Green -> "g"
-    ColorChannel.Blue -> "b"
-    ColorChannel.Alpha -> "a"
-    ColorChannel.Hue -> "h"
-    ColorChannel.Saturation -> "s"
-    ColorChannel.Value -> "v"
-}
-
-/** The readout of one channel in its natural range: bytes, degrees, or percent. */
-internal fun ColorChannel.readout(value: Double) = when(this) {
-    ColorChannel.Red, ColorChannel.Green, ColorChannel.Blue, ColorChannel.Alpha -> (value * 255).toInt().toString()
-    ColorChannel.Hue -> "${(value * 360).toInt()}°"
-    ColorChannel.Saturation, ColorChannel.Value -> "${(value * 100).toInt()}%"
+/**
+ * Where the marker of [color] belongs in the hue triangle, in 0..1 rectangle space.
+ *
+ * The colour there *is* the mixture of the three corners, so its three components are the weights;
+ * they are normalised by their sum because a mixture scaled by its value is the same point. A black
+ * colour has no position at all, and the centre - its nearest point - is used instead.
+ */
+internal fun hueTriangleMarker(color: Color): Pair<Double,Double> {
+    val sum = color.rDouble + color.gDouble + color.bDouble
+    if(sum <= 0.0) return 0.5 to 2.0 / 3
+    val red = color.rDouble / sum
+    val blue = color.bDouble / sum
+    return (0.5 * red + blue) to (1.0 - red)
 }
 
 /** `#rrggbb`, or `#rrggbbaa` while the colour is not opaque. */
@@ -224,6 +222,85 @@ private fun <RP> DslBackendRenderer<RP>.paletteMarker(rect: Rect, x: Double, y: 
     outline(Rect(centerX - unit,centerY - unit,centerX + unit,centerY + unit),unit,Color.WHITE)
 }
 
+/** The apex, bottom-left and bottom-right of [rect], as the triangle-list primitive wants them. */
+private fun Rect.triangleVertices(): FloatArray {
+    val left = left.pixelsOrElse { 0f }
+    val right = right.pixelsOrElse { 0f }
+    val top = top.pixelsOrElse { 0f }
+    val bottom = bottom.pixelsOrElse { 0f }
+    return floatArrayOf((left + right) / 2,top,left,bottom,right,bottom)
+}
+
+/** Draw that triangle with the three corner colours, if the backend has the triangle-list capability. */
+context(backend: DslBackendRenderer<RP>, renderParam: RP)
+private fun <RP> DslBackendRenderer<RP>.paletteTriangle(rect: Rect, apex: Color, left: Color, right: Color) {
+    if(rect.width <= 0.px || rect.height <= 0.px) return
+    this.triangles()?.renderTriangles(rect.triangleVertices(),intArrayOf(apex.rgbaInt,left.rgbaInt,right.rgbaInt))
+}
+
+/**
+ * What every palette shares: a press is taken only when it lands on the shape, a drag follows the
+ * pointer and is held at the shape's nearest point once it leaves, and the drag ends either on a
+ * release or — because a release outside the window never arrives — when the button is no longer
+ * held.
+ *
+ * A subclass supplies the shape: [pointAt] maps the pointer into it, [colorAt] turns a point of it
+ * into a colour, and its own `render` draws it after having called [reconcileDrag].
+ */
+private abstract class Palette(
+    delegate: DslComponent,
+    private val prop: StableRW<Color>,
+    private val dragging: StableRW<Boolean>,
+) : DslComponent by delegate {
+
+    /** Where [x],[y] (0..1 across the palette) is on the shape: its nearest point when [clamp], null when a press there is not ours. */
+    protected abstract fun pointAt(x: Double, y: Double, clamp: Boolean): Pair<Double,Double>?
+
+    /** The colour a point [pointAt] accepted stands for, or null when it is not on the shape after all. */
+    protected abstract fun colorAt(x: Double, y: Double): Color?
+
+    private fun pick(mouse: Position, clamp: Boolean): Color? {
+        val rect = instance.rect
+        if(rect.width <= 0.px || rect.height <= 0.px) return null
+        val point = pointAt((mouse.x - rect.left) / rect.width,(mouse.y - rect.top) / rect.height,clamp) ?: return null
+        val color = colorAt(point.first,point.second) ?: return null
+        prop.value = color
+        return color
+    }
+
+    /** End the drag when the button is no longer held; called once a frame while rendering. */
+    protected fun reconcileDrag() {
+        if(dragging.value && !dslBackend.isMouseDown(MouseButton.LEFT)) dragging.value = false
+    }
+
+    context(eventModifier: KeyModifiers, mouse: Position)
+    override fun mouseDown(mouseButton: MouseButton): Boolean {
+        if(mouseButton != MouseButton.LEFT) return false
+        // Arm the drag only for a press this palette actually takes: a press elsewhere still reaches
+        // here first, and a flag armed there would make this component swallow that press's release.
+        if(pick(mouse,clamp = false) == null) return false
+        dragging.value = true
+        return true
+    }
+
+    context(mouse: Position)
+    override fun mouseMove() {
+        if(!dragging.value) return
+        if(!dslBackend.isMouseDown(MouseButton.LEFT)) {
+            dragging.value = false
+            return
+        }
+        pick(mouse,clamp = true)
+    }
+
+    context(eventModifier: KeyModifiers, mouse: Position)
+    override fun mouseUp(mouseButton: MouseButton): Boolean {
+        if(mouseButton != MouseButton.LEFT || !dragging.value) return false
+        dragging.value = false
+        return true
+    }
+}
+
 context(ctx: DslContext)
 fun Controls.ColorSquare(
     prop: StableRW<Color>,
@@ -231,68 +308,26 @@ fun Controls.ColorSquare(
     id: Any,
 ): DslChild {
     val hue = local(newChildId(id)) { prop.value.hDouble }
-    val dragging = local(newChildId(id)) { false }
-    val input = dslBackend
     val unit = (ctx.scale * 2).px
-    return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx) {
-        /**
-         * Apply the colour under [mouse]. A press out of the palette is refused; a drag may leave
-         * it ([clamp]), and is then held at the nearest point of the square.
-         */
-        private fun pick(mouse: Position, clamp: Boolean = false): Color? {
-            val rect = instance.rect
-            if(rect.width <= 0.px || rect.height <= 0.px) return null
-            var x = (mouse.x - rect.left) / rect.width
-            var y = (mouse.y - rect.top) / rect.height
-            if(x < 0 || x > 1 || y < 0 || y > 1) {
-                if(!clamp) return null
-                val nearest = nearestOnUnitSquare(x,y)
-                x = nearest.first
-                y = nearest.second
-            }
-            val color = squareColor(hue.value,x,y,prop.value.aDouble)
-            prop.value = color
-            return color
-        }
+    return collect(object : Palette(
+        DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
+        prop,
+        local(newChildId(id)) { false },
+    ) {
+        /** The square is the whole rectangle, so its nearest point is a plain coerce. */
+        override fun pointAt(x: Double, y: Double, clamp: Boolean) =
+            if(x in 0.0..1.0 && y in 0.0..1.0) x to y else if(clamp) nearestOnUnitSquare(x,y) else null
+
+        override fun colorAt(x: Double, y: Double) = squareColor(hue.value,x,y,prop.value.aDouble)
 
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
+            reconcileDrag()
             val color = prop.value
-            // A release outside the component (or outside the game window) never arrives, so the
-            // drag is reconciled with the button that is actually held.
-            if(dragging.value && !input.isMouseDown(MouseButton.LEFT)) dragging.value = false
+            // The square has no hue of its own: it is the last chromatic one the colour had.
             if(color.sDouble > 0.0) hue.value = color.hDouble
-            val pure = Color.ofHSV(hue.value,1.0,1.0)
-            backend.renderQuad(instance.rect,Color.WHITE,pure,Color.BLACK,Color.BLACK)
+            backend.renderQuad(instance.rect,Color.WHITE,Color.ofHSV(hue.value,1.0,1.0),Color.BLACK,Color.BLACK)
             backend.paletteMarker(instance.rect,color.sDouble,1.0 - color.vDouble,unit)
-        }
-
-        context(eventModifier: KeyModifiers, mouse: Position)
-        override fun mouseDown(mouseButton: MouseButton): Boolean {
-            if(mouseButton != MouseButton.LEFT) return false
-            // Arm the drag only for a press this palette actually takes. A press elsewhere still
-            // reaches it first (the tree stops at the first component returning true), and a flag
-            // armed there would make this component swallow that other press's release.
-            if(pick(mouse) == null) return false
-            dragging.value = true
-            return true
-        }
-
-        context(mouse: Position)
-        override fun mouseMove() {
-            if(!dragging.value) return
-            if(!input.isMouseDown(MouseButton.LEFT)) {
-                dragging.value = false
-                return
-            }
-            pick(mouse, clamp = true)
-        }
-
-        context(eventModifier: KeyModifiers, mouse: Position)
-        override fun mouseUp(mouseButton: MouseButton): Boolean {
-            if(mouseButton != MouseButton.LEFT || !dragging.value) return false
-            dragging.value = false
-            return true
         }
     })
 }
@@ -311,75 +346,25 @@ fun Controls.ColorTriangle(
     id: Any,
 ): DslChild {
     val hue = local(newChildId(id)) { prop.value.hDouble }
-    val dragging = local(newChildId(id)) { false }
-    val input = dslBackend
     val unit = (ctx.scale * 2).px
-    return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx) {
-        /** See the square's picker: a drag out of the triangle is held at its nearest edge. */
-        private fun pick(mouse: Position, clamp: Boolean = false): Color? {
-            val rect = instance.rect
-            if(rect.width <= 0.px || rect.height <= 0.px) return null
-            var x = (mouse.x - rect.left) / rect.width
-            var y = (mouse.y - rect.top) / rect.height
-            if(triangleWeights(x,y) == null) {
-                if(!clamp) return null
-                val nearest = nearestOnUnitTriangle(x,y)
-                x = nearest.first
-                y = nearest.second
-            }
-            val color = triangleColor(hue.value,x,y,prop.value.aDouble) ?: return null
-            prop.value = color
-            return color
-        }
+    return collect(object : Palette(
+        DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
+        prop,
+        local(newChildId(id)) { false },
+    ) {
+        override fun pointAt(x: Double, y: Double, clamp: Boolean) = unitTrianglePoint(x,y,clamp)
+
+        override fun colorAt(x: Double, y: Double) = triangleColor(hue.value,x,y,prop.value.aDouble)
 
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
+            reconcileDrag()
             val rect = instance.rect
             val color = prop.value
-            if(dragging.value && !input.isMouseDown(MouseButton.LEFT)) dragging.value = false
             if(color.sDouble > 0.0) hue.value = color.hDouble
-            val triangle = backend.triangles()
-            if(triangle != null && rect.width > 0.px && rect.height > 0.px) {
-                val left = rect.left.pixelsOrElse { 0f }
-                val right = rect.right.pixelsOrElse { 0f }
-                val top = rect.top.pixelsOrElse { 0f }
-                val bottom = rect.bottom.pixelsOrElse { 0f }
-                val pure = Color.ofHSV(hue.value,1.0,1.0)
-                triangle.renderTriangles(
-                    floatArrayOf((left + right) / 2,top,left,bottom,right,bottom),
-                    intArrayOf(pure.rgbaInt,Color.WHITE.rgbaInt,Color.BLACK.rgbaInt),
-                )
-            }
+            backend.paletteTriangle(rect,Color.ofHSV(hue.value,1.0,1.0),Color.WHITE,Color.BLACK)
             val (markerX,markerY) = triangleMarker(color)
             backend.paletteMarker(rect,markerX,markerY,unit)
-        }
-
-        context(eventModifier: KeyModifiers, mouse: Position)
-        override fun mouseDown(mouseButton: MouseButton): Boolean {
-            if(mouseButton != MouseButton.LEFT) return false
-            // Arm the drag only for a press this palette actually takes. A press elsewhere still
-            // reaches it first (the tree stops at the first component returning true), and a flag
-            // armed there would make this component swallow that other press's release.
-            if(pick(mouse) == null) return false
-            dragging.value = true
-            return true
-        }
-
-        context(mouse: Position)
-        override fun mouseMove() {
-            if(!dragging.value) return
-            if(!input.isMouseDown(MouseButton.LEFT)) {
-                dragging.value = false
-                return
-            }
-            pick(mouse, clamp = true)
-        }
-
-        context(eventModifier: KeyModifiers, mouse: Position)
-        override fun mouseUp(mouseButton: MouseButton): Boolean {
-            if(mouseButton != MouseButton.LEFT || !dragging.value) return false
-            dragging.value = false
-            return true
         }
     })
 }
@@ -400,35 +385,33 @@ fun Controls.ColorHue(
     axis: Axis = Axis.Horizontal,
     id: Any,
 ): DslChild {
-    val dragging = local(newChildId(id)) { false }
-    val input = dslBackend
     val unit = (ctx.scale * 2).px
-    return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx) {
-        private fun pick(mouse: Position, clamp: Boolean = false): Color? {
-            val rect = instance.rect
-            if(rect.width <= 0.px || rect.height <= 0.px) return null
-            val x = (mouse.x - rect.left) / rect.width
-            val y = (mouse.y - rect.top) / rect.height
-            // The bar is the whole rectangle: only one axis carries the hue, but both have to be on
-            // the bar, or a press beside it would move the hue.
+    return collect(object : Palette(
+        DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
+        prop,
+        local(newChildId(id)) { false },
+    ) {
+        override fun pointAt(x: Double, y: Double, clamp: Boolean): Pair<Double,Double>? {
+            // The bar is the whole rectangle: only one axis carries the hue, but a press beside the
+            // bar must not move it, so the point has to be on both axes.
             if(!clamp && (x < 0 || x > 1 || y < 0 || y > 1)) return null
-            val hue = if(axis == Axis.Horizontal) x.coerceIn(0.0,1.0) else y.coerceIn(0.0,1.0)
-            val color = prop.value.changeHSV(h = hue)
-            prop.value = color
-            return color
+            return if(axis == Axis.Horizontal) x.coerceIn(0.0,1.0) to 0.5
+            else 0.5 to y.coerceIn(0.0,1.0)
         }
+
+        override fun colorAt(x: Double, y: Double) = prop.value.changeHSV(h = if(axis == Axis.Horizontal) x else y)
 
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
+            reconcileDrag()
             val rect = instance.rect
-            if(dragging.value && !input.isMouseDown(MouseButton.LEFT)) dragging.value = false
             repeat(HUE_SECTORS) { index ->
                 val from = index.toDouble() / HUE_SECTORS
                 val to = (index + 1).toDouble() / HUE_SECTORS
                 val begin = Color.ofHSV(from,1.0,1.0)
                 val end = Color.ofHSV(to,1.0,1.0)
-                // The corners are left-top, right-top, left-bottom, right-bottom, so the gradient has
-                // to run along the bar's own axis: along x when it is horizontal, along y otherwise.
+                // The corners are left-top, right-top, left-bottom, right-bottom, so the ramp has to
+                // run along the bar's own axis: along x when it is horizontal, along y otherwise.
                 if(axis == Axis.Horizontal) backend.renderQuad(
                     Rect(rect.left + rect.width * from,rect.top,rect.left + rect.width * to,rect.bottom),
                     begin,end,begin,end,
@@ -445,47 +428,7 @@ fun Controls.ColorHue(
                 unit,
             )
         }
-
-        context(eventModifier: KeyModifiers, mouse: Position)
-        override fun mouseDown(mouseButton: MouseButton): Boolean {
-            if(mouseButton != MouseButton.LEFT) return false
-            if(pick(mouse) == null) return false
-            dragging.value = true
-            return true
-        }
-
-        context(mouse: Position)
-        override fun mouseMove() {
-            if(!dragging.value) return
-            if(!input.isMouseDown(MouseButton.LEFT)) {
-                dragging.value = false
-                return
-            }
-            pick(mouse, clamp = true)
-        }
-
-        context(eventModifier: KeyModifiers, mouse: Position)
-        override fun mouseUp(mouseButton: MouseButton): Boolean {
-            if(mouseButton != MouseButton.LEFT || !dragging.value) return false
-            dragging.value = false
-            return true
-        }
     })
-}
-
-/**
- * Where the marker of [color] belongs in the hue triangle, in 0..1 rectangle space.
- *
- * The colour there *is* the mixture of the three corners, so its three components are the weights;
- * they are normalised by their sum because a mixture scaled by its value is the same point. A black
- * colour has no position at all, and the centre - its nearest point - is used instead.
- */
-internal fun hueTriangleMarker(color: Color): Pair<Double,Double> {
-    val sum = color.rDouble + color.gDouble + color.bDouble
-    if(sum <= 0.0) return 0.5 to 2.0 / 3
-    val red = color.rDouble / sum
-    val blue = color.bDouble / sum
-    return (0.5 * red + blue) to (1.0 - red)
 }
 
 /**
@@ -503,95 +446,34 @@ fun Controls.ColorHueTriangle(
     modifier: Modifier = Modifier,
     id: Any,
 ): DslChild {
-    val dragging = local(newChildId(id)) { false }
-    val input = dslBackend
     val unit = (ctx.scale * 2).px
-    return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx) {
-        /** See the square's picker: a drag out of the triangle is held at its nearest edge. */
-        private fun pick(mouse: Position, clamp: Boolean = false): Color? {
-            val rect = instance.rect
-            if(rect.width <= 0.px || rect.height <= 0.px) return null
-            var x = (mouse.x - rect.left) / rect.width
-            var y = (mouse.y - rect.top) / rect.height
-            if(triangleWeights(x,y) == null) {
-                if(!clamp) return null
-                val nearest = nearestOnUnitTriangle(x,y)
-                x = nearest.first
-                y = nearest.second
-            }
+    return collect(object : Palette(
+        DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
+        prop,
+        local(newChildId(id)) { false },
+    ) {
+        override fun pointAt(x: Double, y: Double, clamp: Boolean) = unitTrianglePoint(x,y,clamp)
+
+        override fun colorAt(x: Double, y: Double): Color? {
             val (red,green,blue) = triangleWeights(x,y) ?: return null
-            val color = Color(red,green,blue,prop.value.aDouble)
-            prop.value = color
-            return color
+            return Color(red,green,blue,prop.value.aDouble)
         }
 
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
+            reconcileDrag()
             val rect = instance.rect
-            if(dragging.value && !input.isMouseDown(MouseButton.LEFT)) dragging.value = false
-            val triangle = backend.triangles()
-            if(triangle != null && rect.width > 0.px && rect.height > 0.px) {
-                val left = rect.left.pixelsOrElse { 0f }
-                val right = rect.right.pixelsOrElse { 0f }
-                val top = rect.top.pixelsOrElse { 0f }
-                val bottom = rect.bottom.pixelsOrElse { 0f }
-                val alpha = prop.value.aDouble
-                triangle.renderTriangles(
-                    floatArrayOf((left + right) / 2,top,left,bottom,right,bottom),
-                    intArrayOf(
-                        Color(1.0,0.0,0.0,alpha).rgbaInt,
-                        Color(0.0,1.0,0.0,alpha).rgbaInt,
-                        Color(0.0,0.0,1.0,alpha).rgbaInt,
-                    ),
-                )
-            }
+            val alpha = prop.value.aDouble
+            backend.paletteTriangle(
+                rect,
+                Color(1.0,0.0,0.0,alpha),
+                Color(0.0,1.0,0.0,alpha),
+                Color(0.0,0.0,1.0,alpha),
+            )
             val (x,y) = hueTriangleMarker(prop.value)
             backend.paletteMarker(rect,x,y,unit)
         }
-
-        context(eventModifier: KeyModifiers, mouse: Position)
-        override fun mouseDown(mouseButton: MouseButton): Boolean {
-            if(mouseButton != MouseButton.LEFT) return false
-            if(pick(mouse) == null) return false
-            dragging.value = true
-            return true
-        }
-
-        context(mouse: Position)
-        override fun mouseMove() {
-            if(!dragging.value) return
-            if(!input.isMouseDown(MouseButton.LEFT)) {
-                dragging.value = false
-                return
-            }
-            pick(mouse, clamp = true)
-        }
-
-        context(eventModifier: KeyModifiers, mouse: Position)
-        override fun mouseUp(mouseButton: MouseButton): Boolean {
-            if(mouseButton != MouseButton.LEFT || !dragging.value) return false
-            dragging.value = false
-            return true
-        }
     })
-}
-
-/** A horizontal slider editing one channel of [prop], labelled with its value. */
-context(ctx: DslContext)
-fun Controls.ColorSlider(
-    channel: ColorChannel,
-    prop: StableRW<Color>,
-    modifier: Modifier = Modifier,
-    id: Any,
-): DslChild {
-    val view = channelView(prop,channel)
-    return Slider(modifier,Axis.Horizontal,0.0..1.0,view,id = id) {
-        TextFlatten(Modifier.padding(h = 5.scaled)) {
-            channel.letter().emit()
-            ": ".emit()
-            channel.readout(view.value).emit()
-        }
-    }
 }
 
 /**
@@ -611,18 +493,21 @@ fun Controls.ColorText(
     return field.editBoxBackground()
 }
 
-/** A compact vertical slider for the channel strip of [Controls.ColorEdit]. */
+/** A slider editing [channel] of [prop]: [ColorProp] is the one channel abstraction, and the core colour slider already draws the ramp. */
 context(ctx: DslContext)
-private fun channelStripSlider(channel: ColorChannel, prop: StableRW<Color>, id: Any) = Slider(
-    Modifier.width(20.scaled).padding(1.scaled),Axis.Vertical,
-    object: StableRW<Double> {
-        private val view = channelView(prop,channel)
-        override fun getValue() = 1 - view.value
-        override fun setValue(value: Double) { view.value = 1 - value }
-    },
-    id = id,
-) {
-    TextAutoFold { channel.letter().emit() }
+private fun channelSlider(
+    channel: Channel,
+    prop: StableRW<Color>,
+    axis: Axis,
+    modifier: Modifier,
+    id: Any,
+    label: Boolean,
+) = Slider(modifier,axis,channel.prop,prop,id = id) {
+    if(label) TextFlatten(Modifier.padding(h = 5.scaled)) {
+        channel.letter.emit()
+        ": ".emit()
+        channel.read(prop.value).emit()
+    } else TextAutoFold { channel.letter.emit() }
 }
 
 /**
@@ -662,12 +547,14 @@ fun Controls.ColorEdit(
                     { translate("kotlinmcui.widget.color.${it.name.lowercase()}") },
                     newChildId(id),
                 )
-                ColorSlider(ColorChannel.Alpha,prop,Modifier.width(60.scaled),newChildId(id))
+                channelSlider(Channels.alpha,prop,Axis.Horizontal,Modifier.width(60.scaled),newChildId(id),label = true)
             }
         }
         val scrollerProp = local(newChildId(id)) { Scroller.empty }
         ScrollableRow(Modifier.minHeight(50.scaled),scrollerProp) {
-            ColorChannel.entries.forEach { channelStripSlider(it,prop,newChildId(id) + it) }
+            Channels.all.forEach { channel ->
+                channelSlider(channel,prop,Axis.Vertical,Modifier.width(20.scaled).padding(1.scaled),newChildId(id) + channel.prop,label = false)
+            }
         }
         if(scrollerProp.value.isScrollable()) ScrollBar(Modifier.height(10.scaled),scrollerProp,Axis.Horizontal) {}
     }

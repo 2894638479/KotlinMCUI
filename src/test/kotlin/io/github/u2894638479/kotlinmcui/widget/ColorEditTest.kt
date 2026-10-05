@@ -5,13 +5,16 @@ import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local
+import io.github.u2894638479.kotlinmcui.dsl.ui.Slider
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
 import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.integration.TestBackend
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
+import io.github.u2894638479.kotlinmcui.math.HDouble
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.RDouble
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.height
 import io.github.u2894638479.kotlinmcui.math.rect.width
@@ -112,19 +115,32 @@ class ColorEditTest {
     }
 
     @Test
-    fun `a channel view reads and writes one channel only`() {
+    fun `a colour slider edits the channel it was given`() {
         val (prop,read) = colorProp(Color(10,20,30,40))
-        channelView(prop,ColorChannel.Red).value = 1.0
-        assertEquals(Color(255,20,30,40),read())
-        channelView(prop,ColorChannel.Alpha).value = 0.5
-        assertEquals(127,read().aInt)
-        channelView(prop,ColorChannel.Hue).value = 0.5
-        assertEquals(0.5,read().hDouble,0.01)
-        assertEquals(127,read().aInt,"moving the hue must not touch the alpha")
-        // The hue is moved through HSV, so the other two channels are re-derived from the
-        // saturation and value the colour already had: those survive, the bytes need not.
-        assertEquals(1.0,channelView(prop,ColorChannel.Value).value,0.01)
-        assertEquals(0.92,channelView(prop,ColorChannel.Saturation).value,0.01)
+        val screen = buildScreen {
+            Slider(Modifier.size(100.px,20.px),Axis.Horizontal,RDouble,prop,id = "red") {}
+        }
+        val slider = screen.children.single()
+        val rightEnd = Position(slider.rect.right - 1.px,slider.rect.top + slider.rect.height / 2)
+        context(KeyModifiers(),rightEnd) { assertTrue(slider.mouseDown(MouseButton.LEFT),"a press on the track is taken") }
+        assertEquals(Color(255,20,30,40),read(),"the right end is the top of the ramp, and only red moved")
+    }
+
+    @Test
+    fun `the hue slider moves the hue and leaves the rest alone`() {
+        val start = Color(10,20,30,40)
+        val (prop,read) = colorProp(start)
+        val screen = buildScreen {
+            Slider(Modifier.size(100.px,20.px),Axis.Horizontal,HDouble,prop,id = "hue") {}
+        }
+        val slider = screen.children.single()
+        val third = Position(slider.rect.left + slider.rect.width / 3,slider.rect.top + slider.rect.height / 2)
+        context(KeyModifiers(),third) { assertTrue(slider.mouseDown(MouseButton.LEFT)) }
+        val moved = read()
+        assertEquals(1.0 / 3,moved.hDouble,0.05,"the hue follows the position")
+        assertEquals(40,moved.aInt,"the alpha is untouched")
+        assertEquals(start.sDouble,moved.sDouble,0.05,"so is the saturation")
+        assertEquals(start.vDouble,moved.vDouble,0.05,"and the value")
     }
 
     @Test

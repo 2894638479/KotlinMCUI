@@ -3,28 +3,29 @@ package io.github.u2894638479.kotlinmcui.test
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.local
-import io.github.u2894638479.kotlinmcui.dsl.translate
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
+import io.github.u2894638479.kotlinmcui.math.ADouble
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
+import io.github.u2894638479.kotlinmcui.math.HDouble
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.size
 import io.github.u2894638479.kotlinmcui.modifier.width
-import io.github.u2894638479.kotlinmcui.widget.ColorChannel
+import io.github.u2894638479.kotlinmcui.prop.value
 import io.github.u2894638479.kotlinmcui.widget.ColorEdit
 import io.github.u2894638479.kotlinmcui.widget.ColorHue
 import io.github.u2894638479.kotlinmcui.widget.ColorHueTriangle
-import io.github.u2894638479.kotlinmcui.widget.ColorSlider
 import io.github.u2894638479.kotlinmcui.widget.ColorSquare
 import io.github.u2894638479.kotlinmcui.widget.ColorText
 import io.github.u2894638479.kotlinmcui.widget.ColorTriangle
 import io.github.u2894638479.kotlinmcui.widget.Controls
 
 /**
- * Every colour widget at once: the composite editor, the two palettes, and the sliders and the
- * text field on their own. It doubles as the `color` page of the in-game verification run, where
- * the triangle is only drawn if the backend has the triangle-list capability.
+ * Every colour widget at once: the composite editor, the two palettes, the two hue palettes and the
+ * hexadecimal field, plus the core colour slider the composite edits its channels with. It doubles
+ * as the `color` page of the in-game verification run, where the triangles are only drawn if the
+ * backend has the triangle-list capability.
  */
 context(ctx: DslContext)
 fun TestColorPage() = ScrollableColumn(Modifier.padding(5.scaled)) {
@@ -41,5 +42,15 @@ fun TestColorPage() = ScrollableColumn(Modifier.padding(5.scaled)) {
         Controls.ColorHue(prop,Modifier.size(12.scaled,50.scaled),Axis.Vertical,"hue-vertical")
         Controls.ColorHue(prop,Modifier.size(50.scaled,12.scaled),Axis.Horizontal,"hue-horizontal")
         Controls.ColorText(prop,Modifier.width(80.scaled),"hex")
+    }
+    // The channel sliders on their own: the same core slider the composite's strip is built from,
+    // which carries each channel's own colour ramp on its track.
+    Row(Modifier.padding(5.scaled)) {
+        Slider(Modifier.width(120.scaled),Axis.Horizontal,ADouble,prop,id = "alpha") {
+            TextFlatten { "a: ".emit(); prop.value.aInt.toString().emit() }
+        }
+        Slider(Modifier.width(120.scaled),Axis.Horizontal,HDouble,prop,id = "hue") {
+            TextFlatten { "h: ".emit(); (prop.value.hDouble * 360).toInt().toString().emit() }
+        }
     }
 }.defaultBackground()
