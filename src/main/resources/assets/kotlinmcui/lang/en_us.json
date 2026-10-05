@@ -34,5 +34,8 @@
     "kotlinmcui.entrypage.show_details": "Show details",
     "kotlinmcui.widget.true": "true",
     "kotlinmcui.widget.false": "false",
+    "kotlinmcui.widget.color.picker": "Palette",
+    "kotlinmcui.widget.color.square": "Square",
+    "kotlinmcui.widget.color.triangle": "Triangle",
     "kotlinmcui.debugoverlay": "Debug Overlay"
 }

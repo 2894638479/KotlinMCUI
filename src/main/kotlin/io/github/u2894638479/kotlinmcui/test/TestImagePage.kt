@@ -22,6 +22,7 @@ import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.remap
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
+import io.github.u2894638479.kotlinmcui.widget.ColorEdit
 import io.github.u2894638479.kotlinmcui.widget.Controls
 import java.io.File
 

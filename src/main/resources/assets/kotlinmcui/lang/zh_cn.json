@@ -34,5 +34,8 @@
     "kotlinmcui.entrypage.show_details": "显示详情",
     "kotlinmcui.widget.true": "开",
     "kotlinmcui.widget.false": "关",
+    "kotlinmcui.widget.color.picker": "调色板",
+    "kotlinmcui.widget.color.square": "方块",
+    "kotlinmcui.widget.color.triangle": "三角",
     "kotlinmcui.debugoverlay": "调试叠加层"
 }

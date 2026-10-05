@@ -1,0 +1,175 @@
+package io.github.u2894638479.kotlinmcui.widget
+
+import io.github.u2894638479.kotlinmcui.backend.DslBackend
+import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
+import io.github.u2894638479.kotlinmcui.container.DslScreen
+import io.github.u2894638479.kotlinmcui.dsl.DslFunction
+import io.github.u2894638479.kotlinmcui.dsl.local
+import io.github.u2894638479.kotlinmcui.input.KeyModifiers
+import io.github.u2894638479.kotlinmcui.input.MouseButton
+import io.github.u2894638479.kotlinmcui.integration.TestBackend
+import io.github.u2894638479.kotlinmcui.math.Color
+import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.px
+import io.github.u2894638479.kotlinmcui.modifier.Modifier
+import io.github.u2894638479.kotlinmcui.modifier.size
+import io.github.u2894638479.kotlinmcui.prop.StableRW
+import io.github.u2894638479.kotlinmcui.prop.value
+import kotlin.math.abs
+import kotlin.test.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+
+class ColorEditTest {
+
+    /** Process-wide state: put back whatever provider was published before the case. */
+    private var previousBackendProvider: (() -> DslBackend<*, *>)? = null
+
+    @BeforeEach
+    fun setUp() {
+        previousBackendProvider = dslBackendProvider
+        dslBackendProvider = { TestBackend }
+    }
+
+    @AfterEach
+    fun tearDown() { dslBackendProvider = previousBackendProvider }
+
+    private fun buildScreen(function: DslFunction): DslScreen {
+        val screen = TestBackend.create("test",function).dslScreen
+        TestBackend.renderFrame(screen)
+        return screen
+    }
+
+    private fun colorProp(initial: Color): Pair<StableRW<Color>, () -> Color> {
+        var color = initial
+        val prop = object : StableRW<Color> {
+            override fun getValue() = color
+            override fun setValue(value: Color) { color = value }
+        }
+        return prop to { color }
+    }
+
+    @Test
+    fun `the square turns saturation and value into a colour`() {
+        assertEquals(Color.RED,squareColor(0.0,1.0,0.0,1.0),"right edge, top: the pure hue")
+        assertEquals(Color.WHITE,squareColor(0.0,0.0,0.0,1.0),"left edge, top: white")
+        assertEquals(Color.BLACK,squareColor(0.0,1.0,1.0,1.0),"bottom: black whatever the saturation")
+        assertEquals(127,squareColor(0.0,0.5,0.5,0.5).aInt,"the alpha passes through, quantised to a byte")
+    }
+
+    @Test
+    fun `the triangle corners are the pure hue, white and black`() {
+        assertEquals(Color.RED,triangleColor(0.0,0.5,0.0,1.0),"the top corner is the pure hue")
+        assertEquals(Color.WHITE,triangleColor(0.0,0.0,1.0,1.0),"bottom-left is white")
+        assertEquals(Color.BLACK,triangleColor(0.0,1.0,1.0,1.0),"bottom-right is black")
+        assertNull(triangleColor(0.0,1.0,0.0,1.0),"the point above the right corner is outside the triangle")
+        assertNotNull(triangleColor(0.0,0.5,1.0,1.0),"the middle of the bottom edge is still on the triangle")
+        assertNull(triangleColor(0.0,0.5,1.05,1.0),"just below that edge is outside")
+    }
+
+    @Test
+    fun `the triangle mixes the hue with white and black`() {
+        // Halfway between the hue corner and the white one: red keeps its channel, the other two
+        // are lifted equally, which is what the backend interpolates as well.
+        val mixed = assertNotNull(triangleColor(0.0,0.25,0.5,1.0))
+        assertTrue(mixed.rDouble > 0.9,"red survives")
+        assertTrue(mixed.gDouble in 0.4..0.6 && mixed.bDouble in 0.4..0.6,"green and blue are lifted alike")
+        assertEquals(mixed.gDouble,mixed.bDouble,0.01)
+    }
+
+    @Test
+    fun `the marker of the triangle inverts the pick`() {
+        for(sector in 0 until 6) for(x in 1 until 10) for(y in 1 until 10) {
+            val pickX = x / 10.0
+            val pickY = y / 10.0
+            val color = triangleColor(sector / 6.0,pickX,pickY,1.0) ?: continue
+            val (markerX,markerY) = triangleMarker(color)
+            assertTrue(
+                abs(markerX - pickX) < 0.02 && abs(markerY - pickY) < 0.02,
+                "hue $sector picked at $pickX,$pickY came back at $markerX,$markerY"
+            )
+        }
+    }
+
+    @Test
+    fun `hex text round-trips and rejects what it cannot read`() {
+        val opaque = Color(255,128,0)
+        assertEquals("#ff8000",formatColorHex(opaque))
+        assertEquals(opaque,parseColorHex("#ff8000"))
+        assertEquals(opaque,parseColorHex("ff8000"),"the hash is optional")
+        assertEquals(Color(255,136,0),parseColorHex("#f80"),"three digits are expanded one at a time")
+        assertEquals(Color(255,128,0,128),parseColorHex("#ff800080"))
+        val transparent = Color(255,128,0,0)
+        assertEquals("#ff800000",formatColorHex(transparent),"a transparent colour shows its alpha")
+        assertEquals(transparent,parseColorHex(formatColorHex(transparent)))
+        assertNull(parseColorHex("#ff800"),"five digits are not a colour")
+        assertNull(parseColorHex("#gggggg"))
+        assertNull(parseColorHex(""))
+    }
+
+    @Test
+    fun `a channel view reads and writes one channel only`() {
+        val (prop,read) = colorProp(Color(10,20,30,40))
+        channelView(prop,ColorChannel.Red).value = 1.0
+        assertEquals(Color(255,20,30,40),read())
+        channelView(prop,ColorChannel.Alpha).value = 0.5
+        assertEquals(127,read().aInt)
+        channelView(prop,ColorChannel.Hue).value = 0.5
+        assertEquals(0.5,read().hDouble,0.01)
+        assertEquals(127,read().aInt,"moving the hue must not touch the alpha")
+        // The hue is moved through HSV, so the other two channels are re-derived from the
+        // saturation and value the colour already had: those survive, the bytes need not.
+        assertEquals(1.0,channelView(prop,ColorChannel.Value).value,0.01)
+        assertEquals(0.92,channelView(prop,ColorChannel.Saturation).value,0.01)
+    }
+
+    @Test
+    fun `pressing the square sets saturation and value`() {
+        var prop: StableRW<Color>? = null
+        val screen = buildScreen {
+            val p = local { Color.WHITE }
+            prop = p
+            Controls.ColorSquare(p,Modifier.size(100.px,100.px),"square")
+        }
+        val square = screen.children.single()
+        val rightTop = Position(square.rect.right - 1.px,square.rect.top + 1.px)
+        context(KeyModifiers(),rightTop) {
+            assertTrue(square.mouseDown(MouseButton.LEFT),"a left press inside the square is taken")
+        }
+        val picked = assertNotNull(prop).value
+        assertTrue(picked.sDouble > 0.9,"the right edge is full saturation")
+        assertTrue(picked.vDouble > 0.9,"the top edge is full value")
+        assertEquals(0.0,picked.hDouble,0.02,"the hue is the one the square was showing")
+
+        val leftBottom = Position(square.rect.left + 1.px,square.rect.bottom - 1.px)
+        context(KeyModifiers(),leftBottom) {
+            assertTrue(square.mouseDown(MouseButton.LEFT))
+        }
+        val dark = assertNotNull(prop).value
+        assertTrue(dark.vDouble < 0.05 && dark.sDouble < 0.05,"the bottom-left corner is black")
+
+        val outside = Position(square.rect.right + 5.px,square.rect.top + 5.px)
+        context(KeyModifiers(),outside) {
+            assertFalse(square.mouseDown(MouseButton.LEFT),"a press outside the square is not taken")
+        }
+        context(KeyModifiers(),rightTop) {
+            assertFalse(square.mouseDown(MouseButton.RIGHT),"other buttons are left to the delegate")
+        }
+    }
+
+    @Test
+    fun `the composite renders both pickers without touching the colour`() {
+        val start = Color(20,140,200,255)
+        var prop: StableRW<Color>? = null
+        val screen = buildScreen {
+            val p = local { start }
+            prop = p
+            Controls.ColorEdit(p,ColorPicker.Triangle,"edit")
+        }
+        TestBackend.renderFrame(screen)
+        // The test backend cannot draw a triangle, so the editor falls back to the square rather
+        // than offering an invisible area - and none of its parts may write the colour back.
+        assertEquals(start,assertNotNull(prop).value)
+        assertTrue(screen.children.isNotEmpty())
+    }
+}

@@ -116,41 +116,6 @@ object Controls {
     }.editBoxBackground()
 
     context(ctx: DslContext)
-    fun ColorEdit(prop: KMutableProperty0<Color>,id:Any = prop) = ColorEdit(prop.property,id)
-
-    context(ctx: DslContext)
-    fun ColorEdit(
-        prop: StableRW<Color>,
-        id: Any
-    ) = Column(id = id) {
-        var color by prop
-        context(ctx: DslContext)
-        fun S(text: String, get:()-> Double, set:(Double)-> Unit) = Slider(
-            Modifier.width(20.scaled).padding(1.scaled),Axis.Vertical,
-            object:StableRW<Double> {
-                override fun getValue() = 1 - get()
-                override fun setValue(value: Double) = set(1 - value)
-            },id = text
-        ) { TextAutoFold { text.emit() } }
-
-        context(ctx: DslContext)
-        fun items() {
-            ColorRect(Modifier.minWidth(50.scaled).padding(1.scaled),color) {}
-            S("r",{ color.rDouble },{color = color.change(r = it)})
-            S("g",{ color.gDouble },{color = color.change(g = it)})
-            S("b",{ color.bDouble },{color = color.change(b = it)})
-            S("a",{ color.aDouble },{color = color.change(a = it)})
-            S("h",{ color.hDouble },{color = color.changeHSV(h = it)})
-            S("s",{ color.sDouble },{color = color.changeHSV(s = it)})
-            S("v",{ color.vDouble },{color = color.changeHSV(v = it)})
-        }
-
-        val scrollerProp = local { Scroller.empty }
-        ScrollableRow(Modifier.minHeight(50.scaled),scrollerProp) { items() }
-        if(scrollerProp.value.isScrollable()) ScrollBar(Modifier.height(10.scaled),scrollerProp,Axis.Horizontal) {}
-    }
-
-    context(ctx: DslContext)
     fun Slider(range: IntProgression, name: String = "", defaultValue: Int = range.first, id: Any): StableRW<Int> {
         val prop = local(newChildId(id)) { defaultValue }
         Slider(prop,range,name,id)
