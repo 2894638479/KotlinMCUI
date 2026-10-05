@@ -203,6 +203,69 @@ class ColorEditTest {
     }
 
     @Test
+    fun `the demo colour is the one the picker starts from`() {
+        val start = Color.ofHSV(0.08,1.0,1.0)
+        assertEquals(255,start.rInt,"hue 0.08 is an orange, not a yellow")
+        assertEquals(122,start.gInt)
+        assertEquals(0,start.bInt)
+        assertEquals("#ff7a00",formatColorHex(start))
+    }
+
+    @Test
+    fun `a press beside the hue bar is not taken`() {
+        val start = Color.ofHSV(0.08,1.0,1.0)
+        var prop: StableRW<Color>? = null
+        val screen = buildScreen {
+            val p = local { start }
+            prop = p
+            Controls.ColorHue(p,Modifier.size(20.px,80.px),Axis.Vertical,"hue")
+        }
+        val bar = screen.children.single()
+        // The same height as the bar, but well to its left: outside the widget altogether.
+        val beside = Position(bar.rect.left - 30.px,bar.rect.top + bar.rect.height / 2)
+        context(KeyModifiers(),beside) {
+            assertFalse(bar.mouseDown(MouseButton.LEFT),"only a press on the bar may move the hue")
+        }
+        assertEquals(start,assertNotNull(prop).value,"and it must not have changed the colour")
+    }
+
+    @Test
+    fun `a vertical hue bar moves the hue along it`() {
+        val start = Color.ofHSV(0.08,1.0,1.0)
+        var prop: StableRW<Color>? = null
+        val screen = buildScreen {
+            val p = local { start }
+            prop = p
+            Controls.ColorHue(p,Modifier.size(20.px,80.px),Axis.Vertical,"hue")
+        }
+        val bar = screen.children.single()
+        val quarter = Position(bar.rect.left + bar.rect.width / 2,bar.rect.top + bar.rect.height / 4)
+        context(KeyModifiers(),quarter) { assertTrue(bar.mouseDown(MouseButton.LEFT)) }
+        assertEquals(0.25,assertNotNull(prop).value.hDouble,0.02,"the hue follows the height on a vertical bar")
+        // Saturation, value and alpha stay where they were.
+        assertEquals(start.sDouble,assertNotNull(prop).value.sDouble,0.05)
+        assertEquals(start.vDouble,assertNotNull(prop).value.vDouble,0.05)
+        assertEquals(start.aInt,assertNotNull(prop).value.aInt)
+    }
+
+    @Test
+    fun `a press above a horizontal hue bar is not taken`() {
+        val start = Color.ofHSV(0.08,1.0,1.0)
+        var prop: StableRW<Color>? = null
+        val screen = buildScreen {
+            val p = local { start }
+            prop = p
+            Controls.ColorHue(p,Modifier.size(80.px,20.px),Axis.Horizontal,"hue")
+        }
+        val bar = screen.children.single()
+        val above = Position(bar.rect.left + bar.rect.width / 2,bar.rect.top - 30.px)
+        context(KeyModifiers(),above) {
+            assertFalse(bar.mouseDown(MouseButton.LEFT),"the bar is not the whole column above it")
+        }
+        assertEquals(start,assertNotNull(prop).value,"and it must not have changed the colour")
+    }
+
+    @Test
     fun `pressing the hue bar moves the hue and leaves the rest alone`() {
         val start = Color(10,20,30,40)
         var prop: StableRW<Color>? = null

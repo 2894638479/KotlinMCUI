@@ -384,10 +384,13 @@ fun Controls.ColorHue(
         private fun pick(mouse: Position, clamp: Boolean = false): Color? {
             val rect = instance.rect
             if(rect.width <= 0.px || rect.height <= 0.px) return null
-            val raw = if(axis == Axis.Horizontal) (mouse.x - rect.left) / rect.width
-            else (mouse.y - rect.top) / rect.height
-            if(!clamp && (raw < 0 || raw > 1)) return null
-            val color = prop.value.changeHSV(h = raw.coerceIn(0.0,1.0))
+            val x = (mouse.x - rect.left) / rect.width
+            val y = (mouse.y - rect.top) / rect.height
+            // The bar is the whole rectangle: only one axis carries the hue, but both have to be on
+            // the bar, or a press beside it would move the hue.
+            if(!clamp && (x < 0 || x > 1 || y < 0 || y > 1)) return null
+            val hue = if(axis == Axis.Horizontal) x.coerceIn(0.0,1.0) else y.coerceIn(0.0,1.0)
+            val color = prop.value.changeHSV(h = hue)
             prop.value = color
             return color
         }
@@ -401,12 +404,14 @@ fun Controls.ColorHue(
                 val to = (index + 1).toDouble() / HUE_SECTORS
                 val begin = Color.ofHSV(from,1.0,1.0)
                 val end = Color.ofHSV(to,1.0,1.0)
+                // The corners are left-top, right-top, left-bottom, right-bottom, so the gradient has
+                // to run along the bar's own axis: along x when it is horizontal, along y otherwise.
                 if(axis == Axis.Horizontal) backend.renderQuad(
                     Rect(rect.left + rect.width * from,rect.top,rect.left + rect.width * to,rect.bottom),
-                    begin,begin,end,end,
+                    begin,end,begin,end,
                 ) else backend.renderQuad(
                     Rect(rect.left,rect.top + rect.height * from,rect.right,rect.top + rect.height * to),
-                    begin,end,begin,end,
+                    begin,begin,end,end,
                 )
             }
             val hue = prop.value.hDouble
