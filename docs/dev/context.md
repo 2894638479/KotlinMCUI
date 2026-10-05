@@ -22,7 +22,6 @@ parent: Dev
 | `DslPreventContext` | 阻止聚合 | `Modifier.align` 的参数 |
 | `DslExecuteContext` | `dataStore` | 属性/动画初始化块、事件回调 |
 | `DslTextBuilderContext` | 文本构建 | `emit` 等 |
-| `DslFrameContext` | 帧信息 | 需要按帧求值的表达式 |
 
 每个接口都带 `companion object { operator fun invoke(...) }` 工厂，返回匿名实现，因此可以凭空构造一个只含单一能力的上下文（例如 `DslIdContext(id)`）临时满足某个函数的签名要求。
 
