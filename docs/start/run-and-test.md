@@ -45,7 +45,7 @@ $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=com.example.mypackage.MyPage"; .\gr
 
 默认**只打开页面**，不截屏也不退出（适合自己看），日志里会打出 `preview: opened '<引用>' as <类#方法>`。再追加 `-Dkotlinmcui.preview.capture=true` 就变成给机器用的模式：拍一张截图写进 `run/screenshots/`、退出；引用解析不出来、页面构建或渲染时抛异常、截图没写出来，退出码都是非零。
 
-引用的三种写法：IDE 里直接复制的顶层函数引用（`com.example.mypackage.MyPage`）、显式的 `包.类Kt#方法`、类名（用它的 `content()` 画，适合入口）。
+引用的三种写法：IDE 里直接复制的顶层函数引用（`com.example.mypackage.MyPage`）、显式的 `包.类Kt#方法`、类名（用它的 `content()` 画，适合入口）。页面可以有额外参数，但**都要有默认值**——预览只能按默认值调用它们，返回值类型不限（带必填参数的函数不会被当成页面）。
 
 预览**只画你指定的页面本身，不替你加背景**。控件自己没有底色，页面不画背景时游戏画面会直接透在控件后面。要原版风格的界面背景，就在页面根容器上挂 `defaultBackground()`：
 
