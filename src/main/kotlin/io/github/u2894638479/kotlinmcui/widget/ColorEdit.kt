@@ -473,6 +473,109 @@ fun Controls.ColorHue(
     })
 }
 
+/**
+ * Where the marker of [color] belongs in the hue triangle, in 0..1 rectangle space.
+ *
+ * The colour there *is* the mixture of the three corners, so its three components are the weights;
+ * they are normalised by their sum because a mixture scaled by its value is the same point. A black
+ * colour has no position at all, and the centre - its nearest point - is used instead.
+ */
+internal fun hueTriangleMarker(color: Color): Pair<Double,Double> {
+    val sum = color.rDouble + color.gDouble + color.bDouble
+    if(sum <= 0.0) return 0.5 to 2.0 / 3
+    val red = color.rDouble / sum
+    val blue = color.bDouble / sum
+    return (0.5 * red + blue) to (1.0 - red)
+}
+
+/**
+ * A triangular hue palette: the corners are the pure red, green and blue hues, and a point picks
+ * their mixture, so the perimeter sweeps the whole hue circle and the middle darkens.
+ *
+ * Unlike the square (one quad) and the bar (six quads) this needs the optional triangle-list
+ * capability, because a rectangle is never a triangle. What is drawn is the backend's linear
+ * interpolation between the three corners, which is exactly the mixture picked here — normalising
+ * it to full value instead (which would keep the middle bright) cannot be drawn that way at all.
+ */
+context(ctx: DslContext)
+fun Controls.ColorHueTriangle(
+    prop: StableRW<Color>,
+    modifier: Modifier = Modifier,
+    id: Any,
+): DslChild {
+    val dragging = local(newChildId(id)) { false }
+    val input = dslBackend
+    val unit = (ctx.scale * 2).px
+    return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx) {
+        /** See the square's picker: a drag out of the triangle is held at its nearest edge. */
+        private fun pick(mouse: Position, clamp: Boolean = false): Color? {
+            val rect = instance.rect
+            if(rect.width <= 0.px || rect.height <= 0.px) return null
+            var x = (mouse.x - rect.left) / rect.width
+            var y = (mouse.y - rect.top) / rect.height
+            if(triangleWeights(x,y) == null) {
+                if(!clamp) return null
+                val nearest = nearestOnUnitTriangle(x,y)
+                x = nearest.first
+                y = nearest.second
+            }
+            val (red,green,blue) = triangleWeights(x,y) ?: return null
+            val color = Color(red,green,blue,prop.value.aDouble)
+            prop.value = color
+            return color
+        }
+
+        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        override fun <RP> render() {
+            val rect = instance.rect
+            if(dragging.value && !input.isMouseDown(MouseButton.LEFT)) dragging.value = false
+            val triangle = backend.triangles()
+            if(triangle != null && rect.width > 0.px && rect.height > 0.px) {
+                val left = rect.left.pixelsOrElse { 0f }
+                val right = rect.right.pixelsOrElse { 0f }
+                val top = rect.top.pixelsOrElse { 0f }
+                val bottom = rect.bottom.pixelsOrElse { 0f }
+                val alpha = prop.value.aDouble
+                triangle.renderTriangles(
+                    floatArrayOf((left + right) / 2,top,left,bottom,right,bottom),
+                    intArrayOf(
+                        Color(1.0,0.0,0.0,alpha).rgbaInt,
+                        Color(0.0,1.0,0.0,alpha).rgbaInt,
+                        Color(0.0,0.0,1.0,alpha).rgbaInt,
+                    ),
+                )
+            }
+            val (x,y) = hueTriangleMarker(prop.value)
+            backend.paletteMarker(rect,x,y,unit)
+        }
+
+        context(eventModifier: KeyModifiers, mouse: Position)
+        override fun mouseDown(mouseButton: MouseButton): Boolean {
+            if(mouseButton != MouseButton.LEFT) return false
+            if(pick(mouse) == null) return false
+            dragging.value = true
+            return true
+        }
+
+        context(mouse: Position)
+        override fun mouseMove() {
+            if(!dragging.value) return
+            if(!input.isMouseDown(MouseButton.LEFT)) {
+                dragging.value = false
+                return
+            }
+            pick(mouse, clamp = true)
+        }
+
+        context(eventModifier: KeyModifiers, mouse: Position)
+        override fun mouseUp(mouseButton: MouseButton): Boolean {
+            if(mouseButton != MouseButton.LEFT || !dragging.value) return false
+            dragging.value = false
+            return true
+        }
+    })
+}
+
 /** A horizontal slider editing one channel of [prop], labelled with its value. */
 context(ctx: DslContext)
 fun Controls.ColorSlider(

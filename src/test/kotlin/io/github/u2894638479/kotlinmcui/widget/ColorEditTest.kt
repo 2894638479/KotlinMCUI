@@ -10,6 +10,7 @@ import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.integration.TestBackend
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
+import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.height
@@ -207,6 +208,38 @@ class ColorEditTest {
         assertEquals(122,start.gInt)
         assertEquals(0,start.bInt)
         assertEquals("#ff7a00",formatColorHex(start))
+    }
+
+    @Test
+    fun `the hue triangle picks the mixture of its three corners`() {
+        var prop: StableRW<Color>? = null
+        val screen = buildScreen {
+            val p = local { Color.WHITE }
+            prop = p
+            Controls.ColorHueTriangle(p,Modifier.size(60.px,60.px),"hue-triangle")
+        }
+        val triangle = screen.children.single()
+        fun press(x: Measure,y: Measure) = context(KeyModifiers(),Position(x,y)) {
+            triangle.mouseDown(MouseButton.LEFT)
+        }
+        press(triangle.rect.left + triangle.rect.width / 2,triangle.rect.top)
+        assertEquals(Color.RED,assertNotNull(prop).value,"the top corner is the red hue")
+        press(triangle.rect.left,triangle.rect.bottom)
+        assertEquals(Color.GREEN,assertNotNull(prop).value,"the bottom-left corner is green")
+        press(triangle.rect.right,triangle.rect.bottom)
+        assertEquals(Color.BLUE,assertNotNull(prop).value,"and the bottom-right is blue")
+    }
+
+    @Test
+    fun `the hue triangle marker normalises the colour to its position`() {
+        assertEquals(0.5 to 0.0,hueTriangleMarker(Color.RED))
+        assertEquals(0.0 to 1.0,hueTriangleMarker(Color.GREEN))
+        assertEquals(1.0 to 1.0,hueTriangleMarker(Color.BLUE))
+        // A mixture scaled by its value is the same point, so white sits in the middle.
+        val white = hueTriangleMarker(Color.WHITE)
+        assertEquals(0.5,white.first,1e-9)
+        assertEquals(2.0 / 3,white.second,1e-9)
+        assertEquals(0.5 to 2.0 / 3,hueTriangleMarker(Color.BLACK),"black has no position; the centre is nearest")
     }
 
     @Test

@@ -24,7 +24,8 @@ Controls.ColorEdit(colorProp, id = "editor")
 | --- | --- |
 | `Controls.ColorSquare(prop, modifier, id)` | 色相固定的饱和度/明度方块 |
 | `Controls.ColorTriangle(prop, modifier, id)` | 顶角纯色相、左下白、右下黑的三角调色板；需要后端支持 |
-| `Controls.ColorHue(prop, modifier, axis, id)` | 色相条，只改色相，饱和度和明度保持不动 |
+| `Controls.ColorHue(prop, modifier, axis, id)` | 色相条，只改色相，饱和度和明度保持不动；`axis` 决定横竖 |
+| `Controls.ColorHueTriangle(prop, modifier, id)` | 三角色相盘：三个角是纯红/绿/蓝，内部是它们的混合；需要后端支持 |
 | `Controls.ColorSlider(channel, prop, modifier, id)` | 单通道滑条（`ColorChannel`），右侧带该通道的读数 |
 | `Controls.ColorText(prop, modifier, id)` | 十六进制输入框 |
 
