@@ -7,124 +7,178 @@ import io.github.u2894638479.kotlinmcui.prop.value
 sealed interface ColorProp<T> {
     fun get(color: Color): T
     fun set(color: Color, value: T): Color
+
+    /** The channel's name, e.g. for a label. */
+    val name: String
+
+    /** How this channel reads for a user: an integer byte, degrees or percent. */
+    fun toString(color: Color): String
 }
 
-object R: ColorProp<UByte> {
+/*
+ * Channels that share a name and a reading share one of these; the value type varies with the
+ * precision a caller wants, but the text a user sees does not.
+ */
+
+private interface RedProp<T> : ColorProp<T> {
+    override val name get() = "red"
+    override fun toString(color: Color) = color.rInt.toString()
+}
+
+private interface GreenProp<T> : ColorProp<T> {
+    override val name get() = "green"
+    override fun toString(color: Color) = color.gInt.toString()
+}
+
+private interface BlueProp<T> : ColorProp<T> {
+    override val name get() = "blue"
+    override fun toString(color: Color) = color.bInt.toString()
+}
+
+private interface AlphaProp<T> : ColorProp<T> {
+    override val name get() = "alpha"
+    override fun toString(color: Color) = color.aInt.toString()
+}
+
+private interface HueProp<T> : ColorProp<T> {
+    override val name get() = "hue"
+    override fun toString(color: Color) = "${(color.h * 360).toInt()}°"
+}
+
+private interface SaturationProp<T> : ColorProp<T> {
+    override val name get() = "saturation"
+    override fun toString(color: Color) = "${(color.s * 100).toInt()}%"
+}
+
+private interface ValueProp<T> : ColorProp<T> {
+    override val name get() = "value"
+    override fun toString(color: Color) = "${(color.v * 100).toInt()}%"
+}
+
+object R: RedProp<UByte> {
     override fun get(color: Color) = color.r
     override fun set(color: Color, value: UByte) = color.change(r = value)
 }
 
-object G: ColorProp<UByte> {
+object G: GreenProp<UByte> {
     override fun get(color: Color) = color.g
     override fun set(color: Color, value: UByte) = color.change(g = value)
 }
 
-object B: ColorProp<UByte> {
+object B: BlueProp<UByte> {
     override fun get(color: Color) = color.b
     override fun set(color: Color, value: UByte) = color.change(b = value)
 }
 
-object A: ColorProp<UByte> {
+object A: AlphaProp<UByte> {
     override fun get(color: Color) = color.a
     override fun set(color: Color, value: UByte) = color.change(a = value)
 }
 
 // ── Int channels ─────────────────────────────────────────────────────────────
 
-object RInt: ColorProp<Int> {
+object RInt: RedProp<Int> {
     override fun get(color: Color) = color.rInt
     override fun set(color: Color, value: Int) = color.change(r = value)
 }
-object GInt: ColorProp<Int> {
+object GInt: GreenProp<Int> {
     override fun get(color: Color) = color.gInt
     override fun set(color: Color, value: Int) = color.change(g = value)
 }
-object BInt: ColorProp<Int> {
+object BInt: BlueProp<Int> {
     override fun get(color: Color) = color.bInt
     override fun set(color: Color, value: Int) = color.change(b = value)
 }
-object AInt: ColorProp<Int> {
+object AInt: AlphaProp<Int> {
     override fun get(color: Color) = color.aInt
     override fun set(color: Color, value: Int) = color.change(a = value)
 }
 
 // ── Float channels ───────────────────────────────────────────────────────────
 
-object RFloat: ColorProp<Float> {
+object RFloat: RedProp<Float> {
     override fun get(color: Color) = color.rFloat
     override fun set(color: Color, value: Float) = color.change(r = value)
 }
-object GFloat: ColorProp<Float> {
+object GFloat: GreenProp<Float> {
     override fun get(color: Color) = color.gFloat
     override fun set(color: Color, value: Float) = color.change(g = value)
 }
-object BFloat: ColorProp<Float> {
+object BFloat: BlueProp<Float> {
     override fun get(color: Color) = color.bFloat
     override fun set(color: Color, value: Float) = color.change(b = value)
 }
-object AFloat: ColorProp<Float> {
+object AFloat: AlphaProp<Float> {
     override fun get(color: Color) = color.aFloat
     override fun set(color: Color, value: Float) = color.change(a = value)
 }
 
 // ── Double channels ──────────────────────────────────────────────────────────
 
-object RDouble: ColorProp<Double> {
+object RDouble: RedProp<Double> {
     override fun get(color: Color) = color.rDouble
     override fun set(color: Color, value: Double) = color.change(r = value)
 }
-object GDouble: ColorProp<Double> {
+object GDouble: GreenProp<Double> {
     override fun get(color: Color) = color.gDouble
     override fun set(color: Color, value: Double) = color.change(g = value)
 }
-object BDouble: ColorProp<Double> {
+object BDouble: BlueProp<Double> {
     override fun get(color: Color) = color.bDouble
     override fun set(color: Color, value: Double) = color.change(b = value)
 }
-object ADouble: ColorProp<Double> {
+object ADouble: AlphaProp<Double> {
     override fun get(color: Color) = color.aDouble
     override fun set(color: Color, value: Double) = color.change(a = value)
 }
 
 // ── HSV channels ─────────────────────────────────────────────────────────────
 
-object H: ColorProp<Float> {
+object H: HueProp<Float> {
     override fun get(color: Color) = color.h
     override fun set(color: Color, value: Float) = color.changeHSV(h = value)
 }
-object S: ColorProp<Float> {
+object S: SaturationProp<Float> {
     override fun get(color: Color) = color.s
     override fun set(color: Color, value: Float) = color.changeHSV(s = value)
 }
-object V: ColorProp<Float> {
+object V: ValueProp<Float> {
     override fun get(color: Color) = color.v
     override fun set(color: Color, value: Float) = color.changeHSV(v = value)
 }
 
-object HDouble: ColorProp<Double> {
+object HDouble: HueProp<Double> {
     override fun get(color: Color) = color.hDouble
     override fun set(color: Color, value: Double) = color.changeHSV(h = value)
 }
-object SDouble: ColorProp<Double> {
+object SDouble: SaturationProp<Double> {
     override fun get(color: Color) = color.sDouble
     override fun set(color: Color, value: Double) = color.changeHSV(s = value)
 }
-object VDouble: ColorProp<Double> {
+object VDouble: ValueProp<Double> {
     override fun get(color: Color) = color.vDouble
     override fun set(color: Color, value: Double) = color.changeHSV(v = value)
 }
 
 // ── Packed representations ───────────────────────────────────────────────────
 
-object RGBAInt: ColorProp<Int> {
+/** A whole colour packed into an [Int]; it reads as that packing in hexadecimal. */
+private interface PackedProp : ColorProp<Int> {
+    override fun toString(color: Color) = "#" + get(color).toUInt().toString(16).padStart(8, '0')
+}
+
+object RGBAInt: PackedProp {
+    override val name get() = "rgba"
     override fun get(color: Color) = color.rgbaInt
     override fun set(color: Color, value: Int) = Color.ofRGBA(value)
 }
-object ARGBInt: ColorProp<Int> {
+object ARGBInt: PackedProp {
+    override val name get() = "argb"
     override fun get(color: Color) = color.argbInt
     override fun set(color: Color, value: Int) = Color.ofARGB(value)
 }
-object ABGRInt: ColorProp<Int> {
+object ABGRInt: PackedProp {
+    override val name get() = "abgr"
     override fun get(color: Color) = color.abgrInt
     override fun set(color: Color, value: Int) = Color.ofABGR(value)
 }

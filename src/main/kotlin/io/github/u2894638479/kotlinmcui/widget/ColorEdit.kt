@@ -42,27 +42,11 @@ import kotlin.reflect.KMutableProperty0
 /** Which palette a [Controls.ColorEdit] shows. */
 enum class ColorPicker { Square, Triangle }
 
-/**
- * One channel the editor edits: the [ColorProp] its slider writes, the letter it is labelled with,
- * and how its value reads. Reading and writing a channel is [ColorProp]'s job, so only the label
- * and the reading live here.
- */
-private class Channel(val prop: ColorProp<Double>, val letter: String, private val scale: Double, private val suffix: String = "") {
-    /** The value of this channel as its slider's label shows it: bytes, degrees or percent. */
-    fun read(color: Color) = "${(prop.get(color) * scale).toInt()}$suffix"
-}
+/** The channels the editor edits, in the order its strip shows them. [ColorProp] carries each one's name and reading. */
+private val channels: List<ColorProp<Double>> = listOf(RDouble, GDouble, BDouble, ADouble, HDouble, SDouble, VDouble)
 
-/** The channels of the editor, in the order its strip shows them. */
-private object Channels {
-    val red = Channel(RDouble,"r",255.0)
-    val green = Channel(GDouble,"g",255.0)
-    val blue = Channel(BDouble,"b",255.0)
-    val alpha = Channel(ADouble,"a",255.0)
-    val hue = Channel(HDouble,"h",360.0,"°")
-    val saturation = Channel(SDouble,"s",100.0,"%")
-    val value = Channel(VDouble,"v",100.0,"%")
-    val all = listOf(red,green,blue,alpha,hue,saturation,value)
-}
+/** The strip is one letter wide per channel, so it is labelled with the first letter of the name. */
+private val channelLetters: Map<ColorProp<Double>, String> = channels.associateWith { it.name.take(1) }
 
 /**
  * The colour at [x] (saturation, 0..1) and [y] (from the top, so value is `1 - y`) of the
@@ -493,21 +477,21 @@ fun Controls.ColorText(
     return field.editBoxBackground()
 }
 
-/** A slider editing [channel] of [prop]: [ColorProp] is the one channel abstraction, and the core colour slider already draws the ramp. */
+/** A slider editing [channel] of [color]: [ColorProp] is the one channel abstraction, and the core colour slider already draws the ramp. */
 context(ctx: DslContext)
 private fun channelSlider(
-    channel: Channel,
-    prop: StableRW<Color>,
+    channel: ColorProp<Double>,
+    color: StableRW<Color>,
     axis: Axis,
     modifier: Modifier,
     id: Any,
     label: Boolean,
-) = Slider(modifier,axis,channel.prop,prop,id = id) {
+) = Slider(modifier,axis,channel,color,id = id) {
     if(label) TextFlatten(Modifier.padding(h = 5.scaled)) {
-        channel.letter.emit()
+        channel.name.emit()
         ": ".emit()
-        channel.read(prop.value).emit()
-    } else TextAutoFold { channel.letter.emit() }
+        channel.toString(color.value).emit()
+    } else TextAutoFold { channelLetters.getValue(channel).emit() }
 }
 
 /**
@@ -547,13 +531,13 @@ fun Controls.ColorEdit(
                     { translate("kotlinmcui.widget.color.${it.name.lowercase()}") },
                     newChildId(id),
                 )
-                channelSlider(Channels.alpha,prop,Axis.Horizontal,Modifier.width(60.scaled),newChildId(id),label = true)
+                channelSlider(ADouble,prop,Axis.Horizontal,Modifier.width(60.scaled),newChildId(id),label = true)
             }
         }
         val scrollerProp = local(newChildId(id)) { Scroller.empty }
         ScrollableRow(Modifier.minHeight(50.scaled),scrollerProp) {
-            Channels.all.forEach { channel ->
-                channelSlider(channel,prop,Axis.Vertical,Modifier.width(20.scaled).padding(1.scaled),newChildId(id) + channel.prop,label = false)
+            channels.forEach { channel ->
+                channelSlider(channel,prop,Axis.Vertical,Modifier.width(20.scaled).padding(1.scaled),newChildId(id) + channel,label = false)
             }
         }
         if(scrollerProp.value.isScrollable()) ScrollBar(Modifier.height(10.scaled),scrollerProp,Axis.Horizontal) {}

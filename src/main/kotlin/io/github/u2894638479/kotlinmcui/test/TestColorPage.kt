@@ -47,10 +47,10 @@ fun TestColorPage() = ScrollableColumn(Modifier.padding(5.scaled)) {
     // which carries each channel's own colour ramp on its track.
     Row(Modifier.padding(5.scaled)) {
         Slider(Modifier.width(120.scaled),Axis.Horizontal,ADouble,prop,id = "alpha") {
-            TextFlatten { "a: ".emit(); prop.value.aInt.toString().emit() }
+            TextFlatten { ADouble.name.emit(); ": ".emit(); ADouble.toString(prop.value).emit() }
         }
         Slider(Modifier.width(120.scaled),Axis.Horizontal,HDouble,prop,id = "hue") {
-            TextFlatten { "h: ".emit(); (prop.value.hDouble * 360).toInt().toString().emit() }
+            TextFlatten { HDouble.name.emit(); ": ".emit(); HDouble.toString(prop.value).emit() }
         }
     }
 }.defaultBackground()
