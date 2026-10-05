@@ -42,4 +42,4 @@ fun TestColorPage() = ScrollableColumn(Modifier.padding(5.scaled)) {
         Controls.ColorHue(prop,Modifier.size(50.scaled,12.scaled),Axis.Horizontal,"hue-horizontal")
         Controls.ColorText(prop,Modifier.width(80.scaled),"hex")
     }
-}
+}.defaultBackground()

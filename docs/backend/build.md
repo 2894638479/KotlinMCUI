@@ -74,6 +74,8 @@ $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.te
 
 **透视是唯一会用到位姿矩阵第三行的路径**（`io.github.u2894638479.kotlinmcui.test.TestTransformPage`），改动变换相关代码后应当跑一次；`io.github.u2894638479.kotlinmcui.test.TestPolygonPage` 是唯一走 `DslBackendTriangles` 这条可选能力的页面，改动顶点提交路径后应当跑一次它。
 
+预览**不替页面补背景**：页面自己没挂 `defaultBackground()` 时，截图里控件背后就是游戏画面。`test.TestColorPage` 等演示页都自己挂了。
+
 页面本身是**框架里公开的顶层 `context(DslContext)` 函数**，时序与判定也都在框架里——框架的预览会话负责解析引用、等首帧、按帧等待、判定、截图与退出码，后端只提供 `capture`（把当前帧写成文件）与 `quit`（结束游戏）两个平台动作。换一个后端时这两处不必重写。
 
 日常验证在 `fabric-1.20.1` 分支上做：预览机制只在这一个分支上维护（迭代期其他版本分支不追）。在 `fabric-26.2` 上，自检还**建议用 Vulkan 再跑一遍**：

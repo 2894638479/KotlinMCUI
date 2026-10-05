@@ -47,4 +47,13 @@ $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=com.example.mypackage.MyPage"; .\gr
 
 引用的三种写法：IDE 里直接复制的顶层函数引用（`com.example.mypackage.MyPage`）、显式的 `包.类Kt#方法`、类名（用它的 `content()` 画，适合入口）。
 
+预览**只画你指定的页面本身，不替你加背景**。控件自己没有底色，页面不画背景时游戏画面会直接透在控件后面。要原版风格的界面背景，就在页面根容器上挂 `defaultBackground()`：
+
+```kotlin
+context(ctx: DslContext)
+fun MyPage() = Column { ... }.defaultBackground()
+```
+
+它铺的是所在容器的矩形（所以屏幕边缘仍会露出游戏画面），绘制在子组件之前，和[基础](../basic/index)里的 `DefaultBackground()` 是同一件事。
+
 用完记得清掉那个变量（它对当前 shell 里**每个** JVM 都生效，包括 Gradle 守护进程）：JVM 会往 stderr 打两行 `Picked up JAVA_TOOL_OPTIONS: …`，那是正常的、无副作用。
