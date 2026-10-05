@@ -13,7 +13,7 @@ val colorProp = local { Color(220,120,40) }
 Controls.ColorEdit(colorProp, id = "editor")
 ```
 
-从上到下依次是：预览色块与十六进制输入框；调色板、色相条与透明度；七个通道的竖向滑条（`r g b a h s v`）。
+从上到下依次是：预览色块与十六进制输入框；调色板、色相条与透明度；七个通道的竖向滑条（`r g b a h s v`），每条轨道上是该通道自己的颜色渐变。
 
 - `picker` 参数选择初始调色板（`ColorPicker.Square` 或 `ColorPicker.Triangle`），旁边的按钮可以在两者间切换，选择按 `id` 记住。
 - 后端不具备三角表能力（`DslBackendTriangles`）时不会提供三角模式——画不出来的取色板比没有更糟。
@@ -26,13 +26,16 @@ Controls.ColorEdit(colorProp, id = "editor")
 | `Controls.ColorTriangle(prop, modifier, id)` | 顶角纯色相、左下白、右下黑的三角调色板；需要后端支持 |
 | `Controls.ColorHue(prop, modifier, axis, id)` | 色相条，只改色相，饱和度和明度保持不动；`axis` 决定横竖 |
 | `Controls.ColorHueTriangle(prop, modifier, id)` | 三角色相盘：三个角是纯红/绿/蓝，内部是它们的混合；需要后端支持 |
-| `Controls.ColorSlider(channel, prop, modifier, id)` | 单通道滑条（`ColorChannel`），右侧带该通道的读数 |
 | `Controls.ColorText(prop, modifier, id)` | 十六进制输入框 |
+
+单通道不改颜色，用核心滑条的彩色重载即可（见[滑条](slider)）：`prop` 是 `math` 里的 `ColorProp`（`RDouble`、`ADouble`、`HDouble` …），轨道上画该通道自己的颜色渐变。
 
 ```kotlin
 Row {
     Controls.ColorSquare(prop, Modifier.size(80.scaled,80.scaled), "square")
-    Controls.ColorSlider(ColorChannel.Alpha, prop, Modifier.width(60.scaled), "alpha")
+    Slider(Modifier.width(60.scaled), Axis.Horizontal, ADouble, prop, id = "alpha") {
+        TextFlatten { "a: ".emit(); prop.value.aInt.toString().emit() }
+    }
 }
 ```
 
@@ -41,4 +44,4 @@ Row {
 - 调色板自带一圈内边距：标记画在内容区之外，但始终留在组件自己的范围内，不会盖到相邻组件上。
 - 十六进制接受 `#rgb`、`#rgba`、`#rrggbb`、`#rrggbbaa`（`#` 可省略、大小写随意）。颜色不透明时显示 6 位，带透明度时显示 8 位；输入过程中只要当前文本能解析就立即生效，不能解析时颜色保持不变。
 - 点进输入框后它归你输入，失去焦点后才重新按颜色刷新。
-- 通道滑条的读数按通道给单位：`r`/`g`/`b`/`a` 是 0-255，`h` 是角度，`s`/`v` 是百分比。
+- 组合控件里通道滑条的读数按通道给单位：`r`/`g`/`b`/`a` 是 0-255，`h` 是角度，`s`/`v` 是百分比；自己用核心滑条时，读数写在滑条的内容里。
