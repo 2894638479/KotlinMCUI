@@ -3,41 +3,33 @@ package io.github.u2894638479.kotlinmcui.test
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.local
+import io.github.u2894638479.kotlinmcui.dsl.translate
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
-import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.modifier.height
-import io.github.u2894638479.kotlinmcui.prop.getValue
-import io.github.u2894638479.kotlinmcui.prop.remap
-import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.modifier.padding
+import io.github.u2894638479.kotlinmcui.modifier.size
+import io.github.u2894638479.kotlinmcui.modifier.width
+import io.github.u2894638479.kotlinmcui.widget.ColorChannel
+import io.github.u2894638479.kotlinmcui.widget.ColorEdit
+import io.github.u2894638479.kotlinmcui.widget.ColorSlider
+import io.github.u2894638479.kotlinmcui.widget.ColorSquare
+import io.github.u2894638479.kotlinmcui.widget.ColorText
+import io.github.u2894638479.kotlinmcui.widget.ColorTriangle
+import io.github.u2894638479.kotlinmcui.widget.Controls
 
+/**
+ * Every colour widget at once: the composite editor, the two palettes, and the sliders and the
+ * text field on their own. It doubles as the `color` page of the in-game verification run, where
+ * the triangle is only drawn if the backend has the triangle-list capability.
+ */
 context(ctx: DslContext)
-fun TestColorPage() = ScrollableColumn {
-    val colorProp = local { Color.WHITE }
-    var color by colorProp
-    ColorRect(Modifier.height(50.scaled),color) {}
-    Button {  }
-
-    Slider(Modifier.height(20.scaled),Axis.Horizontal,0..255,
-        colorProp.remap({ it.r.toInt() }, { color.change(r = it) })
-    ) { TextFlatten { "r:${color.r}".emit() } }
-    Slider(Modifier.height(20.scaled),Axis.Horizontal,0..255,
-        colorProp.remap({ it.g.toInt() }, { color.change(g = it) })
-    ) { TextFlatten { "g:${color.g}".emit() } }
-    Slider(Modifier.height(20.scaled),Axis.Horizontal,0..255,
-        colorProp.remap({ it.b.toInt() }, { color.change(b = it) })
-    ) { TextFlatten { "b:${color.b}".emit() } }
-    Slider(Modifier.height(20.scaled),Axis.Horizontal,0..255,
-        colorProp.remap({ it.a.toInt() }, { color.change(a = it) })
-    ) { TextFlatten { "a:${color.a}".emit() } }
-    Slider(Modifier.height(20.scaled),Axis.Horizontal,
-        colorProp.remap({ it.hDouble }, { color.changeHSV(h = it) })
-    ) { TextFlatten { "h:${color.hDouble}".emit() } }
-    Slider(Modifier.height(20.scaled),Axis.Horizontal,
-        colorProp.remap({ it.sDouble }, { color.changeHSV(s = it) })
-    ) { TextFlatten { "s:${color.sDouble}".emit() } }
-    Slider(Modifier.height(20.scaled),Axis.Horizontal,
-        colorProp.remap({ it.vDouble }, { color.changeHSV(v = it) })
-    ) { TextFlatten { "v:${color.vDouble}".emit() } }
+fun TestColorPage() = ScrollableColumn(Modifier.padding(5.scaled)) {
+    val prop = local { Color(220,120,40) }
+    Controls.ColorEdit(prop,id = "editor")
+    Row(Modifier.padding(5.scaled)) {
+        Controls.ColorSquare(prop,Modifier.size(70.scaled,70.scaled).padding(2.scaled),"square")
+        Controls.ColorTriangle(prop,Modifier.size(70.scaled,64.scaled).padding(2.scaled),"triangle")
+        Controls.ColorText(prop,Modifier.width(80.scaled),"hex")
+    }
 }

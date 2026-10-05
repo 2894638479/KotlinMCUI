@@ -10,6 +10,7 @@ fun verifyPage(spec: String) = when (spec) {
     "transform" -> TestTransformPage()
     "translate" -> TestTranslationPage()
     "polygon" -> TestPolygonPage()
+    "color" -> TestColorPage()
     "debug" -> TestEntry.DebugOverlay.overlay()
     "entrypage" -> DslEntryPage()
     else -> TestEntry.TestPage.content()
