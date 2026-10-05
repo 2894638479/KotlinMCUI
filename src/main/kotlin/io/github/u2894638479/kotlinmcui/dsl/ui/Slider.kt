@@ -31,7 +31,6 @@ import io.github.u2894638479.kotlinmcui.prop.HDouble
 import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.remap
-import io.github.u2894638479.kotlinmcui.prop.set
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.stepDown
 import io.github.u2894638479.kotlinmcui.prop.stepUp
