@@ -5,7 +5,7 @@ import io.github.u2894638479.kotlinmcui.prop.value
 import kotlin.math.max
 import kotlin.math.min
 
-internal class UndoInfo(val codePoints: CodePoints, val cursor: Int, val cursor2: Int?)
+private class UndoInfo(val codePoints: CodePoints, val cursor: Int, val cursor2: Int?)
 
 /**
  * A mutable string model for editable text components.
@@ -20,8 +20,8 @@ internal class EditableString(private val stringProp: StableRW<String>) {
     var cursor = codePoints.size
     var cursor2: Int? = null
     var undoDepth = 0
-    val undoList = mutableListOf<UndoInfo>()
-    var redo: UndoInfo? = null
+    private val undoList = mutableListOf<UndoInfo>()
+    private var redo: UndoInfo? = null
 
     // ── Editing ──────────────────────────────────────────────────────────
 

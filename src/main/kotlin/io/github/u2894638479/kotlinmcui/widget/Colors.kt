@@ -31,6 +31,14 @@ import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.*
 import kotlin.reflect.KMutableProperty0
 
+/**
+ * Colour picker widgets.
+ *
+ * The top-level geometry and hex helpers in this file are `internal` because the widget tests assert them
+ * directly (the test source set is associated with this module, so it sees `internal`); everything else here
+ * is `private`. Keep the split that way: a helper that no test and no other file needs belongs to neither.
+ */
+
 /** Which palette a [Colors.ColorEdit] shows. */
 enum class ColorPicker { Square, Triangle }
 
@@ -98,7 +106,7 @@ private fun Triple<Double,Double,Double>.isInside() =
  * triangle — pure hue on top, white bottom-left, black bottom-right — or `null` when the point
  * is outside it.
  */
-internal fun triangleWeights(x: Double, y: Double): Triple<Double,Double,Double>? =
+private fun triangleWeights(x: Double, y: Double): Triple<Double,Double,Double>? =
     rawWeights(x,y).takeIf { it.isInside() }
 
 /** The point of the unit triangle: on it, or - while dragging - its nearest edge. */
