@@ -65,6 +65,7 @@ Mixin 解决"插进去"，访问扩大器解决"看得见"。后端需要访问�
 
 - **等帧，不等秒**：`TopComponent` 统计帧数，而后端在游戏加载完成前不渲染，所以帧数保持 0——"平台真的渲染了一帧"同时说明加载已完成（这时开屏才不会被顶掉）。用秒数会在慢机器上截到还没加载完的页面，而且运行照样通过。
 - **渲染异常**：页面在渲染期间抛出的异常记录在 `TopComponent.renderFailure` 上，随后**继续抛出**（不改变平台行为），由会话转成非零退出码。
+- **判定靠肉眼与日志，不做像素比对**：截图里的背景取自会转动的全景图，逐像素差异既可能来自真实的渲染改动，也可能只是采样时刻不同，拿它判断"改动是否生效"会得出错误结论。
 
 **`DslFunction` 只在参数位置存在。** 框架里所有需要它的地方都把它当形参（`create(title, dslFunction)`、`showScreen(title, function)`、`tooltip(function)`），由调用方用尾随 lambda 填，框架在自己的上下文里调用它。不要在无 context 的函数里试图**构造**一个 `DslFunction` 值：Kotlin 只对参数位置与初始化器传播 context 类型，`when` 分支不会，函数引用也不行。预览会话按引用解析出来的页面正是这么调用的——在 `create(name) { page.draw() }` 的尾随 lambda 里，context 由那个形参自带。
 
@@ -76,6 +77,7 @@ Mixin 解决"插进去"，访问扩大器解决"看得见"。后端需要访问�
 HUD 从第一帧就画（加载界面上也会画覆盖层），所以它正是那个"过早的调用者"。把 HUD 推迟到游戏加载完成之后，问题根除；这个顺序约束对每个后端都成立，见[后端接口](backend)的契约列表。
 
 复现与验收：`JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=<任一页面引用>" ./gradlew runClient --args="--graphicsBackend vulkan"`（`--graphicsBackend` 是原版启动参数，取值 `default`/`opengl`/`vulkan`，强制后游戏忽略选项里的 `preferredGraphicsBackend`）。
+
 ## `fabric-1.20.1` 分支的差异
 同一套契约在两个 Minecraft 版本上的落地方式不同。这里只列**必须按版本改写**的部分：
 
@@ -88,6 +90,9 @@ HUD 从第一帧就画（加载界面上也会画覆盖层），所以它正是�
 - **输入法**：GLFW 3.3（1.20.1）没有预编辑光标 API，`setPreeditArea` 是空实现（26.2 会调 `glfwSetPreeditCursorRectangle`）；键盘事件、字符输入与文件拖放的行为一致。
 - **未知键码**：GLFW 键码到框架 `Key` 的映射是一张"码 → 码"的表，未列出的码原样透传，再用 `Key(code)` 构造——`Key(code)` 不校验，而 `Key.custom(code)` 只接受框架自己的 custom 区间（`CUSTOM_RANGE_START` 起）。**不要用 `Key.custom(Key.A.code + i)` 这类写法**：它的参数应是平台码，传框架自己的键码既错又会抛。另外别把这张表的构造放进会被输入回调触发的顶层初始化器里：一旦它抛异常，`InputKt.<clinit>` 失败，**任何一次输入都会崩**（表现为 `ExceptionInInitializerError` + `custom key codes must be in the extension range`）。1.20.1 后端在 `register` 里主动构造并记录映射条数，正是为了让这种表在启动时就暴露问题。
 - **类初始化顺序**：`Input` 的调度器取自 `Utils` 而不是聚合对象 `DefaultBackend`，否则两个类会互相初始化并留下半个对象。
+
+## 发布
+发布由标签驱动：`publishMods` 只在目标标签**尚不存在于 origin** 时启用，标签名是 `v<版本号>`（`+` 换成 `-`），发布类型由版本号里的关键字决定（`alpha` / `beta` / 其它视为正式）。Modrinth、CurseForge 与 GitHub Release 各需要一份环境变量里的 token；没有 token 时不要执行发布任务。
 
 ## 已知问题
 - 字体只支持默认字体：取字体接口忽略名称参数，同一实例服务所有名称（满足核心的"同名同实例"要求，但不能按 `FontDescription` 切换）。
