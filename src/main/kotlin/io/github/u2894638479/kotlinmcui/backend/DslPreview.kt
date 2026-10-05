@@ -12,13 +12,17 @@ import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 
 /**
- * The in-game preview session: open the page a launch property names, let it render, photograph it
- * and stop - or, for a human, just open it and stay.
+ * The in-game preview session: open the page a launch property names, and - only when a second
+ * property asks for it - photograph the result and stop.
  *
  * All of this is policy and therefore lives here; the platform only supplies the two members
  * [DslBackendUtils.capture] and [DslBackendUtils.quit] plus the render loop that ticks
  * [TopComponent.frameIndex]. Keeping the timing rules in the framework means they are the same on
  * every platform, and testable without a game.
+ *
+ * `-Dkotlinmcui.preview=<reference>` opens the page. `-Dkotlinmcui.preview.capture=true` turns the
+ * session into the one a machine can gate on: it photographs the page and quits, with a non-zero
+ * code when the reference could not be resolved, the page threw, or no file was written.
  *
  * A page is named by reference rather than registered, so the framework needs no preview-only API:
  *
@@ -28,11 +32,11 @@ import java.lang.reflect.Modifier
  * - a class name, in which case its `content()` draws the page (an entry).
  */
 internal object DslPreview {
-    /** Opens the referenced page, photographs it and stops: the mode a machine can gate on. */
-    private const val VERIFY_PROPERTY = "kotlinmcui.verify"
-
-    /** Opens the referenced page and stays: the mode a human looks at. */
+    /** The page to open: one launch property, and the only name this feature has. */
     private const val PREVIEW_PROPERTY = "kotlinmcui.preview"
+
+    /** Whether [PREVIEW_PROPERTY] should be photographed and left: the one extra switch. */
+    private const val CAPTURE_PROPERTY = "kotlinmcui.preview.capture"
 
     /** Frames the page is given before it is photographed: a frame clock, not a wall clock. */
     private const val FRAMES = 30L
@@ -43,9 +47,18 @@ internal object DslPreview {
 
     /** Called once the backend is published; does nothing unless the platform asked for a page. */
     fun start() {
-        val verify = System.getProperty(VERIFY_PROPERTY)?.takeIf { it.isNotBlank() }
-        val reference = verify ?: System.getProperty(PREVIEW_PROPERTY)?.takeIf { it.isNotBlank() } ?: return
-        CoroutineScope(Dispatchers.Default).launch { run(reference,verify != null) }
+        val request = request() ?: return
+        CoroutineScope(Dispatchers.Default).launch { run(request.first,request.second) }
+    }
+
+    /**
+     * The page the platform asked for and whether it also wants a screenshot, or `null` when it
+     * asked for no page at all. Reading both properties in one place keeps the command line and the
+     * run configuration agreeing on what they mean.
+     */
+    internal fun request(): Pair<String,Boolean>? {
+        val reference = System.getProperty(PREVIEW_PROPERTY)?.takeIf { it.isNotBlank() } ?: return null
+        return reference to (System.getProperty(CAPTURE_PROPERTY)?.toBoolean() ?: false)
     }
 
     /**
@@ -70,6 +83,7 @@ internal object DslPreview {
             }
             val opened = TopComponent.frameIndex
             withContext(backend.mainDispatcher) { backend.create(reference) { page.draw() } }.show()
+            dslLogger.info("preview: opened '$reference' as ${page.describe()}")
             while(TopComponent.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS)
             if(!capture) return
             val file = withContext(backend.mainDispatcher) { backend.capture(fileNameFor(reference)) }

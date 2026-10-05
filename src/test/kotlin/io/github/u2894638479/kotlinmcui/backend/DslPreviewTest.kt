@@ -40,6 +40,26 @@ class DslPreviewTest {
     }
 
     @Test
+    fun `the request is one page property and one capture switch`() {
+        val page = System.getProperty("kotlinmcui.preview")
+        val capture = System.getProperty("kotlinmcui.preview.capture")
+        try {
+            System.clearProperty("kotlinmcui.preview")
+            System.clearProperty("kotlinmcui.preview.capture")
+            assertNull(DslPreview.request(),"no property at all means no page")
+            System.setProperty("kotlinmcui.preview","a.b.C")
+            assertEquals("a.b.C" to false,DslPreview.request(),"opening it is the default")
+            System.setProperty("kotlinmcui.preview.capture","true")
+            assertEquals("a.b.C" to true,DslPreview.request())
+            System.setProperty("kotlinmcui.preview","  ")
+            assertNull(DslPreview.request(),"a blank page is not a page")
+        } finally {
+            if(page == null) System.clearProperty("kotlinmcui.preview") else System.setProperty("kotlinmcui.preview",page)
+            if(capture == null) System.clearProperty("kotlinmcui.preview.capture") else System.setProperty("kotlinmcui.preview.capture",capture)
+        }
+    }
+
+    @Test
     fun `a top-level function resolves through its file class`() {
         val page = DslPreview.pageFor("io.github.u2894638479.kotlinmcui.test.TestColorPage")
         assertEquals("io.github.u2894638479.kotlinmcui.test.TestColorPageKt#TestColorPage",page.describe())
