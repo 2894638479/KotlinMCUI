@@ -25,12 +25,16 @@ import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.math.rect.expand
 import io.github.u2894638479.kotlinmcui.math.rect.height
 import io.github.u2894638479.kotlinmcui.math.rect.width
-import io.github.u2894638479.kotlinmcui.math.set
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
+import io.github.u2894638479.kotlinmcui.prop.ColorProp
+import io.github.u2894638479.kotlinmcui.prop.HDouble
 import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.remap
+import io.github.u2894638479.kotlinmcui.prop.set
 import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.prop.stepDown
+import io.github.u2894638479.kotlinmcui.prop.stepUp
 import io.github.u2894638479.kotlinmcui.prop.value
 import kotlin.math.roundToInt
 

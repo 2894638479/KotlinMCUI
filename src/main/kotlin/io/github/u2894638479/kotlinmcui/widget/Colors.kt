@@ -18,19 +18,11 @@ import io.github.u2894638479.kotlinmcui.dsl.translate
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
 import io.github.u2894638479.kotlinmcui.input.MouseButton
-import io.github.u2894638479.kotlinmcui.math.ADouble
 import io.github.u2894638479.kotlinmcui.math.Axis
-import io.github.u2894638479.kotlinmcui.math.BDouble
 import io.github.u2894638479.kotlinmcui.math.Color
-import io.github.u2894638479.kotlinmcui.math.ColorProp
-import io.github.u2894638479.kotlinmcui.math.GDouble
-import io.github.u2894638479.kotlinmcui.math.HDouble
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.RDouble
-import io.github.u2894638479.kotlinmcui.math.SDouble
-import io.github.u2894638479.kotlinmcui.math.Scroller
-import io.github.u2894638479.kotlinmcui.math.VDouble
+import io.github.u2894638479.kotlinmcui.scroll.Scroller
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.rect.height
@@ -39,7 +31,7 @@ import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.*
 import kotlin.reflect.KMutableProperty0
 
-/** Which palette a [Controls.ColorEdit] shows. */
+/** Which palette a [Colors.ColorEdit] shows. */
 enum class ColorPicker { Square, Triangle }
 
 /** The channels the editor edits, in the order its strip shows them. [ColorProp] carries each one's name and reading. */
@@ -282,196 +274,255 @@ private abstract class Palette(
     }
 }
 
-context(ctx: DslContext)
-fun Controls.ColorSquare(
-    prop: StableRW<Color>,
-    modifier: Modifier = Modifier,
-    id: Any,
-): DslChild {
-    val hue = local(newChildId(id)) { prop.value.hDouble }
-    val unit = (ctx.scale * 2).px
-    return collect(object : Palette(
-        DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
-        prop,
-        local(newChildId(id)) { false },
-    ) {
-        /** The square is the whole rectangle, so its nearest point is a plain coerce. */
-        override fun pointAt(x: Double, y: Double, clamp: Boolean) =
-            if(x in 0.0..1.0 && y in 0.0..1.0) x to y else if(clamp) nearestOnUnitSquare(x,y) else null
-
-        override fun colorAt(x: Double, y: Double) = squareColor(hue.value,x,y,prop.value.aDouble)
-
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-        override fun <RP> render() {
-            reconcileDrag()
-            val color = prop.value
-            // The square has no hue of its own: it is the last chromatic one the colour had.
-            if(color.sDouble > 0.0) hue.value = color.hDouble
-            backend.renderQuad(instance.rect,Color.WHITE,Color.ofHSV(hue.value,1.0,1.0),Color.BLACK,Color.BLACK)
-            backend.paletteMarker(instance.rect,color.sDouble,1.0 - color.vDouble,unit)
-        }
-    })
-}
-
-/**
- * The classic hue triangle: the pure hue on top, white bottom-left, black bottom-right.
- *
- * Drawing needs the optional [DslBackendTriangles] capability; without it the picker still works
- * (pressing sets the colour) but nothing is drawn — [Controls.ColorEdit] hides the mode instead of
- * offering an invisible area.
- */
-context(ctx: DslContext)
-fun Controls.ColorTriangle(
-    prop: StableRW<Color>,
-    modifier: Modifier = Modifier,
-    id: Any,
-): DslChild {
-    val hue = local(newChildId(id)) { prop.value.hDouble }
-    val unit = (ctx.scale * 2).px
-    return collect(object : Palette(
-        DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
-        prop,
-        local(newChildId(id)) { false },
-    ) {
-        override fun pointAt(x: Double, y: Double, clamp: Boolean) = unitTrianglePoint(x,y,clamp)
-
-        override fun colorAt(x: Double, y: Double) = triangleColor(hue.value,x,y,prop.value.aDouble)
-
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-        override fun <RP> render() {
-            reconcileDrag()
-            val rect = instance.rect
-            val color = prop.value
-            if(color.sDouble > 0.0) hue.value = color.hDouble
-            backend.paletteTriangle(rect,Color.ofHSV(hue.value,1.0,1.0),Color.WHITE,Color.BLACK)
-            val (markerX,markerY) = triangleMarker(color)
-            backend.paletteMarker(rect,markerX,markerY,unit)
-        }
-    })
-}
-
 /** The hue circle is not linear in RGB, but each 60° sector between two primary hues is. */
 private const val HUE_SECTORS = 6
 
 /**
- * A hue bar: press or drag along it to move the hue, leaving saturation, value and alpha alone.
+ * The colour editing widgets, all built from the public DSL.
  *
- * Six quads, one per sector between neighbouring primary hues, are exact — the hue is nonlinear in
- * RGB over the whole circle, but linear inside a sector.
+ * The palettes and the composite editor share the [Palette] machinery; the channels are edited
+ * through the core colour slider, so [ColorProp] stays the one channel abstraction.
  */
-context(ctx: DslContext)
-fun Controls.ColorHue(
-    prop: StableRW<Color>,
-    modifier: Modifier = Modifier,
-    axis: Axis = Axis.Horizontal,
-    id: Any,
-): DslChild {
-    val unit = (ctx.scale * 2).px
-    return collect(object : Palette(
-        DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
-        prop,
-        local(newChildId(id)) { false },
-    ) {
-        override fun pointAt(x: Double, y: Double, clamp: Boolean): Pair<Double,Double>? {
-            // The bar is the whole rectangle: only one axis carries the hue, but a press beside the
-            // bar must not move it, so the point has to be on both axes.
-            if(!clamp && (x < 0 || x > 1 || y < 0 || y > 1)) return null
-            return if(axis == Axis.Horizontal) x.coerceIn(0.0,1.0) to 0.5
-            else 0.5 to y.coerceIn(0.0,1.0)
-        }
+object Colors {
 
-        override fun colorAt(x: Double, y: Double) = prop.value.changeHSV(h = if(axis == Axis.Horizontal) x else y)
+    context(ctx: DslContext)
+    fun ColorSquare(
+        prop: StableRW<Color>,
+        modifier: Modifier = Modifier,
+        id: Any,
+    ): DslChild {
+        val hue = local(newChildId(id)) { prop.value.hDouble }
+        val unit = (ctx.scale * 2).px
+        return collect(object : Palette(
+            DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
+            prop,
+            local(newChildId(id)) { false },
+        ) {
+            /** The square is the whole rectangle, so its nearest point is a plain coerce. */
+            override fun pointAt(x: Double, y: Double, clamp: Boolean) =
+                if(x in 0.0..1.0 && y in 0.0..1.0) x to y else if(clamp) nearestOnUnitSquare(x,y) else null
 
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-        override fun <RP> render() {
-            reconcileDrag()
-            val rect = instance.rect
-            repeat(HUE_SECTORS) { index ->
-                val from = index.toDouble() / HUE_SECTORS
-                val to = (index + 1).toDouble() / HUE_SECTORS
-                val begin = Color.ofHSV(from,1.0,1.0)
-                val end = Color.ofHSV(to,1.0,1.0)
-                // The corners are left-top, right-top, left-bottom, right-bottom, so the ramp has to
-                // run along the bar's own axis: along x when it is horizontal, along y otherwise.
-                if(axis == Axis.Horizontal) backend.renderQuad(
-                    Rect(rect.left + rect.width * from,rect.top,rect.left + rect.width * to,rect.bottom),
-                    begin,end,begin,end,
-                ) else backend.renderQuad(
-                    Rect(rect.left,rect.top + rect.height * from,rect.right,rect.top + rect.height * to),
-                    begin,begin,end,end,
+            override fun colorAt(x: Double, y: Double) = squareColor(hue.value,x,y,prop.value.aDouble)
+
+            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            override fun <RP> render() {
+                reconcileDrag()
+                val color = prop.value
+                // The square has no hue of its own: it is the last chromatic one the colour had.
+                if(color.sDouble > 0.0) hue.value = color.hDouble
+                backend.renderQuad(instance.rect,Color.WHITE,Color.ofHSV(hue.value,1.0,1.0),Color.BLACK,Color.BLACK)
+                backend.paletteMarker(instance.rect,color.sDouble,1.0 - color.vDouble,unit)
+            }
+        })
+    }
+
+    /**
+     * The classic hue triangle: the pure hue on top, white bottom-left, black bottom-right.
+     *
+     * Drawing needs the optional [DslBackendTriangles] capability; without it the picker still works
+     * (pressing sets the colour) but nothing is drawn — [ColorEdit] hides the mode instead of
+     * offering an invisible area.
+     */
+    context(ctx: DslContext)
+    fun ColorTriangle(
+        prop: StableRW<Color>,
+        modifier: Modifier = Modifier,
+        id: Any,
+    ): DslChild {
+        val hue = local(newChildId(id)) { prop.value.hDouble }
+        val unit = (ctx.scale * 2).px
+        return collect(object : Palette(
+            DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
+            prop,
+            local(newChildId(id)) { false },
+        ) {
+            override fun pointAt(x: Double, y: Double, clamp: Boolean) = unitTrianglePoint(x,y,clamp)
+
+            override fun colorAt(x: Double, y: Double) = triangleColor(hue.value,x,y,prop.value.aDouble)
+
+            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            override fun <RP> render() {
+                reconcileDrag()
+                val rect = instance.rect
+                val color = prop.value
+                if(color.sDouble > 0.0) hue.value = color.hDouble
+                backend.paletteTriangle(rect,Color.ofHSV(hue.value,1.0,1.0),Color.WHITE,Color.BLACK)
+                val (markerX,markerY) = triangleMarker(color)
+                backend.paletteMarker(rect,markerX,markerY,unit)
+            }
+        })
+    }
+
+    /**
+     * A hue bar: press or drag along it to move the hue, leaving saturation, value and alpha alone.
+     *
+     * Six quads, one per sector between neighbouring primary hues, are exact — the hue is nonlinear in
+     * RGB over the whole circle, but linear inside a sector.
+     */
+    context(ctx: DslContext)
+    fun ColorHue(
+        prop: StableRW<Color>,
+        modifier: Modifier = Modifier,
+        axis: Axis = Axis.Horizontal,
+        id: Any,
+    ): DslChild {
+        val unit = (ctx.scale * 2).px
+        return collect(object : Palette(
+            DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
+            prop,
+            local(newChildId(id)) { false },
+        ) {
+            override fun pointAt(x: Double, y: Double, clamp: Boolean): Pair<Double,Double>? {
+                // The bar is the whole rectangle: only one axis carries the hue, but a press beside the
+                // bar must not move it, so the point has to be on both axes.
+                if(!clamp && (x < 0 || x > 1 || y < 0 || y > 1)) return null
+                return if(axis == Axis.Horizontal) x.coerceIn(0.0,1.0) to 0.5
+                else 0.5 to y.coerceIn(0.0,1.0)
+            }
+
+            override fun colorAt(x: Double, y: Double) = prop.value.changeHSV(h = if(axis == Axis.Horizontal) x else y)
+
+            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            override fun <RP> render() {
+                reconcileDrag()
+                val rect = instance.rect
+                repeat(HUE_SECTORS) { index ->
+                    val from = index.toDouble() / HUE_SECTORS
+                    val to = (index + 1).toDouble() / HUE_SECTORS
+                    val begin = Color.ofHSV(from,1.0,1.0)
+                    val end = Color.ofHSV(to,1.0,1.0)
+                    // The corners are left-top, right-top, left-bottom, right-bottom, so the ramp has to
+                    // run along the bar's own axis: along x when it is horizontal, along y otherwise.
+                    if(axis == Axis.Horizontal) backend.renderQuad(
+                        Rect(rect.left + rect.width * from,rect.top,rect.left + rect.width * to,rect.bottom),
+                        begin,end,begin,end,
+                    ) else backend.renderQuad(
+                        Rect(rect.left,rect.top + rect.height * from,rect.right,rect.top + rect.height * to),
+                        begin,begin,end,end,
+                    )
+                }
+                val hue = prop.value.hDouble
+                backend.paletteMarker(
+                    rect,
+                    if(axis == Axis.Horizontal) hue else 0.5,
+                    if(axis == Axis.Horizontal) 0.5 else hue,
+                    unit,
                 )
             }
-            val hue = prop.value.hDouble
-            backend.paletteMarker(
-                rect,
-                if(axis == Axis.Horizontal) hue else 0.5,
-                if(axis == Axis.Horizontal) 0.5 else hue,
-                unit,
-            )
+        })
+    }
+
+    /**
+     * A triangular hue palette: the corners are the pure red, green and blue hues, and a point picks
+     * their mixture, so the perimeter sweeps the whole hue circle and the middle darkens.
+     *
+     * Unlike the square (one quad) and the bar (six quads) this needs the optional triangle-list
+     * capability, because a rectangle is never a triangle. What is drawn is the backend's linear
+     * interpolation between the three corners, which is exactly the mixture picked here — normalising
+     * it to full value instead (which would keep the middle bright) cannot be drawn that way at all.
+     */
+    context(ctx: DslContext)
+    fun ColorHueTriangle(
+        prop: StableRW<Color>,
+        modifier: Modifier = Modifier,
+        id: Any,
+    ): DslChild {
+        val unit = (ctx.scale * 2).px
+        return collect(object : Palette(
+            DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
+            prop,
+            local(newChildId(id)) { false },
+        ) {
+            override fun pointAt(x: Double, y: Double, clamp: Boolean) = unitTrianglePoint(x,y,clamp)
+
+            override fun colorAt(x: Double, y: Double): Color? {
+                val (red,green,blue) = triangleWeights(x,y) ?: return null
+                return Color(red,green,blue,prop.value.aDouble)
+            }
+
+            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            override fun <RP> render() {
+                reconcileDrag()
+                val rect = instance.rect
+                val alpha = prop.value.aDouble
+                backend.paletteTriangle(
+                    rect,
+                    Color(1.0,0.0,0.0,alpha),
+                    Color(0.0,1.0,0.0,alpha),
+                    Color(0.0,0.0,1.0,alpha),
+                )
+                val (x,y) = hueTriangleMarker(prop.value)
+                backend.paletteMarker(rect,x,y,unit)
+            }
+        })
+    }
+
+    /**
+     * The colour as text, live both ways: it shows the colour whenever nobody is typing in it, and
+     * applies every prefix that already parses while it is focused.
+     */
+    context(ctx: DslContext)
+    fun ColorText(
+        prop: StableRW<Color>,
+        modifier: Modifier = Modifier,
+        id: Any,
+    ): DslChild {
+        val text = local(newChildId(id)) { formatColorHex(prop.value) }
+        val field = EditableText(modifier,text,id = newChildId(id))
+        if(field.currentComponent().isFocused) parseColorHex(text.value)?.let { prop.value = it }
+        else text.value = formatColorHex(prop.value)
+        return field.editBoxBackground()
+    }
+
+    /**
+     * A full colour editor: a preview, a hexadecimal field, one of two palettes with the alpha
+     * alongside, and a strip with every channel.
+     *
+     * The palette is chosen with the button next to it and remembered per [id]; the triangle is only
+     * offered when the backend can draw one, because a picker nobody can see is worse than none.
+     */
+    context(ctx: DslContext)
+    fun ColorEdit(prop: KMutableProperty0<Color>, id: Any = prop) = ColorEdit(prop.property,ColorPicker.Square,id)
+
+    context(ctx: DslContext)
+    fun ColorEdit(
+        prop: StableRW<Color>,
+        picker: ColorPicker = ColorPicker.Square,
+        id: Any = prop,
+    ): DslChild {
+        val canDrawTriangle = dslBackend is DslBackendTriangles<*>
+        val mode = local(newChildId(id)) { if(canDrawTriangle) picker else ColorPicker.Square }
+        return Column(id = id) {
+            Row(Modifier.padding(2.scaled)) {
+                ColorRect(Modifier.size(20.scaled,20.scaled).padding(1.scaled),prop.value,newChildId(id))
+                ColorText(prop,Modifier.weight(1.0),newChildId(id))
+            }
+            Row(Modifier.padding(2.scaled)) {
+                when(mode.value) {
+                    ColorPicker.Square -> ColorSquare(prop,Modifier.size(80.scaled,80.scaled),newChildId(id))
+                    ColorPicker.Triangle -> ColorTriangle(prop,Modifier.size(80.scaled,80.scaled),newChildId(id))
+                }
+                // The palettes only move saturation and value, so the hue needs its own handle.
+                ColorHue(prop,Modifier.size(14.scaled,80.scaled),Axis.Vertical,newChildId(id))
+                Column(Modifier.padding(2.scaled)) {
+                    if(canDrawTriangle) Editors.EnumButton(
+                        mode,
+                        translate("kotlinmcui.widget.color.picker"),
+                        { translate("kotlinmcui.widget.color.${it.name.lowercase()}") },
+                        newChildId(id),
+                    )
+                    channelSlider(ADouble,prop,Axis.Horizontal,Modifier.width(60.scaled),newChildId(id),label = true)
+                }
+            }
+            val scrollerProp = local(newChildId(id)) { Scroller.empty }
+            ScrollableRow(Modifier.minHeight(50.scaled),scrollerProp) {
+                channels.forEach { channel ->
+                    channelSlider(channel,prop,Axis.Vertical,Modifier.width(20.scaled).padding(1.scaled),newChildId(id) + channel,label = false)
+                }
+            }
+            if(scrollerProp.value.isScrollable()) ScrollBar(Modifier.height(10.scaled),scrollerProp,Axis.Horizontal) {}
         }
-    })
-}
-
-/**
- * A triangular hue palette: the corners are the pure red, green and blue hues, and a point picks
- * their mixture, so the perimeter sweeps the whole hue circle and the middle darkens.
- *
- * Unlike the square (one quad) and the bar (six quads) this needs the optional triangle-list
- * capability, because a rectangle is never a triangle. What is drawn is the backend's linear
- * interpolation between the three corners, which is exactly the mixture picked here — normalising
- * it to full value instead (which would keep the middle bright) cannot be drawn that way at all.
- */
-context(ctx: DslContext)
-fun Controls.ColorHueTriangle(
-    prop: StableRW<Color>,
-    modifier: Modifier = Modifier,
-    id: Any,
-): DslChild {
-    val unit = (ctx.scale * 2).px
-    return collect(object : Palette(
-        DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx),
-        prop,
-        local(newChildId(id)) { false },
-    ) {
-        override fun pointAt(x: Double, y: Double, clamp: Boolean) = unitTrianglePoint(x,y,clamp)
-
-        override fun colorAt(x: Double, y: Double): Color? {
-            val (red,green,blue) = triangleWeights(x,y) ?: return null
-            return Color(red,green,blue,prop.value.aDouble)
-        }
-
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-        override fun <RP> render() {
-            reconcileDrag()
-            val rect = instance.rect
-            val alpha = prop.value.aDouble
-            backend.paletteTriangle(
-                rect,
-                Color(1.0,0.0,0.0,alpha),
-                Color(0.0,1.0,0.0,alpha),
-                Color(0.0,0.0,1.0,alpha),
-            )
-            val (x,y) = hueTriangleMarker(prop.value)
-            backend.paletteMarker(rect,x,y,unit)
-        }
-    })
-}
-
-/**
- * The colour as text, live both ways: it shows the colour whenever nobody is typing in it, and
- * applies every prefix that already parses while it is focused.
- */
-context(ctx: DslContext)
-fun Controls.ColorText(
-    prop: StableRW<Color>,
-    modifier: Modifier = Modifier,
-    id: Any,
-): DslChild {
-    val text = local(newChildId(id)) { formatColorHex(prop.value) }
-    val field = EditableText(modifier,text,id = newChildId(id))
-    if(field.currentComponent().isFocused) parseColorHex(text.value)?.let { prop.value = it }
-    else text.value = formatColorHex(prop.value)
-    return field.editBoxBackground()
+    }
 }
 
 /** A slider editing [channel] of [color]: [ColorProp] is the one channel abstraction, and the core colour slider already draws the ramp. */
@@ -489,54 +540,4 @@ private fun channelSlider(
         ": ".emit()
         channel.toString(color.value).emit()
     } else TextAutoFold { channel.name.take(1).emit() }
-}
-
-/**
- * A full colour editor: a preview, a hexadecimal field, one of two palettes with the alpha
- * alongside, and a strip with every channel.
- *
- * The palette is chosen with the button next to it and remembered per [id]; the triangle is only
- * offered when the backend can draw one, because a picker nobody can see is worse than none.
- */
-context(ctx: DslContext)
-fun Controls.ColorEdit(prop: KMutableProperty0<Color>, id: Any = prop) = ColorEdit(prop.property,ColorPicker.Square,id)
-
-context(ctx: DslContext)
-fun Controls.ColorEdit(
-    prop: StableRW<Color>,
-    picker: ColorPicker = ColorPicker.Square,
-    id: Any = prop,
-): DslChild {
-    val canDrawTriangle = dslBackend is DslBackendTriangles<*>
-    val mode = local(newChildId(id)) { if(canDrawTriangle) picker else ColorPicker.Square }
-    return Column(id = id) {
-        Row(Modifier.padding(2.scaled)) {
-            ColorRect(Modifier.size(20.scaled,20.scaled).padding(1.scaled),prop.value,newChildId(id))
-            ColorText(prop,Modifier.weight(1.0),newChildId(id))
-        }
-        Row(Modifier.padding(2.scaled)) {
-            when(mode.value) {
-                ColorPicker.Square -> ColorSquare(prop,Modifier.size(80.scaled,80.scaled),newChildId(id))
-                ColorPicker.Triangle -> ColorTriangle(prop,Modifier.size(80.scaled,80.scaled),newChildId(id))
-            }
-            // The palettes only move saturation and value, so the hue needs its own handle.
-            ColorHue(prop,Modifier.size(14.scaled,80.scaled),Axis.Vertical,newChildId(id))
-            Column(Modifier.padding(2.scaled)) {
-                if(canDrawTriangle) Controls.EnumButton(
-                    mode,
-                    translate("kotlinmcui.widget.color.picker"),
-                    { translate("kotlinmcui.widget.color.${it.name.lowercase()}") },
-                    newChildId(id),
-                )
-                channelSlider(ADouble,prop,Axis.Horizontal,Modifier.width(60.scaled),newChildId(id),label = true)
-            }
-        }
-        val scrollerProp = local(newChildId(id)) { Scroller.empty }
-        ScrollableRow(Modifier.minHeight(50.scaled),scrollerProp) {
-            channels.forEach { channel ->
-                channelSlider(channel,prop,Axis.Vertical,Modifier.width(20.scaled).padding(1.scaled),newChildId(id) + channel,label = false)
-            }
-        }
-        if(scrollerProp.value.isScrollable()) ScrollBar(Modifier.height(10.scaled),scrollerProp,Axis.Horizontal) {}
-    }
 }

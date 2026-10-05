@@ -10,7 +10,7 @@ parent: Components
 ## 一个完整的取色器
 ```kotlin
 val colorProp = local { Color(220,120,40) }
-Controls.ColorEdit(colorProp, id = "editor")
+Colors.ColorEdit(colorProp, id = "editor")
 ```
 
 从上到下依次是：预览色块与十六进制输入框；调色板、色相条与透明度；七个通道的竖向滑条（标着通道名的首字母 `r g b a h s v`），每条轨道上是该通道自己的颜色渐变。
@@ -22,17 +22,17 @@ Controls.ColorEdit(colorProp, id = "editor")
 ## 单独使用
 | 控件 | 作用 |
 | --- | --- |
-| `Controls.ColorSquare(prop, modifier, id)` | 色相固定的饱和度/明度方块 |
-| `Controls.ColorTriangle(prop, modifier, id)` | 顶角纯色相、左下白、右下黑的三角调色板；需要后端支持 |
-| `Controls.ColorHue(prop, modifier, axis, id)` | 色相条，只改色相，饱和度和明度保持不动；`axis` 决定横竖 |
-| `Controls.ColorHueTriangle(prop, modifier, id)` | 三角色相盘：三个角是纯红/绿/蓝，内部是它们的混合；需要后端支持 |
-| `Controls.ColorText(prop, modifier, id)` | 十六进制输入框 |
+| `Colors.ColorSquare(prop, modifier, id)` | 色相固定的饱和度/明度方块 |
+| `Colors.ColorTriangle(prop, modifier, id)` | 顶角纯色相、左下白、右下黑的三角调色板；需要后端支持 |
+| `Colors.ColorHue(prop, modifier, axis, id)` | 色相条，只改色相，饱和度和明度保持不动；`axis` 决定横竖 |
+| `Colors.ColorHueTriangle(prop, modifier, id)` | 三角色相盘：三个角是纯红/绿/蓝，内部是它们的混合；需要后端支持 |
+| `Colors.ColorText(prop, modifier, id)` | 十六进制输入框 |
 
-单通道不改颜色，用核心滑条的彩色重载即可（见[滑条](slider)）：`prop` 是 `math` 里的 `ColorProp`（`RDouble`、`ADouble`、`HDouble` …），轨道上画该通道自己的颜色渐变。
+单通道不改颜色，用核心滑条的彩色重载即可（见[滑条](slider)）：`prop` 是 `prop` 包里的 `ColorProp`（`RDouble`、`ADouble`、`HDouble` …），轨道上画该通道自己的颜色渐变。
 
 ```kotlin
 Row {
-    Controls.ColorSquare(prop, Modifier.size(80.scaled,80.scaled), "square")
+    Colors.ColorSquare(prop, Modifier.size(80.scaled,80.scaled), "square")
     Slider(Modifier.width(60.scaled), Axis.Horizontal, ADouble, prop, id = "alpha") {
         TextFlatten { "a: ".emit(); prop.value.aInt.toString().emit() }
     }

@@ -12,7 +12,7 @@ import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.size
-import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Presets
 import kotlin.test.*
 
 import org.junit.jupiter.api.AfterEach
@@ -147,7 +147,7 @@ class DslTreeTest {
     fun `decorator wraps component via change`() {
         val screen = buildScreen {
             Box {
-                Simple.Button("click") {}.clickable { /* no-op */ }
+                Presets.Button("click") {}.clickable { /* no-op */ }
             }
         }
         assertEquals(1, screen.children.size)
@@ -158,7 +158,7 @@ class DslTreeTest {
         val screen = buildScreen {
             Box {
                 Overlay(Modifier, OverlayAlign.FixRect(Rect(0.px, 0.px, 100.px, 100.px))) {
-                    Simple.Text { "overlay" }
+                    Presets.Text { "overlay" }
                 }
             }
         }

@@ -32,7 +32,7 @@ Slider(Modifier.width(120.scaled), Axis.Horizontal, ADouble, colorProp, id = "al
     TextFlatten { "a: ".emit(); colorProp.value.aInt.toString().emit() }
 }
 ```
-- `prop` 是 `math` 的 `ColorProp`：`RDouble`/`GDouble`/`BDouble`/`ADouble`（0-255 的通道）、`HDouble`/`SDouble`/`VDouble`（色相/饱和度/明度）。
+- 入参 `prop` 是一个 `ColorProp`（定义在 `prop` 包）：`RDouble`/`GDouble`/`BDouble`/`ADouble`（0-255 的通道）、`HDouble`/`SDouble`/`VDouble`（色相/饱和度/明度）。
 - `color` 是被编辑的颜色属性，滑块的填充色就是它当前的颜色。
 - 轨道上画的是该通道自己的颜色渐变——`HDouble` 是整圈彩虹，其它通道是两端颜色的渐变。
 - 键盘方向键按该通道走一步，移动是整数精确的：不会因为浮点误差把其它通道也带偏。

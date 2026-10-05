@@ -9,7 +9,7 @@ import io.github.u2894638479.kotlinmcui.dsl.newChildId
 import io.github.u2894638479.kotlinmcui.math.Measure.Companion.max
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
-import io.github.u2894638479.kotlinmcui.prop.mapView
+import io.github.u2894638479.kotlinmcui.container.mapView
 import io.github.u2894638479.kotlinmcui.container.DslScope
 import io.github.u2894638479.kotlinmcui.container.DslScopeImpl
 
@@ -17,9 +17,9 @@ import io.github.u2894638479.kotlinmcui.container.DslScopeImpl
  * Create a horizontal layout container (Row).
  *
  * Row arranges children along the horizontal axis with a configurable aligner.
- * Its `contentMinWidth` is the maximum of children's total width ([childrenSumWidth])
+ * Its `contentMinWidth` is the maximum of children's total width (`childrenSumWidth`)
  * and the modifier constraint; `contentMinHeight` is the maximum of children's
- * maximum height ([childrenMaxHeight]) and the modifier constraint.
+ * maximum height (`childrenMaxHeight`) and the modifier constraint.
  *
  * Overrides [DslScope]'s `viewHorizontal` and `viewVertical`:
  * - `viewHorizontal`: each child forms a single-row view (for per-column measurement)
@@ -33,8 +33,6 @@ import io.github.u2894638479.kotlinmcui.container.DslScopeImpl
  * @receiver [DslContext] The implicit DSL context.
  * @return The collected component (returned by [collect]).
  * @see DslScopeImpl
- * @see childrenSumWidth
- * @see childrenMaxHeight
  * @see Aligner
  */
 context(ctx: DslContext)

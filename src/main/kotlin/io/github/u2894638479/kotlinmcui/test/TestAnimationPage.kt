@@ -8,7 +8,7 @@ import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
 import io.github.u2894638479.kotlinmcui.dsl.ui.Spacer
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
-import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Presets
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
@@ -28,7 +28,7 @@ fun TestAnimationPage() = ScrollableColumn {
                 }
             }
         }
-        Simple.Button("test") {}.rotate(anim)
+        Presets.Button("test") {}.rotate(anim)
         Spacer {}
     }
 }

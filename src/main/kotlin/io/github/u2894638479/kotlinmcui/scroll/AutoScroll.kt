@@ -1,6 +1,7 @@
-package io.github.u2894638479.kotlinmcui.math
+package io.github.u2894638479.kotlinmcui.scroll
 
 import io.github.u2894638479.kotlinmcui.component.FocusSource
+import io.github.u2894638479.kotlinmcui.math.px
 
 /**
  * Automatic scroll-to-focus behaviour for scrollable containers.

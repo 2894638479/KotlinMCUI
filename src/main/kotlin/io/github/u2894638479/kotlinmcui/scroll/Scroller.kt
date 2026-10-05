@@ -1,20 +1,23 @@
-package io.github.u2894638479.kotlinmcui.math
+package io.github.u2894638479.kotlinmcui.scroll
 
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.outerMinSize
+import io.github.u2894638479.kotlinmcui.container.mapView
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.context.unscaled
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.math.Axis
+import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.align.Align
+import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.Bound
 import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.math.rect.size
 import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
-import io.github.u2894638479.kotlinmcui.prop.mapView
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import kotlin.collections.sumOf
 import kotlin.math.sign
@@ -146,7 +149,7 @@ interface Scroller : DslScaleContext, Bound {
  * Walks from the current [Scroller.scrollIndex] forward or backward,
  * only accessing items along the walk path.
  */
-fun Scroller.calculateIndex(scroll: Double): Pair<Int, Double> {
+internal fun Scroller.calculateIndex(scroll: Double): Pair<Int, Double> {
     val items = items.ifEmpty { return 0 to 0.0 }
     var index = scrollIndex.coerceIn(items.indices)
     var offset = offset
@@ -165,7 +168,7 @@ fun Scroller.calculateIndex(scroll: Double): Pair<Int, Double> {
 }
 
 /** Update [Scroller.scrollIndex] and [Scroller.offset], return the visible range. */
-fun Scroller.updateIndex(): IntRange {
+internal fun Scroller.updateIndex(): IntRange {
     val s = scroll
     val (beginIndex, offset) = calculateIndex(s)
     scrollIndex = beginIndex
@@ -182,7 +185,7 @@ fun Scroller.updateIndex(): IntRange {
 }
 
 /** Clamp [Scroller.rawScroll] to valid range and sync [Scroller.scroll] to it. */
-fun Scroller.updateScroll() {
+internal fun Scroller.updateScroll() {
     val (index, offset) = calculateIndex(rawScroll)
     val viewport = size.unscaled
     if (index == 0 && rawScroll < offset) rawScroll = offset

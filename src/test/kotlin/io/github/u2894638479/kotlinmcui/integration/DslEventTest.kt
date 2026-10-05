@@ -14,7 +14,7 @@ import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.size
-import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Presets
 import java.nio.file.Path
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach
@@ -43,7 +43,7 @@ class DslEventTest {
     @Test
     fun `clickable component consumes mouseDown`() {
         val screen = buildScreen {
-            Simple.Button("click") {}.clickable { /* no-op */ }
+            Presets.Button("click") {}.clickable { /* no-op */ }
         }
         val button = screen.children[0]
         val pos = Position(button.rect.left + 1.px, button.rect.top + 1.px)
@@ -59,7 +59,7 @@ class DslEventTest {
     fun `click outside component does not trigger`() {
         var clicked = false
         val screen = buildScreen {
-            Simple.Button("click") {}.clickable { clicked = true }
+            Presets.Button("click") {}.clickable { clicked = true }
         }
         val button = screen.children[0]
 
@@ -104,8 +104,8 @@ class DslEventTest {
     fun `tab navigation finds next focusable component`() {
         val screen = buildScreen {
             Row {
-                Simple.Button("a") {}.clickable {}
-                Simple.Button("b") {}.clickable {}
+                Presets.Button("a") {}.clickable {}
+                Presets.Button("b") {}.clickable {}
             }
         }
         val row = screen.children[0]
@@ -122,7 +122,7 @@ class DslEventTest {
     @Test
     fun `scroll event passes through when unhandled`() {
         val screen = buildScreen {
-            Simple.Button("scroll") {}.clickable {}
+            Presets.Button("scroll") {}.clickable {}
         }
         val button = screen.children[0]
         val center = Position(

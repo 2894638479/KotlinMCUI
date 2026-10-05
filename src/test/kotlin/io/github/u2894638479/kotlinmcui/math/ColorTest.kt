@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.math
 
+import io.github.u2894638479.kotlinmcui.prop.*
 import kotlin.math.abs
 import kotlin.test.*
 

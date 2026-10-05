@@ -15,7 +15,7 @@ import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.size
-import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Presets
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -28,11 +28,11 @@ import kotlin.math.sin
 context(ctx: DslContext)
 fun TestPolygonPage() {
     Column(Modifier.padding(10.scaled)) {
-        Simple.Text { "polygon: hexagon" }
+        Presets.Text { "polygon: hexagon" }
         Row(Modifier.size(240.scaled, 110.scaled)) {
             Polygon(Modifier.size(100.scaled, 100.scaled), "hexagon", 6)
         }
-        Simple.Text { "polygon: triangle" }
+        Presets.Text { "polygon: triangle" }
         Row(Modifier.size(240.scaled, 70.scaled)) {
             Polygon(Modifier.size(60.scaled, 60.scaled), "triangle", 3)
         }

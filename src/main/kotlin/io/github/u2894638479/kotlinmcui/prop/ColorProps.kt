@@ -1,8 +1,6 @@
-package io.github.u2894638479.kotlinmcui.math
+package io.github.u2894638479.kotlinmcui.prop
 
-import io.github.u2894638479.kotlinmcui.prop.StableRO
-import io.github.u2894638479.kotlinmcui.prop.StableRW
-import io.github.u2894638479.kotlinmcui.prop.value
+import io.github.u2894638479.kotlinmcui.math.Color
 
 sealed interface ColorProp<T> {
     fun get(color: Color): T

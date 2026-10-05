@@ -13,7 +13,7 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.size
 import io.github.u2894638479.kotlinmcui.modifier.weight
-import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Presets
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -107,7 +107,7 @@ class DslLayoutTest {
     @Test
     fun `Button has nonzero size`() {
         val screen = buildScreen {
-            Button { Simple.Text { "hello" } }
+            Button { Presets.Text { "hello" } }
         }
         val button = screen.children[0]
         assertTrue(button.rect.width > 0.px)

@@ -7,7 +7,6 @@ import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.prop.PropertyLifeScope
 import io.github.u2894638479.kotlinmcui.prop.PropertyLifeScope.TimedProperty
-import io.github.u2894638479.kotlinmcui.test.DebugOverlay
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 
 /**

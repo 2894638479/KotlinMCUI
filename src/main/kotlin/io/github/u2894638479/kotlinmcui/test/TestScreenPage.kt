@@ -13,7 +13,7 @@ import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.weight
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
-import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Presets
 
 context(ctx: DslContext)
 fun TestScreenPage() = Column {
@@ -21,9 +21,9 @@ fun TestScreenPage() = Column {
 
     context(ctx:DslContext)
     fun CounterModify(id:Any) = Row(id = id) {
-        Simple.Button("counter++") { counter++ }
-        Simple.Text { "counter: $counter" }
-        Simple.Button("conter--") { counter-- }
+        Presets.Button("counter++") { counter++ }
+        Presets.Text { "counter: $counter" }
+        Presets.Button("conter--") { counter-- }
     }
 
     CounterModify {}
@@ -33,7 +33,7 @@ fun TestScreenPage() = Column {
     }.clickable {
         showScreen("Screen1") {
             Column {
-                Simple.Button("back") {
+                Presets.Button("back") {
                     closeScreen()
                 }
                 TextFlatten { "variable from prev screen:".emit() }

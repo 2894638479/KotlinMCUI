@@ -11,15 +11,15 @@ import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.integration.TestBackend
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
-import io.github.u2894638479.kotlinmcui.math.HDouble
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.RDouble
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.rect.height
 import io.github.u2894638479.kotlinmcui.math.rect.width
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.size
+import io.github.u2894638479.kotlinmcui.prop.HDouble
+import io.github.u2894638479.kotlinmcui.prop.RDouble
 import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.value
 import kotlin.math.abs
@@ -149,7 +149,7 @@ class ColorEditTest {
         val screen = buildScreen {
             val p = local { Color.WHITE }
             prop = p
-            Controls.ColorSquare(p,Modifier.size(100.px,100.px),"square")
+            Colors.ColorSquare(p,Modifier.size(100.px,100.px),"square")
         }
         val square = screen.children.single()
         val rightTop = Position(square.rect.right - 1.px,square.rect.top + 1.px)
@@ -203,7 +203,7 @@ class ColorEditTest {
         val screen = buildScreen {
             val p = local { Color.WHITE }
             prop = p
-            Controls.ColorSquare(p,Modifier.size(50.px,50.px),"square")
+            Colors.ColorSquare(p,Modifier.size(50.px,50.px),"square")
         }
         val square = screen.children.single()
         val start = assertNotNull(prop).value
@@ -232,7 +232,7 @@ class ColorEditTest {
         val screen = buildScreen {
             val p = local { Color.WHITE }
             prop = p
-            Controls.ColorHueTriangle(p,Modifier.size(60.px,60.px),"hue-triangle")
+            Colors.ColorHueTriangle(p,Modifier.size(60.px,60.px),"hue-triangle")
         }
         val triangle = screen.children.single()
         fun press(x: Measure,y: Measure) = context(KeyModifiers(),Position(x,y)) {
@@ -265,7 +265,7 @@ class ColorEditTest {
         val screen = buildScreen {
             val p = local { start }
             prop = p
-            Controls.ColorHue(p,Modifier.size(20.px,80.px),Axis.Vertical,"hue")
+            Colors.ColorHue(p,Modifier.size(20.px,80.px),Axis.Vertical,"hue")
         }
         val bar = screen.children.single()
         // The same height as the bar, but well to its left: outside the widget altogether.
@@ -283,7 +283,7 @@ class ColorEditTest {
         val screen = buildScreen {
             val p = local { start }
             prop = p
-            Controls.ColorHue(p,Modifier.size(20.px,80.px),Axis.Vertical,"hue")
+            Colors.ColorHue(p,Modifier.size(20.px,80.px),Axis.Vertical,"hue")
         }
         val bar = screen.children.single()
         val quarter = Position(bar.rect.left + bar.rect.width / 2,bar.rect.top + bar.rect.height / 4)
@@ -302,7 +302,7 @@ class ColorEditTest {
         val screen = buildScreen {
             val p = local { start }
             prop = p
-            Controls.ColorHue(p,Modifier.size(80.px,20.px),Axis.Horizontal,"hue")
+            Colors.ColorHue(p,Modifier.size(80.px,20.px),Axis.Horizontal,"hue")
         }
         val bar = screen.children.single()
         val above = Position(bar.rect.left + bar.rect.width / 2,bar.rect.top - 30.px)
@@ -319,7 +319,7 @@ class ColorEditTest {
         val screen = buildScreen {
             val p = local { start }
             prop = p
-            Controls.ColorHue(p,Modifier.size(60.px,20.px),Axis.Horizontal,"hue")
+            Colors.ColorHue(p,Modifier.size(60.px,20.px),Axis.Horizontal,"hue")
         }
         val bar = screen.children.single()
         val third = Position(bar.rect.left + bar.rect.width / 3,bar.rect.top + bar.rect.height / 2)
@@ -338,7 +338,7 @@ class ColorEditTest {
         val screen = buildScreen {
             val p = local { start }
             prop = p
-            Controls.ColorEdit(p,ColorPicker.Triangle,"edit")
+            Colors.ColorEdit(p,ColorPicker.Triangle,"edit")
         }
         TestBackend.renderFrame(screen)
         // The test backend cannot draw a triangle, so the editor falls back to the square rather

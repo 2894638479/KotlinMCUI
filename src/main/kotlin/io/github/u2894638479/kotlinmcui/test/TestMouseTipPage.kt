@@ -12,9 +12,9 @@ import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import io.github.u2894638479.kotlinmcui.widget.Controls
-import io.github.u2894638479.kotlinmcui.widget.Simple
-import io.github.u2894638479.kotlinmcui.widget.Simple.simpleTooltip
+import io.github.u2894638479.kotlinmcui.widget.Editors
+import io.github.u2894638479.kotlinmcui.widget.Presets
+import io.github.u2894638479.kotlinmcui.widget.Presets.styledTooltip
 
 
 context(ctx: DslContext)
@@ -31,27 +31,27 @@ fun TestMouseTipPage() = Column {
         Spacer {}.containerBackground()
     }
     Row {
-        Controls.EnumButton(alignH,"horizontal") {}
-        Controls.EnumButton(alignV,"vertical") {}
+        Editors.EnumButton(alignH,"horizontal") {}
+        Editors.EnumButton(alignV,"vertical") {}
     }
     Row {
-        Controls.Slider(width,0..200,"width") {}
-        Controls.Slider(height,0..200,"height") {}
+        Editors.Slider(width,0..200,"width") {}
+        Editors.Slider(height,0..200,"height") {}
     }
-    Controls.BoolButton(tip2,"tip2") {}
+    Editors.BoolButton(tip2,"tip2") {}
     var tooltipCounter by local { 2 }
 
-    Simple.Button("this button has a tooltip") { tooltipCounter++ }.simpleTooltip("Tooltip Test: $tooltipCounter") {
+    Presets.Button("this button has a tooltip") { tooltipCounter++ }.styledTooltip("Tooltip Test: $tooltipCounter") {
         Column {
-            Simple.Button("this is clickable now!"){ tooltipCounter-- }
+            Presets.Button("this is clickable now!"){ tooltipCounter-- }
             TextAutoFold { "123123123afdssssssssssssssssssdsaff".emit() }
         }
     }
-    Simple.Button("this button has a tooltip") {}.simpleTooltip("ScrollableColumn: ") {
+    Presets.Button("this button has a tooltip") {}.styledTooltip("ScrollableColumn: ") {
         Column {
             ScrollableColumn(Modifier.height(100.scaled)) {
                 (1..10).forEachWithId {
-                    Simple.Button("Button $it") {}
+                    Presets.Button("Button $it") {}
                 }
             }
         }

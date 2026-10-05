@@ -1,5 +1,7 @@
-package io.github.u2894638479.kotlinmcui.math
+package io.github.u2894638479.kotlinmcui.prop
 
+import io.github.u2894638479.kotlinmcui.math.Color
+import io.github.u2894638479.kotlinmcui.prop.*
 import kotlin.test.Test
 import kotlin.test.assertEquals
 

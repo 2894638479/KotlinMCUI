@@ -1,38 +1,15 @@
 package io.github.u2894638479.kotlinmcui.test
 
+import io.github.u2894638479.kotlinmcui.container.DebugOverlay
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.dsl.decorator.background
 import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
 import io.github.u2894638479.kotlinmcui.dsl.ui.TextFlatten
-import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
-import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.align
 import io.github.u2894638479.kotlinmcui.modifier.width
-
-interface DebugOverlay {
-    val screenTitle: String
-    val guiScale: Double
-    val localProps: Int
-    val stableProps: Int
-    val staticProps: Int
-    val frameRate: Double
-    val frameTimeMs: Double
-    val frameRateSmooth: Double
-    val frameTimeMsSmooth: Double
-    val frameRenderTimeMs: Double
-    val dslRenderTimeMs: Double
-    val backendRenderTimeMs: Double
-    val components: Int
-    val conflictId: DslId?
-    val focusedId: DslId?
-    val hoveredId: DslId?
-    val focusedDepth: Int
-    val hoveredDepth: Int
-    val mouse: Position
-}
 
 context(ctx: DslContext)
 fun DebugOverlay.content(alpha: Double = 0.5) = ScrollableColumn {

@@ -1,7 +1,9 @@
-package io.github.u2894638479.kotlinmcui.math
+package io.github.u2894638479.kotlinmcui.scroll
 
 import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.align.Align
+import io.github.u2894638479.kotlinmcui.math.px
 import kotlin.test.*
 
 class ScrollerTest {

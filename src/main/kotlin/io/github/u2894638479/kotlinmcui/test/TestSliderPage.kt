@@ -8,6 +8,13 @@ import io.github.u2894638479.kotlinmcui.math.*
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.height
 import io.github.u2894638479.kotlinmcui.modifier.width
+import io.github.u2894638479.kotlinmcui.prop.ADouble
+import io.github.u2894638479.kotlinmcui.prop.BDouble
+import io.github.u2894638479.kotlinmcui.prop.GDouble
+import io.github.u2894638479.kotlinmcui.prop.HDouble
+import io.github.u2894638479.kotlinmcui.prop.RDouble
+import io.github.u2894638479.kotlinmcui.prop.SDouble
+import io.github.u2894638479.kotlinmcui.prop.VDouble
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.remap
 

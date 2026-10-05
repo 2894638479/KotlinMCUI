@@ -12,7 +12,6 @@ import io.github.u2894638479.kotlinmcui.dsl.static
 import io.github.u2894638479.kotlinmcui.dsl.translate
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.math.Color
-import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
@@ -24,10 +23,11 @@ import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
+import io.github.u2894638479.kotlinmcui.scroll.Scroller
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
-import io.github.u2894638479.kotlinmcui.widget.Controls
-import io.github.u2894638479.kotlinmcui.widget.Simple
-import io.github.u2894638479.kotlinmcui.widget.Simple.simpleTooltip
+import io.github.u2894638479.kotlinmcui.widget.Editors
+import io.github.u2894638479.kotlinmcui.widget.Presets
+import io.github.u2894638479.kotlinmcui.widget.Presets.styledTooltip
 
 context(ctx: DslContext)
 fun DslEntryPage() = Row {
@@ -39,8 +39,8 @@ fun DslEntryPage() = Row {
         val showDetails = local { false }
         Row {
             Spacer(Modifier weight Double.MAX_VALUE) {}
-            Controls.BoolButton(showCodeEntry,translate("kotlinmcui.entrypage.show_code_entry")) {}
-            Controls.BoolButton(showDetails,translate("kotlinmcui.entrypage.show_details")) {}
+            Editors.BoolButton(showCodeEntry,translate("kotlinmcui.entrypage.show_code_entry")) {}
+            Editors.BoolButton(showDetails,translate("kotlinmcui.entrypage.show_details")) {}
         }
         DslEntryLoader.entries.forEachWithId { (it, flags) ->
             if(!showCodeEntry.value && !flags.isGui && !flags.isOverlay) return@forEachWithId
@@ -65,9 +65,9 @@ fun DslEntryPage() = Row {
                         override fun getValue() = DslEntryLoader.isOverlayEnabled(it)
                         override fun setValue(value: Boolean) { DslEntryLoader.setOverlayEnabled(it,value) }
                     }
-                    Controls.BoolButton(prop,translate("kotlinmcui.entrypage.overlay")) {}
+                    Editors.BoolButton(prop,translate("kotlinmcui.entrypage.overlay")) {}
                     if(prop.getValue()) {
-                        Simple.Button("bring to top",DslEntryLoader.enabledOverlays.firstOrNull() !== it) {
+                        Presets.Button("bring to top",DslEntryLoader.enabledOverlays.firstOrNull() !== it) {
                             DslEntryLoader.bringOverlayToTop(it)
                         }
                     }
@@ -76,10 +76,10 @@ fun DslEntryPage() = Row {
                 showScreen(it.name) {
                     (it as DslEntryGui).content()
                 }
-            }.simpleTooltip {
+            }.styledTooltip {
                 if(!showDetails.value) {
                     TextFlatten { it.name.emit() }
-                    return@simpleTooltip
+                    return@styledTooltip
                 }
                 val className by static.cached(it) {
                     it.javaClass.canonicalName?.removePrefix(it.javaClass.`package`?.name?.plus(".") ?: "")
@@ -125,7 +125,7 @@ fun DslEntryPage() = Row {
                     "  ".emit()
                     broken.reason.emit(Color(200,200,200))
                 }
-            }.simpleTooltip {
+            }.styledTooltip {
                 TextAutoFold {
                     broken.className.emit()
                     enter()

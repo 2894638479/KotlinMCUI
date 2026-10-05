@@ -16,7 +16,7 @@ import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.size
-import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Presets
 import java.nio.file.Path
 import kotlin.test.*
 import org.junit.jupiter.api.AfterEach
@@ -87,7 +87,7 @@ class DslDecoratorTest {
     fun `tooltip sets tooltip function`() {
         val screen = buildScreen {
             val spacer = Spacer(Modifier.size(50.px, 50.px), id = "tt")
-            spacer.tooltip { Simple.Text { "tip" } }
+            spacer.tooltip { Presets.Text { "tip" } }
         }
         val child = screen.children[0]
         assertNotNull(child.tooltip)
@@ -108,7 +108,7 @@ class DslDecoratorTest {
     @Test
     fun `buttonBackground decorator adds narration`() {
         val screen = buildScreen {
-            val box = Box { Simple.Text { "btn" } }
+            val box = Box { Presets.Text { "btn" } }
             box.buttonBackground()
         }
         val child = screen.children[0]

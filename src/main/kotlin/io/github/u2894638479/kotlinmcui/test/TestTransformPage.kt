@@ -14,7 +14,7 @@ import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import io.github.u2894638479.kotlinmcui.modifier.size
-import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Presets
 
 /**
  * Exercises the transform pipeline, including the third row of the pose matrix that only
@@ -26,21 +26,21 @@ import io.github.u2894638479.kotlinmcui.widget.Simple
 context(ctx: DslContext)
 fun TestTransformPage() {
     Column(Modifier.padding(10.scaled)) {
-        Simple.Text { "rotate" }
+        Presets.Text { "rotate" }
         Row(Modifier.size(240.scaled, 30.scaled)) {
             ColorRect(Modifier.size(80.scaled, 30.scaled), Color.RED) {}
             ColorRect(Modifier.size(80.scaled, 30.scaled), Color.GREEN) {}
             ColorRect(Modifier.size(80.scaled, 30.scaled), Color.BLUE) {}
         }.rotate(0.35)
 
-        Simple.Text { "perspective" }
+        Presets.Text { "perspective" }
         Row(Modifier.size(240.scaled, 30.scaled)) {
             ColorRect(Modifier.size(80.scaled, 30.scaled), Color.RED) {}
             ColorRect(Modifier.size(80.scaled, 30.scaled), Color.GREEN) {}
             ColorRect(Modifier.size(80.scaled, 30.scaled), Color.BLUE) {}
         }.perspective(0.002, 0.0008)
 
-        Simple.Text { "scale + move" }
+        Presets.Text { "scale + move" }
         Row(Modifier.size(240.scaled, 30.scaled)) {
             ColorRect(Modifier.size(80.scaled, 30.scaled), Color.RED) {}
             ColorRect(Modifier.size(80.scaled, 30.scaled), Color.GREEN) {}

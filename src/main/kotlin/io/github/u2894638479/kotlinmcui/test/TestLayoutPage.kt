@@ -20,7 +20,7 @@ import io.github.u2894638479.kotlinmcui.prop.StableRO
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
-import io.github.u2894638479.kotlinmcui.widget.Simple
+import io.github.u2894638479.kotlinmcui.widget.Presets
 
 context(ctx: DslContext)
 fun TestLayoutPage() = Column {
@@ -158,7 +158,7 @@ fun TestLayoutPage() = Column {
     var chosen by local { map.entries.first() }
     Row(Modifier.weight(0.0)) {
         map.entries.forEachWithId {
-            Simple.Button(it.key,chosen != it) { chosen = it }
+            Presets.Button(it.key,chosen != it) { chosen = it }
         }
     }
     ShrinkBox {

@@ -17,7 +17,7 @@ import io.github.u2894638479.kotlinmcui.container.DslChild
 import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 import kotlinx.coroutines.CoroutineScope
 
-object Simple {
+object Presets {
     context(ctx: DslContext)
     fun Splitter(size:Measure = 1.scaled, padding: Measure = 3.scaled, id: Any) =
         ColorRect(Modifier.minSize(size,size).weight(0.0).padding(padding), Color(180,180,180).mixed,id)
@@ -34,15 +34,15 @@ object Simple {
     fun Text(id:Any? = null, text:()-> String) = TextFlatten(id = id ?: text::class) { text().emit() }
 
     context(ctx: DslContext)
-    fun DslChild.simpleTooltip(content: DslFunction) = tooltip {
+    fun DslChild.styledTooltip(content: DslFunction) = tooltip {
         Box(Modifier.padding(10.scaled),id = null) { content() }.tooltipBackground()
     }
 
     context(ctx: DslContext)
-    fun DslChild.simpleTooltip(text: String) = simpleTooltip { Text { text } }
+    fun DslChild.styledTooltip(text: String) = styledTooltip { Text { text } }
 
     context(ctx: DslContext)
-    fun DslChild.simpleTooltip(title: String,content: DslFunction) = tooltip {
+    fun DslChild.styledTooltip(title: String,content: DslFunction) = tooltip {
         Column(Modifier.padding(10.scaled)) {
             TextFlatten(Modifier.padding(h = 10.scaled)) { title.emit(Color.BLUE,18.scaled, DslCharStyle().italic.shadowed) }
             Splitter {}
@@ -51,5 +51,5 @@ object Simple {
     }
 
     context(ctx: DslContext)
-    fun DslChild.simpleTooltip(title: String,text: String) = simpleTooltip(title) { Text { text } }
+    fun DslChild.styledTooltip(title: String,text: String) = styledTooltip(title) { Text { text } }
 }

@@ -6,12 +6,12 @@ import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.decorator.clickable
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
-import io.github.u2894638479.kotlinmcui.math.ScrollConstraint
-import io.github.u2894638479.kotlinmcui.math.AutoScroll
-import io.github.u2894638479.kotlinmcui.math.Scroller
 import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
+import io.github.u2894638479.kotlinmcui.scroll.AutoScroll
+import io.github.u2894638479.kotlinmcui.scroll.ScrollConstraint
+import io.github.u2894638479.kotlinmcui.scroll.Scroller
 
 context(ctx: DslContext)
 fun TestScrollPage() = Row {
