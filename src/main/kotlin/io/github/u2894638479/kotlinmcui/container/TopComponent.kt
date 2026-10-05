@@ -123,10 +123,34 @@ object TopComponent: DslScope {
         return false
     }
 
+    /**
+     * How many frames the platform has rendered through the framework. It stays zero until the
+     * game is past its loading overlay, because the backend does not call in before that - which
+     * makes this both "the platform can show a screen now" and the frame clock a preview session
+     * waits on.
+     */
+    @Volatile
+    internal var frameIndex = 0L
+        private set
+
+    /** The last exception a page threw while rendering, kept so a preview session can report it. */
+    @Volatile
+    internal var renderFailure: Throwable? = null
+
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
+        frameIndex++
         children.forEach { it.rect copyFrom rect }
-        children.asReversed().forEach { it.render() }
+        children.asReversed().forEach { child ->
+            try {
+                child.render()
+            } catch(e: Throwable) {
+                // Recorded for the preview session and rethrown: a development tool watching must
+                // not change what the platform does with a broken page.
+                renderFailure = e
+                throw e
+            }
+        }
         val hovered = instance.testHit(mouse) { it.takeIf { it.highlightable } }
         this.hovered = hovered?.identity
         mouseNarration = hovered?.narration ?: instance.testHit(mouse) { it.takeIf { it.narratable } }?.narration

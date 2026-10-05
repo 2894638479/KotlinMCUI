@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.*
+import io.github.u2894638479.kotlinmcui.container.DslChild
 import io.github.u2894638479.kotlinmcui.container.DslDataStore
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.container.TopComponent
@@ -56,6 +57,25 @@ internal object TestBackend : DslBackend<Unit, Unit>,
             TopComponent.children.remove(child)
         }
     }
+
+    /** Screenshot names the preview session asked for, in order. */
+    val captures get() = TestUtils.captures
+
+    /** The exit code the preview session asked for, or null while the game has not been stopped. */
+    val quitCode get() = TestUtils.quitCode
+
+    /** Makes the next capture fail, so the "no screenshot was written" path can be exercised. */
+    var failCapture
+        get() = TestUtils.failCapture
+        set(value) { TestUtils.failCapture = value }
+
+    /** Forget what an earlier case asked the preview session to do, and unmount what it opened. */
+    fun resetPreview() {
+        TestUtils.captures.clear()
+        TestUtils.quitCode = null
+        TestUtils.failCapture = false
+        TestScreenFactory.unmount()
+    }
 }
 
 // ── Renderer ─────────────────────────────────────────────────────────────────
@@ -94,12 +114,27 @@ private object TestRenderer : DslBackendRenderer<Unit> {
 // ── Screen factory ───────────────────────────────────────────────────────────
 
 private object TestScreenFactory : DslBackendScreenFactory<Unit> {
+    private var mounted: DslChild? = null
+
     override fun create(title: String, dslFunction: DslFunction) = object : DslBackendScreenHolder<Unit> {
         private val store = DslDataStore(TestBackend, title, {}, dslFunction)
-        override fun show() {}
+        // Showing a screen mounts it, the way a real platform does when the screen is added: a page
+        // that is never mounted is never built, and so never gets to fail.
+        override fun show() { mount(dslScreen) }
         override val screen: Unit = Unit
         // The data store has already built its screen; reusing it avoids a second one.
         override val dslScreen = store.dslScreen
+    }
+
+    private fun mount(screen: DslScreen) {
+        unmount()
+        mounted = TopComponent.children.collect(screen)
+    }
+
+    /** Unmount whatever a case opened: a leftover child would be rendered by every later case. */
+    fun unmount() {
+        mounted?.let { TopComponent.children.remove(it) }
+        mounted = null
     }
 }
 
@@ -117,6 +152,26 @@ private object TestUtils : DslBackendUtils {
     // UI state is confined to the thread that builds it, so "the main thread"
     // dispatcher here must run continuations on the caller rather than a pool.
     override val mainDispatcher: CoroutineDispatcher = Dispatchers.Unconfined
+
+    /** Capture requests, recorded so a test can assert what the preview session asked for. */
+    val captures = mutableListOf<String>()
+
+    /** The exit code the preview session asked for; a test cannot let the game really stop. */
+    var quitCode: Int? = null
+
+    /** Makes the next capture fail, so the "no screenshot was written" path can be exercised. */
+    var failCapture = false
+
+    override suspend fun capture(fileName: String): File? {
+        captures += fileName
+        if(failCapture) return null
+        val directory = File("build","test-captures").apply { mkdirs() }
+        return File(directory,fileName).apply { writeBytes(byteArrayOf(1,2,3)) }
+    }
+
+    override fun quit(exitCode: Int) {
+        quitCode = exitCode
+    }
 }
 
 // ── Metadata ─────────────────────────────────────────────────────────────────

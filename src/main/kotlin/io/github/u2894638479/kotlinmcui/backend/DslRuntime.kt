@@ -51,6 +51,8 @@ object DslRuntime {
         check(installed) { "DslRuntime.platformReady was called before DslRuntime.install" }
         check(dslBackendProvider == null) { "DslRuntime.platformReady was already called" }
         dslBackendProvider = backend
+        // A platform that asked for a page to be shown gets it now; otherwise this does nothing.
+        DslPreview.start()
     }
 
     /**

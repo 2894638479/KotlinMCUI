@@ -49,4 +49,16 @@ interface DslBackendUtils {
 
     /** The main/UI thread dispatcher for launching coroutines. */
     val mainDispatcher: CoroutineDispatcher
+
+    /**
+     * Write the frame that is on screen now to [fileName] in the platform's own screenshot
+     * directory, and return the file it actually wrote, or `null` when it could not.
+     *
+     * Suspends until the file exists: platforms capture on the render thread and encode on a
+     * background one, so the call is not over when the pixels have been read.
+     */
+    suspend fun capture(fileName: String): File?
+
+    /** Stop the game, passing [exitCode] to the host where the platform can. */
+    fun quit(exitCode: Int)
 }
