@@ -60,6 +60,9 @@ nav_order: 7
 | 组件用**接口委托**组合行为 | 可以在不修改类的情况下"覆写" `final` 类的成员 |
 | 全局焦点/悬停/IME 状态放在单例根节点 | 这些状态本来就是进程级的，不属于某个 Screen |
 | 用 toolchain 21 编译，但**链接 JDK 8 的 API 面**（`-Xjdk-release=1.8`） | 库要在旧版 Minecraft 的 Java 8 运行时上加载；只设 `jvmTarget` 不会阻止误用 JDK 9+ 的 API——那种代码编译得过，到玩家那儿才 `NoSuchMethodError` |
+| 公开面按**判据**定，而不是按仓库内引用数 | 保持 public 的理由只有：① 用户要实现/继承的公开类型的契约成员；② 出现在公开签名里；③ 公开原语的对称一半或配对操作；④ 正式文档（`docs/`，不含 `docs/dev/`）教用户调用；⑤ 公开扩展点必需的原材料。对用户自己实现的类型而言"仓库内零引用"是常态，所以引用数既不能证明该收窄、也不能证明该公开。向下还有两级：`internal`（本模块，测试也算消费者）与 `private`（仅本文件）；一个声明只有本文件在用就不该停在 `internal`。 |
+
+一个刻意留下的例外：`PropertyLifeScope` 是公开类型但构造器是 `internal`——用户只会通过 `local`/`stable`/`static` 拿到框架建好的实例，自己构造没有意义；它的 `clear()`/`clearOutdated()` 也保持 `internal`，因为 `clear()` 会清掉跨模组共享的 static 表。
 
 ## 模块地图
 | 包 | 职责 |
