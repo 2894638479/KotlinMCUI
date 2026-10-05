@@ -4,12 +4,12 @@ import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.Position
 
 /**
- * The per-frame performance and state readings a screen's debug overlay shows.
+ * The per-frame performance and state metrics a screen's debug overlay shows.
  *
- * This is the contract only: how the readings are drawn is a demo concern and lives with the
+ * This is the contract only: how the metrics are drawn is a demo concern and lives with the
  * demo overlay in the `test` package.
  */
-interface DebugOverlay {
+interface DebugMetrics {
     val screenTitle: String
     val guiScale: Double
     val localProps: Int

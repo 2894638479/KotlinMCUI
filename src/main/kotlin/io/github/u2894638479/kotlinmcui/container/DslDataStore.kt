@@ -80,7 +80,7 @@ class DslDataStore(
 
     val dslScreen = DslScreen(this,dslFunction)
 
-    val debugOverlay: DebugOverlay field = object: DebugOverlay {
+    val debugOverlay: DebugMetrics field = object: DebugMetrics {
         override val screenTitle get() = title
         override val guiScale get() = backend.guiScale
         override val localProps get() = localLifeScope.size

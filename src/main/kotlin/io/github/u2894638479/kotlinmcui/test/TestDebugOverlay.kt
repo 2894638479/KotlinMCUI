@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.test
 
-import io.github.u2894638479.kotlinmcui.container.DebugOverlay
+import io.github.u2894638479.kotlinmcui.container.DebugMetrics
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.dsl.decorator.background
 import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
@@ -12,7 +12,7 @@ import io.github.u2894638479.kotlinmcui.modifier.align
 import io.github.u2894638479.kotlinmcui.modifier.width
 
 context(ctx: DslContext)
-fun DebugOverlay.content(alpha: Double = 0.5) = ScrollableColumn {
+fun DebugMetrics.content() = ScrollableColumn {
     val left = Modifier.align { left() }.width(Measure.AUTO_MIN)
     infix fun String.display(value: Any?) = TextFlatten(left) {
         "${this@display}: $value".emit()
