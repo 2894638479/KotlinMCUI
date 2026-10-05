@@ -45,7 +45,43 @@ enum class ColorChannel { Red, Green, Blue, Alpha, Hue, Saturation, Value }
  * this is exactly what the backend interpolates between them.
  */
 internal fun squareColor(hue: Double, x: Double, y: Double, alpha: Double): Color =
-    Color.ofHSV(hue, x.coerceIn(0.0,1.0), (1.0 - y).coerceIn(0.0,1.0), alpha)
+    Color.ofHSV(hue, x, 1.0 - y, alpha)
+
+/** The point of the 0..1 square nearest to [x],[y]. The square palette *is* the rectangle. */
+internal fun nearestOnUnitSquare(x: Double, y: Double) = x.coerceIn(0.0,1.0) to y.coerceIn(0.0,1.0)
+
+/**
+ * The corners of the palettes' triangles in 0..1 rectangle space: the first hue on top, the second
+ * bottom-left, the third bottom-right.
+ */
+private val TRIANGLE_CORNERS = arrayOf(0.5 to 0.0,0.0 to 1.0,1.0 to 1.0)
+
+/**
+ * The point of that triangle nearest to [x],[y]: the closest of the three edge projections, which
+ * covers the corners as well. Dropping the negative barycentric weights and renormalising is *not*
+ * the same thing - it drifts along an edge instead of staying at the closest point.
+ */
+internal fun nearestOnUnitTriangle(x: Double, y: Double): Pair<Double,Double> {
+    var nearestX = 0.0
+    var nearestY = 0.0
+    var nearestDistance = Double.MAX_VALUE
+    for(index in TRIANGLE_CORNERS.indices) {
+        val (ax,ay) = TRIANGLE_CORNERS[index]
+        val (bx,by) = TRIANGLE_CORNERS[(index + 1) % TRIANGLE_CORNERS.size]
+        val dx = bx - ax
+        val dy = by - ay
+        val ratio = (((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy)).coerceIn(0.0,1.0)
+        val px = ax + dx * ratio
+        val py = ay + dy * ratio
+        val distance = (x - px) * (x - px) + (y - py) * (y - py)
+        if(distance < nearestDistance) {
+            nearestDistance = distance
+            nearestX = px
+            nearestY = py
+        }
+    }
+    return nearestX to nearestY
+}
 
 /** The three weights of [x],[y] without asking whether the point is inside; negative means outside. */
 private fun rawWeights(x: Double, y: Double): Triple<Double,Double,Double> {
@@ -58,18 +94,6 @@ private fun Triple<Double,Double,Double>.isInside() =
     first >= -1e-6 && second >= -1e-6 && third >= -1e-6
 
 /**
- * Hold an outside point at the nearest point of the triangle: what is negative is dropped and the
- * rest renormalised, which lands on the closest edge, or on a corner when one weight dominates.
- */
-private fun Triple<Double,Double,Double>.clampedIntoTriangle(): Triple<Double,Double,Double>? {
-    val hue = maxOf(first,0.0)
-    val white = maxOf(second,0.0)
-    val black = maxOf(third,0.0)
-    val sum = hue + white + black
-    return if(sum <= 0.0) null else Triple(hue/sum,white/sum,black/sum)
-}
-
-/**
  * The barycentric weights of the point [x],[y] (0..1 of the picker rectangle) inside the hue
  * triangle — pure hue on top, white bottom-left, black bottom-right — or `null` when the point
  * is outside it.
@@ -78,24 +102,14 @@ internal fun triangleWeights(x: Double, y: Double): Triple<Double,Double,Double>
     rawWeights(x,y).takeIf { it.isInside() }
 
 /**
- * The colour at [x],[y] inside the triangle, or `null` outside it.
+ * The colour at [x],[y] **on** the triangle, or `null` when the point is outside it.
  *
  * The three corners are mixed linearly because that is what the backend does across a triangle,
  * so the colour picked is the colour seen. White and black contribute to every channel equally,
  * which is why the mix can be written per channel as `hueWeight * pureHue + whiteWeight`.
- *
- * With [clamp] an outside point is held at the nearest point of the triangle instead of being
- * rejected — a drag may leave the palette while the button is still down, and the colour should
- * keep following the pointer along the edge rather than stop moving.
  */
-internal fun triangleColor(hue: Double, x: Double, y: Double, alpha: Double, clamp: Boolean = false): Color? {
-    val raw = rawWeights(x,y)
-    val weights = when {
-        raw.isInside() -> raw
-        clamp -> raw.clampedIntoTriangle() ?: return null
-        else -> return null
-    }
-    val (hueWeight,whiteWeight) = weights
+internal fun triangleColor(hue: Double, x: Double, y: Double, alpha: Double): Color? {
+    val (hueWeight,whiteWeight) = triangleWeights(x,y) ?: return null
     val pure = Color.ofHSV(hue,1.0,1.0)
     return Color(
         pure.rDouble * hueWeight + whiteWeight,
@@ -223,15 +237,19 @@ fun Controls.ColorSquare(
     return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx) {
         /**
          * Apply the colour under [mouse]. A press out of the palette is refused; a drag may leave
-         * it ([clamp]), and is then held at the nearest point inside — [squareColor] clamps the
-         * saturation and value itself.
+         * it ([clamp]), and is then held at the nearest point of the square.
          */
         private fun pick(mouse: Position, clamp: Boolean = false): Color? {
             val rect = instance.rect
             if(rect.width <= 0.px || rect.height <= 0.px) return null
-            val x = (mouse.x - rect.left) / rect.width
-            val y = (mouse.y - rect.top) / rect.height
-            if(!clamp && (x < 0 || x > 1 || y < 0 || y > 1)) return null
+            var x = (mouse.x - rect.left) / rect.width
+            var y = (mouse.y - rect.top) / rect.height
+            if(x < 0 || x > 1 || y < 0 || y > 1) {
+                if(!clamp) return null
+                val nearest = nearestOnUnitSquare(x,y)
+                x = nearest.first
+                y = nearest.second
+            }
             val color = squareColor(hue.value,x,y,prop.value.aDouble)
             prop.value = color
             return color
@@ -297,14 +315,19 @@ fun Controls.ColorTriangle(
     val input = dslBackend
     val unit = (ctx.scale * 2).px
     return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx) {
-        /** See the square's picker: a drag may leave the triangle, and is then held at its edge. */
+        /** See the square's picker: a drag out of the triangle is held at its nearest edge. */
         private fun pick(mouse: Position, clamp: Boolean = false): Color? {
             val rect = instance.rect
             if(rect.width <= 0.px || rect.height <= 0.px) return null
-            val x = (mouse.x - rect.left) / rect.width
-            val y = (mouse.y - rect.top) / rect.height
-            if(!clamp && (x < 0 || x > 1 || y < 0 || y > 1)) return null
-            val color = triangleColor(hue.value,x,y,prop.value.aDouble,clamp) ?: return null
+            var x = (mouse.x - rect.left) / rect.width
+            var y = (mouse.y - rect.top) / rect.height
+            if(triangleWeights(x,y) == null) {
+                if(!clamp) return null
+                val nearest = nearestOnUnitTriangle(x,y)
+                x = nearest.first
+                y = nearest.second
+            }
+            val color = triangleColor(hue.value,x,y,prop.value.aDouble) ?: return null
             prop.value = color
             return color
         }

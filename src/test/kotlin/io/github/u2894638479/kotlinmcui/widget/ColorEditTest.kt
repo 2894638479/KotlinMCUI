@@ -162,23 +162,21 @@ class ColorEditTest {
 
     @Test
     fun `a point outside a palette is held at its nearest edge`() {
-        // The square clamps its own saturation and value.
-        assertEquals(Color.WHITE,squareColor(0.0,-0.5,-0.5,1.0),"left of and above the square is white")
-        assertEquals(Color.BLACK,squareColor(0.0,1.5,1.5,1.0),"right of and below it is black")
+        // The square is the whole rectangle, so its nearest point is a plain coerce.
+        assertEquals(0.0 to 0.0,nearestOnUnitSquare(-0.5,-0.5))
+        assertEquals(1.0 to 1.0,nearestOnUnitSquare(1.5,1.5))
 
-        // The triangle drops whatever weight went negative and renormalises the rest, which lands
-        // on the closest corner when one of them dominates...
-        assertEquals(Color.RED,assertNotNull(triangleColor(0.0,0.5,-0.5,1.0,clamp = true)))
-        assertEquals(Color.WHITE,assertNotNull(triangleColor(0.0,-0.5,1.0,1.0,clamp = true)))
-        assertEquals(Color.BLACK,assertNotNull(triangleColor(0.0,1.5,1.4,1.0,clamp = true)))
-        // ...and on the closest edge otherwise.
-        val onEdge = assertNotNull(triangleColor(0.0,0.5,1.4,1.0,clamp = true))
-        assertEquals(0.5,onEdge.rDouble,0.01,"the middle of the bottom edge is half white, half black")
-        assertEquals(onEdge.rDouble,onEdge.gDouble,0.001)
-        assertEquals(onEdge.gDouble,onEdge.bDouble,0.001)
+        // The triangle projects onto its closest edge - the corners fall out of the same projection.
+        val onEdge = nearestOnUnitTriangle(1.0,0.0)
+        assertEquals(0.6,onEdge.first,1e-6,"the closest point of the right edge, not a weight renorm")
+        assertEquals(0.2,onEdge.second,1e-6)
+        assertEquals(0.5 to 0.0,nearestOnUnitTriangle(0.5,-0.5),"above the top corner")
+        assertEquals(0.0 to 1.0,nearestOnUnitTriangle(-0.5,1.0),"left of the bottom-left corner")
+        assertEquals(1.0 to 1.0,nearestOnUnitTriangle(1.5,1.4),"below the bottom-right corner")
 
-        // None of those points is inside, so without clamping they are refused.
-        assertNull(triangleColor(0.0,0.5,-0.5,1.0))
+        // A point on the triangle is its own nearest point, and off it the colour functions refuse.
+        assertEquals(0.5 to 1.0,nearestOnUnitTriangle(0.5,1.0))
+        assertNull(triangleColor(0.0,0.5,-0.5,1.0),"off the triangle there is no colour")
         assertNull(triangleColor(0.0,0.5,1.4,1.0))
     }
 
