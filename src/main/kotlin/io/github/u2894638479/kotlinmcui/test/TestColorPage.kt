@@ -25,11 +25,13 @@ import io.github.u2894638479.kotlinmcui.widget.Controls
  */
 context(ctx: DslContext)
 fun TestColorPage() = ScrollableColumn(Modifier.padding(5.scaled)) {
-    val prop = local { Color(220,120,40) }
+    // A colour at full saturation and value, so the marker sits exactly on the square's corner and
+    // on the triangle's apex - the place where it would spill out of the widget if it could.
+    val prop = local { Color.ofHSV(0.08,1.0,1.0) }
     Controls.ColorEdit(prop,id = "editor")
     Row(Modifier.padding(5.scaled)) {
-        Controls.ColorSquare(prop,Modifier.size(70.scaled,70.scaled).padding(2.scaled),"square")
-        Controls.ColorTriangle(prop,Modifier.size(70.scaled,64.scaled).padding(2.scaled),"triangle")
+        Controls.ColorSquare(prop,Modifier.size(70.scaled,70.scaled),"square")
+        Controls.ColorTriangle(prop,Modifier.size(70.scaled,64.scaled),"triangle")
         Controls.ColorText(prop,Modifier.width(80.scaled),"hex")
     }
 }

@@ -220,7 +220,7 @@ fun Controls.ColorSquare(
     val dragging = local(newChildId(id)) { false }
     val input = dslBackend
     val unit = (ctx.scale * 2).px
-    return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier,ctx) {
+    return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx) {
         /**
          * Apply the colour under [mouse]. A press out of the palette is refused; a drag may leave
          * it ([clamp]), and is then held at the nearest point inside — [squareColor] clamps the
@@ -296,7 +296,7 @@ fun Controls.ColorTriangle(
     val dragging = local(newChildId(id)) { false }
     val input = dslBackend
     val unit = (ctx.scale * 2).px
-    return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier,ctx) {
+    return collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier.padding(unit * 3),ctx) {
         /** See the square's picker: a drag may leave the triangle, and is then held at its edge. */
         private fun pick(mouse: Position, clamp: Boolean = false): Color? {
             val rect = instance.rect
@@ -435,8 +435,8 @@ fun Controls.ColorEdit(
         }
         Row(Modifier.padding(2.scaled)) {
             when(mode.value) {
-                ColorPicker.Square -> ColorSquare(prop,Modifier.size(80.scaled,80.scaled).padding(1.scaled),newChildId(id))
-                ColorPicker.Triangle -> ColorTriangle(prop,Modifier.size(80.scaled,80.scaled).padding(1.scaled),newChildId(id))
+                ColorPicker.Square -> ColorSquare(prop,Modifier.size(80.scaled,80.scaled),newChildId(id))
+                ColorPicker.Triangle -> ColorTriangle(prop,Modifier.size(80.scaled,80.scaled),newChildId(id))
             }
             Column(Modifier.padding(2.scaled)) {
                 if(canDrawTriangle) Controls.EnumButton(
