@@ -50,26 +50,26 @@ parent: Backend
 ```
 ./gradlew runVerifyClient
 ```
-它会在游戏出现界面之后自动打开框架的测试页，渲染几秒，把截图写进 `run/screenshots/`，然后退出。退出码为 0 且截图内容正常，就说明"模组能加载、界面能画、事件循环没抛异常"。
+它会在游戏出现界面之后自动打开页面、**按帧**等它渲染完，把截图写进 `run/screenshots/`，然后退出。退出码为 0 且截图内容正常，就说明"模组能加载、界面能画、事件循环没抛异常"。
+
+页面用**引用**指定，不需要注册任何东西：
 
 ```
-KOTLINMCUI_VERIFY=transform ./gradlew runVerifyClient        # PowerShell: $env:KOTLINMCUI_VERIFY="transform"
+KOTLINMCUI_VERIFY=io.github.u2894638479.kotlinmcui.test.TestTransformPage ./gradlew runVerifyClient
+# PowerShell: $env:KOTLINMCUI_VERIFY="io.github.u2894638479.kotlinmcui.test.TestTransformPage"
 ```
-用 `KOTLINMCUI_VERIFY` 选择页面：
 
-| 值 | 页面 |
+| 形式 | 例子 |
 | --- | --- |
-| 缺省 / `1` | 框架的测试页 |
-| `transform` | 内置的变换演示页（旋转、透视、缩放+平移） |
-| `translate` | 内置的翻译演示页 |
-| `polygon` | 内置的多边形演示页（可选三角表能力：六边形与三角形） |
-| `debug` | 框架的调试叠层 |
-| `entrypage` | 后端的入口配置页（已注册入口，以及加载失败的占位行） |
-| `color` | 颜色控件演示页（取色器、方块、三角、滑条、十六进制） |
+| IDE 里复制的顶层函数引用（JVM 类名 = 文件名 + `Kt`） | `io.github.u2894638479.kotlinmcui.test.TestColorPage` |
+| 显式的类与方法 | `io.github.u2894638479.kotlinmcui.test.TestTransformPageKt#TestTransformPage` |
+| 类名（入口，用它的 `content()` 画） | `io.github.u2894638479.kotlinmcui.test.TestEntry$TestPage` |
 
-**透视是唯一会用到位姿矩阵第三行的路径**，改动变换相关代码后应当跑一次 `transform`；`polygon` 是唯一走 `DslBackendTriangles` 这条可选能力的页面，改动顶点提交路径后应当跑一次它。
+缺省是框架的测试入口。**解析不出来的引用、构建或渲染时抛异常的页面、以及没写出截图的情况，都会以非零退出码结束**（日志会列出尝试过哪些名字）。只想看、不想拍时用 `./gradlew previewClient` 配 `KOTLINMCUI_PREVIEW=<引用>`：打开页面后不截图也不退出，留给你自己看。
 
-页面本身由**核心库**提供（`io.github.u2894638479.kotlinmcui.test.verifyPage` 按名字返回），它们只用 DSL 写成、检查的是框架自己的契约；后端这边只负责驱动平台：等窗口、开页、截图、退出。换一个后端时这部分不必重写。
+**透视是唯一会用到位姿矩阵第三行的路径**（`io.github.u2894638479.kotlinmcui.test.TestTransformPage`），改动变换相关代码后应当跑一次；`io.github.u2894638479.kotlinmcui.test.TestPolygonPage` 是唯一走 `DslBackendTriangles` 这条可选能力的页面，改动顶点提交路径后应当跑一次它。
+
+页面本身是**框架里公开的顶层 `context(DslContext)` 函数**，时序与判定也都在框架里——框架的预览会话负责解析引用、等首帧、按帧等待、判定、截图与退出码，后端只提供 `capture`（把当前帧写成文件）与 `quit`（结束游戏）两个平台动作。换一个后端时这两处不必重写。
 
 日常验证在 `fabric-1.20.1` 分支上做：`./gradlew runVerifyClient` 在两个分支上都可用，页面与用法相同。在 `fabric-26.2` 上，自检还**建议用 Vulkan 再跑一遍**：
 

@@ -60,4 +60,4 @@ javap -classpath <上面那个 jar> net.minecraft.client.gui.Gui
 比翻反编译源码快，而且拿到的是**当前实际依赖的那个版本**的签名。校验访问扩大器与 Mixin 目标时都用这个方法。
 
 ## 6. 移植完的验证
-按[构建与运行](build)的顺序跑一遍：两个仓库都构建通过，`runVerifyClient` 能自动打开测试页并截图，`KOTLINMCUI_VERIFY=transform` 的变换演示页三种变换都正常。透视那一页尤其重要——它是唯一依赖位姿矩阵第三行的路径，出问题时表现是画面被拉扯到极大或直接消失。
+按[构建与运行](build)的顺序跑一遍：两个仓库都构建通过，`runVerifyClient` 能自动打开测试页并截图，`KOTLINMCUI_VERIFY=io.github.u2894638479.kotlinmcui.test.TestTransformPage` 的变换演示页三种变换都正常。透视那一页尤其重要——它是唯一依赖位姿矩阵第三行的路径，出问题时表现是画面被拉扯到极大或直接消失。

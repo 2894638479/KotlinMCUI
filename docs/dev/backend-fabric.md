@@ -56,10 +56,15 @@ Mixin 解决"插进去"，访问扩大器解决"看得见"。后端需要访问�
 - **输入法**分两条路：有焦点组件上报预编辑区域时，组合文本由框架（或组件自己）绘制，此时**不**透传给平台；没有时说明框架没在用输入法，要透传，否则原版输入会失效。
 - 鼠标位置由光标回调维护，按键/滚轮/拖放/按键走同一套"先框架后平台"的判定，返回值决定是否继续传播。
 
-## 自检页为什么不在后端里
-后端的 in-game 自检（`Verify`）只做四件事：等窗口出现、按名字开一个页面、延时后截图、退出——全是平台知识。**页面本身在框架里**（`io.github.u2894638479.kotlinmcui.test.verifyPage`）：它们是纯 DSL，检查的是框架自己的契约——`transform` 检查后端必须实现的位姿矩阵第三行，`polygon` 检查可选的三角表能力，其余是框架自带的演示页。分开的理由是移植：换一个加载器时页面不用重写，后端只补那几个平台动作。`verifyPage` 自己就是 `context(DslContext)` 函数，后端写 `create("DSL Entry") { verifyPage(spec) }`——context 由那个 `DslFunction` 形参的尾随 lambda 自带。
+## 自检页为什么在框架里
+**时序在框架里，平台只提供两个动作。** 框架的预览会话（`io.github.u2894638479.kotlinmcui.backend.DslPreview`）负责解析页面引用、等首帧、按帧等待、判定、截图与退出码；后端只需实现 `DslBackendUtils` 的 `capture`（把当前帧写成文件并返回路径——MC 是在 IO 线程写完才回调的，所以它是 `suspend`）与 `quit`（退出码为 0 走游戏自己的关闭，非零则直接离开，因为游戏关闭总是报成功，而不可门禁的运行没有意义）。页面本身是框架里公开的顶层 `context(DslContext)` 函数，用**引用**指定，不需要注册。
 
-**`DslFunction` 只在参数位置存在。** 框架里所有需要它的地方都把它当形参（`create(title, dslFunction)`、`showScreen(title, function)`、`tooltip(function)`），由调用方用尾随 lambda 填，框架在自己的上下文里调用它。不要在无 context 的函数里试图**构造**一个 `DslFunction` 值：Kotlin 只对参数位置与初始化器传播 context 类型，`when` 分支不会，函数引用也不行。需要"按名字选页面"时，正确写法是让选择函数自己带 context 并直接调用页面（`verifyPage` 就是这么写的）。
+这么分是为了移植：换一个加载器时时序与判定不用重写。同理，**判定依据必须来自框架自己**：
+
+- **等帧，不等秒**：`TopComponent` 统计帧数，而后端在游戏加载完成前不渲染，所以帧数保持 0——"平台真的渲染了一帧"同时说明加载已完成（这时开屏才不会被顶掉）。用秒数会在慢机器上截到还没加载完的页面，而且运行照样通过。
+- **渲染异常**：页面在渲染期间抛出的异常记录在 `TopComponent.renderFailure` 上，随后**继续抛出**（不改变平台行为），由会话转成非零退出码。
+
+**`DslFunction` 只在参数位置存在。** 框架里所有需要它的地方都把它当形参（`create(title, dslFunction)`、`showScreen(title, function)`、`tooltip(function)`），由调用方用尾随 lambda 填，框架在自己的上下文里调用它。不要在无 context 的函数里试图**构造**一个 `DslFunction` 值：Kotlin 只对参数位置与初始化器传播 context 类型，`when` 分支不会，函数引用也不行。预览会话按引用解析出来的页面正是这么调用的——在 `create(name) { page.draw() }` 的尾随 lambda 里，context 由那个形参自带。
 
 ## 为什么 HUD 要等游戏加载完成
 后端的每帧入口（`DefaultBackend.render`）在 `Minecraft.isGameLoadFinished()` 之前直接返回。这不是保守，而是**必须**的：
