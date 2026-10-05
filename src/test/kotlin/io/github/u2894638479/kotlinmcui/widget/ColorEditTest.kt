@@ -158,6 +158,26 @@ class ColorEditTest {
     }
 
     @Test
+    fun `a press outside the palette must not capture the release`() {
+        var prop: StableRW<Color>? = null
+        val screen = buildScreen {
+            val p = local { Color.WHITE }
+            prop = p
+            Controls.ColorSquare(p,Modifier.size(50.px,50.px),"square")
+        }
+        val square = screen.children.single()
+        val start = assertNotNull(prop).value
+        val outside = Position(square.rect.right + 5.px,square.rect.top + 5.px)
+        context(KeyModifiers(),outside) {
+            assertFalse(square.mouseDown(MouseButton.LEFT),"a press outside the palette is not taken")
+            // Returning true here is what stops the event on its way down the tree, so a release
+            // that does not belong to the palette must return false and keep travelling.
+            assertFalse(square.mouseUp(MouseButton.LEFT),"so the release must keep travelling")
+        }
+        assertEquals(start,assertNotNull(prop).value,"and none of it may change the colour")
+    }
+
+    @Test
     fun `the composite renders both pickers without touching the colour`() {
         val start = Color(20,140,200,255)
         var prop: StableRW<Color>? = null

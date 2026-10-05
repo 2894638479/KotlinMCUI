@@ -220,8 +220,12 @@ fun Controls.ColorSquare(
         context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton): Boolean {
             if(mouseButton != MouseButton.LEFT) return false
+            // Arm the drag only for a press this palette actually takes. A press elsewhere still
+            // reaches it first (the tree stops at the first component returning true), and a flag
+            // armed there would make this component swallow that other press's release.
+            if(pick(mouse) == null) return false
             dragging.value = true
-            return pick(mouse) != null
+            return true
         }
 
         context(mouse: Position)
@@ -296,8 +300,12 @@ fun Controls.ColorTriangle(
         context(eventModifier: KeyModifiers, mouse: Position)
         override fun mouseDown(mouseButton: MouseButton): Boolean {
             if(mouseButton != MouseButton.LEFT) return false
+            // Arm the drag only for a press this palette actually takes. A press elsewhere still
+            // reaches it first (the tree stops at the first component returning true), and a flag
+            // armed there would make this component swallow that other press's release.
+            if(pick(mouse) == null) return false
             dragging.value = true
-            return pick(mouse) != null
+            return true
         }
 
         context(mouse: Position)
