@@ -50,13 +50,13 @@ parent: Backend
 ```
 ./gradlew runVerifyClient
 ```
-它会在游戏出现界面之后自动打开页面、**按帧**等它渲染完，把截图写进 `run/screenshots/`，然后退出。退出码为 0 且截图内容正常，就说明"模组能加载、界面能画、事件循环没抛异常"。
+它会在游戏出现界面之后自动打开页面、**按帧**等它渲染完；加 `KOTLINMCUI_PREVIEW_CAPTURE=true` 时再写一张截图进 `run/screenshots/` 并退出。退出码为 0 且截图内容正常，就说明"模组能加载、界面能画、事件循环没抛异常"。
 
 页面用**引用**指定，不需要注册任何东西：
 
 ```
-KOTLINMCUI_VERIFY=io.github.u2894638479.kotlinmcui.test.TestTransformPage ./gradlew runVerifyClient
-# PowerShell: $env:KOTLINMCUI_VERIFY="io.github.u2894638479.kotlinmcui.test.TestTransformPage"
+KOTLINMCUI_PREVIEW=io.github.u2894638479.kotlinmcui.test.TestTransformPage ./gradlew runPreviewClient
+# PowerShell: $env:KOTLINMCUI_PREVIEW="io.github.u2894638479.kotlinmcui.test.TestTransformPage"
 ```
 
 | 形式 | 例子 |
@@ -65,13 +65,13 @@ KOTLINMCUI_VERIFY=io.github.u2894638479.kotlinmcui.test.TestTransformPage ./grad
 | 显式的类与方法 | `io.github.u2894638479.kotlinmcui.test.TestTransformPageKt#TestTransformPage` |
 | 类名（入口，用它的 `content()` 画） | `io.github.u2894638479.kotlinmcui.test.TestEntry$TestPage` |
 
-缺省是框架的测试入口。**解析不出来的引用、构建或渲染时抛异常的页面、以及没写出截图的情况，都会以非零退出码结束**（日志会列出尝试过哪些名字）。只想看、不想拍时用 `./gradlew previewClient` 配 `KOTLINMCUI_PREVIEW=<引用>`：打开页面后不截图也不退出，留给你自己看。
+不设 `KOTLINMCUI_PREVIEW` 时什么都不会打开（就是普通客户端）。**只打开页面、不拍照也不退出**是默认行为，适合自己看；再加 `KOTLINMCUI_PREVIEW_CAPTURE=true` 才变成给机器用的模式——这时**解析不出来的引用、构建或渲染时抛异常的页面、以及没写出截图，都会以非零退出码结束**（日志会列出尝试过哪些名字）。
 
 **透视是唯一会用到位姿矩阵第三行的路径**（`io.github.u2894638479.kotlinmcui.test.TestTransformPage`），改动变换相关代码后应当跑一次；`io.github.u2894638479.kotlinmcui.test.TestPolygonPage` 是唯一走 `DslBackendTriangles` 这条可选能力的页面，改动顶点提交路径后应当跑一次它。
 
 页面本身是**框架里公开的顶层 `context(DslContext)` 函数**，时序与判定也都在框架里——框架的预览会话负责解析引用、等首帧、按帧等待、判定、截图与退出码，后端只提供 `capture`（把当前帧写成文件）与 `quit`（结束游戏）两个平台动作。换一个后端时这两处不必重写。
 
-日常验证在 `fabric-1.20.1` 分支上做：`./gradlew runVerifyClient` 在两个分支上都可用，页面与用法相同。在 `fabric-26.2` 上，自检还**建议用 Vulkan 再跑一遍**：
+日常验证在 `fabric-1.20.1` 分支上做：`./gradlew runPreviewClient` 只在这一个分支上维护（迭代期其他版本分支不追）。在 `fabric-26.2` 上，自检还**建议用 Vulkan 再跑一遍**：
 
 ```
 ./gradlew runVerifyClient --args="--graphicsBackend vulkan"      # PowerShell 同样写法
