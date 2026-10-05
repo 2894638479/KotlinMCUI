@@ -73,7 +73,7 @@ Mixin 解决"插进去"，访问扩大器解决"看得见"。后端需要访问�
 
 HUD 从第一帧就画（加载界面上也会画覆盖层），所以它正是那个"过早的调用者"。把 HUD 推迟到游戏加载完成之后，问题根除；这个顺序约束对每个后端都成立，见[后端接口](backend)的契约列表。
 
-复现与验收：`./gradlew runPreviewClient --args="--graphicsBackend vulkan"`（`--graphicsBackend` 是原版启动参数，取值 `default`/`opengl`/`vulkan`，强制后游戏忽略选项里的 `preferredGraphicsBackend`）。
+复现与验收：`JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=<任一页面引用>" ./gradlew runClient --args="--graphicsBackend vulkan"`（`--graphicsBackend` 是原版启动参数，取值 `default`/`opengl`/`vulkan`，强制后游戏忽略选项里的 `preferredGraphicsBackend`）。
 ## `fabric-1.20.1` 分支的差异
 同一套契约在两个 Minecraft 版本上的落地方式不同。这里只列**必须按版本改写**的部分：
 

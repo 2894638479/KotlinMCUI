@@ -14,4 +14,37 @@ parent: Start
 
 如果展示不了测试页面，请重新检查之前的步骤。
 
-如果你在开发**后端本身**而不是使用它，验证方式不一样：见[构建与运行](../backend/build)，那里有一套自动打开页面并截图的自检流程。
+如果你在开发**后端本身**而不是使用它，验证方式不一样：见[构建与运行](../backend/build)，那里用的是同一套预览机制。
+
+## 预览自己的页面
+
+预览的页面用**引用**指定，不需要注册任何东西——页面就是一个顶层函数：
+
+```kotlin
+context(ctx: DslContext)
+fun MyPage() {
+    Column { Text { "hello".emit() } }
+}
+```
+
+打开它**不需要改构建脚本**，只要给游戏 JVM 一个属性。启动器直接开游戏时，把这句加进 JVM 参数：
+
+```
+-Dkotlinmcui.preview=com.example.mypackage.MyPage
+```
+
+用 Gradle 跑时借助 `JAVA_TOOL_OPTIONS`——这个变量由 JVM 自己读取，而游戏 JVM 会继承它，所以 `runClient` 无需任何配置就能带上：
+
+```bash
+JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=com.example.mypackage.MyPage" ./gradlew runClient
+```
+
+```powershell
+$env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=com.example.mypackage.MyPage"; .\gradlew runClient
+```
+
+默认**只打开页面**，不截屏也不退出（适合自己看），日志里会打出 `preview: opened '<引用>' as <类#方法>`。再追加 `-Dkotlinmcui.preview.capture=true` 就变成给机器用的模式：拍一张截图写进 `run/screenshots/`、退出；引用解析不出来、页面构建或渲染时抛异常、截图没写出来，退出码都是非零。
+
+引用的三种写法：IDE 里直接复制的顶层函数引用（`com.example.mypackage.MyPage`）、显式的 `包.类Kt#方法`、类名（用它的 `content()` 画，适合入口）。
+
+用完记得清掉那个变量（它对当前 shell 里**每个** JVM 都生效，包括 Gradle 守护进程）：JVM 会往 stderr 打两行 `Picked up JAVA_TOOL_OPTIONS: …`，那是正常的、无副作用。

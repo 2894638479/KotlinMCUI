@@ -48,16 +48,21 @@ parent: Backend
 ## 自动验证
 窗口里没人操作也能验证后端是否还能用：
 ```
-./gradlew runVerifyClient
+JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.test.TestColorPage -Dkotlinmcui.preview.capture=true" ./gradlew runClient
 ```
-它会在游戏出现界面之后自动打开页面、**按帧**等它渲染完；加 `KOTLINMCUI_PREVIEW_CAPTURE=true` 时再写一张截图进 `run/screenshots/` 并退出。退出码为 0 且截图内容正常，就说明"模组能加载、界面能画、事件循环没抛异常"。
+它会在游戏出现界面之后自动打开页面、**按帧**等它渲染完；加 `-Dkotlinmcui.preview.capture=true` 时再写一张截图进 `run/screenshots/` 并退出。退出码为 0 且截图内容正常，就说明"模组能加载、界面能画、事件循环没抛异常"。
+
+**预览不需要运行配置**：属性直接给游戏 JVM 即可，`runClient` 本身就能带上它（`JAVA_TOOL_OPTIONS` 由 JVM 自己读取，而 Loom fork 出的游戏 JVM 会继承它）：
+
+```bash
+JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.test.TestTransformPage" ./gradlew runClient
+```
+
+```powershell
+$env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.test.TestTransformPage"; .\gradlew runClient
+```
 
 页面用**引用**指定，不需要注册任何东西：
-
-```
-KOTLINMCUI_PREVIEW=io.github.u2894638479.kotlinmcui.test.TestTransformPage ./gradlew runPreviewClient
-# PowerShell: $env:KOTLINMCUI_PREVIEW="io.github.u2894638479.kotlinmcui.test.TestTransformPage"
-```
 
 | 形式 | 例子 |
 | --- | --- |
@@ -65,16 +70,16 @@ KOTLINMCUI_PREVIEW=io.github.u2894638479.kotlinmcui.test.TestTransformPage ./gra
 | 显式的类与方法 | `io.github.u2894638479.kotlinmcui.test.TestTransformPageKt#TestTransformPage` |
 | 类名（入口，用它的 `content()` 画） | `io.github.u2894638479.kotlinmcui.test.TestEntry$TestPage` |
 
-不设 `KOTLINMCUI_PREVIEW` 时什么都不会打开（就是普通客户端）。**只打开页面、不拍照也不退出**是默认行为，适合自己看；再加 `KOTLINMCUI_PREVIEW_CAPTURE=true` 才变成给机器用的模式——这时**解析不出来的引用、构建或渲染时抛异常的页面、以及没写出截图，都会以非零退出码结束**（日志会列出尝试过哪些名字）。
+不设这个属性时什么都不会打开（就是普通客户端）。**只打开页面、不拍照也不退出**是默认行为，适合自己看；再追加 `-Dkotlinmcui.preview.capture=true` 才变成给机器用的模式——这时**解析不出来的引用、构建或渲染时抛异常的页面、以及没写出截图，都会以非零退出码结束**（日志会列出尝试过哪些名字）。
 
 **透视是唯一会用到位姿矩阵第三行的路径**（`io.github.u2894638479.kotlinmcui.test.TestTransformPage`），改动变换相关代码后应当跑一次；`io.github.u2894638479.kotlinmcui.test.TestPolygonPage` 是唯一走 `DslBackendTriangles` 这条可选能力的页面，改动顶点提交路径后应当跑一次它。
 
 页面本身是**框架里公开的顶层 `context(DslContext)` 函数**，时序与判定也都在框架里——框架的预览会话负责解析引用、等首帧、按帧等待、判定、截图与退出码，后端只提供 `capture`（把当前帧写成文件）与 `quit`（结束游戏）两个平台动作。换一个后端时这两处不必重写。
 
-日常验证在 `fabric-1.20.1` 分支上做：`./gradlew runPreviewClient` 只在这一个分支上维护（迭代期其他版本分支不追）。在 `fabric-26.2` 上，自检还**建议用 Vulkan 再跑一遍**：
+日常验证在 `fabric-1.20.1` 分支上做：预览机制只在这一个分支上维护（迭代期其他版本分支不追）。在 `fabric-26.2` 上，自检还**建议用 Vulkan 再跑一遍**：
 
 ```
-./gradlew runVerifyClient --args="--graphicsBackend vulkan"      # PowerShell 同样写法
+JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.test.TestColorPage" ./gradlew runClient --args="--graphicsBackend vulkan"      # PowerShell 同样写法
 ```
 
 Vulkan 对管线校验比 OpenGL 严格得多，绘制路径的问题它会更早暴露（例如"在游戏加载完成前就画 HUD"会让它在原版 shader 缓存就绪前编出无效管线，直接崩掉——细节见[开发文档](../dev/backend-fabric)）。OpenGL 能跑通不代表 Vulkan 能。
