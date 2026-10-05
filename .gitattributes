@@ -1,0 +1,9 @@
+# 换行符：文本一律以 LF 入库、以 LF 检出，不依赖各机器 core.autocrlf 的设置
+* text=auto eol=lf
+
+# 明确按二进制处理，避免被当作文本改写
+*.jar binary
+*.png binary
+
+# Windows 批处理脚本保持 CRLF
+*.bat text eol=crlf
