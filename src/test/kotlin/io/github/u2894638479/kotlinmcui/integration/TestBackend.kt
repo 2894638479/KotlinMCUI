@@ -118,8 +118,9 @@ private object TestScreenFactory : DslBackendScreenFactory<Unit> {
 
     override fun create(title: String, dslFunction: DslFunction) = object : DslBackendScreenHolder<Unit> {
         private val store = DslDataStore(TestBackend, title, {}, dslFunction)
-        // Showing a screen mounts it, the way a real platform does when the screen is added: a page
-        // that is never mounted is never built, and so never gets to fail.
+        // A real backend mounts in its own screen's lifecycle (the Minecraft Screen's added and
+        // removed), which a headless fake does not have - showing is the only event it can hang
+        // mounting on. A page that is never mounted is never built, and so never gets to fail.
         override fun show() { mount(dslScreen) }
         override val screen: Unit = Unit
         // The data store has already built its screen; reusing it avoids a second one.
