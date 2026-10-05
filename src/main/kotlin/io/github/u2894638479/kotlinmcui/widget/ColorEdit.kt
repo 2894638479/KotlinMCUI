@@ -45,9 +45,6 @@ enum class ColorPicker { Square, Triangle }
 /** The channels the editor edits, in the order its strip shows them. [ColorProp] carries each one's name and reading. */
 private val channels: List<ColorProp<Double>> = listOf(RDouble, GDouble, BDouble, ADouble, HDouble, SDouble, VDouble)
 
-/** The strip is one letter wide per channel, so it is labelled with the first letter of the name. */
-private val channelLetters: Map<ColorProp<Double>, String> = channels.associateWith { it.name.take(1) }
-
 /**
  * The colour at [x] (saturation, 0..1) and [y] (from the top, so value is `1 - y`) of the
  * saturation/value square of [hue].
@@ -491,7 +488,7 @@ private fun channelSlider(
         channel.name.emit()
         ": ".emit()
         channel.toString(color.value).emit()
-    } else TextAutoFold { channelLetters.getValue(channel).emit() }
+    } else TextAutoFold { channel.name.take(1).emit() }
 }
 
 /**

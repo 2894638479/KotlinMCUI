@@ -13,7 +13,7 @@ val colorProp = local { Color(220,120,40) }
 Controls.ColorEdit(colorProp, id = "editor")
 ```
 
-从上到下依次是：预览色块与十六进制输入框；调色板、色相条与透明度；七个通道的竖向滑条（`r g b a h s v`），每条轨道上是该通道自己的颜色渐变。
+从上到下依次是：预览色块与十六进制输入框；调色板、色相条与透明度；七个通道的竖向滑条（标着通道名的首字母 `r g b a h s v`），每条轨道上是该通道自己的颜色渐变。
 
 - `picker` 参数选择初始调色板（`ColorPicker.Square` 或 `ColorPicker.Triangle`），旁边的按钮可以在两者间切换，选择按 `id` 记住。
 - 后端不具备三角表能力（`DslBackendTriangles`）时不会提供三角模式——画不出来的取色板比没有更糟。
