@@ -162,23 +162,24 @@ object VDouble: ValueProp<Double> {
 
 // ── Packed representations ───────────────────────────────────────────────────
 
-/** A whole colour packed into an [Int]; it reads as that packing in hexadecimal. */
-private interface PackedProp : ColorProp<Int> {
-    override fun toString(color: Color) = "#" + get(color).toUInt().toString(16).padStart(8, '0')
-}
+/** Formats [bytes] as `#` followed by one hexadecimal pair each, in the order the caller gives them. */
+private fun packedHex(vararg bytes: Int) = bytes.joinToString("", "#") { it.toString(16).padStart(2, '0') }
 
-object RGBAInt: PackedProp {
+object RGBAInt: ColorProp<Int> {
     override val name get() = "rgba"
+    override fun toString(color: Color) = packedHex(color.rInt, color.gInt, color.bInt, color.aInt)
     override fun get(color: Color) = color.rgbaInt
     override fun set(color: Color, value: Int) = Color.ofRGBA(value)
 }
-object ARGBInt: PackedProp {
+object ARGBInt: ColorProp<Int> {
     override val name get() = "argb"
+    override fun toString(color: Color) = packedHex(color.aInt, color.rInt, color.gInt, color.bInt)
     override fun get(color: Color) = color.argbInt
     override fun set(color: Color, value: Int) = Color.ofARGB(value)
 }
-object ABGRInt: PackedProp {
+object ABGRInt: ColorProp<Int> {
     override val name get() = "abgr"
+    override fun toString(color: Color) = packedHex(color.aInt, color.bInt, color.gInt, color.rInt)
     override fun get(color: Color) = color.abgrInt
     override fun set(color: Color, value: Int) = Color.ofABGR(value)
 }

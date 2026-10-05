@@ -15,6 +15,8 @@ class ColorPropsTest {
         assertEquals("saturation", SDouble.name)
         assertEquals("value", VDouble.name)
         assertEquals("rgba", RGBAInt.name)
+        assertEquals("argb", ARGBInt.name)
+        assertEquals("abgr", ABGRInt.name)
     }
 
     @Test fun `byte channels read their own byte`() {
@@ -31,8 +33,12 @@ class ColorPropsTest {
         assertEquals("86%", VDouble.toString(orange))
     }
 
-    @Test fun `packed channels read as hexadecimal`() {
+    @Test fun `packed channels read in their own byte order`() {
+        // One colour, three packings: the string is the packing's own byte order, so it stays
+        // readable as the number the channel holds.
         assertEquals("#dc7828ff", RGBAInt.toString(orange))
+        assertEquals("#ffdc7828", ARGBInt.toString(orange))
+        assertEquals("#ff2878dc", ABGRInt.toString(orange))
     }
 
     @Test fun `stepping a double channel moves one byte`() {

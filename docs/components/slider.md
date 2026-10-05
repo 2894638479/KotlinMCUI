@@ -36,4 +36,4 @@ Slider(Modifier.width(120.scaled), Axis.Horizontal, ADouble, colorProp, id = "al
 - `color` 是被编辑的颜色属性，滑块的填充色就是它当前的颜色。
 - 轨道上画的是该通道自己的颜色渐变——`HDouble` 是整圈彩虹，其它通道是两端颜色的渐变。
 - 键盘方向键按该通道走一步，移动是整数精确的：不会因为浮点误差把其它通道也带偏。
-- 通道自带名字与读数（`ColorProp.name`、`ColorProp.toString(color)`），直接写进自己的标签里即可。
+- 通道自带名字与读数（`ColorProp.name`、`ColorProp.toString(color)`），直接写进自己的标签里即可；打包通道（`RGBAInt` / `ARGBInt` / `ABGRInt`）的读数就是它自己字节序的十六进制。
