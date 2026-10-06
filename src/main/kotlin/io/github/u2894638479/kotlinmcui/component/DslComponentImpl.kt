@@ -3,7 +3,6 @@ package io.github.u2894638479.kotlinmcui.component
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
-import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 
 /**

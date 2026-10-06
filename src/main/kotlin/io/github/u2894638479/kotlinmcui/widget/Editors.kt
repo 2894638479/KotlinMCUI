@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.widget
 
+import io.github.u2894638479.kotlinmcui.container.DslChild
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.decorator.clickable
@@ -10,10 +11,11 @@ import io.github.u2894638479.kotlinmcui.dsl.ui.*
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
-import io.github.u2894638479.kotlinmcui.modifier.*
+import io.github.u2894638479.kotlinmcui.modifier.Modifier
+import io.github.u2894638479.kotlinmcui.modifier.height
+import io.github.u2894638479.kotlinmcui.modifier.padding
+import io.github.u2894638479.kotlinmcui.modifier.width
 import io.github.u2894638479.kotlinmcui.prop.*
-import io.github.u2894638479.kotlinmcui.scroll.Scroller
-import io.github.u2894638479.kotlinmcui.container.DslChild
 import kotlin.reflect.KMutableProperty0
 
 object Editors {

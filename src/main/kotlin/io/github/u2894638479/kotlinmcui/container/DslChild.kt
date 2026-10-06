@@ -18,9 +18,9 @@ class DslChild internal constructor(private var component: DslComponent) {
     fun change(component: DslComponent) = apply { this.component = component }
     inline fun change(action: (DslComponent)-> DslComponent) = change(action(currentComponent()))
 
-    interface Group: kotlin.collections.List<DslComponent> {
+    interface Group: List<DslComponent> {
         fun collect(child: DslComponent): DslChild
-        fun collectAll(list: kotlin.collections.List<DslComponent>)
+        fun collectAll(list: List<DslComponent>)
         fun remove(child: DslChild)
         companion object {
             val empty: Group get() = GroupImpl.empty
@@ -29,9 +29,9 @@ class DslChild internal constructor(private var component: DslComponent) {
 
     companion object {
         fun Group(): Group = GroupImpl()
-        fun Group.reverseRead(): Group = object : Group, kotlin.collections.List<DslComponent> by asReversed() {
+        fun Group.reverseRead(): Group = object : Group, List<DslComponent> by asReversed() {
             override fun collect(child: DslComponent) = this@reverseRead.collect(child)
-            override fun collectAll(list: kotlin.collections.List<DslComponent>) {
+            override fun collectAll(list: List<DslComponent>) {
                this@reverseRead.collectAll(list)
             }
             override fun remove(child: DslChild) = this@reverseRead.remove(child)
@@ -49,7 +49,7 @@ class DslChild internal constructor(private var component: DslComponent) {
         }
     }
 
-    private class GroupImpl private constructor(private val mutList: MutableList<DslChild>): Group, kotlin.collections.List<DslComponent> by mutList.mapView({it.component}){
+    private class GroupImpl private constructor(private val mutList: MutableList<DslChild>): Group, List<DslComponent> by mutList.mapView({it.component}){
         constructor():this(mutableListOf())
         companion object {
             val empty = GroupImpl(object : AbstractMutableList<DslChild>() {
@@ -63,7 +63,7 @@ class DslChild internal constructor(private var component: DslComponent) {
 
         override fun collect(child: DslComponent) = DslChild(child).also { mutList += it }
 
-        override fun collectAll(list: kotlin.collections.List<DslComponent>) {
+        override fun collectAll(list: List<DslComponent>) {
             mutList.addAll(list.map { DslChild(it) })
         }
 

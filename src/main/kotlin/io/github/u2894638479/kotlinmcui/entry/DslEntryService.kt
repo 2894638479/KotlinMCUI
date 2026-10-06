@@ -1,6 +1,5 @@
 package io.github.u2894638479.kotlinmcui.entry
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendScreenHolder
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 

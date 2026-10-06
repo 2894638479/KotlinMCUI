@@ -1,13 +1,11 @@
 package io.github.u2894638479.kotlinmcui.component
 
-import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
-import io.github.u2894638479.kotlinmcui.context.DslIdContext
-import io.github.u2894638479.kotlinmcui.context.DslScaleContext
-import io.github.u2894638479.kotlinmcui.dsl.dataStore
-import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.rect.contains
 import io.github.u2894638479.kotlinmcui.container.DslChild
 import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.context.DslIdContext
+import io.github.u2894638479.kotlinmcui.context.DslScaleContext
+import io.github.u2894638479.kotlinmcui.math.Position
+import io.github.u2894638479.kotlinmcui.math.rect.contains
 
 /**
  * The core interface for all DSL components in the UI tree.

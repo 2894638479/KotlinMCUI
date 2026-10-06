@@ -103,7 +103,7 @@ object DslEntryLoader {
     }
 
     context(ctx: DslContext)
-    internal fun overlays(): Unit {
+    internal fun overlays() {
         enabledSnapshot.forEachWithId {
             Box {
                 it.overlay()

@@ -10,6 +10,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * The in-game preview session: open the page a launch property names, and - only when a second
@@ -87,7 +88,7 @@ internal object DslPreview {
             val opened = TopComponent.frameIndex
             withContext(backend.mainDispatcher) { backend.create(reference) { page.draw() } }.show()
             dslLogger.info("preview: opened '$reference' as ${page.describe()}")
-            while(TopComponent.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS)
+            while(TopComponent.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
             if(!capture) return
             val file = withContext(backend.mainDispatcher) { backend.capture(fileNameFor(reference)) }
             if(TopComponent.renderFailure != null) {
@@ -118,7 +119,7 @@ internal object DslPreview {
         val deadline = System.currentTimeMillis() + READY_TIMEOUT_MS
         while(TopComponent.frameIndex == 0L) {
             if(System.currentTimeMillis() > deadline) return false
-            delay(READY_POLL_MS)
+            delay(READY_POLL_MS.milliseconds)
         }
         return true
     }

@@ -3,7 +3,6 @@ package io.github.u2894638479.kotlinmcui.math.rect
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.math.transform.Transform
 

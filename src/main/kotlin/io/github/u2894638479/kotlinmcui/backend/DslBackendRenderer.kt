@@ -3,7 +3,6 @@ package io.github.u2894638479.kotlinmcui.backend
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.math.Color
-import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.Rect
 import io.github.u2894638479.kotlinmcui.math.transform.Transform
 import io.github.u2894638479.kotlinmcui.text.DslFont
