@@ -45,7 +45,7 @@ $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=com.example.mypackage.MyPage"; .\gr
 
 默认**只打开页面**，不截屏也不退出（适合自己看），日志里会打出 `preview: opened '<引用>' as <类#方法>`。再追加 `-Dkotlinmcui.preview.capture=true` 就变成给机器用的模式：拍一张截图写进 `run/screenshots/`、退出；引用解析不出来、页面构建或渲染时抛异常、截图没写出来，退出码都是非零。
 
-引用的两种写法：IDE 里直接复制的顶层函数引用（`com.example.mypackage.MyPage`，它的 JVM 类名是文件名加 `Kt`），以及显式的 `包.类#方法`。后者覆盖静态函数，以及 **object**、**companion** 或能用无参构造器建出来的类的成员——入口就是这种，例如 `io.github.u2894638479.kotlinmcui.test.TestEntry$TestPage#content`、`…TestEntry$DebugOverlay#overlay`。**预览指定的是一个函数**：只给类名不会去猜哪个函数画页面，那样只会报"找不到"。页面只接受两种形状：只要 DSL 上下文，或者额外参数**全部有默认值**——预览没有实参可传，只能按零值调用它们。只要有一个额外参数没有默认值就会被拒绝，日志里会告诉你试过哪些引用、以及哪个参数缺默认值。返回值类型不限。
+引用的两种写法：IDE 里直接复制的顶层函数引用（`com.example.mypackage.MyPage`，它的 JVM 类名是**文件名 + `Kt`**，所以文件要与函数同名；文件上写了 `@file:JvmName` 或名字不同就只能用下面这种），以及显式的 `包.类#方法`。后者覆盖静态函数，以及 **object**、**companion** 或能用无参构造器建出来的类的成员——入口就是这种，例如 `io.github.u2894638479.kotlinmcui.test.TestEntry$TestPage#content`、`…TestEntry$DebugOverlay#overlay`。**预览指定的是一个函数**：只给类名不会去猜哪个函数画页面，那样只会报"找不到"。页面只接受两种形状：只要 DSL 上下文，或者额外参数**全部有默认值**——预览没有实参可传，只能按零值调用它们。只要有一个额外参数没有默认值就会被拒绝，日志里会告诉你试过哪些引用、以及哪个参数缺默认值。返回值类型不限。
 
 引用解析不出来、或者参数形状不合格时，预览会**把待测页面换成错误页**：上面写着你要的引用和失败原因（试过哪些名字、哪个候选为什么被否）。不加 `capture` 时游戏不会退出，你就停在那一页上读；加了 `capture` 时截的就是这一页、日志照旧报错、退出码照旧非零——机器门禁拿到的图就是失败报告本身。
 

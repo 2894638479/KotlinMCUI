@@ -66,7 +66,7 @@ $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.te
 
 | 形式 | 例子 |
 | --- | --- |
-| IDE 里复制的顶层函数引用（JVM 类名 = 文件名 + `Kt`） | `io.github.u2894638479.kotlinmcui.test.TestColorPage` |
+| IDE 里复制的顶层函数引用（JVM 类名 = 文件名 + `Kt`，所以文件要与函数同名） | `io.github.u2894638479.kotlinmcui.test.TestColorPage` |
 | 显式的类与方法：静态函数，或 object / companion / 可用无参构造器建出来的类的成员 | `io.github.u2894638479.kotlinmcui.test.TestTransformPageKt#TestTransformPage`、`io.github.u2894638479.kotlinmcui.test.TestEntry$TestPage#content` |
 
 **预览指定的是一个函数**：只给类名不算引用，也不会去猜哪个函数画页面（那样只会报找不到）。

@@ -43,6 +43,11 @@ import kotlin.time.Duration.Companion.milliseconds
  * - `a.b.Class#method` for a static function or for a member of an object, which is what an entry's
  *   page is (`a.b.Entry$Page#content`).
  *
+ * A member function is reached through the object's own `INSTANCE`, through the outer class's static
+ * field when the class is a nested or companion object, or through a no-argument constructor; an
+ * abstract class is out of reach. When a class declares several functions under the same name, the
+ * one that takes nothing but the DSL context wins, because reflection promises no order.
+ *
  * A page takes the DSL context, and may take further parameters - but only defaulted ones, because
  * the preview passes no arguments. Whether a parameter has a default is invisible to Java reflection,
  * so a page that is not shaped that way is refused instead of being called with values nobody supplied.
