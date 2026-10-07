@@ -31,8 +31,10 @@ repositories {
     mavenCentral()
 }
 
-val slf4j = "org.slf4j:slf4j-api:2.0.20"
-val fastutil = "it.unimi.dsi:fastutil:8.5.19"
+// Pinned to the floor the supported game versions ship (Minecraft 1.20.1 has slf4j 2.0.1 and
+// fastutil 8.5.9): compiling against anything newer risks using an API the runtime lacks.
+val slf4j = "org.slf4j:slf4j-api:2.0.1"
+val fastutil = "it.unimi.dsi:fastutil:8.5.9"
 val serializationCore = "org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0"
 val serializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
 val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0"
