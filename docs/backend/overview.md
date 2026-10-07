@@ -27,7 +27,9 @@ parent: Backend
 
 后端版本与它依赖的核心库版本**无关**：核心库版本写在 `gradle.properties` 的 `kotlinmcui_version` 里，两者各自发布。
 
-**后端与核心库是分开发布的，必须成对安装。** 后端的元数据把核心库写成精确版本，装错会在加载时直接报依赖不满足，而不是运行时出错。反方向同样是硬依赖：核心库需要 Kotlin 运行时，而运行时用哪一家（Fabric Language Kotlin / Kotlin for Forge / KotlinLangForge）由后端挑选提供，所以核心库把后端的 mod id 写成 `depends` / `mandatory = true` / `type = "required"`——服务端也可以有服务端专用的后端。
+**后端与核心库是分开发布的，必须成对安装。** 后端的元数据把核心库写成精确版本，装错会在加载时直接报依赖不满足，而不是运行时出错。反方向同样是硬依赖，而且**两侧都一样**：核心库需要 Kotlin 运行时，而运行时用哪一家（Fabric Language Kotlin / Kotlin for Forge / KotlinLangForge）由后端挑选提供；更重要的是框架的每一行代码都要经过后端能力，服务端也不例外——只装核心库不装后端，服务端连一行代码都跑不起来。所以核心库把后端的 mod id 写成 `depends` / `mandatory = true` / `type = "required"`。
+
+官方目前只有客户端实现。服务端的实现有两条路可选：只提供入口发现（同一份 jar 也允许被客户端加载），或连同窗口管理与渲染一起提供——后者能让一份 jar 跨多个 Minecraft 版本、只按加载器分。
 
 ## 支持情况
 一条分支只对应**一个加载器 + 一个 Minecraft 版本**。当前维护七条分支，全部按同一套流程验收（构建通过 + 游戏内预览出图）：
