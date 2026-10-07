@@ -2,7 +2,9 @@
 
 核心库不含任何 Minecraft 类型，"支持什么"由它**不依赖什么**决定：不依赖某个游戏版本的类，就不该在元数据里写死游戏版本区间；不依赖某个加载器的 API，就不该只认一个加载器；不进客户端代码，就不该只在客户端可用。于是加载器元数据只声明**能力**：Fabric 侧 `minecraft: "*"`、`java: ">=8"`、`environment: "*"`；Forge/NeoForge 侧**不声明**游戏或加载器的依赖——核心库不依赖它们，声明出来就是一条假的依赖关系。
 
-官方后端则是**硬依赖**（Fabric 侧 `depends`、Forge 侧 `mandatory = true`、NeoForge 侧 `type = "required"`，两侧都要）：核心库和它 `META-INF/services` 里的入口都是 Kotlin 编译的，运行时要由谁提供不该由核心库挑——具体用 Fabric Language Kotlin、Kotlin for Forge 还是 KotlinLangForge，由后端自己挑选并提供，核心库的元数据里因此**不出现任何语言提供者的名字**。服务端同样可以有自己的后端（入口系统本来就分客户端与服务端），所以这条依赖在两侧都成立。Kotlin 语言提供者也不锁版本：Forge 侧由 `modLoader = "lowcodefml"` 选择语言适配器，Kotlin for Forge 提供它，KotlinLangForge 自带的 KFF 兼容层也提供它，`loaderVersion` 因此写 `"[0,)"`。
+官方后端是**硬依赖**（Fabric 侧 `depends`、Forge 侧 `mandatory = true`、NeoForge 侧 `type = "required"`，两侧都要）：核心库和它 `META-INF/services` 里的入口都是 Kotlin 编译的，运行时要由谁提供不该由核心库挑——具体用 Fabric Language Kotlin、Kotlin for Forge 还是 KotlinLangForge，由后端自己挑选并提供，核心库的元数据里因此**不出现任何语言提供者的名字**。服务端同样可以有自己的后端（入口系统本来就分客户端与服务端），所以这条依赖在两侧都成立。
+
+Forge 侧的语言**加载器**与语言**提供者**是两件事：核心库没有入口代码，所以它声明的是 Forge 自带的 low/no-code 加载器 `modLoader = "lowcodefml"`（Forge 文档原文：「Forge provides the Java loader `javafml` and low/no code loader `lowcodefml`」），这不需要任何 Kotlin 提供者去实现；提供者（KFF / KLF）只负责让 Kotlin 写的 `@Mod` 类能被加载，那是**后端**的事。
 
 ## 被否的备选
 
