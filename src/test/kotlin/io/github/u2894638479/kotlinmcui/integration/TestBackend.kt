@@ -69,11 +69,15 @@ internal object TestBackend : DslBackend<Unit, Unit>,
         get() = TestUtils.failCapture
         set(value) { TestUtils.failCapture = value }
 
+    /** The title of the last screen a case opened, which is how a test tells an error page apart. */
+    val lastScreenTitle get() = TestScreenFactory.lastTitle
+
     /** Forget what an earlier case asked the preview session to do, and unmount what it opened. */
     fun resetPreview() {
         TestUtils.captures.clear()
         TestUtils.quitCode = null
         TestUtils.failCapture = false
+        TestScreenFactory.lastTitle = null
         TestScreenFactory.unmount()
     }
 }
@@ -116,15 +120,21 @@ private object TestRenderer : DslBackendRenderer<Unit> {
 private object TestScreenFactory : DslBackendScreenFactory<Unit> {
     private var mounted: DslChild? = null
 
-    override fun create(title: String, dslFunction: DslFunction) = object : DslBackendScreenHolder<Unit> {
-        private val store = DslDataStore(TestBackend, title, {}, dslFunction)
-        // A real backend mounts in its own screen's lifecycle (the Minecraft Screen's added and
-        // removed), which a headless fake does not have - showing is the only event it can hang
-        // mounting on. A page that is never mounted is never built, and so never gets to fail.
-        override fun show() { mount(dslScreen) }
-        override val screen: Unit = Unit
-        // The data store has already built its screen; reusing it avoids a second one.
-        override val dslScreen = store.dslScreen
+    /** The title the last screen was created with; a test clears it through [TestBackend.resetPreview]. */
+    var lastTitle: String? = null
+
+    override fun create(title: String, dslFunction: DslFunction): DslBackendScreenHolder<Unit> {
+        lastTitle = title
+        return object : DslBackendScreenHolder<Unit> {
+            private val store = DslDataStore(TestBackend, title, {}, dslFunction)
+            // A real backend mounts in its own screen's lifecycle (the Minecraft Screen's added and
+            // removed), which a headless fake does not have - showing is the only event it can hang
+            // mounting on. A page that is never mounted is never built, and so never gets to fail.
+            override fun show() { mount(dslScreen) }
+            override val screen: Unit = Unit
+            // The data store has already built its screen; reusing it avoids a second one.
+            override val dslScreen = store.dslScreen
+        }
     }
 
     private fun mount(screen: DslScreen) {

@@ -210,6 +210,44 @@ class DslPreviewTest {
         assertEquals("no-arg",MixedContentCalls.recorded,"the parameterless content is the page")
     }
 
+    @Test
+    fun `an unresolvable reference is put on screen as an error page`() {
+        runWithFrames {
+            DslPreview.run("io.github.u2894638479.kotlinmcui.test.NoSuchPage",capture = false)
+        }
+        assertEquals("Preview error",TestBackend.lastScreenTitle,"the failure takes the page's place")
+        assertNull(TestBackend.quitCode,"without capture the reason is read in the game")
+        assertNull(TopComponent.renderFailure,"the error page itself draws")
+    }
+
+    @Test
+    fun `capture mode photographs the error page and still exits non zero`() {
+        runWithFrames {
+            DslPreview.run("io.github.u2894638479.kotlinmcui.test.NoSuchPage",capture = true)
+        }
+        assertEquals(1,TestBackend.quitCode,"a run that never opened its page is not a pass")
+        assertEquals(listOf("kotlinmcui-NoSuchPage.png"),TestBackend.captures,"the error page is the picture")
+        assertNull(TopComponent.renderFailure,"the error page itself draws")
+    }
+
+    @Test
+    fun `a refused parameter is put on screen as an error page too`() {
+        runWithFrames {
+            DslPreview.run("io.github.u2894638479.kotlinmcui.backend.RequiredArgPreviewPage",capture = false)
+        }
+        assertEquals("Preview error",TestBackend.lastScreenTitle)
+        assertNull(TestBackend.quitCode)
+    }
+
+    @Test
+    fun `the error text carries the reason the page was refused`() {
+        val reference = "io.github.u2894638479.kotlinmcui.backend.RequiredArgPreviewPage"
+        val error = assertFailsWith<IllegalStateException> { DslPreview.pageFor(reference) }
+        val text = DslPreview.errorText(reference,error)
+        assertTrue(text.contains(reference),text)
+        assertTrue(text.contains("parameter 'required' (kotlin.Int) has no default value"),text)
+    }
+
     /**
      * Runs [session] while rendering frames, because it waits on the frame clock rather than on a
      * wall clock: without a platform ticking [TopComponent] it would sit there until its timeout.
