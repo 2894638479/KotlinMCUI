@@ -122,6 +122,60 @@ class DslPreviewTest {
     }
 
     @Test
+    fun `a renamed file facade is only reachable by its explicit name`() {
+        assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.JvmNamedPreviewPage")
+        }
+        val reference = "io.github.u2894638479.kotlinmcui.backend.JvmNamedFacade#JvmNamedPreviewPage"
+        assertEquals(reference,DslPreview.pageFor(reference).describe())
+    }
+
+    @Test
+    fun `an extension function is refused`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.PreviewShapeFixturesKt#ExtensionPreviewPage")
+        }
+        val message = assertNotNull(error.message)
+        assertTrue(message.contains("value parameter"),message)
+    }
+
+    @Test
+    fun `a suspending function is refused`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.PreviewShapeFixturesKt#SuspendPreviewPage")
+        }
+        val message = assertNotNull(error.message)
+        assertTrue(message.contains("Continuation"),message)
+    }
+
+    @Test
+    fun `a second context parameter is refused`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.PreviewShapeFixturesKt#TwoContextPreviewPage")
+        }
+        val message = assertNotNull(error.message)
+        assertTrue(message.contains("value parameter"),message)
+    }
+
+    @Test
+    fun `a bare reference looks for the file class of its own name`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.ExtensionPreviewPage")
+        }
+        val message = assertNotNull(error.message)
+        assertTrue(message.contains("ExtensionPreviewPageKt#ExtensionPreviewPage"),message)
+        assertTrue(message.contains("class not found"),"the file is not named after the function here")
+    }
+
+    @Test
+    fun `an inner class member is not reachable`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.OuterPreviewPage\$InnerPreviewPage#page")
+        }
+        assertNotNull(error.message)
+    }
+
+    @Test
     fun `a bare class name is not a page`() {
         val error = assertFailsWith<IllegalStateException> {
             DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.ObjectPreviewPage")
