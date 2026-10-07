@@ -1,5 +1,6 @@
 plugins {
     kotlin("jvm")
+    `java-library`
     id("org.jetbrains.kotlin.plugin.serialization")
     id("me.modmuss50.mod-publish-plugin") version "2.2.1"
 }
@@ -30,18 +31,36 @@ repositories {
     mavenCentral()
 }
 
+val slf4j = "org.slf4j:slf4j-api:2.0.20"
+val fastutil = "it.unimi.dsi:fastutil:8.5.19"
+val serializationCore = "org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0"
+val serializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
+val coroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0"
+
 dependencies {
-    implementation("org.slf4j:slf4j-api:2.0.20")
-    implementation("it.unimi.dsi:fastutil:8.5.19")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+    // The platform supplies every runtime dependency of this library: Minecraft ships slf4j and
+    // fastutil, and a mod loader's Kotlin provider (Fabric Language Kotlin, and its equivalents)
+    // bundles the Kotlin runtime, coroutines and serialization. The library must neither bundle them
+    // (there is no fat jar) nor hand them to consumers: `compileOnlyApi` keeps a dependency on the
+    // consumer's COMPILE classpath, where the public API needs it, and out of the published runtime
+    // metadata, where a second copy would collide with the one the platform already put there.
+    compileOnlyApi(slf4j)
+    compileOnlyApi(serializationCore)
+    compileOnlyApi(coroutines)
+    compileOnly(fastutil)
+    compileOnly(serializationJson)
     // Only the preview session reads Kotlin reflection, and only to tell which page parameters have
     // defaults. It is compile-time only: the published jar must not carry the 3 MB runtime, and the
     // platforms that can run a preview ship it already (Fabric's language loader bundles it).
     compileOnly(kotlin("reflect"))
+    // compileOnly dependencies are absent from the test classpath, and the tests exercise all of them.
     testImplementation(kotlin("test"))
     testImplementation(kotlin("reflect"))
+    testImplementation(slf4j)
+    testImplementation(fastutil)
+    testImplementation(serializationCore)
+    testImplementation(serializationJson)
+    testImplementation(coroutines)
 }
 
 tasks.test {
