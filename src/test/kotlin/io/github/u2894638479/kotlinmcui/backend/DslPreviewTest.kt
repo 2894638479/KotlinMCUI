@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -156,7 +157,7 @@ class DslPreviewTest {
             "io.github.u2894638479.kotlinmcui.backend.DefaultedPreviewPageKt#DefaultedPreviewPage",
             page.describe(),
         )
-        assertTrue(page.defaulted,"the preview cannot pass arguments, so it uses the defaults")
+        assertTrue(page.usesDefaults,"the preview cannot pass arguments, so it uses the defaults")
         runWithFrames {
             DslPreview.run("io.github.u2894638479.kotlinmcui.backend.DefaultedPreviewPage",capture = false)
         }
@@ -172,6 +173,41 @@ class DslPreviewTest {
         }
         val message = assertNotNull(error.message)
         assertTrue(message.contains("RequiredArgPreviewPageKt#RequiredArgPreviewPage"),message)
+        assertTrue(message.contains("parameter 'required' (kotlin.Int) has no default value"),message)
+        assertTrue(message.contains("all have default values"),"the refusal says what a page may look like")
+    }
+
+    @Test
+    fun `a page that mixes a required parameter with a defaulted one is refused`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.MixedSignaturePage")
+        }
+        val message = assertNotNull(error.message)
+        assertTrue(message.contains("MixedSignaturePageKt#MixedSignaturePage"),message)
+        assertTrue(message.contains("parameter 'required' (kotlin.Int) has no default value"),message)
+        assertFalse(message.contains("'optional'"),"a parameter that does have a default is not blamed")
+    }
+
+    @Test
+    fun `a page whose extra parameter is a vararg is refused`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.VarargPreviewPage")
+        }
+        val message = assertNotNull(error.message)
+        assertTrue(message.contains("VarargPreviewPageKt#VarargPreviewPage"),message)
+        assertTrue(message.contains("parameter 'names' is a vararg"),message)
+    }
+
+    @Test
+    fun `an entry with a parameterless and a parameterised content uses the parameterless one`() {
+        val reference = "io.github.u2894638479.kotlinmcui.backend.MixedContentEntry"
+        val page = DslPreview.pageFor(reference)
+        assertFalse(page.usesDefaults,"the interface's own content() takes no parameters")
+        MixedContentCalls.recorded = null
+        runWithFrames {
+            DslPreview.run(reference,capture = false)
+        }
+        assertEquals("no-arg",MixedContentCalls.recorded,"the parameterless content is the page")
     }
 
     /**
