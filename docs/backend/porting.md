@@ -61,6 +61,15 @@ Loom 从某个版本起默认使用**官方命名**（Mojang 名），不再需�
 
 **别按名字猜哪个成员本来就是公开的。** 实测：把 `1.21.1` 上 `GuiGraphics.bufferSource` 与 `GuiGraphics.innerBlit(...)` 两条 AT 注释掉再编译，立刻报 `Cannot access ... it is private` / `it is package-private`——它们看着像公开（框架代码到处在调），实际全靠 AT 打开。反过来说也确有冗余条目：`26.3` 上 `RenderPipelines.GUI_SNIPPET` 与 `GUI_TEXTURED_SNIPPET` 本来就是 public，写进去只是为了与 Fabric 侧 access widener 一一对应。
 
+## 打包后复跑一遍
+开发环境与打包环境会差出真实故障，改完必须用**发布 jar** 在真实客户端里跑一遍（见[构建与运行](build)）。已经踩过的三类差异：
+
+- **Fabric 的模组资源**由 Fabric API 加载：缺了它只会重载 `vanilla`，核心库的语言文件读不到，所有翻译退化成键名；而 dev 环境由 Loom 代劳，所以只在打包后暴露。
+- **依赖版本要互相满足**：`fabric-1.21.1` 曾把 loader 钉在 0.18.4，而它声明的 Fabric Language Kotlin 要求 ≥0.19.5——dev 用 Loom 自带的 loader，因此直到打包后才报 `HARD_DEP_NO_CANDIDATE`。
+- **Forge 的 Mixin 需要 refmap**：`1.20.1` 生产环境跑 SRG 名，`@Shadow` 必须有 refmap 才能定位；dev 用官方名所以无害，打包后则直接 `No refMap loaded` 注入失败。NeoForge 不需要（它生产环境也用官方名）。
+
+`26.3` 的 NeoForge 生产环境要多一步：portablemc 自带的 NeoForge 安装器在该版本上会崩（`KeyError: 'ROOT'`），改用 **NeoForge 官方安装器** `java -jar neoforge-<版本>-installer.jar --installClient <目录>` 生成 `versions/<neoforge 版本>/`，再让 portablemc 按那个版本 id 启动即可。
+
 ## 4. Mixin
 仓库有三处 Mixin，各自替换后失效的方式不同：
 
