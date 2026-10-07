@@ -33,7 +33,7 @@ class DslRuntimeTest {
     @Order(1)
     fun `publishing the backend before installing the platform is an error`() {
         assertFalse(DslRuntime.isInstalled)
-        assertFailsWith<IllegalStateException> { DslRuntime.platformReady({ TestBackend }) }
+        assertFailsWith<IllegalStateException> { DslRuntime.platformReady { TestBackend } }
     }
 
     @Test
@@ -42,7 +42,7 @@ class DslRuntimeTest {
         val commonRuns = FixtureCommon.runs
         val clientRuns = FixtureClient.runs
 
-        DslRuntime.install({ TestMetadata })
+        DslRuntime.install { TestMetadata }
 
         assertEquals(commonRuns + 1, FixtureCommon.runs, "installing must initialise the common entries once")
         assertEquals(clientRuns, FixtureClient.runs, "a common platform must not run the client initialisation")
@@ -51,7 +51,7 @@ class DslRuntimeTest {
     @Test
     @Order(3)
     fun `metadata works before the platform is ready while the backend does not`() {
-        DslRuntime.install({ TestMetadata })
+        DslRuntime.install { TestMetadata }
 
         assertEquals(TestMetadata.configDir, dslMetadata.configDir)
 
@@ -65,8 +65,8 @@ class DslRuntimeTest {
     @Test
     @Order(4)
     fun `publishing the backend makes it available`() {
-        DslRuntime.install({ TestMetadata })
-        DslRuntime.platformReady({ TestBackend })
+        DslRuntime.install { TestMetadata }
+        DslRuntime.platformReady { TestBackend }
 
         assertSame(TestBackend, dslBackend)
     }
@@ -74,17 +74,17 @@ class DslRuntimeTest {
     @Test
     @Order(5)
     fun `installing a second time is an error`() {
-        DslRuntime.install({ TestMetadata })
+        DslRuntime.install { TestMetadata }
 
-        assertFailsWith<IllegalStateException> { DslRuntime.install({ TestMetadata }) }
+        assertFailsWith<IllegalStateException> { DslRuntime.install { TestMetadata } }
     }
 
     @Test
     @Order(6)
     fun `publishing a second backend is an error`() {
-        DslRuntime.install({ TestMetadata })
-        DslRuntime.platformReady({ TestBackend })
+        DslRuntime.install { TestMetadata }
+        DslRuntime.platformReady { TestBackend }
 
-        assertFailsWith<IllegalStateException> { DslRuntime.platformReady({ TestBackend }) }
+        assertFailsWith<IllegalStateException> { DslRuntime.platformReady { TestBackend } }
     }
 }

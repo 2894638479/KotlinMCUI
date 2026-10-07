@@ -14,7 +14,7 @@ import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 internal object TestRuntime {
 
     fun install() {
-        if (!DslRuntime.isInstalled) DslRuntime.install({ TestMetadata })
-        if (dslBackendProvider == null) DslRuntime.platformReady({ TestBackend })
+        if (!DslRuntime.isInstalled) DslRuntime.install { TestMetadata }
+        if (dslBackendProvider == null) DslRuntime.platformReady { TestBackend }
     }
 }

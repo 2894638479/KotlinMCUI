@@ -28,9 +28,9 @@ parent: Dev
 后端的可用时机分两段，框架为这两段各提供一个入口，模组与后端都不再自己拼接顺序：
 
 ```kotlin
-DslRuntime.install({ Metadata })              // 模组初始化：平台事实 + 入口发现
+DslRuntime.install { Metadata }                // 模组初始化：平台事实 + 入口发现
 // …客户端构造完成、可以建界面之后…
-DslRuntime.platformReady({ DefaultBackend })  // 后端工厂与"就绪"一起交出来
+DslRuntime.platformReady { DefaultBackend }    // 后端工厂与"就绪"一起交出来
 ```
 
 - `install` 立刻读一次元数据，并完成**入口发现**与框架自己的**配置读取**——这些只需要元数据。

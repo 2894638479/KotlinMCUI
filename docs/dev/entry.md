@@ -51,7 +51,7 @@ META-INF/services/io.github.u2894638479.kotlinmcui.entry.DslEntryGui
 
 ## 加载顺序
 ```kotlin
-DslRuntime.install({ Metadata })   // 内部调用 DslEntryLoader.discover(environment)
+DslRuntime.install { Metadata }   // 内部调用 DslEntryLoader.discover(environment)
 ```
 
 首次 `discover` 的动作是：加载公共入口并调用 `initialize()` → 按环境调用 `initializeClient()` 或 `initializeServer()` → 登记 GUI 入口 → 登记 Overlay 入口。
