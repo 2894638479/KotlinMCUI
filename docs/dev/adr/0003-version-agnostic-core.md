@@ -4,7 +4,9 @@
 
 官方后端是**硬依赖**（Fabric 侧 `depends`、Forge 侧 `mandatory = true`、NeoForge 侧 `type = "required"`，两侧都要）：核心库和它 `META-INF/services` 里的入口都是 Kotlin 编译的，运行时要由谁提供不该由核心库挑——具体用 Fabric Language Kotlin、Kotlin for Forge 还是 KotlinLangForge，由后端自己挑选并提供，核心库的元数据里因此**不出现任何语言提供者的名字**。服务端同样可以有自己的后端（入口系统本来就分客户端与服务端），所以这条依赖在两侧都成立。
 
-Forge 侧的语言**加载器**与语言**提供者**是两件事：核心库没有入口代码，所以它声明的是 Forge 自带的 low/no-code 加载器 `modLoader = "lowcodefml"`（Forge 文档原文：「Forge provides the Java loader `javafml` and low/no code loader `lowcodefml`」），这不需要任何 Kotlin 提供者去实现；提供者（KFF / KLF）只负责让 Kotlin 写的 `@Mod` 类能被加载，那是**后端**的事。
+Forge 侧的语言**加载器**与语言**提供者**是两件事：核心库没有入口代码，所以它在 **Forge** 上声明的是 Forge 自带的 low/no-code 加载器 `modLoader = "lowcodefml"`（Forge 文档原文：「Forge provides the Java loader `javafml` and low/no code loader `lowcodefml`」），这不需要任何 Kotlin 提供者去实现；提供者（KFF / KLF）只负责让 Kotlin 写的 `@Mod` 类能被加载，那是**后端**的事。
+
+**NeoForge 上这条声明不能省。** `26.3` 把 `lowcodefml` 标为弃用，并在日志里建议删掉 `modLoader` 与 `loaderVersion`；但 `21.1` 反过来要求必须有它——缺了直接 `InvalidModFileException: Missing ModLoader`，整份 mod 文件被判无效（实测：删掉后 `21.1` 上核心库加载失败，后端随之报硬依赖不满足）。核心库只有一份 `neoforge.mods.toml` 要同时服务所有 NeoForge 版本，所以声明保留，代价是 `26.3` 上一条弃用警告。这正是本 ADR 的立场：宁可留一条警告，也不提前把某条版本线排除在外。
 
 ## 被否的备选
 

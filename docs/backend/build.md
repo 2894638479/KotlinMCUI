@@ -80,7 +80,7 @@ $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.te
 
 页面本身是**框架里公开的顶层 `context(DslContext)` 函数**，时序与判定也都在框架里——框架的预览会话负责解析引用、等首帧、按帧等待、判定、截图与退出码，后端只提供 `capture`（把当前帧写成文件）与 `quit`（结束游戏）两个平台动作。换一个后端时这两处不必重写。
 
-日常验证在 `fabric-1.20.1` 分支上做：预览机制只在这一个分支上维护（迭代期其他版本分支不追）。`fabric-26.2` 上除 OpenGL 外**建议再用 Vulkan 跑一遍同一套命令**——Vulkan 对绘制路径的校验更严格，OpenGL 能跑通不代表它能（原因见[开发文档](../dev/backend-fabric)）：
+七条分支都用这一套命令验收（清单见[概览](overview)）。预览机制本身在**核心库**里，后端只提供 `capture` 与 `quit` 两个平台动作，所以换分支不需要重写任何验证代码。图形后端方面，`26.x` 上除 OpenGL 外**建议再用 Vulkan 跑一遍同一套命令**——Vulkan 对绘制路径的校验更严格，OpenGL 能跑通不代表它能（原因见[开发文档](../dev/backend-fabric)）：
 
 ```
 JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.test.TestColorPage" ./gradlew runClient --args="--graphicsBackend vulkan"      # PowerShell 同样写法
