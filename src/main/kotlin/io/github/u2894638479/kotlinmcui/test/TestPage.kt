@@ -28,7 +28,8 @@ fun TestPage(): DslChild = Row {
             "color" to { TestColorPage() },
             "metadata" to { TestMetadataPage() },
             "rotation" to { TestRotationPage() },
-            "animation" to { TestAnimationPage() }
+            "animation" to { TestAnimationPage() },
+            "render" to { TestBackendRenderPage() }
         ).mapKeys { translate("kotlinmcui.${it.key}") }
     }
     var page by local { pages.entries.first() }

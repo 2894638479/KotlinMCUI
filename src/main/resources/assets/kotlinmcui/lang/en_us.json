@@ -34,5 +34,6 @@
     "kotlinmcui.widget.color.square": "Square",
     "kotlinmcui.widget.color.triangle": "Triangle",
     "kotlinmcui.debugoverlay": "Debug Overlay",
-    "kotlinmcui.preview.error": "Preview failed"
+    "kotlinmcui.preview.error": "Preview failed",
+    "kotlinmcui.render": "Render",
 }
