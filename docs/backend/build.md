@@ -73,7 +73,7 @@ $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.te
 
 不设这个属性时什么都不会打开（就是普通客户端）。**只打开页面、不拍照也不退出**是默认行为，适合自己看；加了 `capture` 才变成给机器用的模式——这时**解析不出来的引用、构建或渲染时抛异常的页面、以及没写出截图，都会以非零退出码结束**（日志会列出尝试过哪些名字）。
 
-**透视是唯一会用到位姿矩阵第三行的路径**（`test.TestTransformPage`），改动变换相关代码后应当跑一次；`test.TestPolygonPage` 是唯一走 `DslBackendTriangles` 这条可选能力的页面，改动顶点提交路径后应当跑一次它。
+**透视是唯一会用到位姿矩阵第三行的路径**（`test.TestTransformPage`），改动变换相关代码后应当跑一次；`test.TestPolygonPage` 是唯一走三角形列表这个原语的页面，改动顶点提交路径后应当跑一次它。
 
 预览**不替页面补背景**：页面自己没挂 `defaultBackground()` 时，截图里控件背后就是游戏画面。`test.TestColorPage` 等演示页都自己挂了。
 

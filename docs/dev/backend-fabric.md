@@ -86,7 +86,7 @@ HUD 从第一帧就画（加载界面上也会画覆盖层），所以它正是�
 同一套契约在两个 Minecraft 版本上的落地方式不同。这里只列**必须按版本改写**的部分：
 
 - **HUD 就绪门控**：1.20.1 没有 `isGameLoadFinished`，用 `Minecraft.getOverlay() != null`（加载覆盖层在场）等价表达。
-- **绘制原语**：1.20.1 的 `RenderType` 既没有三角形类型、`create` 也不公开（`NO_CULL`/`NO_DEPTH_TEST` 等还是 protected），所以热路径用原版批处理——未贴图走 `RenderType.gui()` 的一个四边形，贴图且四角同色走 `innerBlit`；只有"贴图 + 逐顶点颜色"和可选能力 `DslBackendTriangles` 走公开的 `Tesselator` + `BufferBuilder` 立即模式。**立即模式不是 `RenderType`，必须自己 `disableCull()` / `disableDepthTest()`**，否则一个图形都画不出来（多边形自检页曾经只剩文字，就是这个原因）。
+- **绘制原语**：1.20.1 的 `RenderType` 既没有三角形类型、`create` 也不公开（`NO_CULL`/`NO_DEPTH_TEST` 等还是 protected），所以热路径用原版批处理——未贴图走 `RenderType.gui()` 的一个四边形，贴图且四角同色走 `innerBlit`；只有"贴图 + 逐顶点颜色"和三角形列表 `renderTriangles` 走公开的 `Tesselator` + `BufferBuilder` 立即模式。**立即模式不是 `RenderType`，必须自己 `disableCull()` / `disableDepthTest()`**，否则一个图形都画不出来（多边形自检页曾经只剩文字，就是这个原因）。
 - **四边形的对角线**：`RenderType.gui()` 是 QUADS，用哪条对角线切开由平台决定；框架产生的四角颜色都是轴仿射的（滑块轨道的 `(c0,c1,c0,c1)`、装饰器的单色），所以看不出来，但四角颜色完全任意的调用会看到差异。
 - **透视**：1.20.1 的位姿矩阵是 `Matrix4f`，后端直接用九参构造把 `m20/m21/m22` 带进去，不需要 26.2 那种给 JOML 二维矩阵补第三行的 mixin。
 - **HUD 注入点**：`GameRendererMixin` 重定向 `GuiGraphics.flush()`（26.2 是在 `Gui.extractRenderState` 里重定向 `applyCursor`）；注入时把位姿按 `1/guiScale` 缩放，框架的坐标因此仍是物理像素。

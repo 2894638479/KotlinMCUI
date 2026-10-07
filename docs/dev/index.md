@@ -71,6 +71,7 @@ nav_order: 7
 - [预览拒绝参数不全有默认值的页面](adr/0001-preview-parameterised-pages.md)
 - [核心库只声明编译期依赖](adr/0002-compile-time-dependencies.md)
 - [核心库不限定版本、加载器与环境](adr/0003-version-agnostic-core.md)
+- [三角形列表并入 DslBackendRenderer](adr/0004-mandatory-triangles.md)
 
 ## 模块地图
 | 包 | 职责 |
