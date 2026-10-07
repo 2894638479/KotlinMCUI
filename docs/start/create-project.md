@@ -27,6 +27,8 @@ dependencies {
 
 核心库不会把自己的运行期依赖带进你的工程：`slf4j-api`、`fastutil`、`kotlinx-coroutines-core`、`kotlinx-serialization-core`/`-json` 都由平台提供（Minecraft 自带前两个，Fabric Language Kotlin 内嵌后三个），它们在核心库的元数据里只对**编译期**可见。所以如果你在纯 JVM 环境（比如只写单元测试）里用到出现在公开签名中的成员——`dslLogger`、收 `CoroutineScope` 的回调、收 `StringFormat` 的配置工具——需要自己把它们加进依赖。
 
+核心库也不限定 Minecraft 版本、加载器与环境：元数据里不写游戏版本区间、不认某个具体加载器，`java` 要求是 8 及以上。它对**后端**是硬依赖，因为 Kotlin 运行时由后端挑选提供（Fabric 上是 Fabric Language Kotlin，Forge/NeoForge 上是 Kotlin for Forge 或 KotlinLangForge）；服务端也可以有服务端专用的后端。**某个环境能不能用，取决于有没有对应的后端**——同一个核心库 jar 可以配任何加载器、任何游戏版本的后端。
+
 适配情况查看：
 
 [KotlinMCUI source](https://github.com/2894638479/KotlinMCUI/)

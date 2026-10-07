@@ -11,7 +11,7 @@ parent: Backend
 ## 1. 先确认运行期依赖由谁提供
 核心库把这些依赖都当**编译期**依赖，运行期必须由平台提供：`slf4j-api` 与 `fastutil` 由 Minecraft 自带（它们是启动器库，不在 merged jar 里），`kotlin-stdlib`、`kotlinx-coroutines-core`、`kotlinx-serialization-core`/`-json` 与 `kotlin-reflect` 由加载器的 Kotlin 语言提供者内嵌。目标加载器缺哪个，就由**后端**把它打进自己的 jar，否则核心库会在运行期抛 `NoClassDefFoundError`。
 
-同时要在加载器元数据里指向所用的 Kotlin 提供者：Fabric 用 `fabric-language-kotlin`，Forge 侧是 Kotlin for Forge，NeoForge 侧用它自己的变体或 KotlinLangForge。Forge 与 NeoForge 是靠 `modLoader` / `loaderVersion` 选择语言适配器的，写错或缺失会在解析适配器时就拒绝加载，而不是等到运行期。
+同时要在后端自己的加载器元数据里指向所用的 Kotlin 提供者：Fabric 用 `fabric-language-kotlin`，Forge 侧是 Kotlin for Forge，NeoForge 侧用它自己的变体或 KotlinLangForge。核心库的元数据里不出现任何提供者的名字——运行时由后端挑选提供。Forge 与 NeoForge 是靠 `modLoader` / `loaderVersion` 选择语言适配器的，写错或缺失会在解析适配器时就拒绝加载，而不是等到运行期。
 
 ## 2. 先改版本号
 `gradle.properties` 里几乎每一项都要重新确认：

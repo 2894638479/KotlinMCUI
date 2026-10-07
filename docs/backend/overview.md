@@ -27,7 +27,7 @@ parent: Backend
 
 后端版本与它依赖的核心库版本**无关**：核心库版本写在 `gradle.properties` 的 `kotlinmcui_version` 里，两者各自发布。
 
-**后端与核心库是分开发布的，必须成对安装。** 后端的元数据把核心库写成精确版本，装错会在加载时直接报依赖不满足，而不是运行时出错。核心库那边只能把后端写成 `recommends`：专用服务端上没有后端，硬依赖会让服务端拒绝加载核心库。
+**后端与核心库是分开发布的，必须成对安装。** 后端的元数据把核心库写成精确版本，装错会在加载时直接报依赖不满足，而不是运行时出错。反方向同样是硬依赖：核心库需要 Kotlin 运行时，而运行时用哪一家（Fabric Language Kotlin / Kotlin for Forge / KotlinLangForge）由后端挑选提供，所以核心库把后端的 mod id 写成 `depends` / `mandatory = true` / `type = "required"`——服务端也可以有服务端专用的后端。
 
 ## 支持情况
 当前维护两个分支：`fabric-26.2`（Minecraft `26.2`、Fabric、Java 25）与 `fabric-1.20.1`（Minecraft `1.20.1`、Fabric、Java 17）。**日常验证在 `1.20.1` 上做**，`26.2` 用同一套流程跟进新版本；其它 Minecraft 版本的分支不再更新，需要时按[移植](porting)的清单另开分支。
