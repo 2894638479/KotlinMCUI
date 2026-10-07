@@ -48,9 +48,9 @@ class DslPropertyTest {
 
     @Test
     fun `the same id under another identity is a different property`() {
-        // A tooltip's content is built in the tooltip's own identity, so a value it needs from the
-        // page has to be read inside the page: `local` keys a slot by identity plus id, and another
-        // identity starts from the default again.
+        // A local slot is keyed by the identity that declared it, and tooltips and overlays are built
+        // in their own identity - so a `local` property is not a channel between them. Anything they
+        // have to share is read before they are built, or is a `static` property.
         var fromPage: Boolean? = null
         var fromOtherIdentity: Boolean? = null
         buildScreen {
