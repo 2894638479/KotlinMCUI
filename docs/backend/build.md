@@ -67,8 +67,9 @@ $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.te
 | 形式 | 例子 |
 | --- | --- |
 | IDE 里复制的顶层函数引用（JVM 类名 = 文件名 + `Kt`） | `io.github.u2894638479.kotlinmcui.test.TestColorPage` |
-| 显式的类与方法 | `io.github.u2894638479.kotlinmcui.test.TestTransformPageKt#TestTransformPage` |
-| 类名（入口，用它的 `content()` 画） | `io.github.u2894638479.kotlinmcui.test.TestEntry$TestPage` |
+| 显式的类与方法：静态函数，或 object / companion / 可用无参构造器建出来的类的成员 | `io.github.u2894638479.kotlinmcui.test.TestTransformPageKt#TestTransformPage`、`io.github.u2894638479.kotlinmcui.test.TestEntry$TestPage#content` |
+
+**预览指定的是一个函数**：只给类名不算引用，也不会去猜哪个函数画页面（那样只会报找不到）。
 
 不设这个属性时什么都不会打开（就是普通客户端）。**只打开页面、不拍照也不退出**是默认行为，适合自己看；加了 `capture` 才变成给机器用的模式——这时**解析不出来的引用、构建或渲染时抛异常的页面、以及没写出截图，都会以非零退出码结束**（日志会列出尝试过哪些名字）。
 
