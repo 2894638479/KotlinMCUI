@@ -68,8 +68,67 @@ class DslPreviewTest {
 
     @Test
     fun `an entry resolves through its content`() {
-        val page = DslPreview.pageFor("io.github.u2894638479.kotlinmcui.test.TestEntry\$TestPage")
+        val page = DslPreview.pageFor("io.github.u2894638479.kotlinmcui.test.TestEntry\$TestPage#content")
         assertEquals("io.github.u2894638479.kotlinmcui.test.TestEntry\$TestPage#content",page.describe())
+    }
+
+    @Test
+    fun `a member function of an object is reached through its instance`() {
+        val reference = "io.github.u2894638479.kotlinmcui.backend.ObjectPreviewPage#page"
+        assertEquals(reference,DslPreview.pageFor(reference).describe())
+    }
+
+    @Test
+    fun `a member function is reached through a no argument constructor`() {
+        val reference = "io.github.u2894638479.kotlinmcui.backend.ConstructedPreviewPage#page"
+        assertEquals(reference,DslPreview.pageFor(reference).describe())
+    }
+
+    @Test
+    fun `a jvm static companion member is reached through the class`() {
+        val reference = "io.github.u2894638479.kotlinmcui.backend.StaticCompanionPreviewPage#page"
+        assertEquals(reference,DslPreview.pageFor(reference).describe())
+    }
+
+    @Test
+    fun `a companion member without jvm static lives on the companion class`() {
+        val reference = "io.github.u2894638479.kotlinmcui.backend.PlainCompanionPreviewPage\$Companion#page"
+        assertEquals(reference,DslPreview.pageFor(reference).describe())
+    }
+
+    @Test
+    fun `a class that needs arguments is not reachable`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.UnbuildablePreviewPage#page")
+        }
+        assertNotNull(error.message)
+    }
+
+    @Test
+    fun `an abstract class is not reachable`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.AbstractPreviewPage#page")
+        }
+        assertNotNull(error.message)
+    }
+
+    @Test
+    fun `a vararg member is refused`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.VarargMemberPreviewPage#page")
+        }
+        val message = assertNotNull(error.message)
+        assertTrue(message.contains("parameter 'names' is a vararg"),message)
+    }
+
+    @Test
+    fun `a bare class name is not a page`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslPreview.pageFor("io.github.u2894638479.kotlinmcui.backend.ObjectPreviewPage")
+        }
+        val message = assertNotNull(error.message)
+        assertTrue(message.contains("ObjectPreviewPageKt#ObjectPreviewPage"),message)
+        assertFalse(message.contains("#page"),"a class name no longer guesses which function draws it")
     }
 
     @Test
@@ -85,7 +144,7 @@ class DslPreviewTest {
         }
         val message = assertNotNull(error.message)
         assertTrue(message.contains("NoSuchPageKt#NoSuchPage"),message)
-        assertTrue(message.contains("NoSuchPage#content"),message)
+        assertTrue(message.contains("class not found"),"a candidate whose class is missing says so")
     }
 
     @Test
@@ -200,7 +259,7 @@ class DslPreviewTest {
 
     @Test
     fun `an entry with a parameterless and a parameterised content uses the parameterless one`() {
-        val reference = "io.github.u2894638479.kotlinmcui.backend.MixedContentEntry"
+        val reference = "io.github.u2894638479.kotlinmcui.backend.MixedContentEntry#content"
         val page = DslPreview.pageFor(reference)
         assertFalse(page.usesDefaults,"the interface's own content() takes no parameters")
         MixedContentCalls.recorded = null
