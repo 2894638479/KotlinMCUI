@@ -35,12 +35,13 @@ import kotlin.time.Duration.Companion.milliseconds
  * session into the one a machine can gate on: it photographs the page and quits, with a non-zero
  * code when the reference could not be resolved, the page threw, or no file was written.
  *
- * A page is named by reference rather than registered, so the framework needs no preview-only API:
+ * A page is a function, named by reference rather than registered, so the framework needs no
+ * preview-only API:
  *
  * - the reference an IDE gives for a top-level function, which is the file name plus the function
  *   (`a.b.TestColorPage` means `a.b.TestColorPageKt.TestColorPage`);
- * - `a.b.Class#method` for a static function;
- * - a class name, in which case its `content()` draws the page (an entry).
+ * - `a.b.Class#method` for a static function or for a member of an object, which is what an entry's
+ *   page is (`a.b.Entry$Page#content`).
  *
  * A page takes the DSL context, and may take further parameters - but only defaulted ones, because
  * the preview passes no arguments. Whether a parameter has a default is invisible to Java reflection,
@@ -208,17 +209,15 @@ internal object DslPreview {
             val type = reference.substring(0,hash)
             val method = reference.substring(hash + 1)
             tried += describeCandidate(type,method)
-            staticPage(type,method,refused)?.let { return it }
+            findPage(type,method,refused)?.let { return it }
         } else {
-            // The JVM class of a top-level function is its file name with `Kt` appended, and a bare
-            // reference may instead name a class whose `content()` draws the page, so both are tried.
+            // A page is a function, and the reference an IDE gives for a top-level one is the function
+            // itself: its JVM class is the file name with `Kt` appended.
             val simple = reference.substringAfterLast('.')
             val parent = reference.substringBeforeLast('.',"")
             val fileClass = if(parent.isEmpty()) "${simple}Kt" else "$parent.${simple}Kt"
             tried += describeCandidate(fileClass,simple)
-            staticPage(fileClass,simple,refused)?.let { return it }
-            tried += describeCandidate(reference,"content")
-            entryPage(reference,refused)?.let { return it }
+            findPage(fileClass,simple,refused)?.let { return it }
         }
         val found = if(refused.isEmpty()) "" else "; found ${refused.joinToString()}"
         val rule = if(refused.isEmpty()) "" else
@@ -226,30 +225,51 @@ internal object DslPreview {
         error("no preview page for '$reference' - tried ${tried.joinToString()}$found$rule")
     }
 
-    private fun staticPage(className: String,methodName: String,refused: MutableList<String>): Page? {        val type = forName(className) ?: return null
-        for(method in type.declaredMethods) {
-            if(method.name != methodName || !Modifier.isStatic(method.modifiers) || !pageShape(method)) continue
-            val page = resolve(method,null,refused)
-            if(page != null) return page
+    /**
+     * The page named by [className] and [methodName], or `null` when there is no such function. A
+     * static one is called directly; a member one is called on the object's `INSTANCE`, or on an
+     * instance built by a no-argument constructor when it is not a Kotlin object.
+     */
+    private fun findPage(className: String,methodName: String,refused: MutableList<String>): Page? {
+        val type = forName(className) ?: return null
+        val candidates = type.declaredMethods.filter { it.name == methodName && pageShape(it) }
+        if(candidates.isEmpty()) return null
+        for(method in candidates.filter { Modifier.isStatic(it.modifiers) }) {
+            resolve(method,null,refused)?.let { return it }
+        }
+        val members = candidates.filterNot { Modifier.isStatic(it.modifiers) }
+        if(members.isEmpty() || Modifier.isAbstract(type.modifiers)) return null
+        val instance = instanceOf(type) ?: return null
+        // The parameterless overload is the page when a class offers both: the order `declaredMethods`
+        // reports is not specified.
+        members.firstOrNull { it.parameterCount == 1 }?.let { return Page(it,instance,null) }
+        for(method in members) {
+            resolve(method,instance,refused)?.let { return it }
         }
         return null
     }
 
-    private fun entryPage(className: String,refused: MutableList<String>): Page? {
-        val type = forName(className) ?: return null
-        val candidates = type.declaredMethods.filter { it.name == "content" && pageShape(it) }
-        if(candidates.isEmpty()) return null
-        val instance = runCatching { type.getField("INSTANCE").get(null) }.getOrNull()
+    /**
+     * The receiver a member function is called on: the object's own `INSTANCE`, the outer class's
+     * static field when the class is a companion object, or a no-argument constructor.
+     */
+    private fun instanceOf(type: Class<*>): Any? =
+        runCatching { type.getField("INSTANCE").get(null) }.getOrNull()
+            ?: outerInstance(type)
             ?: runCatching { type.getDeclaredConstructor().newInstance() }.getOrNull()
-            ?: return null
-        // The interface's own `content()` is the parameterless one, so it wins over an object's
-        // parameterised overload: the order `declaredMethods` reports is not specified.
-        candidates.firstOrNull { it.parameterCount == 1 }?.let { return Page(it,instance,null) }
-        for(method in candidates) {
-            val page = resolve(method,instance,refused)
-            if(page != null) return page
-        }
-        return null
+
+    /**
+     * The instance a nested object or a companion object is reachable through: its outer class holds
+     * it in a static field. The field is found by type rather than by name, because an unnamed
+     * companion's field is called `Companion` and it is the object's own name otherwise.
+     */
+    private fun outerInstance(type: Class<*>): Any? {
+        val outerName = type.name.substringBeforeLast('$',"")
+        if(outerName.isEmpty()) return null
+        val outer = forName(outerName) ?: return null
+        return outer.declaredFields
+            .firstOrNull { Modifier.isStatic(it.modifiers) && it.type == type }
+            ?.let { runCatching { it.get(null) }.getOrNull() }
     }
 
     /** The page for [method], or `null` after recording in [refused] why it cannot be previewed. */
