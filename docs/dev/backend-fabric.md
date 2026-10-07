@@ -98,6 +98,8 @@ HUD 从第一帧就画（加载界面上也会画覆盖层），所以它正是�
 
 Kotlin 反射是**编译期依赖**：核心库只写 `compileOnly(kotlin("reflect"))`，发布 jar 里没有它。运行期由平台提供——Fabric 的语言加载器已经把 `kotlin-reflect` 打进 `META-INF/jars/`，版本跟着它钉的 Kotlin 版本走。环境里没有 kotlin-reflect 时，带额外参数的页面一律被拒绝并写明原因，而不是退回"假定全默认"。
 
+同一套分工适用于核心库的其它平台依赖：`slf4j-api` 与 `fastutil` 由 Minecraft 自带（它们是启动器库，不在 merged jar 里），`kotlin-stdlib`、`kotlinx-coroutines-core` 与 `kotlinx-serialization-{core,json}` 由 FLK 的 `META-INF/jars/` 内嵌。所以核心库对它们只声明编译期依赖，`compileOnlyApi`（公开签名里出现过的）或 `compileOnly`（只在实现里用到的），**不写进发布元数据的运行期依赖**——否则消费者会被拖进第二份 coroutines/serialization，和 FLK 内嵌的那份撞在一起。后端不需要为这些做任何事：FLK 已经把库带进游戏进程。
+
 调用仍然走 `$default`：掩码位把 context 参数也算进去，页面自己的参数从第 1 位起；零值永远不会被读到，这正是"参数全部有默认值"换来的。返回值类型不参与判断，页面返回 `DslChild` 还是 `Unit` 都一样。
 
 ## 已知问题
