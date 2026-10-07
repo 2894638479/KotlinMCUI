@@ -35,6 +35,8 @@ import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
 import io.github.u2894638479.kotlinmcui.dsl.ui.Spacer
 import io.github.u2894638479.kotlinmcui.dsl.ui.TextAutoFold
 import io.github.u2894638479.kotlinmcui.dsl.ui.TextFlatten
+import io.github.u2894638479.kotlinmcui.dsl.ui.TextFoldable
+import io.github.u2894638479.kotlinmcui.dsl.withColor
 import io.github.u2894638479.kotlinmcui.dsl.ui.defaultBackground
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.Color
@@ -112,14 +114,59 @@ fun TestBackendRenderPage() = ScrollableColumn {
             Item(Modifier.size(24.scaled,24.scaled),"minecraft:diamond_sword",1,null,true,id = "item4")
         }
     }
-    Section("文本：字形 / 样式 / 自动折行 / 输入框") {
+    Section("文本：flatten（单行）/ foldable（换行）/ autofold（折行）/ 输入框") {
         Column {
             TextFlatten { "flatten：单行，换行符被去掉".emit() }
-            TextFlatten { "样式：阴影 + 斜体".emit(style = DslCharStyle().shadowed.italic) }
+            TextFoldable { "foldable：第一行\n第二行（\\n 生效）".emit() }
             TextAutoFold(Modifier.width(240.scaled)) {
                 "autofold：一段足够长的文字，用来确认自动折行与宽度约束都生效。".emit()
             }
             EditableText(Modifier.size(160.scaled,16.scaled),local { "可编辑文本" }) {}
+        }
+    }
+    Section("字体样式：粗体 / 斜体 / 粗斜 / 下划线 / 删除线 / 混淆 / 阴影 / 全开") {
+        Column {
+            TextFlatten { "plain 普通".emit() }
+            TextFlatten { "bold 粗体".emit(style = DslCharStyle().bold) }
+            TextFlatten { "italic 斜体".emit(style = DslCharStyle().italic) }
+            TextFlatten { "bold+italic 粗斜".emit(style = DslCharStyle().bold.italic) }
+            TextFlatten { "underlined 下划线".emit(style = DslCharStyle().underlined) }
+            TextFlatten { "strikeThrough 删除线".emit(style = DslCharStyle().strikeThrough) }
+            TextFlatten { "shadowed 阴影".emit(style = DslCharStyle().shadowed) }
+            TextFlatten { "obfuscated 混淆".emit(style = DslCharStyle().obfuscated) }
+            TextFlatten { "all 全开".emit(style = DslCharStyle().bold.italic.underlined.strikeThrough.obfuscated.shadowed) }
+            TextFlatten { "underlined ×2 两倍字号".emit(size = 18.scaled,style = DslCharStyle().underlined) }
+            TextFlatten { "strikeThrough ×2 两倍字号".emit(size = 18.scaled,style = DslCharStyle().strikeThrough) }
+        }
+    }
+    Section("字号 / 颜色 / 颜色作用域 / 同行混排 / 非 BMP / 字体名") {
+        Column {
+            Row {
+                // Fixed widths, otherwise the row's weighted aligner stretches each label and the
+                // four sizes can no longer be compared.
+                TextFlatten(Modifier.width(26.scaled)) { "6".emit(size = 6.scaled) }
+                TextFlatten(Modifier.width(26.scaled)) { "9".emit() }
+                TextFlatten(Modifier.width(26.scaled)) { "12".emit(size = 12.scaled) }
+                TextFlatten(Modifier.width(26.scaled)) { "18".emit(size = 18.scaled) }
+            }
+            TextFlatten {
+                "颜色：".emit()
+                "红 ".emit(color = Color(255,80,80))
+                "绿 ".emit(color = Color(80,220,80))
+                "半透明 ".emit(color = Color(255,255,255,120))
+                "默认".emit()
+            }
+            withColor(Color(255,180,60)) {
+                TextFlatten { "withColor 作用域：整段继承橙色".emit() }
+            }
+            TextFlatten {
+                "同行混排：".emit()
+                "红粗".emit(color = Color(255,80,80),style = DslCharStyle().bold)
+                " + ".emit()
+                "蓝斜下划线".emit(color = Color(90,140,255),style = DslCharStyle().italic.underlined)
+            }
+            TextFlatten { "非 BMP：😀 🧱 ∑ 中文 ①②③".emit() }
+            TextFlatten(fontName = "uniform") { "fontName=uniform（后端若忽略它，这行与上一行同形）".emit() }
         }
     }
     Section("裁剪：renderScissor（只裁绘制）/ scissor（裁剪 + 输入门控）") {
