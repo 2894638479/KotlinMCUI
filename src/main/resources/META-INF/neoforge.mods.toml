@@ -1,5 +1,3 @@
-modLoader = "lowcodefml"
-loaderVersion = "[0,)"
 issueTrackerURL = "${mod_issues}"
 license = "${license}"
 
@@ -11,7 +9,7 @@ authors = "${mod_authors}"
 description = '''
 ${mod_description}
 '''
-logoFile = "${icon}"
+iconFile = "${icon}"
 
 
 # Same as the Forge file: the backend brings the Kotlin runtime. NeoForge replaced `mandatory`
