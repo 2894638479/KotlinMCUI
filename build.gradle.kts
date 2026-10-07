@@ -36,7 +36,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.11.0")
+    // Only the preview session reads Kotlin reflection, and only to tell which page parameters have
+    // defaults. It is compile-time only: the published jar must not carry the 3 MB runtime, and the
+    // platforms that can run a preview ship it already (Fabric's language loader bundles it).
+    compileOnly(kotlin("reflect"))
     testImplementation(kotlin("test"))
+    testImplementation(kotlin("reflect"))
 }
 
 tasks.test {
