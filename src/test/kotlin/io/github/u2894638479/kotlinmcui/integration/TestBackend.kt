@@ -84,12 +84,21 @@ internal object TestBackend : DslBackend<Unit, Unit>,
 
 // ── Renderer ─────────────────────────────────────────────────────────────────
 
+/** One recorded [DslBackendRenderer.renderTriangles] call, for tests that assert geometry. */
+internal class Triangles(val vertices: FloatArray, val colors: IntArray, val image: ImageHolder?)
+
+/** Every `renderTriangles` call the fake backend received, in order. */
+internal val recordedTriangles = mutableListOf<Triangles>()
+
 private object TestRenderer : DslBackendRenderer<Unit> {
     override val guiScale = 1.0
     context(renderParam: Unit) override fun flush() {}
     context(renderParam: Unit) override fun renderQuad(
         rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color, image: ImageHolder?, uv: Rect?
     ) {}
+    context(renderParam: Unit) override fun renderTriangles(vertices: FloatArray, colors: IntArray, image: ImageHolder?) {
+        recordedTriangles += Triangles(vertices.copyOf(), colors.copyOf(), image)
+    }
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderButton(rect: Rect, highlighted: Boolean, active: Boolean, color: Color) {}
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderSlot(rect: Rect) {}
     context(renderParam: Unit, ctx: DslScaleContext) override fun renderContainer(rect: Rect) {}

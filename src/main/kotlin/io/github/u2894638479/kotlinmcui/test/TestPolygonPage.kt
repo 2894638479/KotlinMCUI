@@ -2,7 +2,6 @@ package io.github.u2894638479.kotlinmcui.test
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.backend.fillPolygon
-import io.github.u2894638479.kotlinmcui.backend.triangles
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
@@ -21,9 +20,9 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Draws regular polygons through the optional triangle-list capability, which no
- * framework component uses: the polygons below are painted by a component that asks the
- * backend it was given for the capability, exactly the way user code would.
+ * Draws regular polygons through the triangle-list primitive, which no framework component
+ * uses: the polygons below are painted by a component that calls the backend it was given,
+ * exactly the way user code would.
  */
 context(ctx: DslContext)
 fun TestPolygonPage() {
@@ -42,15 +41,13 @@ fun TestPolygonPage() {
 private val polygonPalette = arrayOf(Color.RED, Color.GREEN, Color.BLUE, Color.WHITE)
 
 /**
- * A regular polygon painted through the backend's optional triangle capability. On a
- * backend without it the component draws nothing, which is what the capability promises.
+ * A regular polygon painted as a triangle fan.
  */
 context(ctx: DslContext)
 private fun Polygon(modifier: Modifier, id: Any, sides: Int) = Spacer(modifier, id).change {
     object : DslComponent by it {
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
-            val triangles = backend.triangles() ?: return
             val rect = instance.rect
             val centerX = (rect.left + rect.right) / 2
             val centerY = (rect.top + rect.bottom) / 2
@@ -59,7 +56,7 @@ private fun Polygon(modifier: Modifier, id: Any, sides: Int) = Spacer(modifier, 
                 val angle = i * 2.0 * PI / sides - PI / 2
                 Position(centerX + radius * cos(angle), centerY + radius * sin(angle))
             }
-            triangles.fillPolygon(points, points.indices.map { polygonPalette[it % polygonPalette.size] })
+            backend.fillPolygon(points, points.indices.map { polygonPalette[it % polygonPalette.size] })
         }
     }
 }

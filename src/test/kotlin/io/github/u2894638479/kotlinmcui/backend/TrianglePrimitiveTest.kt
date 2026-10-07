@@ -13,13 +13,14 @@ import kotlin.test.*
 import org.junit.jupiter.api.Test
 
 /**
- * The polygon convenience builds a triangle fan. A capability backend is all this needs —
- * the interface has no other member — which is the point of keeping it separate from
- * [DslBackendRenderer].
+ * The triangle-list primitive is part of the renderer contract — a quad cannot express a
+ * shape that is not a parallelogram — and [fillPolygon] is the convenience that turns a
+ * convex polygon into a fan of it.
  */
-class DslBackendTrianglesTest {
+class TrianglePrimitiveTest {
 
-    private class Recorder : DslBackendTriangles<Unit> {
+    /** A renderer that records the triangle list it was handed; everything else is a stub. */
+    private class Recorder : DslBackendRenderer<Unit> by Plain {
         var vertices: FloatArray? = null
         var colors: IntArray? = null
         var image: ImageHolder? = null
@@ -37,37 +38,6 @@ class DslBackendTrianglesTest {
     private fun Recorder.polygon(points: List<Position>, colors: List<Color>) {
         kotlin.context(Unit) { fillPolygon(points, colors) }
     }
-
-    /** A backend that implements the renderer contract and nothing else. */
-    private object Plain : DslBackendRenderer<Unit> {
-        override val guiScale = 1.0
-        context(renderParam: Unit) override fun flush() {}
-        context(renderParam: Unit) override fun renderQuad(
-            rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color, image: ImageHolder?, uv: Rect?
-        ) {}
-        context(renderParam: Unit, ctx: DslScaleContext) override fun renderButton(rect: Rect, highlighted: Boolean, active: Boolean, color: Color) {}
-        context(renderParam: Unit, ctx: DslScaleContext) override fun renderSlot(rect: Rect) {}
-        context(renderParam: Unit, ctx: DslScaleContext) override fun renderContainer(rect: Rect) {}
-        context(renderParam: Unit, ctx: DslScaleContext) override fun renderTooltip(rect: Rect) {}
-        context(renderParam: Unit, ctx: DslScaleContext) override fun renderItem(rect: Rect, item: String, count: Int, damage: Double?, enchanted: Boolean) {}
-        context(ctx: DslScaleContext, renderParam: Unit) override fun renderDefaultBackground(rect: Rect) {}
-        context(renderParam: Unit) override fun withScissor(rect: Rect, block: () -> Unit) = block()
-        context(renderParam: Unit) override fun withTransform(transform: Transform, block: () -> Unit) = block()
-        override fun getFont(name: String?): DslFont<Unit> = error("not used")
-    }
-
-    private object Capable : DslBackendRenderer<Unit> by Plain, DslBackendTriangles<Unit> by Recorder()
-
-    @Test
-    fun `a component reaches the capability through the renderer it was given`() {
-        assertSame(Capable, Capable.triangles(), "a backend that has the capability is returned as is")
-        assertNull(Plain.triangles(), "one without it answers null, so the component draws nothing")
-    }
-
-    private val square = listOf(
-        Position(0.px, 0.px), Position(10.px, 0.px), Position(10.px, 10.px), Position(0.px, 10.px)
-    )
-    private val squareColors = listOf(Color.RED, Color.GREEN, Color.BLUE, Color.WHITE)
 
     @Test
     fun `a convex polygon becomes a fan around its first vertex`() {
@@ -122,5 +92,29 @@ class DslBackendTrianglesTest {
         assertFailsWith<IllegalArgumentException>("every vertex needs a colour") {
             Recorder().polygon(square, squareColors.take(3))
         }
+    }
+
+    private val square = listOf(
+        Position(0.px, 0.px), Position(10.px, 0.px), Position(10.px, 10.px), Position(0.px, 10.px)
+    )
+    private val squareColors = listOf(Color.RED, Color.GREEN, Color.BLUE, Color.WHITE)
+
+    /** A renderer that draws nothing; the recording subclass overrides what it needs. */
+    private object Plain : DslBackendRenderer<Unit> {
+        override val guiScale = 1.0
+        context(renderParam: Unit) override fun flush() {}
+        context(renderParam: Unit) override fun renderQuad(
+            rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color, image: ImageHolder?, uv: Rect?
+        ) {}
+        context(renderParam: Unit) override fun renderTriangles(vertices: FloatArray, colors: IntArray, image: ImageHolder?) {}
+        context(renderParam: Unit, ctx: DslScaleContext) override fun renderButton(rect: Rect, highlighted: Boolean, active: Boolean, color: Color) {}
+        context(renderParam: Unit, ctx: DslScaleContext) override fun renderSlot(rect: Rect) {}
+        context(renderParam: Unit, ctx: DslScaleContext) override fun renderContainer(rect: Rect) {}
+        context(renderParam: Unit, ctx: DslScaleContext) override fun renderTooltip(rect: Rect) {}
+        context(renderParam: Unit, ctx: DslScaleContext) override fun renderItem(rect: Rect, item: String, count: Int, damage: Double?, enchanted: Boolean) {}
+        context(ctx: DslScaleContext, renderParam: Unit) override fun renderDefaultBackground(rect: Rect) {}
+        context(renderParam: Unit) override fun withScissor(rect: Rect, block: () -> Unit) = block()
+        context(renderParam: Unit) override fun withTransform(transform: Transform, block: () -> Unit) = block()
+        override fun getFont(name: String?): DslFont<Unit> = error("not used")
     }
 }

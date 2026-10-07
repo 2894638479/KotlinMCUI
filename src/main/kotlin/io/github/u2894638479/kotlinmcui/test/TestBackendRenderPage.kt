@@ -4,7 +4,6 @@ import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.backend.fillRect
 import io.github.u2894638479.kotlinmcui.backend.fillRectGradient
 import io.github.u2894638479.kotlinmcui.backend.fillPolygon
-import io.github.u2894638479.kotlinmcui.backend.triangles
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
@@ -193,7 +192,7 @@ fun TestBackendRenderPage() = ScrollableColumn {
             ColorRect(Modifier.size(30.scaled,20.scaled),Color(255,140,60),"t-persp").perspective(0.002,0.0)
         }
     }
-    Section("可选能力：DslBackendTriangles（灰块 = 后端没有这个能力）") {
+    Section("三角形：renderTriangles 与 fillPolygon（多边形扇）") {
         PolygonBox()
     }
 }.defaultBackground()
@@ -220,20 +219,14 @@ private fun GradientBox() = Spacer(Modifier.size(50.scaled,24.scaled),"gradient"
     }
 }
 
-/** The optional triangle-list capability: a fan when it is there, a grey box when it is not. */
+/** The triangle-list primitive: a fan of three vertices with one colour each. */
 context(ctx: DslContext)
 private fun PolygonBox() = Spacer(Modifier.size(80.scaled,24.scaled),"triangles").change {
     object : DslComponent by it {
         context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
-            val triangles = backend.triangles()
-            if(triangles == null) {
-                backend.fillRect(instance.rect,Color(90,90,90))
-                backend.flush()
-                return
-            }
             val rect = instance.rect
-            triangles.fillPolygon(
+            backend.fillPolygon(
                 listOf(
                     Position(rect.left + rect.width / 2,rect.top),
                     Position(rect.left,rect.bottom),

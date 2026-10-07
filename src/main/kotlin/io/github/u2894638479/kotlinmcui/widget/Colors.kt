@@ -1,10 +1,8 @@
 package io.github.u2894638479.kotlinmcui.widget
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
-import io.github.u2894638479.kotlinmcui.backend.DslBackendTriangles
 import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.backend.fillRect
-import io.github.u2894638479.kotlinmcui.backend.triangles
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.DslComponentImpl
 import io.github.u2894638479.kotlinmcui.component.isFocused
@@ -212,11 +210,11 @@ private fun Rect.triangleVertices(): FloatArray {
     return floatArrayOf((left + right) / 2,top,left,bottom,right,bottom)
 }
 
-/** Draw that triangle with the three corner colours, if the backend has the triangle-list capability. */
+/** Draw that triangle with the three corner colours. */
 context(backend: DslBackendRenderer<RP>, renderParam: RP)
 private fun <RP> DslBackendRenderer<RP>.paletteTriangle(rect: Rect, apex: Color, left: Color, right: Color) {
     if(rect.width <= 0.px || rect.height <= 0.px) return
-    this.triangles()?.renderTriangles(rect.triangleVertices(),intArrayOf(apex.rgbaInt,left.rgbaInt,right.rgbaInt))
+    this.renderTriangles(rect.triangleVertices(),intArrayOf(apex.rgbaInt,left.rgbaInt,right.rgbaInt))
 }
 
 /**
@@ -327,9 +325,8 @@ object Colors {
     /**
      * The classic hue triangle: the pure hue on top, white bottom-left, black bottom-right.
      *
-     * Drawing needs the optional [DslBackendTriangles] capability; without it the picker still works
-     * (pressing sets the colour) but nothing is drawn — [ColorEdit] hides the mode instead of
-     * offering an invisible area.
+     * The triangle is drawn with [DslBackendRenderer.renderTriangles], so every backend can
+     * show it.
      */
     context(ctx: DslContext)
     fun ColorTriangle(
@@ -498,8 +495,7 @@ object Colors {
         picker: ColorPicker = ColorPicker.Square,
         id: Any = prop,
     ): DslChild {
-        val canDrawTriangle = dslBackend is DslBackendTriangles<*>
-        val mode = local(newChildId(id)) { if(canDrawTriangle) picker else ColorPicker.Square }
+        val mode = local(newChildId(id)) { picker }
         return Column(id = id) {
             Row(Modifier.padding(2.scaled)) {
                 ColorRect(Modifier.size(20.scaled,20.scaled).padding(1.scaled),prop.value,newChildId(id))
@@ -513,7 +509,7 @@ object Colors {
                 // The palettes only move saturation and value, so the hue needs its own handle.
                 ColorHue(prop,Modifier.size(14.scaled,80.scaled),Axis.Vertical,newChildId(id))
                 Column(Modifier.padding(2.scaled)) {
-                    if(canDrawTriangle) Editors.EnumButton(
+                    Editors.EnumButton(
                         mode,
                         translate("kotlinmcui.widget.color.picker"),
                         { translate("kotlinmcui.widget.color.${it.name.lowercase()}") },

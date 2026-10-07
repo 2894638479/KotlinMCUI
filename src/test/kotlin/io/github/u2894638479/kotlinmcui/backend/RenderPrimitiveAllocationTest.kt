@@ -33,6 +33,7 @@ class RenderPrimitiveAllocationTest {
         var quads = 0
         override val guiScale = 1.0
         context(renderParam: Unit) override fun flush() {}
+        context(renderParam: Unit) override fun renderTriangles(vertices: FloatArray, colors: IntArray, image: ImageHolder?) {}
         context(renderParam: Unit) override fun renderQuad(
             rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color, image: ImageHolder?, uv: Rect?
         ) { quads++ }
