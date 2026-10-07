@@ -14,9 +14,11 @@ ${mod_description}
 logoFile = "${icon}"
 
 
+# Same as the Forge file: the backend brings the Kotlin runtime. NeoForge replaced `mandatory`
+# with `type` in 1.20.5.
 [[dependencies.${mod_id}]]
 modId = "kotlinmcuibackend"
-mandatory = true
+type = "required"
 versionRange = "[0,)"
 ordering = "NONE"
 side = "BOTH"

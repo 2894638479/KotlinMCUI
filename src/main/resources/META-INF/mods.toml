@@ -14,9 +14,11 @@ ${mod_description}
 logoFile = "${icon}"
 
 
+# The backend is what brings the Kotlin runtime - Fabric Language Kotlin, Kotlin for Forge or
+# KotlinLangForge, the backend picks - so the core requires it on both sides.
 [[dependencies.${mod_id}]]
 modId = "kotlinmcuibackend"
 mandatory = true
 versionRange = "[0,)"
 ordering = "NONE"
-side = "CLIENT"
+side = "BOTH"
