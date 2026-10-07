@@ -76,6 +76,8 @@ $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.te
 
 预览**不替页面补背景**：页面自己没挂 `defaultBackground()` 时，截图里控件背后就是游戏画面。`test.TestColorPage` 等演示页都自己挂了。
 
+引用解析不出来、或参数形状不合格时，预览把待测页面换成**错误页**（写着引用与原因），并保留错误日志与非零退出码；截图模式下截的就是这一页，所以那张图本身就是失败报告。不加 `capture` 时游戏不退出，可以留在页面里读原因。
+
 首次在一个游戏目录里运行时，原版会先显示**无障碍引导屏**并朗读「Press enter to enable the narrator」；预览直接换屏幕、不去应答它，所以该目录每次启动都会再来一遍。在 `run/options.txt` 里写 `onboardAccessibility:false` 即可关掉。
 
 页面本身是**框架里公开的顶层 `context(DslContext)` 函数**，时序与判定也都在框架里——框架的预览会话负责解析引用、等首帧、按帧等待、判定、截图与退出码，后端只提供 `capture`（把当前帧写成文件）与 `quit`（结束游戏）两个平台动作。换一个后端时这两处不必重写。
