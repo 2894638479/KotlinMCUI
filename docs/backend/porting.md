@@ -60,4 +60,4 @@ javap -classpath <上面那个 jar> net.minecraft.client.gui.Gui
 比翻反编译源码快，而且拿到的是**当前实际依赖的那个版本**的签名。校验访问扩大器与 Mixin 目标时都用这个方法。
 
 ## 6. 移植完的验证
-按[构建与运行](build)的顺序跑一遍：两个仓库都构建通过，`JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.test.TestTransformPage -Dkotlinmcui.preview.capture=true"` 配上 `./gradlew runClient` 时，变换演示页三种变换都正常并写出截图。透视那一页尤其重要——它是唯一依赖位姿矩阵第三行的路径。
+按[构建与运行](build)的顺序跑一遍：两个仓库都构建通过，`JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.test.TestTransformPage -Dkotlinmcui.preview.capture=true"` 配上 `./gradlew runClient` 时，变换演示页三种变换都正常并写出截图。透视那一页尤其重要——它是唯一依赖位姿矩阵第三行的路径。预览会话用 Kotlin 反射判断页面参数，核心库只把它当**编译期依赖**，运行期要由后端所在平台提供（Fabric 的语言加载器自带 `kotlin-reflect`）；平台没有它时，带额外参数的页面会被拒绝并写明原因。

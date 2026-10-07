@@ -94,7 +94,11 @@ HUD 从第一帧就画（加载界面上也会画覆盖层），所以它正是�
 ## 发布
 发布由标签驱动：`publishMods` 只在目标标签**尚不存在于 origin** 时启用，标签名是 `v<版本号>`（`+` 换成 `-`），发布类型由版本号里的关键字决定（`alpha` / `beta` / 其它视为正式）。Modrinth、CurseForge 与 GitHub Release 各需要一份环境变量里的 token；没有 token 时不要执行发布任务。
 
-**"多余参数必须有默认值"是反射的极限。** 解析器只检查第一个参数是 `DslContext`、函数不抽象，以及（有多余参数时）编译器为带默认值的参数生成的 `name$default` 方法存在——那是反射唯一能看到的“有默认值”的痕迹，它说不出**哪几个**参数有默认值，所以规则只能是“有多余参数就全部按默认值调用”（掩码位把 context 参数也算进去，页面自己的参数从第 1 位起）。带必填参数的函数因此不会被判成页面；只有“一部分必填、一部分有默认值”的函数会静默传入 0/null，日志里那条 `takes parameters` 就是提示。返回值类型不参与判断，页面返回 `DslChild` 还是 `Unit` 都一样。
+**"哪些参数有默认值"只有 Kotlin 反射说得出来。** Java 反射能看到的唯一痕迹，是编译器为带默认值的参数生成的 `name$default` 方法——而它**只要有一个参数带默认值就存在**，所以说不出是哪几个：`(ctx, required: Int, optional: String = "d")` 与全默认的页面在 Java 反射下无法区分，按"有 `$default` 就是页面"的规则，前者会被静默传入 0/null。判定因此改走 Kotlin 反射：`KFunction.parameters` 里 `kind` 为 `VALUE` 的那些就是页面自己的参数（上下文参数有独立的 `CONTEXT` kind），逐个问 `isOptional`，全为真才接受，否则拒绝并点名。`isOptional` 的定义还带出第二个坑：成员函数**覆写**时，超类声明有默认值也算 optional，可这种类自己没有 `name$default` 可调，所以"全都 optional"之后还要确认 `name$default` 确实存在于**这个类**上。
+
+Kotlin 反射是**编译期依赖**：核心库只写 `compileOnly(kotlin("reflect"))`，发布 jar 里没有它。运行期由平台提供——Fabric 的语言加载器已经把 `kotlin-reflect` 打进 `META-INF/jars/`，版本跟着它钉的 Kotlin 版本走。环境里没有 kotlin-reflect 时，带额外参数的页面一律被拒绝并写明原因，而不是退回"假定全默认"。
+
+调用仍然走 `$default`：掩码位把 context 参数也算进去，页面自己的参数从第 1 位起；零值永远不会被读到，这正是"参数全部有默认值"换来的。返回值类型不参与判断，页面返回 `DslChild` 还是 `Unit` 都一样。
 
 ## 已知问题
 - 字体只支持默认字体：取字体接口忽略名称参数，同一实例服务所有名称（满足核心的"同名同实例"要求，但不能按 `FontDescription` 切换）。

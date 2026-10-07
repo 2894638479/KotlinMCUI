@@ -62,7 +62,7 @@ JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.test.Te
 $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.test.TestTransformPage"; .\gradlew runClient
 ```
 
-页面用**引用**指定，不需要注册任何东西；页面可以有额外参数，但都要有默认值——预览只能按默认值调用它们（带必填参数的函数不是页面），返回值类型不限：
+页面用**引用**指定，不需要注册任何东西；返回值类型不限。页面只能长成两种样子：只要 DSL 上下文，或者额外参数**全部有默认值**——预览没有实参可传，只能按零值调用它们。只要有一个额外参数没有默认值，解析就会失败，日志会点名是哪个参数，并列出试过的引用：
 
 | 形式 | 例子 |
 | --- | --- |
