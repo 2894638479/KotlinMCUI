@@ -44,6 +44,10 @@ fun DslEntryPage() = Row {
         }
         DslEntryLoader.entries.forEachWithId { (it, flags) ->
             if(!showCodeEntry.value && !flags.isGui && !flags.isOverlay) return@forEachWithId
+            // The tooltip below is built in the tooltip's own identity, where a `local` property
+            // starts from its default again. So the page reads the flag here, and the tooltip uses
+            // the copy it is handed - reading it inside the tooltip would ignore the toggle.
+            val showDetailsHere = showDetails.value
             var errStr by local<String?> { null }
             Row(Modifier.padding(5.scaled)) {
                 Image(Modifier.size(40.scaled,40.scaled),it.icon) {}
@@ -77,7 +81,7 @@ fun DslEntryPage() = Row {
                     (it as DslEntryGui).content()
                 }
             }.styledTooltip {
-                if(!showDetails.value) {
+                if(!showDetailsHere) {
                     TextFlatten { it.name.emit() }
                     return@styledTooltip
                 }
