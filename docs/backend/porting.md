@@ -15,6 +15,8 @@ parent: Backend
 
 加载器的声明方式两边不同：**Forge** 必须写 `modLoader` / `loaderVersion`（Forge 文档明说这是必需的，写错或缺失会在解析适配器时就拒绝加载）；**NeoForge** 更麻烦——`26.x` 把它标为弃用、日志会建议删掉这两个设置，但 `21.1` 反过来要求必须有它，缺了直接报 `InvalidModFileException: Missing ModLoader`，整份 mod 文件被判无效。一份元数据要同时服务两条版本线时只能保留声明，代价是 `26.x` 上一条弃用警告。核心库就是这么取舍的。
 
+还要确认**模组资源**由谁加载：Fabric 上这件事由 Fabric API 的资源加载器负责，缺了它打包后的客户端里核心库的语言文件读不到，所有翻译都会变成键名（开发环境由 Loom 代劳，所以只在打包后暴露）。后端因此在 `fabric.mod.json` 里把 `fabric-api` 写成依赖。Forge / NeoForge 原生就加载模组资源，不需要额外模组。
+
 ## 2. 先改版本号
 `gradle.properties` 里几乎每一项都要重新确认：
 

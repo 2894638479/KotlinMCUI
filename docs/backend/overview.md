@@ -53,7 +53,8 @@ parent: Backend
 | Fabric Language Kotlin | 1.14.1+kotlin.2.4.20 起 |
 | KotlinMCUI（核心库） | 由后端的 `kotlinmcui_version` 精确指定，与后端自身的版本号无关 |
 | kotlinx-serialization-json | 1.11.0；核心库用它读写配置文件。核心库把它（以及 slf4j、fastutil、coroutines、serialization-core）都声明成**编译期**依赖：运行期由平台提供——Minecraft 自带 slf4j 与 fastutil，Fabric Language Kotlin 内嵌 coroutines 与 serialization。缺少某个库的加载器需要后端把它打进 jar |
-| Mod Menu | 可选；装了之后后端的配置页会出现在 Mod Menu 里 |
+| Fabric API | **必装**：Fabric 上加载模组资源（核心库的语言文件就在其中）的是它的资源加载器。缺了它，打包后的客户端里所有翻译都会退化成键名——开发环境看不出来，因为那里由 Loom 代劳 |
+| Mod Menu | 可选；装了之后后端的配置页（入口点列表）能从 Mod Menu 进入。Fabric 上它没有别的 UI 入口，不装时你自己的页面仍可用 `showScreen` 打开 |
 | Java | 运行游戏用的版本见上面的支持情况表；**构建用的 JDK 由构建工具链决定**，Forge 分支必须是 JDK 17 |
 
 Forge 与 NeoForge 分支把语言提供者换成 Kotlin for Forge / KotlinLangForge，依赖关系其余相同——核心库自己的元数据里不出现任何提供者的名字，用哪一家由后端挑选。
