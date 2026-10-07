@@ -57,6 +57,8 @@ Loom 从某个版本起默认使用**官方命名**（Mojang 名），不再需�
 
 **NeoForge 不读 access widener**：同一批成员要在 `META-INF/accesstransformer.cfg` 里用 Access Transformer 再写一遍（ModDevGradle 会自动取这个路径，元数据里再声明一次 `[[accessTransformers]]`）。两种写法里的名字与签名完全一致（都用官方命名），区别只在关键字：`accessible method/field/class` 对应 `public`，需要可赋值的用 `public-f`。逐条对着目标版本的 jar 用 `javap` 核过再写。
 
+**别按名字猜哪个成员本来就是公开的。** 实测：把 `1.21.1` 上 `GuiGraphics.bufferSource` 与 `GuiGraphics.innerBlit(...)` 两条 AT 注释掉再编译，立刻报 `Cannot access ... it is private` / `it is package-private`——它们看着像公开（框架代码到处在调），实际全靠 AT 打开。反过来说也确有冗余条目：`26.3` 上 `RenderPipelines.GUI_SNIPPET` 与 `GUI_TEXTURED_SNIPPET` 本来就是 public，写进去只是为了与 Fabric 侧 access widener 一一对应。
+
 ## 4. Mixin
 仓库有三处 Mixin，各自替换后失效的方式不同：
 
