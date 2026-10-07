@@ -65,6 +65,12 @@ nav_order: 7
 
 一个刻意留下的例外：`PropertyLifeScope` 是公开类型但构造器是 `internal`——用户只会通过 `local`/`stable`/`static` 拿到框架建好的实例，自己构造没有意义；它的 `clear()`/`clearOutdated()` 也保持 `internal`，因为 `clear()` 会清掉跨模组共享的 static 表。
 
+## 决策记录
+有些抉择值得单独展开——被否的备选、以及不明显的后果。它们写在 `adr/` 下，是开发文档而不是站点页面：
+
+- [预览拒绝参数不全有默认值的页面](adr/0001-preview-parameterised-pages.md)
+- [核心库只声明编译期依赖](adr/0002-compile-time-dependencies.md)
+
 ## 模块地图
 | 包 | 职责 |
 | --- | --- |
