@@ -29,15 +29,3 @@ private fun dslNoBackendError() = IllegalStateException(
     else
         "DSL failed to find a backend. You should install a mod to provide it, or you are trying to use DSL before initialization."
 )
-
-/**
- * Marks a backend implementation as internal/unstable.
- *
- * Users may install third-party backends at runtime, so depending on a specific
- * implementation may cause crashes. Use [dslBackend] instead for general access.
- */
-@RequiresOptIn(
-    message = "This backend is not stable; users may install other backends at runtime, causing a crash. Use dslBackend instead.",
-    level = RequiresOptIn.Level.WARNING
-)
-annotation class InternalBackend
