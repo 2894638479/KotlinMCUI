@@ -33,5 +33,6 @@
     "kotlinmcui.widget.color.picker": "调色板",
     "kotlinmcui.widget.color.square": "方块",
     "kotlinmcui.widget.color.triangle": "三角",
-    "kotlinmcui.debugoverlay": "调试叠加层"
+    "kotlinmcui.debugoverlay": "调试叠加层",
+    "kotlinmcui.preview.error": "预览失败"
 }

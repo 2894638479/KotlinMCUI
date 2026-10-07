@@ -2,7 +2,15 @@ package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.container.TopComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.context.scaled
+import io.github.u2894638479.kotlinmcui.dsl.translate
+import io.github.u2894638479.kotlinmcui.dsl.ui.Column
+import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
+import io.github.u2894638479.kotlinmcui.dsl.ui.TextAutoFold
+import io.github.u2894638479.kotlinmcui.dsl.ui.defaultBackground
 import io.github.u2894638479.kotlinmcui.logger.dslLogger
+import io.github.u2894638479.kotlinmcui.modifier.Modifier as DslModifier
+import io.github.u2894638479.kotlinmcui.modifier.padding
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -37,6 +45,11 @@ import kotlin.time.Duration.Companion.milliseconds
  * A page takes the DSL context, and may take further parameters - but only defaulted ones, because
  * the preview passes no arguments. Whether a parameter has a default is invisible to Java reflection,
  * so a page that is not shaped that way is refused instead of being called with values nobody supplied.
+ *
+ * A reference that does not resolve, or a page shaped function whose parameters cannot be left out,
+ * is shown as an error screen carrying the reason: the interactive session then stays in the game,
+ * where the reason can be read, and the capture session photographs that screen instead and still
+ * leaves the non-zero code and the log line.
  */
 internal object DslPreview {
     /** The page to open: one launch property, and the only name this feature has. */
@@ -79,7 +92,7 @@ internal object DslPreview {
             pageFor(reference)
         } catch(e: Throwable) {
             dslLogger.error("preview: '$reference' could not be resolved",e)
-            backend.quit(1)
+            showFailure(reference,errorText(reference,e),capture)
             return
         }
         if(page.usesDefaults) {
@@ -118,6 +131,52 @@ internal object DslPreview {
     }
 
     /**
+     * Puts [text] on screen instead of the page that could not be opened. In capture mode the error
+     * screen is photographed under the name the page would have had and the run still ends with a
+     * non-zero code, so a machine gate gets both the picture and the verdict; when nobody asked for a
+     * screenshot the game is left running, which is where a human wants to read the reason. The log
+     * line is written by the caller, because it carries the exception itself.
+     */
+    private suspend fun showFailure(reference: String,text: String,capture: Boolean) {
+        val backend = dslBackend
+        // The error screen needs the same readiness as a real page: opened any earlier it would be
+        // pushed aside by the platform's own loading screen, and the screenshot would show that
+        // instead of the reason.
+        if(!awaitFirstFrame()) {
+            dslLogger.error("preview: the platform never rendered a frame, giving up on '$reference'")
+            backend.quit(1)
+            return
+        }
+        try {
+            withContext(backend.mainDispatcher) {
+                backend.create("Preview error") { PreviewErrorPage(text) }
+            }.show()
+        } catch(e: Throwable) {
+            // A failing error screen must not swallow the reason it was meant to show, so this path
+            // stays a plain exit.
+            dslLogger.error("preview: could not show the error screen for '$reference'",e)
+            backend.quit(1)
+            return
+        }
+        if(!capture) return
+        val opened = TopComponent.frameIndex
+        while(TopComponent.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
+        val file = withContext(backend.mainDispatcher) { backend.capture(fileNameFor(reference)) }
+        if(file == null) dslLogger.error("preview: no screenshot was written for '$reference'")
+        else dslLogger.info("preview: wrote ${file.absolutePath} for the error screen of '$reference'")
+        backend.quit(1)
+    }
+
+    /**
+     * What the error screen shows: the reference that was asked for and why it could not be opened.
+     * For a reference that did not resolve, that reason already lists every name that was tried and
+     * what was wrong with each candidate. The reason is folded into one fact per line, because the
+     * text component only folds where its box ends and these diagnostics are a single long sentence.
+     */
+    internal fun errorText(reference: String,error: Throwable) =
+        "$reference\n\n" + (error.message ?: error.toString()).replace(", ","\n").replace(" - ","\n    ")
+
+    /**
      * Waits until the platform has rendered one frame through the framework, which is the moment it
      * is past its own loading screen and a screen of ours can survive.
      */
@@ -148,16 +207,17 @@ internal object DslPreview {
         if(hash > 0) {
             val type = reference.substring(0,hash)
             val method = reference.substring(hash + 1)
-            tried += "$type#$method"
+            tried += describeCandidate(type,method)
             staticPage(type,method,refused)?.let { return it }
         } else {
-            // The JVM class of a top-level function is its file name with `Kt` appended.
+            // The JVM class of a top-level function is its file name with `Kt` appended, and a bare
+            // reference may instead name a class whose `content()` draws the page, so both are tried.
             val simple = reference.substringAfterLast('.')
             val parent = reference.substringBeforeLast('.',"")
             val fileClass = if(parent.isEmpty()) "${simple}Kt" else "$parent.${simple}Kt"
-            tried += "$fileClass#$simple"
+            tried += describeCandidate(fileClass,simple)
             staticPage(fileClass,simple,refused)?.let { return it }
-            tried += "$reference#content"
+            tried += describeCandidate(reference,"content")
             entryPage(reference,refused)?.let { return it }
         }
         val found = if(refused.isEmpty()) "" else "; found ${refused.joinToString()}"
@@ -166,8 +226,7 @@ internal object DslPreview {
         error("no preview page for '$reference' - tried ${tried.joinToString()}$found$rule")
     }
 
-    private fun staticPage(className: String,methodName: String,refused: MutableList<String>): Page? {
-        val type = forName(className) ?: return null
+    private fun staticPage(className: String,methodName: String,refused: MutableList<String>): Page? {        val type = forName(className) ?: return null
         for(method in type.declaredMethods) {
             if(method.name != methodName || !Modifier.isStatic(method.modifiers) || !pageShape(method)) continue
             val page = resolve(method,null,refused)
@@ -202,6 +261,15 @@ internal object DslPreview {
     }
 
     private fun parameterTypes(method: Method) = method.parameterTypes.joinToString(",") { it.name }
+
+    /**
+     * One candidate name as the failure message shows it. A candidate whose class is not on the
+     * classpath is marked as such, because otherwise the list reads as if that member had been
+     * looked for and rejected on its shape.
+     */
+    private fun describeCandidate(className: String,methodName: String) =
+        if(forName(className) == null) "$className#$methodName (class not found)"
+        else "$className#$methodName"
 
     private fun forName(className: String): Class<*>? = runCatching { Class.forName(className) }.getOrNull()
 
@@ -314,3 +382,14 @@ internal object DslPreview {
         fun describe() = "${method.declaringClass.name}#${method.name}"
     }
 }
+
+
+/**
+ * The screen a preview shows when the page it was asked for cannot be opened: the reference, why it
+ * could not be opened, and nothing else, so that a screenshot of it is a usable report.
+ */
+context(ctx: DslContext)
+private fun PreviewErrorPage(text: String) = Column(DslModifier.padding(6.scaled)) {
+    TextAutoFold { translate("kotlinmcui.preview.error").emit() }
+    TextAutoFold { "\n$text".emit() }
+}.defaultBackground()
