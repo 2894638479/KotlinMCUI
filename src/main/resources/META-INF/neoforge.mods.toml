@@ -1,6 +1,9 @@
 issueTrackerURL = "${mod_issues}"
 license = "${license}"
 
+modLoader = "lowcodefml"
+loaderVersion = "[0,)"
+
 [[mods]]
 modId = "${mod_id}"
 version = "${mod_version}"
