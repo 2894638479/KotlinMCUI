@@ -56,4 +56,6 @@ fun MyPage() = Column { ... }.defaultBackground()
 
 它铺的是所在容器的矩形（所以屏幕边缘仍会露出游戏画面），绘制在子组件之前，和[基础](../basic/index)里的 `DefaultBackground()` 是同一件事。
 
+另外：第一次在某个游戏目录里跑预览时，原版会先弹出**无障碍引导屏**并朗读「Press enter to enable the narrator」——那是原版行为。预览是直接换屏幕的，不会去应答它，所以只要没人手动关掉，这个游戏目录每次启动都会再遇到一次。在 `run/options.txt` 里把 `onboardAccessibility` 写成 `false` 即可永久关掉（该文件是游戏的运行产物，不在仓库里）。
+
 用完记得清掉那个变量（它对当前 shell 里**每个** JVM 都生效，包括 Gradle 守护进程）：JVM 会往 stderr 打两行 `Picked up JAVA_TOOL_OPTIONS: …`，那是正常的、无副作用。

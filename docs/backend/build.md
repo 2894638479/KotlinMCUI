@@ -76,6 +76,8 @@ $env:JAVA_TOOL_OPTIONS="-Dkotlinmcui.preview=io.github.u2894638479.kotlinmcui.te
 
 预览**不替页面补背景**：页面自己没挂 `defaultBackground()` 时，截图里控件背后就是游戏画面。`test.TestColorPage` 等演示页都自己挂了。
 
+首次在一个游戏目录里运行时，原版会先显示**无障碍引导屏**并朗读「Press enter to enable the narrator」；预览直接换屏幕、不去应答它，所以该目录每次启动都会再来一遍。在 `run/options.txt` 里写 `onboardAccessibility:false` 即可关掉。
+
 页面本身是**框架里公开的顶层 `context(DslContext)` 函数**，时序与判定也都在框架里——框架的预览会话负责解析引用、等首帧、按帧等待、判定、截图与退出码，后端只提供 `capture`（把当前帧写成文件）与 `quit`（结束游戏）两个平台动作。换一个后端时这两处不必重写。
 
 日常验证在 `fabric-1.20.1` 分支上做：预览机制只在这一个分支上维护（迭代期其他版本分支不追）。`fabric-26.2` 上除 OpenGL 外**建议再用 Vulkan 跑一遍同一套命令**——Vulkan 对绘制路径的校验更严格，OpenGL 能跑通不代表它能（原因见[开发文档](../dev/backend-fabric)）：
