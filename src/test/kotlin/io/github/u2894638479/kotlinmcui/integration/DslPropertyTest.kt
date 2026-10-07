@@ -6,6 +6,7 @@ import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.dsl.stable
+import io.github.u2894638479.kotlinmcui.dsl.withId
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.prop.value
@@ -43,6 +44,25 @@ class DslPropertyTest {
             observed = value
         }
         assertEquals(5.0, observed, "a zero-length animation must not interpolate")
+    }
+
+    @Test
+    fun `the same id under another identity is a different property`() {
+        // A tooltip's content is built in the tooltip's own identity, so a value it needs from the
+        // page has to be read inside the page: `local` keys a slot by identity plus id, and another
+        // identity starts from the default again.
+        var fromPage: Boolean? = null
+        var fromOtherIdentity: Boolean? = null
+        buildScreen {
+            val toggle = local("toggle") { false }
+            toggle.value = true
+            fromPage = toggle.value
+            withId("tooltip") {
+                fromOtherIdentity = local("toggle") { false }.value
+            }
+        }
+        assertEquals(true,fromPage,"the page sees what it set")
+        assertEquals(false,fromOtherIdentity,"another identity gets its own slot, starting at the default")
     }
 
     @Test
