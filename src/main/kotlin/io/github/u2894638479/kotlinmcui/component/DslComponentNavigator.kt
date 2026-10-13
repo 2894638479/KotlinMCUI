@@ -81,11 +81,13 @@ internal fun DslComponent.nextFocusable(focused: DslId?, reverse:Boolean = false
 @OverloadResolutionByLambdaReturnType
 internal fun DslComponent.nextFocusable(focused: DslId?, view:(DslComponentNavigator) -> List<DslComponent>): DslComponent? {
     fun DslComponent.flattenView(): List<DslComponent> = buildList {
+        // The component this walk starts from is the node being navigated *from*, not a candidate:
+        // at the root it has no identity to compare against, and asking it for one throws.
         fun flatten(component: DslComponent) {
             for (child in view(component)) {
                 flatten(child)
+                add(child)
             }
-            add(component)
         }
         flatten(this@nextFocusable)
     }
