@@ -18,28 +18,37 @@ parent: Backend
 | 客户端，配自带窗口的后端 | 无界面版 + `kotlinmcuiwindow` |
 | 客户端，要用游戏内界面 | 带界面的那份（分支清单见[概览](overview)） |
 
-无界面版发现 `kotlinmcuiwindow` 已经装了时会保持沉默，把发布权让给那个 mod，所以"无界面版 + 窗口后端"这两个一起装就是客户端的正确组合。带界面的那份会加载客户端类，专用服务端上应该改用无界面版。
+无界面版发现 `kotlinmcuiwindow` 已经装了时会保持沉默，把发布权让给那个 mod。带界面的那份会加载客户端类，专用服务端上应该改用无界面版。
 
-## 一个 jar 覆盖一个加载器的所有版本
+## 它不引用 Minecraft，也不要求某一个游戏版本
 
-无界面版**不引用任何 Minecraft 类**，也不依赖任何 Kotlin 语言加载器：它需要的运行期库（Kotlin 标准库、协程、序列化）**打包在 jar 里**。因此 `fabric-language-kotlin`、`kotlinforforge`、`kotlinlangforge` 装不装、装哪一个，对它都没有影响；元数据里也不声明游戏版本上限。代价是产物约 4 MB。
+无界面版**不引用任何 Minecraft 类**：它只用加载器自身的 API。元数据因此不声明游戏版本上限，一个加载器一份 jar 覆盖整条线；构建仍钉在一个具体版本上，但产物里没有任何指向它的引用。同理，它的字节码目标是 Java 8，才能在 1.14 与 26.3 上都加载。
 
-构建仍然钉在一个具体的 Minecraft 版本上，因为编译需要一个真实的依赖；但那只是编译期的事，产物里没有任何指向它的引用。
+## 运行期依赖由谁提供
 
-已实测的覆盖范围（真实服务端或客户端，均使用未改动的核心库）：
+这是唯一一处各线不同的地方，取决于该平台有没有现成的 Kotlin 提供者：
+
+| 分支 | Kotlin 与框架运行期 | slf4j |
+| --- | --- | --- |
+| Fabric（`headless-fabric`） | 由 `fabric-language-kotlin` 提供，需自行安装 | 打包进 jar（约 50 KB） |
+| Forge 1.13 起（`headless-forge`） | 打包进 jar，不需要 `kotlinforforge` | 由游戏提供（1.17 起），不打进 jar |
+| NeoForge（`headless-neoforge`） | 打包进 jar，不需要 `kotlinforforge` | 由游戏提供，不打进 jar |
+| 老 Forge 1.7.10–1.12.2（`headless-forge-legacy`） | 打包进 jar（那个年代没有 Kotlin 提供者） | 打包进 jar |
+
+Fabric 的 slf4j 必须自带：游戏直到 1.17 前后才提供它，而更早的版本上框架的日志器根本初始化不了。Forge 相反——1.17 起 slf4j 在模块路径上，打进 jar 反而会让游戏在加载任何 mod 之前就因模块冲突停下，所以那边交给游戏。
+
+## 已实测的覆盖范围
+
+均使用未改动的核心库，均为真实服务端或客户端：
 
 | 分支 | 覆盖 |
 | --- | --- |
-| Fabric（`headless-fabric`） | 1.14.4、1.16.5、1.18.2、1.20.1、1.21.1、26.3 |
-| Forge 1.13 起（`headless-forge`） | 1.20.1 |
-| NeoForge（`headless-neoforge`） | 1.21.1（入口构造已验证，打包实跑待补） |
-| 老 Forge（`headless-forge-legacy`） | 1.7.10、1.8.9、1.12.2 |
+| `headless-fabric` | 1.14.4、1.16.5、1.18.2、1.20.1、1.21.1、26.3 |
+| `headless-forge` | 1.20.1 |
+| `headless-forge-legacy` | 1.7.10、1.8.9、1.12.2 |
+| `headless-neoforge` | 1.21.1（入口构造已验证，打包实跑待补） |
 
-Fabric 最早支持的版本就是 1.14，所以那条线一份 jar 已经从头覆盖到尾。
-
-## 老 Forge 是另一条分支
-
-1.13 之前的 Forge 是另一套 API：注解属性式 `@Mod`、`cpw.mods.fml` 包名、`Loader` 而非 `ModList`，元数据也不是 `mods.toml`。这些差异无法在一个 jar 里同时满足，所以 1.7.10 到 1.12.2 单独一支（`headless-forge-legacy`）。它同样不引用任何 Minecraft 类，也不需要核心库做任何改动。
+Fabric 最早支持的版本就是 1.14，所以那条线一份 jar 已经从头覆盖到尾。与语言提供者**同时安装**的情况只实测过 Fabric + `fabric-language-kotlin`（正常）；Forge/NeoForge 与 `kotlinforforge`、`kotlinlangforge` 共用尚未验证。
 
 ## 能做什么、不能做什么
 
