@@ -23,9 +23,9 @@ parent: Backend
 
 ## 它做什么、不做什么
 
-做：自己的窗口与窗口内的页面栈、把 AWT 的鼠标与键盘事件翻译成框架事件、用 Java2D 画框架的绘制原语（含透视与三角形）、读写系统剪贴板、按 `capture` 截自己的窗口、解析 jar 里的语言文件与贴图资源。
+做：自己的窗口与窗口内的页面栈、把 AWT 的鼠标与键盘事件翻译成框架事件、用 Java2D 画框架的绘制原语（含透视与三角形）、读写系统剪贴板、按 `capture` 截自己的窗口、解析 jar 里的语言文件与贴图资源、和游戏一起跑时按路径从客户端 jar 与 `mods/` 里读物品图标。
 
-不做：不在游戏窗口里画任何东西（这是刻意的——正是这一点让它与游戏版本无关）；不读 Minecraft 的贴图与语言（它们在游戏的资源包里，不在 jar 里），`renderButton`/`renderSlot`/`renderContainer`/`renderTooltip`/`renderItem` 是它自己的平面近似。它读得到的是**jar 里的**资源：核心与后端自己带的语言文件，以及 mod 自带的贴图。
+不做：不在游戏窗口里画任何东西（这是刻意的——正是这一点让它与游戏版本无关）；不引用任何 Minecraft 类，`renderButton`/`renderSlot`/`renderContainer`/`renderTooltip` 是它自己的平面近似。物品图标是其中唯一的例外：它不读 Minecraft 的代码，只读 jar 里的 PNG —— 版本客户端 jar 与 `mods/` 下的每个 jar 都按 `assets/<命名空间>/textures/item/<名字>.png` 找一遍，找不到（例如没有游戏的独立运行）就退回原来的平面替身。
 
 ## 独立运行
 
