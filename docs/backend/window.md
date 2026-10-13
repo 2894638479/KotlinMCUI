@@ -35,7 +35,15 @@ parent: Backend
 ./gradlew run -Pcapture=true -PcaptureName=demo.png
 ```
 
-窗口会打开、渲染根页面，然后按 `capture` 指定的名字把图写进 `screenshots/` 并退出（不传 `capture` 就只是开窗，自己关）。要直接看某一页，用 `-Ppreview=<引用>`：预览会把那一页压在根页面之上。
+窗口会打开、渲染根页面，然后按 `capture` 指定的名字把图写进 `screenshots/` 并退出（不传 `capture` 就只是开窗，自己关）。
+
+要直接看某一页并把图留下来，两个开关一起给：
+
+```
+./gradlew run -Ppreview=<引用> -Pcapture=true -PcaptureName=<文件>
+```
+
+预览会把那一页压在根页面之上，`capture` 让这个进程截完图自己退出；只给 `preview` 会一直开着窗口，只给 `capture` 截到的是根页面。
 
 ## 三个平台细节
 
