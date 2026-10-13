@@ -5,10 +5,13 @@ import io.github.u2894638479.kotlinmcui.backend.fillRect
 import io.github.u2894638479.kotlinmcui.backend.fillRectGradient
 import io.github.u2894638479.kotlinmcui.backend.fillPolygon
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.container.DslChild
 import io.github.u2894638479.kotlinmcui.context.DslContext
+import io.github.u2894638479.kotlinmcui.context.mixed
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.decorator.background
+import io.github.u2894638479.kotlinmcui.dsl.decorator.clickable
 import io.github.u2894638479.kotlinmcui.dsl.decorator.containerBackground
 import io.github.u2894638479.kotlinmcui.dsl.decorator.move
 import io.github.u2894638479.kotlinmcui.dsl.decorator.outline
@@ -68,6 +71,10 @@ fun TestBackendRenderPage() = ScrollableColumn {
             GradientBox()
             Spacer(Modifier.width(6.scaled)) {}
             ColorRect(Modifier.size(50.scaled,24.scaled),Color(60,60,200,120),"alpha")
+            Spacer(Modifier.width(6.scaled)) {}
+            // The `outline` decorator draws a border of its own through `fillRect`; it is not part
+            // of `renderButton`, so it is checked here with the other quad drawing.
+            Spacer(Modifier.size(50.scaled,24.scaled),"outline").outline(color = Color(255,200,60))
         }
     }
     Section("quad + 贴图：clip / repeatUV / nineSlice（renderQuad(image)）") {
@@ -97,12 +104,23 @@ fun TestBackendRenderPage() = ScrollableColumn {
             Spacer(Modifier.size(50.scaled,24.scaled),"tooltip").tooltipBackground(4.scaled)
         }
     }
-    Section("renderButton：普通 / 悬停高亮 / 描边") {
+    Section("renderButton：highlighted × active 的四个组合，以及真实 Button 落在哪一个") {
         Row {
+            RenderButtonProbe(false,false,"0/0")
+            Spacer(Modifier.width(6.scaled)) {}
+            RenderButtonProbe(false,true,"0/1")
+            Spacer(Modifier.width(6.scaled)) {}
+            RenderButtonProbe(true,false,"1/0")
+            Spacer(Modifier.width(6.scaled)) {}
+            RenderButtonProbe(true,true,"1/1")
+        }
+        Row {
+            // `Button` passes `highlightable` as `active`, so a button without `clickable` is the
+            // disabled combination - the same one as the first probe above.
             Button(Modifier.size(70.scaled,20.scaled),"button") { TextFlatten { "button".emit() } }
             Spacer(Modifier.width(6.scaled)) {}
-            Button(Modifier.size(70.scaled,20.scaled),"button-outline") { TextFlatten { "outline".emit() } }
-                .outline(color = Color(255,200,60))
+            Button(Modifier.size(70.scaled,20.scaled),"button-clickable") { TextFlatten { "clickable".emit() } }
+                .clickable {}
         }
     }
     Section("renderItem：数量 / 耐久 / 附魔光效") {
@@ -235,6 +253,28 @@ private fun PolygonBox() = Spacer(Modifier.size(80.scaled,24.scaled),"triangles"
                 listOf(Color(255,120,60),Color(60,255,120),Color(120,120,255))
             )
             backend.flush()
+        }
+    }
+}
+
+/**
+ * One `renderButton` call with the two flags given rather than derived, so all four combinations
+ * are on the page at once.
+ *
+ * A real `Button` cannot show the fourth one: it passes its own `highlightable` as `active`, so it
+ * is never highlighted while inactive - only a `Slider` gets there.
+ */
+context(ctx: DslContext)
+private fun RenderButtonProbe(highlighted: Boolean,active: Boolean,label: String): DslChild {
+    val color = Color.WHITE.mixed
+    return Box(Modifier.size(70.scaled,20.scaled)) { TextFlatten { label.emit() } }.change {
+        object : DslComponent by it {
+            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            override fun <RP> render() {
+                backend.renderButton(instance.rect,highlighted,active,color)
+                backend.flush()
+                it.render()
+            }
         }
     }
 }
