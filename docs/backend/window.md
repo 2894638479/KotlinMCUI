@@ -29,7 +29,7 @@ parent: Backend
 
 ## 独立运行
 
-不装游戏也能跑，这是开发和验证它的常规方式：
+不装游戏也能跑。开发时用构建脚本：
 
 ```
 ./gradlew run -Pcapture=true -PcaptureName=demo.png
@@ -44,6 +44,26 @@ parent: Backend
 ```
 
 预览会把那一页压在根页面之上，`capture` 让这个进程截完图自己退出；只给 `preview` 会一直开着窗口，只给 `capture` 截到的是根页面。
+
+## 两个 jar，别拿错
+
+`./gradlew build` 会出两份产物，来自同一份源码、功能一致，但用途相反：
+
+| 产物 | 给谁 | 里面有什么 |
+|---|---|---|
+| `KotlinMCUI-window-<版本>.jar` | **加载器**（放进 `mods/`） | 三份加载器元数据各指向自己的入口；核心库是旁边的另一个 mod |
+| `KotlinMCUI-window-<版本>-standalone.jar` | **不带游戏直接跑** | 自己的代码 + 核心库 + kotlin-reflect + 协程等；**没有**加载器元数据 |
+
+```
+java -jar KotlinMCUI-window-<版本>-standalone.jar
+```
+
+standalone 那份**不要**放进 `mods/`：它内含一份核心库，游戏里会和真正的核心库撞车（这也是它刻意不带加载器元数据的原因）。它认的是普通系统属性，与上面的 `-P` 开关一一对应：
+
+```
+java -Dkotlinmcui.preview=<引用> -Dkotlinmcui.preview.capture=true \
+     -Dkotlinmcuiwindow.capture=<文件> -jar KotlinMCUI-window-<版本>-standalone.jar
+```
 
 ## 三个平台细节
 
