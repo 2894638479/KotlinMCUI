@@ -20,11 +20,26 @@ parent: Backend
 
 无界面版发现 `kotlinmcuiwindow` 已经装了时会保持沉默，把发布权让给那个 mod，所以"无界面版 + 窗口后端"这两个一起装就是客户端的正确组合。带界面的那份会加载客户端类，专用服务端上应该改用无界面版。
 
-## 为什么它能跨游戏版本
+## 一个 jar 覆盖一个加载器的所有版本
 
-无界面版**不引用任何 Minecraft 类**：它只用加载器自身的 API（Fabric 的 `ModInitializer` 与 `FabricLoader`；Forge/NeoForge 的 `@Mod` 与同族 API）。这一点可以自己核实——把 jar 里每个 `.class` 扫一遍常量池，`net/minecraft` 的命中数是 0。因此元数据里不声明游戏版本上限，一个加载器一份 jar 覆盖所有版本。
+无界面版**不引用任何 Minecraft 类**，也不依赖任何 Kotlin 语言加载器：它需要的运行期库（Kotlin 标准库、协程、序列化）**打包在 jar 里**。因此 `fabric-language-kotlin`、`kotlinforforge`、`kotlinlangforge` 装不装、装哪一个，对它都没有影响；元数据里也不声明游戏版本上限。代价是产物约 4 MB。
 
 构建仍然钉在一个具体的 Minecraft 版本上，因为编译需要一个真实的依赖；但那只是编译期的事，产物里没有任何指向它的引用。
+
+已实测的覆盖范围（真实服务端或客户端，均使用未改动的核心库）：
+
+| 分支 | 覆盖 |
+| --- | --- |
+| Fabric（`headless-fabric`） | 1.14.4、1.16.5、1.18.2、1.20.1、1.21.1、26.3 |
+| Forge 1.13 起（`headless-forge`） | 1.20.1 |
+| NeoForge（`headless-neoforge`） | 1.21.1（入口构造已验证，打包实跑待补） |
+| 老 Forge（`headless-forge-legacy`） | 1.7.10、1.8.9、1.12.2 |
+
+Fabric 最早支持的版本就是 1.14，所以那条线一份 jar 已经从头覆盖到尾。
+
+## 老 Forge 是另一条分支
+
+1.13 之前的 Forge 是另一套 API：注解属性式 `@Mod`、`cpw.mods.fml` 包名、`Loader` 而非 `ModList`，元数据也不是 `mods.toml`。这些差异无法在一个 jar 里同时满足，所以 1.7.10 到 1.12.2 单独一支（`headless-forge-legacy`）。它同样不引用任何 Minecraft 类，也不需要核心库做任何改动。
 
 ## 能做什么、不能做什么
 
