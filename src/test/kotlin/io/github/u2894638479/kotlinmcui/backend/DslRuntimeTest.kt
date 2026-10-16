@@ -81,10 +81,16 @@ class DslRuntimeTest {
 
     @Test
     @Order(6)
-    fun `publishing a second backend is an error`() {
+    fun `publishing a second backend is refused, not thrown`() {
         DslRuntime.install { TestMetadata }
-        DslRuntime.platformReady { TestBackend }
+        val first = DslRuntime.platformReady { TestBackend }
 
-        assertFailsWith<IllegalStateException> { DslRuntime.platformReady { TestBackend } }
+        // Refusing instead of throwing keeps a user's double install from becoming a crash,
+        // so the caller has to learn that it lost from the return value.
+        val second = DslRuntime.platformReady { TestBackend }
+
+        assertTrue(first, "the first publish must report success")
+        assertFalse(second, "a later publish must report that it was refused")
+        assertSame(TestBackend, dslBackend, "the refused backend must not replace the published one")
     }
 }
