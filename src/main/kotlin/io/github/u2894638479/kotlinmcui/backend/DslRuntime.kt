@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
+import io.github.u2894638479.kotlinmcui.logger.dslLogger
 
 /**
  * The framework's startup sequence.
@@ -44,15 +45,29 @@ object DslRuntime {
      * `Minecraft.<init>` returns. The factory arrives together with readiness, so there
      * is no "registered but not published" state to keep.
      *
-     * @throws IllegalStateException when [install] has not run, or when a backend was
-     *   already published.
+     * Only the first backend wins. A second call is refused and logged rather than
+     * thrown, because two backends in one instance is a user's installation mistake and
+     * must not become a client crash — but the caller has to be able to see that it lost:
+     * a platform that goes on to open its own screens would draw them with the winner's
+     * renderer. **Check the return value before doing anything visible.**
+     *
+     * @return `true` when this call published the backend, `false` when another one was
+     *   already published (the published one is left untouched).
+     * @throws IllegalStateException when [install] has not run.
      */
-    fun platformReady(backend: () -> DslBackend<*, *>) = synchronized(lock) {
+    fun platformReady(backend: () -> DslBackend<*, *>): Boolean = synchronized(lock) {
         check(installed) { "DslRuntime.platformReady was called before DslRuntime.install" }
-        check(dslBackendProvider == null) { "DslRuntime.platformReady was already called" }
+        if (dslBackendProvider != null) {
+            dslLogger.warn(
+                "DslRuntime.platformReady was already called; this backend is ignored. " +
+                    "Install only one backend in a game instance.",
+            )
+            return@synchronized false
+        }
         dslBackendProvider = backend
         // A platform that asked for a page to be shown gets it now; otherwise this does nothing.
         DslPreview.start()
+        true
     }
 
     /**
