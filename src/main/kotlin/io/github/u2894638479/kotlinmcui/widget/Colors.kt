@@ -201,20 +201,31 @@ private fun <RP> DslBackendRenderer<RP>.paletteMarker(rect: Rect, x: Double, y: 
     outline(Rect(centerX - unit,centerY - unit,centerX + unit,centerY + unit),unit,Color.WHITE)
 }
 
-/** The apex, bottom-left and bottom-right of [rect], as the triangle-list primitive wants them. */
-private fun Rect.triangleVertices(): FloatArray {
+/** The apex, bottom-left and bottom-right of [rect], written into [out] as the triangle-list primitive wants them. */
+private fun Rect.writeTriangleVertices(out: FloatArray) {
     val left = left.pixelsOrElse { 0f }
     val right = right.pixelsOrElse { 0f }
     val top = top.pixelsOrElse { 0f }
     val bottom = bottom.pixelsOrElse { 0f }
-    return floatArrayOf((left + right) / 2,top,left,bottom,right,bottom)
+    out[0] = (left + right) / 2
+    out[1] = top
+    out[2] = left
+    out[3] = bottom
+    out[4] = right
+    out[5] = bottom
 }
 
 /** Draw that triangle with the three corner colours. */
 context(backend: DslBackendRenderer<RP>, renderParam: RP)
 private fun <RP> DslBackendRenderer<RP>.paletteTriangle(rect: Rect, apex: Color, left: Color, right: Color) {
     if(rect.width <= 0.px || rect.height <= 0.px) return
-    this.renderTriangles(rect.triangleVertices(),intArrayOf(apex.rgbaInt,left.rgbaInt,right.rgbaInt))
+    val vertices = Colors.triangleVerticesBuffer()
+    val colors = Colors.triangleColorsBuffer()
+    rect.writeTriangleVertices(vertices)
+    colors[0] = apex.rgbaInt
+    colors[1] = left.rgbaInt
+    colors[2] = right.rgbaInt
+    this.renderTriangles(vertices,colors)
 }
 
 /**
@@ -290,6 +301,25 @@ private const val HUE_SECTORS = 6
  * through the core colour slider, so [ColorProp] stays the one channel abstraction.
  */
 object Colors {
+
+    /**
+     * Scratch buffers for the triangle swatch, reused instead of rebuilt on every draw.
+     *
+     * `renderTriangles` reads its arrays during the call and the framework draws on one
+     * thread, so a single instance's buffer is always consumed before the next draw
+     * overwrites it — including the nested case, where a draw triggered from inside
+     * another draw finishes first.
+     */
+    /**
+     * Scratch buffers for the triangle swatch, filled and consumed inside a single
+     * [paletteTriangle] call. The accessors keep them private while letting the top-level
+     * drawing function reach them.
+     */
+    private val vertices = FloatArray(6)
+    private val colors = IntArray(3)
+
+    internal fun triangleVerticesBuffer() = vertices
+    internal fun triangleColorsBuffer() = colors
 
     context(ctx: DslContext)
     fun ColorSquare(
