@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.dsl.ui
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.backend.fillRectGradient
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
@@ -83,7 +83,7 @@ fun Slider(
     object : SliderImpl(delegate, axis, progress, 0.0 /* arrows owned by stepUp/stepDown below */, color.value, buttonSize, status) {
         override val knobColor get() = color.value
 
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> renderBackground() {
             val rect = instance.rect
             backend.renderButton(rect, keyFocused, false, backgroundColor)
@@ -146,7 +146,7 @@ private open class SliderImpl(
     var alreadyDown by status::alreadyDown
     var keyFocused by status::keyFocused
 
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     fun <RP> renderButton() {
         val progress = this.progress
         val buttonRect = when(axis) {
@@ -167,14 +167,14 @@ private open class SliderImpl(
         backend.flush()
     }
 
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     open fun <RP> renderBackground() {
         val rect = instance.rect
         backend.renderButton(rect, keyFocused, false, buttonColor)
         backend.flush()
     }
 
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         renderBackground()
         renderButton()
@@ -272,7 +272,7 @@ private fun gradientStops(current: Color, prop: ColorProp<Double>): List<Color> 
     else -> listOf(prop.set(current, 0.0), prop.set(current, 1.0))
 }
 
-context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
 private fun <RP> drawGradient(axis: Axis, rect: Rect, stops: List<Color>) {
     val segments = stops.size - 1
     if (segments <= 0) return

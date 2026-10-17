@@ -1,7 +1,7 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslPlatform
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.component.*
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.*
@@ -140,7 +140,7 @@ class DslDecoratorTest {
         var observed: Position? = null
         val screen = buildScreen {
             val box = Box(Modifier.size(50.px, 50.px)) {}.change { object : DslComponent by it {
-                context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+                context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
                 override fun <RP> render() { observed = mouse }
             } }
             box.move(30.px, 0.px)

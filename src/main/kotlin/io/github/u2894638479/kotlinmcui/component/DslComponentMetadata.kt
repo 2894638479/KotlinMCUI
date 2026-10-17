@@ -55,7 +55,7 @@ interface DslComponentMetadata {
      * The screen-space rectangle of this component's text input cursor, or `null`
      * if this component does not accept IME input. When non-null, the framework
      * renders the IME preedit preview box adjacent to this rectangle and calls
-     * [io.github.u2894638479.kotlinmcui.backend.DslBackendInput.setPreeditArea]
+     * [io.github.u2894638479.kotlinmcui.backend.DslRootInput.setPreeditArea]
      * to position the platform IME candidate window.
      */
     val preeditArea: Rect? get() = null

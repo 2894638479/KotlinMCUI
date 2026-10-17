@@ -17,16 +17,16 @@ parent: Dev
 | 接口 | 职责 | 归属 |
 | --- | --- | --- |
 | `DslPlatform` | `metadata`、`utils`、`dispatcher` | 进程级 |
-| `DslBackendMetadata` | 目录、游戏版本、加载器、运行环境 | 进程级 |
+| `DslPlatformMetadata` | 目录、游戏版本、加载器、运行环境 | 进程级 |
 | `DslPlatformUtils` | 本地化、退出、本地图像加载与强制重载、世界判定 | 进程级 |
 | `DslRootUtils` | 剪贴板、朗读、按钮音效、打开链接、截图、会话调度器 | 每个根 |
-| `DslBackendRenderer<RP>` | 缩放、提交、绘制原语、裁剪、变换、取字体 | 每个根 |
-| `DslBackendInput` | 按键/鼠标状态查询、鼠标位置、IME 候选区 | 每个根 |
+| `DslRootRenderer<RP>` | 缩放、提交、绘制原语、裁剪、变换、取字体 | 每个根 |
+| `DslRootInput` | 按键/鼠标状态查询、鼠标位置、IME 候选区 | 每个根 |
 | `DslRootScreenFactory<SC>` | 创建 Screen | 每个根 |
 
 一个对象可以同时实现多个接口（例如 `DslPlatformUtils` 与 `DslRootUtils` 用同一个实现），实现者不因"分了接口"就必须拆成多个对象。
 
-`DslBackendScreenHolder<SC>` **不属于**上面任何一个，它是 `create()` 的返回值，负责持有平台侧 screen 对象并实现 `show()`。
+`DslScreenHolder<SC>` **不属于**上面任何一个，它是 `create()` 的返回值，负责持有平台侧 screen 对象并实现 `show()`。
 
 抽象成员总数为三十余个：渲染接口里的绘制成员是 `renderQuad` 与 `renderTriangles` **两个**，纯色矩形、渐变矩形、贴图矩形都是 `renderQuad` 的**扩展函数**（不额外分配）。它们是扩展而不是接口成员，因此没法被覆写——后端想要平台自己的快速路径（例如原生的实心矩形填充），就在 `renderQuad` 里判断"无纹理且四角同色"，这样所有调用方一起受益。
 
@@ -86,7 +86,7 @@ fun renderQuad(
 
 由此带来几条必须遵守的契约：
 
-- **坐标空间统一**：`Measure`、`Position`、`Rect`、`DslBackendInput.mouse`、根节点的 `rect` 处于同一空间，原点左上、Y 轴向下。`guiScale` 只用于 `.scaled` / `.unscaled` 的换算，不是绘制坐标的一部分。
+- **坐标空间统一**：`Measure`、`Position`、`Rect`、`DslRootInput.mouse`、根节点的 `rect` 处于同一空间，原点左上、Y 轴向下。`guiScale` 只用于 `.scaled` / `.unscaled` 的换算，不是绘制坐标的一部分。
 - **UV 处于图像像素空间，且允许越界**。平铺（repeat）与九宫格策略依赖越界 UV 加纹理环绕模式，后端**不得**在这里做钳制。
 - **`guiScale` 必须在运行期保持稳定**。组件持有的 `scale` 是建树那一刻的快照，若中途改变缩放，已建好的组件仍会按旧值计算。
 - **`withScissor` 嵌套求交，`withTransform` 嵌套复合**。进入这两个作用域前必须先 `flush()`，否则已经排队的顶点会用错裁剪/变换。

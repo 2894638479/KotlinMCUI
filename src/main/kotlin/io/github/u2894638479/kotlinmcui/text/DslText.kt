@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.text
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.DslComponentImpl
 import io.github.u2894638479.kotlinmcui.context.DslContext
@@ -28,7 +28,7 @@ open class DslText(
         val arr = IntArray(it.size) { i -> it[i].code }
         String(arr,0,arr.size)
     }
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         val font = backend.getFont(fontName)
         lines().forEach { it.renderChars(font,it.alignedChars(font)) }

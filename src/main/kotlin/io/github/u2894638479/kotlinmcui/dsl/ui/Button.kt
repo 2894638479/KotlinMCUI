@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.dsl.ui
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isHighlighted
 import io.github.u2894638479.kotlinmcui.context.DslContext
@@ -22,7 +22,7 @@ context(ctx: DslContext)
 fun DslChild.buttonBackground(padding: Measure = 2.scaled) = change {
     val color = Color.WHITE.mixed
     object:DslComponent by it {
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
             backend.renderButton(instance.rect.expand(padding), instance.isHighlighted,instance.highlightable,color)
             backend.flush()

@@ -20,7 +20,7 @@ import org.junit.jupiter.api.Test
 class TrianglePrimitiveTest {
 
     /** A renderer that records the triangle list it was handed; everything else is a stub. */
-    private class Recorder : DslBackendRenderer<Unit> by Plain {
+    private class Recorder : DslRootRenderer<Unit> by Plain {
         var vertices: FloatArray? = null
         var colors: IntArray? = null
         var image: ImageHolder? = null
@@ -100,7 +100,7 @@ class TrianglePrimitiveTest {
     private val squareColors = listOf(Color.RED, Color.GREEN, Color.BLUE, Color.WHITE)
 
     /** A renderer that draws nothing; the recording subclass overrides what it needs. */
-    private object Plain : DslBackendRenderer<Unit> {
+    private object Plain : DslRootRenderer<Unit> {
         override val guiScale = 1.0
         context(renderParam: Unit) override fun flush() {}
         context(renderParam: Unit) override fun renderQuad(

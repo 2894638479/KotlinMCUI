@@ -16,5 +16,5 @@ fun interface DslRootScreenFactory<SC> {
      * @param dslFunction The DSL function that defines the screen's UI content.
      * @return A holder wrapping both the platform screen and the framework's [io.github.u2894638479.kotlinmcui.container.DslScreen].
      */
-    fun create(title: String, dslFunction: DslFunction): DslBackendScreenHolder<SC>
+    fun create(title: String, dslFunction: DslFunction): DslScreenHolder<SC>
 }

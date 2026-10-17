@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.container
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.backend.DslPlatform
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
@@ -44,7 +44,7 @@ class DslDataStore(
     val renderer get() = root.renderer
 
     /** The renderer, or a loud failure: something that has to draw is attached to a root that cannot. */
-    fun requireRenderer(): DslBackendRenderer<*> =
+    fun requireRenderer(): DslRootRenderer<*> =
         root.renderer ?: error("this screen's root has no renderer: text and images cannot be drawn on it")
 
     override val scale get() = root.renderer?.guiScale ?: 1.0

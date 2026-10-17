@@ -13,7 +13,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.Rect
  * dispatching events. Mouse button indices follow the convention shared by
  * GLFW and SDL (0=left, 1=right, 2=middle, then additional buttons).
  */
-interface DslBackendInput {
+interface DslRootInput {
     /** Returns `true` while the given [key] is held down. */
     fun isKeyDown(key: Key): Boolean
 

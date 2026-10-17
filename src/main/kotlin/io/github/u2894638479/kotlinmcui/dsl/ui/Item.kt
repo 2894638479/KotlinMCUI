@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.dsl.ui
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.DslComponentImpl
 import io.github.u2894638479.kotlinmcui.context.DslContext
@@ -12,7 +12,7 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
 /**
  * Create an item rendering component to display a Minecraft-style item icon.
  *
- * Renders via the backend's [DslBackendRenderer.renderItem]. Supports item icon,
+ * Renders via the backend's [DslRootRenderer.renderItem]. Supports item icon,
  * stack count, durability bar, and enchantment glint effect.
  *
  * @param modifier The modifier controlling size, position, etc.
@@ -23,7 +23,7 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
  * @param id Unique identifier (required, no default) for component distinction and reference.
  * @receiver [DslContext] The implicit DSL context.
  * @return The collected component (returned by [collect]).
- * @see DslBackendRenderer
+ * @see DslRootRenderer
  * @see DslComponentImpl
  */
 context(ctx: DslContext)
@@ -35,7 +35,7 @@ fun Item(
     enchanted:Boolean = false,
     id:Any
 ) = collect(object : DslComponent by DslComponentImpl(newChildId(id),modifier,ctx) {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         backend.renderItem(instance.rect,item,count,damage,enchanted)
         backend.flush()

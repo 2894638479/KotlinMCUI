@@ -30,7 +30,7 @@ object DslRuntime {
      *   because the platform cannot build anything yet.
      * @throws IllegalStateException when it is called a second time.
      */
-    fun install(metadata: () -> DslBackendMetadata) = synchronized(lock) {
+    fun install(metadata: () -> DslPlatformMetadata) = synchronized(lock) {
         check(!installed) { "DslRuntime.install was already called" }
         dslMetadataProvider = metadata
         DslEntryLoader.discover(metadata().environment)

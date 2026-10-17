@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.widget
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.backend.fillRect
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.DslComponentImpl
@@ -183,7 +183,7 @@ internal fun parseColorHex(text: String): Color? {
 
 /** Draw the outline of [rect] as four filled edges, so the middle stays visible. */
 context(renderParam: RP)
-private fun <RP> DslBackendRenderer<RP>.outline(rect: Rect, thickness: Measure, color: Color) {
+private fun <RP> DslRootRenderer<RP>.outline(rect: Rect, thickness: Measure, color: Color) {
     fillRect(Rect(rect.left,rect.top,rect.right,rect.top + thickness),color)
     fillRect(Rect(rect.left,rect.bottom - thickness,rect.right,rect.bottom),color)
     fillRect(Rect(rect.left,rect.top,rect.left + thickness,rect.bottom),color)
@@ -192,7 +192,7 @@ private fun <RP> DslBackendRenderer<RP>.outline(rect: Rect, thickness: Measure, 
 
 /** The small ring that marks where in a palette the current colour sits. */
 context(renderParam: RP)
-private fun <RP> DslBackendRenderer<RP>.paletteMarker(rect: Rect, x: Double, y: Double, unit: Measure) {
+private fun <RP> DslRootRenderer<RP>.paletteMarker(rect: Rect, x: Double, y: Double, unit: Measure) {
     val centerX = rect.left + rect.width * x.coerceIn(0.0,1.0)
     val centerY = rect.top + rect.height * y.coerceIn(0.0,1.0)
     val marker = Rect(centerX - unit * 3,centerY - unit * 3,centerX + unit * 3,centerY + unit * 3)
@@ -215,8 +215,8 @@ private fun Rect.writeTriangleVertices(out: FloatArray) {
 }
 
 /** Draw that triangle with the three corner colours. */
-context(backend: DslBackendRenderer<RP>, renderParam: RP)
-private fun <RP> DslBackendRenderer<RP>.paletteTriangle(rect: Rect, apex: Color, left: Color, right: Color) {
+context(backend: DslRootRenderer<RP>, renderParam: RP)
+private fun <RP> DslRootRenderer<RP>.paletteTriangle(rect: Rect, apex: Color, left: Color, right: Color) {
     if(rect.width <= 0.px || rect.height <= 0.px) return
     val vertices = Colors.triangleVerticesBuffer()
     val colors = Colors.triangleColorsBuffer()
@@ -339,7 +339,7 @@ object Colors {
 
             override fun colorAt(x: Double, y: Double) = squareColor(hue.value,x,y,prop.value.aDouble)
 
-            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
                 reconcileDrag()
                 val color = prop.value
@@ -354,7 +354,7 @@ object Colors {
     /**
      * The classic hue triangle: the pure hue on top, white bottom-left, black bottom-right.
      *
-     * The triangle is drawn with [DslBackendRenderer.renderTriangles], so every backend can
+     * The triangle is drawn with [DslRootRenderer.renderTriangles], so every backend can
      * show it.
      */
     context(ctx: DslContext)
@@ -374,7 +374,7 @@ object Colors {
 
             override fun colorAt(x: Double, y: Double) = triangleColor(hue.value,x,y,prop.value.aDouble)
 
-            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
                 reconcileDrag()
                 val rect = instance.rect
@@ -416,7 +416,7 @@ object Colors {
 
             override fun colorAt(x: Double, y: Double) = prop.value.changeHSV(h = if(axis == Axis.Horizontal) x else y)
 
-            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
                 reconcileDrag()
                 val rect = instance.rect
@@ -474,7 +474,7 @@ object Colors {
                 return Color(red,green,blue,prop.value.aDouble)
             }
 
-            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
                 reconcileDrag()
                 val rect = instance.rect

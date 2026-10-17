@@ -16,7 +16,7 @@ package io.github.u2894638479.kotlinmcui.backend
  * happens-before edge from the write to the read, a reader may legally keep seeing `null` forever.
  */
 @Volatile
-internal var dslMetadataProvider: (() -> DslBackendMetadata)? = null
+internal var dslMetadataProvider: (() -> DslPlatformMetadata)? = null
 
 /**
  * The published platform. `platformReady` is what fills this in.

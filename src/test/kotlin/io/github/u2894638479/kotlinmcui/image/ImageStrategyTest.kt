@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.image
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.align.Alignment
@@ -28,7 +28,7 @@ class ImageStrategyTest {
         override fun toString() = "rect=${rect.map { it.toInt() }} uv=${uv?.map { it.toInt() }}"
     }
 
-    private object Recording : DslBackendRenderer<Unit> {
+    private object Recording : DslRootRenderer<Unit> {
         val quads = mutableListOf<Quad>()
         override val guiScale = 1.0
         context(renderParam: Unit) override fun flush() {}

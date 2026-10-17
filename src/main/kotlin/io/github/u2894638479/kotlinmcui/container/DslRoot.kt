@@ -1,7 +1,7 @@
 package io.github.u2894638479.kotlinmcui.container
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendInput
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootInput
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.backend.DslRootScreenFactory
 import io.github.u2894638479.kotlinmcui.backend.DslRootUtils
 import io.github.u2894638479.kotlinmcui.component.DslComponent
@@ -24,9 +24,9 @@ import io.github.u2894638479.kotlinmcui.math.rect.MutRect
  */
 class DslRoot(
     /** Pointer and keyboard state, and the preedit area the platform should show. */
-    val input: DslBackendInput,
+    val input: DslRootInput,
     /** Drawing, or `null` for a root that draws nothing - in which case there is not even a font. */
-    val renderer: DslBackendRenderer<*>?,
+    val renderer: DslRootRenderer<*>?,
     /** Creates the screens mounted on this root, or `null` when this root cannot hold screens. */
     val screenFactory: DslRootScreenFactory<*>?,
     /** The per-output helpers: clipboard, narration, sounds, capture, quit. */

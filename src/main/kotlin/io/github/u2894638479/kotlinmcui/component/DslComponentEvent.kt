@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.component
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.input.Key
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
 import io.github.u2894638479.kotlinmcui.input.MouseButton
@@ -24,7 +24,7 @@ interface DslComponentEvent {
      * Render this component.
      * @param RP The platform-specific render parameter type.
      */
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     fun <RP> render() {}
 
     /** A key was pressed. */

@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.test
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.backend.fillRect
 import io.github.u2894638479.kotlinmcui.backend.fillRectGradient
 import io.github.u2894638479.kotlinmcui.backend.fillPolygon
@@ -56,7 +56,7 @@ import io.github.u2894638479.kotlinmcui.text.DslCharStyle
 /**
  * Every rendering capability a backend has, on one page.
  *
- * This is a contract check rather than a demo: each block names the member of [DslBackendRenderer]
+ * This is a contract check rather than a demo: each block names the member of [DslRootRenderer]
  * it goes through, so a screenshot of the page says which of them a given backend really draws.
  * Some of these fail only in a packaged client while looking fine in development (the tooltip
  * background and the triangle list both behaved that way), which is why they sit here next to the
@@ -226,7 +226,7 @@ private fun Section(title: String,content: DslFunction) = Column(Modifier.paddin
 context(ctx: DslContext)
 private fun GradientBox() = Spacer(Modifier.size(50.scaled,24.scaled),"gradient").change {
     object : DslComponent by it {
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
             backend.fillRectGradient(
                 instance.rect,
@@ -241,7 +241,7 @@ private fun GradientBox() = Spacer(Modifier.size(50.scaled,24.scaled),"gradient"
 context(ctx: DslContext)
 private fun PolygonBox() = Spacer(Modifier.size(80.scaled,24.scaled),"triangles").change {
     object : DslComponent by it {
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
             val rect = instance.rect
             backend.fillPolygon(
@@ -269,7 +269,7 @@ private fun RenderButtonProbe(highlighted: Boolean,active: Boolean,label: String
     val color = Color.WHITE.mixed
     return Box(Modifier.size(70.scaled,20.scaled)) { TextFlatten { label.emit() } }.change {
         object : DslComponent by it {
-            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
                 backend.renderButton(instance.rect,highlighted,active,color)
                 backend.flush()

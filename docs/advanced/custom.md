@@ -100,7 +100,7 @@ override val focusable get() = true
 框架有两个绘制原语：四边形与三角形列表。矩形、贴图、九宫格都由四边形表达，**任意三角形与多边形不在其中**——仿射映射只能把矩形映成平行四边形：
 
 ```kotlin
-context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
 override fun <RP> render() {
     // 凸多边形：一个顶点一种颜色，内部展开成三角扇
     backend.fillPolygon(points, colors)

@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.image
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.backend.fillRect
 import io.github.u2894638479.kotlinmcui.backend.renderImage
 import io.github.u2894638479.kotlinmcui.math.Color
@@ -25,12 +25,12 @@ import kotlin.math.min
  * Custom strategies can implement [UVStrategy] or the raw [render] method.
  */
 interface ImageStrategy {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP)
+    context(backend: DslRootRenderer<RP>, renderParam: RP)
     fun <RP> render(rect: Rect, image: ImageHolder, color: Color)
 
     fun interface UVStrategy: ImageStrategy {
         fun uvRect(rect: Rect, image: ImageHolder): Rect
-        context(backend: DslBackendRenderer<RP>, renderParam: RP)
+        context(backend: DslRootRenderer<RP>, renderParam: RP)
         override fun <RP> render(rect: Rect, image: ImageHolder, color: Color) {
             backend.renderImage(image,rect,uvRect(rect,image),color)
         }
@@ -95,7 +95,7 @@ interface ImageStrategy {
          * [tile] and [source] are the caller's scratch views: a tile's geometry is written
          * into them and consumed by the draw call, so tiling allocates nothing per tile.
          */
-        context(backend: DslBackendRenderer<RP>, renderParam: RP)
+        context(backend: DslRootRenderer<RP>, renderParam: RP)
         private fun <RP> drawTiled(
             rect: Rect, uv: Rect, scale: Double, image: ImageHolder, color: Color,
             tile: MutRect, source: MutRect,
@@ -122,7 +122,7 @@ interface ImageStrategy {
             private val tile = MutRect()
             private val source = MutRect()
 
-            context(backend: DslBackendRenderer<RP>, renderParam: RP)
+            context(backend: DslRootRenderer<RP>, renderParam: RP)
             override fun <RP> render(rect: Rect, image: ImageHolder, color: Color) {
                 drawTiled(rect, uv, scale, image, color, tile, source)
             }
@@ -145,7 +145,7 @@ interface ImageStrategy {
                 MID -> action(inner.top,inner.bottom)
                 HIGH -> action(inner.bottom,outer.bottom)
             }
-            context(backend: DslBackendRenderer<RP>, renderParam: RP)
+            context(backend: DslRootRenderer<RP>, renderParam: RP)
             override fun <RP> render(rect: Rect, image: ImageHolder, color: Color) {
                 rect.ifEmpty { return }
                 if(rect.width < 1e-3.px || rect.height < 1e-3.px) return
@@ -180,7 +180,7 @@ interface ImageStrategy {
         fun stretchUV(uv: Rect) = UVStrategy { _,_-> uv }
 
         fun fitIn(alignment: Alignment, fillColor: Color = Color.TRANSPARENT_WHITE) = object : ImageStrategy {
-            context(backend: DslBackendRenderer<RP>, renderParam: RP)
+            context(backend: DslRootRenderer<RP>, renderParam: RP)
             override fun <RP> render(rect: Rect, image: ImageHolder, color: Color) {
                 backend.fillRect(rect,fillColor)
                 val ratio = rect.width / rect.height

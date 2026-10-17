@@ -22,7 +22,7 @@ import io.github.u2894638479.kotlinmcui.text.DslFont
  *
  * @param RP The platform-specific render parameter type.
  */
-interface DslBackendRenderer<RP> {
+interface DslRootRenderer<RP> {
     /** The current GUI scale factor (e.g. 2.0 for doubled resolution). */
     val guiScale: Double
 
@@ -142,18 +142,18 @@ interface DslBackendRenderer<RP> {
 /**
  * Draw a gradient-filled rectangle.
  *
- * One of the drawing helpers written in terms of [DslBackendRenderer.renderQuad]. It is
+ * One of the drawing helpers written in terms of [DslRootRenderer.renderQuad]. It is
  * an extension rather than an interface member so that the interface keeps a single
  * drawing primitive: a backend that wants its own solid-rectangle path does it inside
  * `renderQuad`, where every caller benefits. Allocates nothing.
  */
 context(renderParam: RP)
-fun <RP> DslBackendRenderer<RP>.fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color) =
+fun <RP> DslRootRenderer<RP>.fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color) =
     renderQuad(rect, lt, rt, lb, rb)
 
 /** Draw a solid filled rectangle. See [fillRectGradient] for why this is an extension. */
 context(renderParam: RP)
-fun <RP> DslBackendRenderer<RP>.fillRect(rect: Rect, color: Color) =
+fun <RP> DslRootRenderer<RP>.fillRect(rect: Rect, color: Color) =
     renderQuad(rect, color, color, color, color)
 
 /**
@@ -161,22 +161,22 @@ fun <RP> DslBackendRenderer<RP>.fillRect(rect: Rect, color: Color) =
  * them with [color]. See [fillRectGradient] for why this is an extension.
  */
 context(renderParam: RP)
-fun <RP> DslBackendRenderer<RP>.renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE) =
+fun <RP> DslRootRenderer<RP>.renderImage(image: ImageHolder, rect: Rect, uv: Rect, color: Color = Color.WHITE) =
     renderQuad(rect, color, color, color, color, image, uv)
 
 /**
  * Fill a convex polygon as a triangle fan, one colour per vertex.
  *
- * Convenience for [DslBackendRenderer.renderTriangles]: it rebuilds its arrays on every
+ * Convenience for [DslRootRenderer.renderTriangles]: it rebuilds its arrays on every
  * call, which is fine for the shapes that need it — the framework itself never calls
  * this. A concave polygon, or one that needs texture coordinates, submits its own
- * triangles through [DslBackendRenderer.renderTriangles].
+ * triangles through [DslRootRenderer.renderTriangles].
  *
  * A vertex whose coordinates are not plain numbers (an unmeasured value) makes the whole
  * call draw nothing, like the other drawing entry points.
  */
 context(renderParam: RP)
-fun <RP> DslBackendRenderer<RP>.fillPolygon(points: List<Position>, colors: List<Color>) {
+fun <RP> DslRootRenderer<RP>.fillPolygon(points: List<Position>, colors: List<Color>) {
     require(points.size >= 3) { "a polygon needs at least three vertices, got ${points.size}" }
     require(colors.size == points.size) {
         "one colour per vertex, got ${colors.size} for ${points.size} vertices"

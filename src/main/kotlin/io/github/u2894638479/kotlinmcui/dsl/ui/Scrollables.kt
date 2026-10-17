@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.dsl.ui
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.component.alignable
 import io.github.u2894638479.kotlinmcui.component.childrenMaxHeight
@@ -120,7 +120,7 @@ private fun Scrollable(
                 children.forEach { it.layoutHorizontal() }
             }
 
-            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
                 val rect = instance.rect
                 children.asReversed().forEach {

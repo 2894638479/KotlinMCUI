@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.entry
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendMetadata
+import io.github.u2894638479.kotlinmcui.backend.DslPlatformMetadata
 import io.github.u2894638479.kotlinmcui.backend.Environment
 import io.github.u2894638479.kotlinmcui.backend.dslMetadataProvider
 import io.github.u2894638479.kotlinmcui.integration.TestMetadata
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test
  */
 class EntryListingTest {
 
-    private var previousMetadataProvider: (() -> DslBackendMetadata)? = null
+    private var previousMetadataProvider: (() -> DslPlatformMetadata)? = null
 
     @BeforeEach
     fun setUp() {

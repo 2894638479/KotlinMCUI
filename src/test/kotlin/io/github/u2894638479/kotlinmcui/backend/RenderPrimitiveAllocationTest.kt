@@ -30,7 +30,7 @@ import org.junit.jupiter.api.Test
  */
 class RenderPrimitiveAllocationTest {
 
-    private object Counting : DslBackendRenderer<Unit> {
+    private object Counting : DslRootRenderer<Unit> {
         var quads = 0
         var triangles = 0
         var lastVertices: FloatArray? = null
@@ -61,7 +61,7 @@ class RenderPrimitiveAllocationTest {
     private val batch = 1_000
 
     /** Bytes allocated per call of [block], warm, averaged over 20 batches. */
-    private fun bytesPerCall(block: context(DslBackendRenderer<Unit>, Unit) () -> Unit): Double {
+    private fun bytesPerCall(block: context(DslRootRenderer<Unit>, Unit) () -> Unit): Double {
         kotlin.context(Counting, Unit) { repeat(5_000) { block() } }
         var total = 0L
         repeat(20) {

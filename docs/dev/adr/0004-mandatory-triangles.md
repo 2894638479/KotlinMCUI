@@ -32,3 +32,7 @@ fun renderTriangles(vertices: FloatArray, colors: IntArray, image: ImageHolder? 
 
 - **保持可选，只补文档与验收。** 缺点是不解决"坏实现无人发现"这个已经发生过的问题；优点是第三方后端可以只实现四边形。此方案曾被上一轮建议过，这一轮被推翻。
 - **在 `DslBackendRenderer` 里给 `renderTriangles` 一个默认实现。** 想做也做不到：默认实现只能建在 `renderQuad` 上，而四边形原语的形状来自 `rect`，表达不了三角形。
+
+## 后续改名（2026-10-18）
+
+本篇正文保留写作当时的类型名：`DslBackendRenderer` 现在叫 `DslRootRenderer`（同一类型，纯改名，无行为变化）；更早的 `DslBackendTriangles` 在本决定作出后即被删除，从未改名。**ADR 记录的是当时的决定，不随代码改名重写正文**；旧名只在这条注记里出现一次，用于指认。

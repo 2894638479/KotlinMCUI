@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.dsl.ui
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.math.Position
@@ -11,7 +11,7 @@ fun DefaultBackground(id:Any = object{}::class) = Spacer(id = id).defaultBackgro
 
 context(ctx: DslContext)
 fun DslChild.defaultBackground() = change { object:DslComponent by it {
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         backend.renderDefaultBackground(instance.rect)
         backend.flush()

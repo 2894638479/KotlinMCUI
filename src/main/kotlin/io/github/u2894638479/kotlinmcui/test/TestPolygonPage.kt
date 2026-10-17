@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.test
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.backend.fillPolygon
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
@@ -46,7 +46,7 @@ private val polygonPalette = arrayOf(Color.RED, Color.GREEN, Color.BLUE, Color.W
 context(ctx: DslContext)
 private fun Polygon(modifier: Modifier, id: Any, sides: Int) = Spacer(modifier, id).change {
     object : DslComponent by it {
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
             val rect = instance.rect
             val centerX = (rect.left + rect.right) / 2

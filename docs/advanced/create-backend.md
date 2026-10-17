@@ -23,7 +23,7 @@ parent: Advanced
   - `DslPlatform`：`metadata`、`utils`、`dispatcher`
   - `DslPlatformUtils`：翻译、退出、加载图片、后台调度
   - `DslRootUtils`：剪贴板、旁白、音效、跳转链接、截图、会话调度
-  - `DslBackendRenderer`、`DslBackendInput`、`DslRootScreenFactory`
+  - `DslRootRenderer`、`DslRootInput`、`DslRootScreenFactory`
   - 一个对象可以同时实现多个（例如 `DslPlatformUtils` 与 `DslRootUtils` 用同一个实现）
 - **根由后端自己建**：`DslRoot(input, renderer, screenFactory, rootUtils)`。框架不发根、也不替你持有根
 - **根不负责渲染**：每帧写`root.rect`，然后在`context(renderer, 参数, root.input.mouse)`里调用`root.component.render()`

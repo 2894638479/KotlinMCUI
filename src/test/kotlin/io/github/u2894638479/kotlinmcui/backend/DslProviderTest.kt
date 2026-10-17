@@ -20,7 +20,7 @@ class DslProviderTest {
     data class Marker(val value: String = "")
 
     /** A provider that is nothing but metadata: reading it touches no platform. */
-    private object OnlyMetadata : DslBackendMetadata {
+    private object OnlyMetadata : DslPlatformMetadata {
         override val configDir = Paths.get("build", "test-config-metadata")
         override val gameDir = Paths.get("build")
         override val gameVersion = "test"

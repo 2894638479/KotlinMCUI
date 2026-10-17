@@ -8,7 +8,7 @@ import io.github.u2894638479.kotlinmcui.container.DslScreen
  *
  * @param SC The platform-specific screen type.
  */
-interface DslBackendScreenHolder<SC> {
+interface DslScreenHolder<SC> {
     /** Display this screen to the user. */
     fun show()
 

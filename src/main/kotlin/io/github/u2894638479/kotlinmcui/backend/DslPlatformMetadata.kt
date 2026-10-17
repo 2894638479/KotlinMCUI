@@ -5,7 +5,7 @@ import java.nio.file.Path
 /**
  * Read-only metadata about the backend's runtime environment.
  */
-interface DslBackendMetadata {
+interface DslPlatformMetadata {
     /** The configuration directory (e.g. `.minecraft/config`). */
     val configDir: Path
 

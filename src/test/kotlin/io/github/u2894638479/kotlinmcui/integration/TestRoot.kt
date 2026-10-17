@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslChild
@@ -63,6 +63,6 @@ internal object TestRoot {
     context(eventModifier: KeyModifiers)
     fun keyDown(key: Key, scanCode: Int) = root.component.keyDown(key, scanCode)
 
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     fun <RP> render() = root.component.render<RP>()
 }

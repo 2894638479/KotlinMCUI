@@ -13,7 +13,7 @@ import kotlinx.coroutines.CoroutineDispatcher
  */
 interface DslPlatform {
     /** Metadata of the published platform. */
-    val metadata: DslBackendMetadata
+    val metadata: DslPlatformMetadata
 
     /** The process-level helpers: translation, world state, images, exit. */
     val utils: DslPlatformUtils
@@ -33,5 +33,5 @@ val dslPlatform: DslPlatform get() = publishedPlatform()
  * An installed metadata provider answers before the platform is published, so mod initialisation can
  * read directories without building anything; afterwards the platform's own metadata is the answer.
  */
-val dslMetadata: DslBackendMetadata
+val dslMetadata: DslPlatformMetadata
     get() = dslMetadataProvider?.invoke() ?: dslPlatform.metadata

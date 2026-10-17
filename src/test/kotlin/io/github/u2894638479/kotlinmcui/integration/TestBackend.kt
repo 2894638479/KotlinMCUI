@@ -28,10 +28,10 @@ import java.nio.file.Paths
  * Minimal mock backend for integration testing.
  *
  * All rendering methods are no-ops. Translation returns the key itself.
- * Provides a full [DslBackend] implementation so that [DslScreen.build]
+ * Provides the fake platform's pieces so that [DslScreen.build]
  * and the complete layout/render pipeline can be exercised in tests.
  */
-internal object TestBackend : DslBackendRenderer<Unit> by TestRenderer, DslRootScreenFactory<Unit> by TestScreenFactory {
+internal object TestBackend : DslRootRenderer<Unit> by TestRenderer, DslRootScreenFactory<Unit> by TestScreenFactory {
 
     /** Run a single frame of the DSL lifecycle for the given [screen]. */
     fun renderFrame(screen: DslScreen, mousePos: Position = Position(0.px, 0.px)) {
@@ -83,13 +83,13 @@ internal object TestBackend : DslBackendRenderer<Unit> by TestRenderer, DslRootS
 
 // ── Renderer ─────────────────────────────────────────────────────────────────
 
-/** One recorded [DslBackendRenderer.renderTriangles] call, for tests that assert geometry. */
+/** One recorded [DslRootRenderer.renderTriangles] call, for tests that assert geometry. */
 internal class Triangles(val vertices: FloatArray, val colors: IntArray, val image: ImageHolder?)
 
 /** Every `renderTriangles` call the fake backend received, in order. */
 internal val recordedTriangles = mutableListOf<Triangles>()
 
-internal object TestRenderer : DslBackendRenderer<Unit> {
+internal object TestRenderer : DslRootRenderer<Unit> {
     override val guiScale = 1.0
     context(renderParam: Unit) override fun flush() {}
     context(renderParam: Unit) override fun renderQuad(
@@ -131,9 +131,9 @@ internal object TestScreenFactory : DslRootScreenFactory<Unit> {
     /** The title the last screen was created with; a test clears it through [TestBackend.resetPreview]. */
     var lastTitle: String? = null
 
-    override fun create(title: String, dslFunction: DslFunction): DslBackendScreenHolder<Unit> {
+    override fun create(title: String, dslFunction: DslFunction): DslScreenHolder<Unit> {
         lastTitle = title
-        return object : DslBackendScreenHolder<Unit> {
+        return object : DslScreenHolder<Unit> {
             private val store = DslDataStore(TestPlatform, TestRoot.root, title, {}, dslFunction)
             // A real backend mounts in its own screen's lifecycle (the Minecraft Screen's added and
             // removed), which a headless fake does not have - showing is the only event it can hang
@@ -198,7 +198,7 @@ internal object TestUtils : DslPlatformUtils, DslRootUtils {
 
 // ── Metadata ─────────────────────────────────────────────────────────────────
 
-internal object TestMetadata : DslBackendMetadata {
+internal object TestMetadata : DslPlatformMetadata {
     // Configuration written during tests belongs under build/, not in the checkout.
     override val configDir = Paths.get("build", "test-config")
     override val gameDir = Paths.get(".")
@@ -209,7 +209,7 @@ internal object TestMetadata : DslBackendMetadata {
 
 // ── Input ────────────────────────────────────────────────────────────────────
 
-internal object TestInput : DslBackendInput {
+internal object TestInput : DslRootInput {
     var _mouse = Position(0.px, 0.px)
     override val mouse: Position get() = _mouse
     override fun isKeyDown(key: Key) = false
@@ -224,7 +224,7 @@ internal object TestInput : DslBackendInput {
  * interfaces" shape the real backends will use after the split.
  */
 internal object TestPlatform : DslPlatform {
-    override val metadata: DslBackendMetadata get() = TestMetadata
+    override val metadata: DslPlatformMetadata get() = TestMetadata
     override val utils: DslPlatformUtils get() = TestUtils
     override val dispatcher: CoroutineDispatcher get() = TestUtils.mainDispatcher
 }

@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.dsl.ui
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.backend.fillRect
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.isFocused
@@ -41,7 +41,7 @@ fun DslChild.editBoxBackground(width: Measure = 1.scaled, padding: Measure = wid
     val frameColor = Color(0xA0,0xA0,0xA0).mixed
     val innerColor = Color.BLACK.mixed
     object: DslComponent by it {
-        context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+        context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
             backend.fillRect(instance.rect.expand(padding), if(instance.isHighlighted) highlightColor else frameColor)
             backend.fillRect(instance.rect.expand(padding - width), innerColor)
@@ -162,7 +162,7 @@ fun EditableText(
 
             // ── Render ──────────────────────────────────────────────────
 
-            context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+            context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
                 editable.addUndo()
                 val font = backend.getFont(fontName)

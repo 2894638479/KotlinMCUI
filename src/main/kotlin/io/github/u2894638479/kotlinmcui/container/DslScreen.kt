@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.container
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.attachInstance
 import io.github.u2894638479.kotlinmcui.component.relativeTransform
@@ -130,7 +130,7 @@ class DslScreen private constructor(
         children = DslChild.Group().apply { collectAll(tooltips + children) }
     }
 
-    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+    context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() = dataStore.frame { buildFinish ->
         build()
         buildFinish()
@@ -156,7 +156,7 @@ class DslScreen private constructor(
                 TextFlatten(Modifier.padding(3.scaled)) { state.preedit.toString().emit(color = Color.BLACK) }
             }.background(Color.WHITE).outline(color = Color.GREEN).change {
                 object : DslComponent by it {
-                    context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
+                    context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
                     override fun <RP> render() {
                         it.render()
                         this@DslScreen.dataStore.root.input.setPreeditArea(instance.rect)
