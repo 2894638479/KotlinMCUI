@@ -30,14 +30,7 @@ import io.github.u2894638479.kotlinmcui.math.Position
  * and will throw if accessed.
  */
 object TopComponent: DslScope {
-    private val root: DslRoot = DslRoot(
-        state = DslRootState(
-            onFocusChanged = { newFocus, source -> globalFocusChanged(newFocus, source) },
-            onHoverChanged = { globalHoverChanged(it) },
-            onNarrate = { dslBackend.narrate(it) }
-        ),
-        geometry = DslRootGeometry()
-    )
+    private val root: DslRoot get() = mainRoot
 
     private val component: DslScope get() = root.component
 

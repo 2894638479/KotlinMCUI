@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
+import io.github.u2894638479.kotlinmcui.backend.DslRuntime
 import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.container.DslRoot
 import io.github.u2894638479.kotlinmcui.container.DslRootGeometry
@@ -102,6 +103,14 @@ class DslRootMountTest {
 
         rootB.children.collect(screen)
         assertSame(rootB.state, screen.dataStore.rootState, "the new root takes over the stamp")
+    }
+
+    @Test
+    fun `the runtime hands out the main root that TopComponent stands for`() {
+        val root = DslRuntime.ownerRoot
+
+        assertSame(root.children, TopComponent.children, "both hand out the same root's children")
+        assertSame(root.component, TopComponent.instance, "both hand out the same root component")
     }
 
     @Test

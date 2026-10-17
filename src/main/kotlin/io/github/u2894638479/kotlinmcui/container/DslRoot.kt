@@ -3,6 +3,7 @@ package io.github.u2894638479.kotlinmcui.container
 import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
+import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 
 /**
  * One root: the state, the viewport and the children that belong to it.
@@ -14,11 +15,12 @@ import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
  *
  * The name is deliberate: this is the early form of the `DslRoot` the design draft declares, and it
  * grows in place - `provider`, `mount`/`unmount`, `advanceFrame` and the rest are added here rather
- * than in a second type that would have to be reconciled with this one later.
+ * than in a second type that would have to be reconciled with this one later. Only the members a
+ * backend needs today are public; the rest stays internal until the draft's own shape grows here.
  */
-internal class DslRoot(
-    val state: DslRootState,
-    val geometry: DslRootGeometry
+class DslRoot internal constructor(
+    internal val state: DslRootState,
+    internal val geometry: DslRootGeometry
 ) {
     /**
      * The component that represents this root in the tree.
@@ -27,6 +29,15 @@ internal class DslRoot(
      * backend drives it. Rebuilding it would break the `it !== this` checks and the focused identity.
      */
     val component: DslScope = DslRootComponent(this)
+
+    /**
+     * This root's viewport.
+     *
+     * The backend owns it: each frame it sets the rect to the full screen size and then renders
+     * [component]. Those two calls together are "one frame of this root"; the order between them is
+     * the contract, because the render pass copies this rect onto every mounted screen.
+     */
+    val rect: MutRect get() = geometry.rect
 
     private val rawChildren: DslChild.Group by lazy {
         DslChild.Group().also {

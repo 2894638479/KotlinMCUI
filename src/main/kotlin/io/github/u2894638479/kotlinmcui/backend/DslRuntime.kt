@@ -1,5 +1,7 @@
 package io.github.u2894638479.kotlinmcui.backend
 
+import io.github.u2894638479.kotlinmcui.container.DslRoot
+import io.github.u2894638479.kotlinmcui.container.mainRoot
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
 import io.github.u2894638479.kotlinmcui.logger.dslLogger
 
@@ -23,6 +25,19 @@ object DslRuntime {
 
     /** Installed, but the backend has not been published yet. */
     internal val installedButNotReady get() = synchronized(lock) { installed && dslBackendProvider == null }
+
+    /**
+     * The process owner root: the one root that stands for this process.
+     *
+     * Today that is the main root, which is also what [io.github.u2894638479.kotlinmcui.container.TopComponent]
+     * projects. When roots become multiple, this is the one that holds `isOwner` - the draft's
+     * `DslRuntime.ownerRoot` - and the type stays the same.
+     *
+     * Reading it materialises the main root if it does not exist yet, so a backend can take the handle
+     * before it has mounted anything. That makes it never `null`: the "queried before the root exists"
+     * window does not arise, which removes a whole class of too-early failures from the backend side.
+     */
+    val ownerRoot: DslRoot get() = mainRoot
 
     /**
      * Register the platform and do everything that is safe this early.
