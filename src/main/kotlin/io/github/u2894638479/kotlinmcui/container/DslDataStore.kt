@@ -19,12 +19,11 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
  *   the declaring UI code did not run; released by [dispose] when the screen closes
  * - [staticLifeScope]: persists for the lifetime of the process and is never released
  *
- * Global UI state (focus, hover, narration, IME) is reached through
- * [TopComponent] rather than held here, since it belongs to the main root and
- * is shared by every screen mounted on it.
+ * Global UI state (focus, hover, narration, IME) belongs to the root this screen is mounted on and is
+ * reached through [rootState] rather than held here.
  *
- * Also provides a [debugOverlay] with performance metrics referencing
- * [TopComponent] for current focus/hover state.
+ * Also provides a [debugOverlay] with performance metrics that report this screen's own focus/hover
+ * state.
  */
 class DslDataStore(
     val backend: DslBackend<*, *>,
@@ -125,8 +124,10 @@ class DslDataStore(
             return dslScreen.components()
         }
         override val conflictId: DslId? = null
-        override val focusedId get() = TopComponent.focused
-        override val hoveredId get() = TopComponent.hovered
+        // The overlay describes this screen's own tree. A screen that was never mounted has no root
+        // state yet, so these read as "nothing focused / nothing hovered".
+        override val focusedId get() = rootState?.focused
+        override val hoveredId get() = rootState?.hovered
         override val focusedDepth: Int get() {
             return 0
         }

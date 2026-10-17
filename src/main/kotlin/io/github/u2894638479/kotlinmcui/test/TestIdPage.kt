@@ -12,7 +12,6 @@ import io.github.u2894638479.kotlinmcui.modifier.*
 import io.github.u2894638479.kotlinmcui.prop.getValue
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.container.DslChild
-import io.github.u2894638479.kotlinmcui.container.TopComponent
 
 context(ctx: DslContext)
 fun TestIdPage() = Row {
@@ -20,8 +19,10 @@ fun TestIdPage() = Row {
 
     ScrollableColumn {
         TextAutoFold { "last clicked id: $id".emit() }
-        TextAutoFold { "focused id: ${TopComponent.focused}".emit(color = Color(50, 250, 20)) }
-        TextAutoFold { "hovered id: ${TopComponent.hovered}".emit(color = Color(200, 30, 30)) }
+        // The page belongs to whichever tree it is mounted on; a page that is not mounted has no
+        // root state and shows nothing. (Rendering always mounts first.)
+        TextAutoFold { "focused id: ${ctx.dataStore.rootState?.focused}".emit(color = Color(50, 250, 20)) }
+        TextAutoFold { "hovered id: ${ctx.dataStore.rootState?.hovered}".emit(color = Color(200, 30, 30)) }
     }
 
     Column(Modifier.weight(2.0)) {

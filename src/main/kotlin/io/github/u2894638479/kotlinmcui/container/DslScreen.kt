@@ -140,16 +140,20 @@ class DslScreen private constructor(
     /**
      * Render the default IME preedit preview box in the overlay layer,
      * positioned at the focused component's preedit cursor.
+     *
+     * Both the focused identity and the preedit come from the tree this screen is mounted on. A screen
+     * that was never mounted has no root state and draws no box - every rendering path mounts first.
      */
     context(ctx: DslContext)
     private fun ImeBox() {
-        val component = testHit { it.takeIf { it.identity == TopComponent.focused } } ?: return
+        val state = dataStore.rootState ?: return
+        val component = testHit { it.takeIf { it.identity == state.focused } } ?: return
         val rect = component.preeditArea?.transformedMaxBound(component.relativeTransform(this) ?: return) ?: return
-        if (TopComponent.preedit.isEmpty) return
+        if (state.preedit.isEmpty) return
         if (component.selfRenderPreedit) return
         Overlay(Modifier, OverlayAlign.AutoToRect(rect, this.rect)) {
             Box {
-                TextFlatten(Modifier.padding(3.scaled)) { TopComponent.preedit.toString().emit(color = Color.BLACK) }
+                TextFlatten(Modifier.padding(3.scaled)) { state.preedit.toString().emit(color = Color.BLACK) }
             }.background(Color.WHITE).outline(color = Color.GREEN).change {
                 object : DslComponent by it {
                     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
@@ -166,11 +170,14 @@ class DslScreen private constructor(
      * Render a tooltip near the hovered or focused component. If a component
      * is focused but not hovered, the tooltip anchors to the component's rect.
      * Otherwise it anchors to the mouse position.
+     *
+     * The focus is the one of the tree this screen is mounted on; a screen that was never mounted has
+     * no root state, so it can only anchor to the pointer.
      */
     context(ctx: DslContext)
     private fun Tooltip() {
         val hovered = testHit(this@DslScreen.dataStore.backend.mouse) { it.tooltip }
-        val focusedId = TopComponent.focused
+        val focusedId = dataStore.rootState?.focused
         val focused = if (focusedId == null) null else testHit { it.takeIf { it.identity == focusedId } }
         val func = hovered ?: focused?.tooltip ?: return
         val focusedRect = if (focusedId != null && hovered == null) run {

@@ -58,6 +58,9 @@ internal object TestBackend : DslBackend<Unit, Unit>,
         }
     }
 
+    /** Put the pointer at [position] for the next frame, without mounting anything. */
+    fun mouseAt(position: Position) { TestInput._mouse = position }
+
     /** Screenshot names the preview session asked for, in order. */
     val captures get() = TestUtils.captures
 
