@@ -106,7 +106,7 @@ object TopComponent: DslScope {
 
     context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton): Boolean {
-        setFocus(instance.testHit(mouse) { it.takeIf { it.focusable } }?.identity, FocusSource.MOUSE)
+        acquireFocusFromInput(::setFocus)
         return super.mouseDown(mouseButton)
     }
 
