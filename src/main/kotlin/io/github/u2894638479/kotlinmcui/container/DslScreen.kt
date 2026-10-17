@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.container
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
-import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.attachInstance
 import io.github.u2894638479.kotlinmcui.component.relativeTransform
@@ -156,7 +155,7 @@ class DslScreen private constructor(
                     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
                     override fun <RP> render() {
                         it.render()
-                        dslBackend.setPreeditArea(instance.rect)
+                        this@DslScreen.dataStore.backend.setPreeditArea(instance.rect)
                     }
                 }
             }
@@ -170,7 +169,7 @@ class DslScreen private constructor(
      */
     context(ctx: DslContext)
     private fun Tooltip() {
-        val hovered = testHit(dslBackend.mouse) { it.tooltip }
+        val hovered = testHit(this@DslScreen.dataStore.backend.mouse) { it.tooltip }
         val focusedId = TopComponent.focused
         val focused = if (focusedId == null) null else testHit { it.takeIf { it.identity == focusedId } }
         val func = hovered ?: focused?.tooltip ?: return
@@ -179,7 +178,7 @@ class DslScreen private constructor(
         } else null
         val outline: Rect = rect
         val align = focusedRect?.let { OverlayAlign.AutoToRect(it, outline) }
-            ?: OverlayAlign.AutoToPoint(dslBackend.mouse, outline)
+            ?: OverlayAlign.AutoToPoint(this@DslScreen.dataStore.backend.mouse, outline)
         Overlay(Modifier, align) { func() }
     }
 }
