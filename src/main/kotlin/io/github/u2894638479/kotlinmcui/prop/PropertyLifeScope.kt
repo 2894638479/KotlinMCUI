@@ -20,7 +20,7 @@ import kotlin.time.Duration.Companion.seconds
 class PropertyLifeScope internal constructor(
     internal val dataStore: DslDataStore,
     internal val isStatic: Boolean = false,
-    private val map: Object2ObjectOpenHashMap<DslId, TimedProperty<*>> = Object2ObjectOpenHashMap<DslId, TimedProperty<*>>()
+    private val map: MutableMap<DslId, TimedProperty<*>> = Object2ObjectOpenHashMap<DslId, TimedProperty<*>>()
 ) {
     internal val size get() = map.size
     internal open class TimedProperty<T>(private var _value:T, var frameStamp: ULong = 0uL) : StableRW<T> {
@@ -49,8 +49,11 @@ class PropertyLifeScope internal constructor(
     }
 
     /**
-     * The slot's value type is fixed by the declaration site that created it, and that
-     * site is part of the storage key, so this erased cast cannot fail at runtime.
+     * This erased cast is safe **only where the declaration site is part of the key** - the per-screen
+     * scopes. A static key is the bare id (that is what makes it reachable across mods), so two
+     * declaration sites that use the same id with different value types share one slot, and reading it
+     * as the wrong type throws ClassCastException. The contract is therefore per scope:
+     * **inside one process, the same id must always carry the same type**.
      */
     @Suppress("UNCHECKED_CAST")
     private fun <T> TimedProperty<*>.stable(): StableRW<T> = this as StableRW<T>

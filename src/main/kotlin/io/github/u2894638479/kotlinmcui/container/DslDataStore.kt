@@ -9,6 +9,7 @@ import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.prop.PropertyLifeScope
 import io.github.u2894638479.kotlinmcui.prop.PropertyLifeScope.TimedProperty
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Central data store for a screen instance.
@@ -69,7 +70,27 @@ class DslDataStore(
     internal var rootState: DslRootState? = null
 
     companion object {
-        private val staticPropertyMap = Object2ObjectOpenHashMap<DslId, TimedProperty<*>>()
+        /**
+         * The process-wide `static` slots: one map shared by every root and screen.
+         *
+         * A **concurrent** map, not a locked one: after the split a process can render several roots
+         * on different threads, and `static` slots are touched on every frame - a lock would serialise
+         * all roots on the hottest path for no gain. Every operation below is a single-key map operation
+         * (`get`, `put`, `remove`, `keys`), which is exactly the shape `ConcurrentHashMap` makes safe.
+         *
+         * Its keys are **bare ids**: unlike the per-screen scopes, the declaration site is not part of
+         * the key, so two declaration sites using one id share a slot. See `stable()` on
+         * `PropertyLifeScope` for the contract that follows ("same id, same type, per process").
+         */
+        internal val staticPropertyMap: ConcurrentHashMap<DslId, TimedProperty<*>> = ConcurrentHashMap()
+
+        /**
+         * The ids that hold a `static` slot right now, for the debug overlay.
+         *
+         * Internal on purpose: the overlay is a development tool, and `staticProps` is a count that
+         * cannot answer "what is in there". Nothing outside the module needs this list.
+         */
+        internal val staticIds: Set<DslId> get() = staticPropertyMap.keys.toSet()
     }
 
     val stableLifeScope = PropertyLifeScope(this)
