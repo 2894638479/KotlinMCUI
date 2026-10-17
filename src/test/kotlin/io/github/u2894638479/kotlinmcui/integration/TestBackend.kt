@@ -175,6 +175,9 @@ internal object TestUtils : DslPlatformUtils, DslRootUtils {
     // The split gives the same object two hats: process-level helpers and per-output helpers.
     override val sessionDispatcher: CoroutineDispatcher get() = mainDispatcher
 
+    // The fake renders on one thread, so "the session thread" is whoever calls in.
+    override val isOnSessionThread: Boolean get() = true
+
     /** Capture requests, recorded so a test can assert what the preview session asked for. */
     val captures = mutableListOf<String>()
 
