@@ -4,14 +4,12 @@ import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
-import io.github.u2894638479.kotlinmcui.component.nextFocusable
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.input.Key
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
 import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.input.PreeditInfo
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
 
 /**
  * The singleton root of the entire component tree.
@@ -19,6 +17,9 @@ import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
  * The view state ([focused], [hovered], [preedit], the narration, the frame clock and
  * [renderFailure]) lives in the main root's [DslRootState], and the viewport in its
  * [DslRootGeometry]; both are only projected here, so those slots are no longer process-wide.
+ *
+ * The tree itself is walked by the root's component ([DslRoot.component]); this object forwards to
+ * it, which is a stepping stone rather than a shape worth keeping.
  *
  * ### Backend convention
  * The backend must, each frame, set [rect] to the full screen dimensions
@@ -29,13 +30,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
  * and will throw if accessed.
  */
 object TopComponent: DslScope {
-    /**
-     * The root this object stands for: its state, its viewport and its children.
-     *
-     * This object is the projection of the main root only - one instance per root is what lets a
-     * second root keep its own focus, hover and children.
-     */
-    private val root = DslRoot(
+    private val root: DslRoot = DslRoot(
         state = DslRootState(
             onFocusChanged = { newFocus, source -> globalFocusChanged(newFocus, source) },
             onHoverChanged = { globalHoverChanged(it) },
@@ -44,23 +39,21 @@ object TopComponent: DslScope {
         geometry = DslRootGeometry()
     )
 
-    override val rect get() = root.geometry.rect
-    override val modifier get() = error("modifier is not available on topComponent")
-    override var instance: DslComponent get() = this
-        set(value) {}
-    override val identity get() = error("identity is not available on topComponent")
-    override val scale get() = error("scale is not available on topComponent")
-    override val children get() = root.children
+    private val component: DslScope get() = root.component
 
-    override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
-        fun DslChild.Group.f():Unit = forEach { it.children.f();it.globalFocusChanged(newFocus, source) }
-        instance.children.f()
-    }
+    override val rect get() = component.rect
+    override val modifier get() = component.modifier
+    override var instance: DslComponent
+        get() = component.instance
+        set(value) { component.instance = value }
+    override val identity get() = component.identity
+    override val scale get() = component.scale
+    override val children get() = component.children
 
-    override fun globalHoverChanged(newHover: DslId?) {
-        fun DslChild.Group.f():Unit = forEach { it.children.f();it.globalHoverChanged(newHover) }
-        instance.children.f()
-    }
+    override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) =
+        component.globalFocusChanged(newFocus, source)
+
+    override fun globalHoverChanged(newHover: DslId?) = component.globalHoverChanged(newHover)
 
     /**
      * The state of the main root, which this object projects as [focused], [hovered], [preedit],
@@ -105,32 +98,10 @@ object TopComponent: DslScope {
     val preeditUsing get() = testHit { it.takeIf { it !== this && it.identity == focused } }?.preeditArea != null
 
     context(eventModifier: KeyModifiers, mouse: Position)
-    override fun mouseDown(mouseButton: MouseButton): Boolean {
-        acquireFocusFromInput(::setFocus)
-        return super.mouseDown(mouseButton)
-    }
+    override fun mouseDown(mouseButton: MouseButton) = component.mouseDown(mouseButton)
 
     context(eventModifier: KeyModifiers)
-    override fun keyDown(key: Key, scanCode: Int): Boolean {
-        if(super.keyDown(key, scanCode)) return true
-        val next = when(key) {
-            Key.LEFT -> instance.nextFocusable(focused,true) { it.viewHorizontal }
-            Key.RIGHT -> instance.nextFocusable(focused) { it.viewHorizontal }
-            Key.UP -> instance.nextFocusable(focused,true) { it.viewVertical }
-            Key.DOWN -> instance.nextFocusable(focused) { it.viewVertical }
-            Key.TAB -> if(eventModifier.shift) instance.nextFocusable(focused) { it.viewSequential.asReversed() }
-            else instance.nextFocusable(focused) { it.viewSequential }
-            Key.HOME -> instance.nextFocusable(null) { it.viewSequential }
-            Key.END -> instance.nextFocusable(null) { it.viewSequential.asReversed() }
-            else -> return false
-        }
-        if(this.focused != next?.identity) {
-            setFocus(next?.identity, FocusSource.KEYBOARD)
-            this.keyboardNarration = next?.narration
-            return true
-        }
-        return false
-    }
+    override fun keyDown(key: Key, scanCode: Int) = component.keyDown(key, scanCode)
 
     /**
      * How many frames the platform has rendered. It stays zero until the game is past its loading
@@ -145,38 +116,7 @@ object TopComponent: DslScope {
         set(value) { rootState.noteRenderFailure(value) }
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
-    override fun <RP> render() {
-        rootState.advanceFrame()
-        children.forEach { it.rect copyFrom rect }
-        children.asReversed().forEach { child ->
-            try {
-                child.render()
-            } catch(e: Throwable) {
-                // Recorded for the preview session and rethrown: a development tool watching must
-                // not change what the platform does with a broken page.
-                renderFailure = e
-                throw e
-            }
-        }
-        val hovered = instance.testHit(mouse) { it.takeIf { it.highlightable } }
-        this.hovered = hovered?.identity
-        mouseNarration = hovered?.narration ?: instance.testHit(mouse) { it.takeIf { it.narratable } }?.narration
-    }
+    override fun <RP> render() = component.render<RP>()
 
-    /**
-     * Dispatch IME preedit state. When [info] is empty, broadcast to all
-     * components (composition ended). When non-empty, send only to the
-     * focused component. If the component does not have [selfRenderPreedit],
-     * also notify the platform of the cursor position via [setPreeditArea].
-     */
-    override fun globalPreedit(info: PreeditInfo) {
-        preedit = info
-        if(info.isEmpty) testHit {
-            if(it !== this) { it.globalPreedit(info) };null
-        } else {
-            val component = testHit { it.takeIf { it !== this && it.identity == focused } } ?: return
-            component.globalPreedit(info)
-            if(component.selfRenderPreedit) component.preeditArea?.let { dslBackend.setPreeditArea(it) }
-        }
-    }
+    override fun globalPreedit(info: PreeditInfo) = component.globalPreedit(info)
 }

@@ -20,6 +20,14 @@ internal class DslRoot(
     val state: DslRootState,
     val geometry: DslRootGeometry
 ) {
+    /**
+     * The component that represents this root in the tree.
+     *
+     * Stable for the root's whole lifetime: the tree walks it, the focus broadcast enters it and the
+     * backend drives it. Rebuilding it would break the `it !== this` checks and the focused identity.
+     */
+    val component: DslScope = DslRootComponent(this)
+
     private val rawChildren: DslChild.Group by lazy {
         DslChild.Group().also {
             it.collect(dslBackend.create("Dsl Overlay") { DslEntryLoader.overlays() }.dslScreen)
