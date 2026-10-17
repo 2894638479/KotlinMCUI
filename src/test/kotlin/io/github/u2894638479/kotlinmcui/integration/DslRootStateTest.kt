@@ -121,8 +121,8 @@ class DslRootStateTest {
     @Test
     fun `two state instances do not share their slots`() {
         val seen = mutableListOf<DslId?>()
-        val a = DslRootState(onFocusChanged = { id, _ -> seen += id }, onHoverChanged = {})
-        val b = DslRootState(onFocusChanged = { _, _ -> }, onHoverChanged = { _ -> })
+        val a = DslRootState(onFocusChanged = { id, _ -> seen += id }, onHoverChanged = {}, onNarrate = {})
+        val b = DslRootState(onFocusChanged = { _, _ -> }, onHoverChanged = { _ -> }, onNarrate = {})
         val id = DslId("only-a")
 
         a.setFocus(id)

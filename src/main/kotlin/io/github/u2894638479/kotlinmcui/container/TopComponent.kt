@@ -12,15 +12,14 @@ import io.github.u2894638479.kotlinmcui.input.KeyModifiers
 import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.input.PreeditInfo
 import io.github.u2894638479.kotlinmcui.math.Position
-import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
 
 /**
  * The singleton root of the entire component tree.
  *
- * The view state ([focused], [hovered], [preedit]) lives in the main root's
- * [DslRootState] and is only projected here, so those slots are no longer
- * process-wide.
+ * The view state ([focused], [hovered], [preedit], the narration, the frame clock and
+ * [renderFailure]) lives in the main root's [DslRootState], and the viewport in its
+ * [DslRootGeometry]; both are only projected here, so those slots are no longer process-wide.
  *
  * ### Backend convention
  * The backend must, each frame, set [rect] to the full screen dimensions
@@ -31,7 +30,10 @@ import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
  * and will throw if accessed.
  */
 object TopComponent: DslScope {
-    override val rect = MutRect()
+    /** The main root's viewport; the backend writes it in place each frame. */
+    private val geometry = DslRootGeometry()
+
+    override val rect get() = geometry.rect
     override val modifier get() = error("modifier is not available on topComponent")
     override var instance: DslComponent get() = this
         set(value) {}
@@ -54,15 +56,16 @@ object TopComponent: DslScope {
     }
 
     /**
-     * The view state of the main root, which this object projects as [focused], [hovered]
-     * and [preedit].
+     * The state of the main root, which this object projects as [focused], [hovered], [preedit],
+     * [keyboardNarration], [mouseNarration], [frameIndex] and [renderFailure].
      *
      * The state is deliberately not stored here: one instance per root is what lets a second
      * root keep its own focus and hover. This object is the projection of the main root only.
      */
     private val rootState = DslRootState(
         onFocusChanged = { newFocus, source -> globalFocusChanged(newFocus, source) },
-        onHoverChanged = { globalHoverChanged(it) }
+        onHoverChanged = { globalHoverChanged(it) },
+        onNarrate = { dslBackend.narrate(it) }
     )
 
     /** The identity of the main root's focused component, or `null`. */
@@ -85,20 +88,12 @@ object TopComponent: DslScope {
     var hovered: DslId?
         get() = rootState.hovered
         internal set(value) { rootState.setHovered(value) }
-    var keyboardNarration: String? = null
-        internal set(value) {
-            if(value != field) {
-                field = value
-                value?.let { dslBackend.narrate(it) }
-            }
-        }
-    var mouseNarration: String? = null
-        internal set(value) {
-            if(value != field) {
-                field = value
-                value?.let { dslBackend.narrate(it) }
-            }
-        }
+    var keyboardNarration: String?
+        get() = rootState.keyboardNarration
+        internal set(value) { rootState.noteKeyboardNarration(value) }
+    var mouseNarration: String?
+        get() = rootState.mouseNarration
+        internal set(value) { rootState.noteMouseNarration(value) }
     val mouse get() = dslBackend.mouse
 
     /** The current IME preedit state. Updated by [globalPreedit]. */
@@ -138,22 +133,20 @@ object TopComponent: DslScope {
     }
 
     /**
-     * How many frames the platform has rendered through the framework. It stays zero until the
-     * game is past its loading overlay, because the backend does not call in before that - which
-     * makes this both "the platform can show a screen now" and the frame clock a preview session
-     * waits on.
+     * How many frames the platform has rendered. It stays zero until the game is past its loading
+     * overlay, which makes it both "the platform can show a screen now" and the frame clock a
+     * preview session waits on.
      */
-    @Volatile
-    internal var frameIndex = 0L
-        private set
+    internal val frameIndex: Long get() = rootState.frameIndex
 
     /** The last exception a page threw while rendering, kept so a preview session can report it. */
-    @Volatile
-    internal var renderFailure: Throwable? = null
+    internal var renderFailure: Throwable?
+        get() = rootState.renderFailure
+        set(value) { rootState.noteRenderFailure(value) }
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
-        frameIndex++
+        rootState.advanceFrame()
         children.forEach { it.rect copyFrom rect }
         children.asReversed().forEach { child ->
             try {
