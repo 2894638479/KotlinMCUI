@@ -9,8 +9,8 @@ parent: Dev
 
 ## 帧循环
 ```
-后端：设置 TopComponent.rect = 整屏
-后端：TopComponent.render()
+后端：设置 root.rect = 整屏
+后端：root.component.render()
         ├─ 把整屏矩形分发给 Overlay 层子节点
         ├─ 逆序渲染所有子节点
         └─ 重算悬停与朗读

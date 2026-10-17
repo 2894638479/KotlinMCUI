@@ -4,7 +4,7 @@ nav_order: 8
 parent: Basic
 ---
 # 协程
-`dslBackend.mainDispatcher`提供的调度器可以把任务调度到`minecraft`的主线程（渲染线程）上。
+`DslPlatform.dispatcher`（进程级）与`DslRootUtils.sessionDispatcher`（会话级）提供的调度器可以把任务调度到`minecraft`的主线程（渲染线程）上。
 
 ## 通过Context启动
 部分回调包含`CoroutineScope`接收者。可以使用`launch{}`，`async{}`，`withContext(){}`等扩展函数。

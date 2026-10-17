@@ -121,7 +121,7 @@ fun DslChild.background(color: Color? = null) = change {
 裁剪与变换装饰器会各自覆写 `testHit`，使命中测试走与绘制相同的裁剪矩形/逆变换矩阵——保证"看得见就点得到"。
 
 ## 全局状态
-焦点、悬停、朗读、IME 预编辑状态不放在组件上，而放在单例根节点上，因为它们是**进程级**的：同一时刻整个游戏只有一个焦点组件，切换 Screen 不应让焦点状态残留。用户可以用公开的 `TopComponent.setFocus(identity)`（`source` 默认 `FocusSource.CODE`，`null` 表示清除）主动设焦点，鼠标与键盘导航走的是同一个函数；它**不**筛选 `focusable`，所以"根节点记录了焦点"和"组件报告 `isFocused`"是两件事。
+焦点、悬停、朗读、IME 预编辑状态不放在组件上，而放在**根**（`DslRoot`）上：它们属于那个根的树，切换 Screen 不应让状态残留；同一进程里的多个后端各有各的根，因此这些状态是**每根**的，不是进程级的。设焦点由鼠标与键盘导航驱动，走的是根内部同一个入口；它**不**筛选 `focusable`，所以"根记录了焦点"和"组件报告 `isFocused`"是两件事。由代码主动设焦点的唯一入口是 `root.setFocus(identity)`（`source` 默认 `FocusSource.CODE`，`null` 表示清除）——"开屏就把光标放进输入框"用的就是它；`DslRootState` 保持 `internal`，所以 `setHovered`/`setPreedit`/帧计数都不在公开面上。
 
 全局事件从根节点向下派发，顺序是**后序**的（先子后父）：子组件先知道自己失去了焦点，父容器最后才看到变化，便于父容器在子组件已更新后再做整体反应。
 

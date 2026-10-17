@@ -16,7 +16,7 @@ Box {
 ```
 更靠前的组件会排在更上层。右下角红色矩形在上层，左上角蓝色矩形在下层。
 
-`showScreen{}`和`dslBackend.create(...)`默认也是`Box{}`。`Button{}`也是一种特殊的`Box{}`，只是额外渲染了背景。
+`showScreen{}`和`root.screenFactory.create(...)`默认也是`Box{}`。`Button{}`也是一种特殊的`Box{}`，只是额外渲染了背景。
 
 ## `Row{}`
 ```kotlin

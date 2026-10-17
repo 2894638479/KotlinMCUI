@@ -10,42 +10,63 @@ parent: Dev
 这一页讲**契约**。官方实现（独立仓库）是怎么满足它的、踩了哪些平台限制，见 [Fabric 后端实现](backend-fabric)；后端的使用与构建见[后端](../backend/index)一章。
 
 ## 接口组合
-`DslBackend` 自己**没有任何成员**，它只是把若干职责接口聚合成"一个后端"：
+没有"后端对象"这个东西了。后端按职责分别实现下面几个接口，框架只认这些接口，不认"一个实现了全部的后端"：
 
 两组的边界有一条判据：**元数据是"进程启动时就可读、且必须无副作用的事实"，工具是"需要一个活着的平台才能执行的操作"**。名称、本地化与打开链接都要求平台已经起来，所以它们属于工具而不属于元数据。
 
-| 接口 | 职责 |
-| --- | --- |
-| `DslBackendRenderer<RP>` | 缩放、提交、绘制原语、裁剪、变换、取字体 |
-| `DslBackendScreenFactory<SC>` | 创建 Screen |
-| `DslBackendInput` | 按键/鼠标状态查询、鼠标位置、IME 候选区 |
-| `DslBackendMetadata` | 目录、游戏版本、加载器、运行环境 |
-| `DslBackendUtils` | 剪贴板、朗读、本地化、世界判定、本地图像加载与强制重载、按钮音效、打开链接、主线程调度器、截图、退出 |
+| 接口 | 职责 | 归属 |
+| --- | --- | --- |
+| `DslPlatform` | `metadata`、`utils`、`dispatcher` | 进程级 |
+| `DslBackendMetadata` | 目录、游戏版本、加载器、运行环境 | 进程级 |
+| `DslPlatformUtils` | 本地化、退出、本地图像加载与强制重载、世界判定 | 进程级 |
+| `DslRootUtils` | 剪贴板、朗读、按钮音效、打开链接、截图、会话调度器 | 每个根 |
+| `DslBackendRenderer<RP>` | 缩放、提交、绘制原语、裁剪、变换、取字体 | 每个根 |
+| `DslBackendInput` | 按键/鼠标状态查询、鼠标位置、IME 候选区 | 每个根 |
+| `DslRootScreenFactory<SC>` | 创建 Screen | 每个根 |
 
-`DslBackendScreenHolder<SC>` **不属于** `DslBackend`，它是 `create()` 的返回值，负责持有平台侧 screen 对象并实现 `show()`。
+一个对象可以同时实现多个接口（例如 `DslPlatformUtils` 与 `DslRootUtils` 用同一个实现），实现者不因"分了接口"就必须拆成多个对象。
+
+`DslBackendScreenHolder<SC>` **不属于**上面任何一个，它是 `create()` 的返回值，负责持有平台侧 screen 对象并实现 `show()`。
 
 抽象成员总数为三十余个：渲染接口里的绘制成员是 `renderQuad` 与 `renderTriangles` **两个**，纯色矩形、渐变矩形、贴图矩形都是 `renderQuad` 的**扩展函数**（不额外分配）。它们是扩展而不是接口成员，因此没法被覆写——后端想要平台自己的快速路径（例如原生的实心矩形填充），就在 `renderQuad` 里判断"无纹理且四角同色"，这样所有调用方一起受益。
 
 ## 启动顺序：`DslRuntime`
-后端的可用时机分两段，框架为这两段各提供一个入口，模组与后端都不再自己拼接顺序：
+进程级只有平台，分两段，框架为这两段各提供一个入口，模组与后端都不再自己拼接顺序：
 
 ```kotlin
-DslRuntime.install { Metadata }                // 模组初始化：平台事实 + 入口发现
+DslRuntime.install { Metadata }            // 模组初始化：平台事实 + 入口发现
 // …客户端构造完成、可以建界面之后…
-DslRuntime.platformReady { DefaultBackend }    // 后端工厂与"就绪"一起交出来
+DslRuntime.start { DefaultPlatform }       // 先到先得，返回 false 表示这次没生效
 ```
 
 - `install` 立刻读一次元数据，并完成**入口发现**与框架自己的**配置读取**——这些只需要元数据。
-- 后端工厂在 `platformReady` 才交给框架，因此**不存在"已登记未发布"的中间状态**，框架里也不需要多存一个后备工厂。这里刻意不用"提前赋值 + 阶段守卫"：那会让"阶段"和"provider 是否已赋值"成为两个可以互相矛盾的真相来源，而"还没赋值"本身就是许可。
-- 两个 provider 变量是 `internal`，后端（独立模块）只能走这两个入口。`install` 在第二次调用时直接抛错；`platformReady` 只在第一次生效，第二个后端会被拒绝并记一条日志而不抛错——同一个游戏实例只应该装一个后端，而"装了两个"是用户的环境问题，不该升级成客户端崩溃：被拒的那一方只能从返回值和这一行日志知道自己没有生效。**同一个游戏实例只装一个后端**，否则先到的那个赢、后到的那个静默失效。两者都在锁内执行：单次语义必须在任何线程上都成立。
-- 只依赖元数据的路径（配置读写、版本与环境查询）永远走 `dslMetadata`；`dslMetadata` 在没装元数据 provider 时会回退成"构造后端再取元数据"，等于把下面的风险拿回来，只作为兼容路径存在。
+- `start` 只在第一次生效。第二个后端会被拒绝并记一条日志而**不抛错**：同一个游戏实例只应该装一个后端，而"装了两个"是用户的环境问题，不该升级成客户端崩溃。被拒的那一方从返回值和日志知道自己没有生效，**但照常建自己的根、照常服务**——是否自动驱动主循环由它自己决定，框架不代管。
+- 两个 provider 变量（元数据、平台）是 `internal`，后端（独立模块）只能走这两个入口。两者都在锁内执行：单次语义必须在任何线程上都成立。
+- 只依赖元数据的路径（配置读写、版本与环境查询）永远走 `dslMetadata`；它只来自 `install`，没有"回退去构造后端"这条路。
+- 运行时的状态只有三件事：`installed`、元数据 provider、平台 provider。**没有任何根**——根属于建它的后端。
 
-两条契约，来自一次真实的崩溃：
+两条契约：
 
 | 契约 | 理由 |
 | --- | --- |
 | 元数据实现不得有副作用 | 它在模组初始化阶段就会被读，那时窗口、渲染器、语言数据都还不存在 |
-| `DslBackend` 的构造不得有副作用 | 后端要等 `platformReady` 之后才可能被构造；构造期碰平台（例如在字段初始化器里建 `Screen`）会在 narrator 就绪前 NPE 并直接崩客户端 |
+| 建根与建界面只能在 `start` 之后 | 平台发布之前，界面所需的渲染器、输入、调度器都还不存在；提前建根得到的不是"稍后能用的根"，而是根本不该存在的对象 |
+
+## 根：由后端建、由后端驱动
+框架不发根。后端拿到平台之后自己构造：
+
+```kotlin
+val root = DslRoot(input, renderer, screenFactory, rootUtils)
+```
+
+- `renderer` 可空：为空表示这个根不绘制（连字体也没有）。需要绘制的组件会在使用处响亮失败，`scale` 退回 `1.0` 只影响布局近似。
+- **根不负责渲染**。每帧后端写 `root.rect`，然后在 `context(renderer, 参数, root.input.mouse)` 里调用 `root.component.render()`。顺序是契约：渲染期会把 `rect` 复制到每个已挂载的屏。
+- 挂载由 `root.children.collect(screen)` 完成，并且**每次 collect 都会把 `root.state` 盖到该屏的 store 上**；`remove` 不清章（隐藏不是销毁）。
+- 同一进程里有多个后端时，各建各的根，互不可见——框架里没有"进程根"这个概念。
+- **拆除门**：`root.close()`（幂等）让"继续用这个根"变成响亮失败——挂载、卸载、`component.render()`、`setFocus` 都会抛，晚到的一帧因此不会画进一个没人看的根。它**不**负责停你的定时器/执行器/录制器：顺序是**先 `close()`，再停你自己的驱动**。`root.isClosed` 报告状态。
+
+## 预览
+预览是工具，不是进程事实：`DslPreview.start(root)`，**显式调用**，画进你给的那个根。平台发布不会再顺带触发它。
 
 ## 渲染原语与不变量
 框架要求后端实现**两个绘制成员**：下面的 `renderQuad` 与任意多边形的 `renderTriangles`。矩形是绝大多数内容的形状，多边形只有圆、圆角一类需要逼近时才用。
@@ -79,18 +100,18 @@ fun renderQuad(
 ```kotlin
 showScreen(title) { /* DSL */ }
 // 等价于
-backend.create(title) { /* DSL */ }.show()
+root.screenFactory.create(title) { /* DSL */ }.show()
 ```
 
-`create()` 构造 `DslDataStore`，其中又构造 `DslScreen`。**`create()` 必须无副作用**：根节点会惰性地调用一次 `create("Dsl Overlay") { ... }` 来建立 Overlay 层，并且**只取其中的 `dslScreen`、从不 `show()`**。如果 `create()` 顺手做了注册、着色器初始化之类的可见副作用，就会在无人察觉的情况下被执行一次。
+`create()` 构造 `DslDataStore(platform, root, …)`，其中又构造 `DslScreen`。**`create()` 必须无副作用**：根会惰性地调用一次 `create("Dsl Overlay") { ... }` 来建立 Overlay 层，并且**只取其中的 `dslScreen`、从不 `show()`**。如果 `create()` 顺手做了注册、着色器初始化之类的可见副作用，就会在无人察觉的情况下被执行一次。
 
 每帧后端要做三件事：
 
-1. 把 `TopComponent.rect` 设为整屏尺寸；
-2. 以 `(backend, renderParam, mouse)` 三个上下文接收者调用根节点的 `render<RP>()`；
+1. 把 `root.rect` 设为整屏尺寸；
+2. 在 `context(renderer, renderParam, root.input.mouse)` 里调用 `root.component.render()`；
 3. 帧末 `flush()`。
 
-`TopComponent.render()` 会把整屏矩形分发给 Overlay 层子节点，然后按逆序渲染。它内部会重算悬停状态，所以**输入与渲染不需要各自维护一套坐标判定**。
+`root.component.render()` 会把整屏矩形分发给 Overlay 层子节点，然后按逆序渲染。它内部会重算悬停状态，所以**输入与渲染不需要各自维护一套坐标判定**。
 
 ### 输入由后端采集
 框架不采集输入。后端必须在平台回调里转发到根节点对应的方法：`keyDown` / `keyUp` / `mouseDown` / `mouseUp` / `mouseMove` / `mouseScrollVertical` / `mouseScrollHorizontal` / `charTyped` / `dropFiles` / `globalPreedit`。修饰键由后端从平台位掩码填充，框架内部不做推导。
@@ -102,15 +123,16 @@ backend.create(title) { /* DSL */ }.show()
 `dataStore.pauseGame` 默认为 `true`，是否使用由后端决定。
 
 ## 后端注册与入口
-后端通过一个全局可变的 provider 注册自身：
+后端通过 `DslRuntime.start` 交出平台，之后读 `dslPlatform` / `dslMetadata`：
 
 ```kotlin
-var dslBackendProvider: (() -> DslBackend<*, *>)? = null
-val dslBackend get() = dslBackendProvider?.invoke()
-    ?: throw IllegalStateException("DSL failed to find a backend...")
+DslRuntime.install { Metadata }
+DslRuntime.start { DefaultPlatform }
 ```
 
-注意 `dslBackend` **每次访问都会调用 provider**，所以 provider 必须返回稳定的单例，不能在每次调用时新建后端。
+两个 provider 是 `internal` 的 `var`，且带 `@Volatile`：写方在 `DslRuntime` 的锁内，读方（`dslPlatform`、`dslMetadata`）不取锁，没有 volatile 就没有 happens-before 边，读者可以合法地一直读到 `null`。**这不是可选的优化，是发布语义的一部分。**
+
+读口 `dslPlatform` 每次访问都会调一次 provider，所以 provider 必须返回稳定的单例。
 
 加载器侧的入口发现见 [入口](entry)。
 
@@ -119,10 +141,10 @@ UI 构建状态是线程受限的：`DslContext` 记录创建它的线程，所�
 
 由于**每帧都会新建一个 `DslContext`**，而组件对象会跨帧留存（它们持有创建时的上下文引用），实际约束是：`create` / `build` / `render` / 输入转发 / 关闭回调必须全部发生在同一个线程上。
 
-`mainDispatcher` 供属性作用域创建协程使用（`clickable { launch { } }` 就跑在它上面），因此它必须是**主线程的串行调度器**，不能是并行调度器。
+调度器分两层：`DslPlatform.dispatcher` 是**进程级**的主线程调度器（给"整个进程一次"的工作用），`DslRootUtils.sessionDispatcher` 是**会话级**的调度器，供属性作用域创建协程使用（`clickable { launch { } }` 就跑在它上面）。两者都必须是串行调度器，不能是并行池：UI 构建状态是线程受限的。
 
 ## 写一个最小后端
-必须实现的成员分布大致是：渲染接口十余个（缩放、`flush`、`renderQuad`、`renderTriangles`、原版风格的按钮/槽位/容器/提示底纹/物品/默认背景、裁剪、变换、取字体）、输入接口四个、元数据五个、工具接口十余个、以及 Screen 工厂一个。
+必须实现的成员分布大致是：渲染接口十余个（缩放、`flush`、`renderQuad`、`renderTriangles`、原版风格的按钮/槽位/容器/提示底纹/物品/默认背景、裁剪、变换、取字体）、输入接口四个、元数据五个、平台工具四五个、根工具七八个、以及 Screen 工厂一个。
 
 最低限度可以这样：
 

@@ -19,13 +19,13 @@ showScreen {
 
 如果要获得创建的`Screen`对象，如下：
 ```kotlin
-val screen = dslBackend.create("DSL Screen") {
+val screen = root.screenFactory.create("DSL Screen") {
     TestPage()
 }.screen as Screen
 ```
 `create`的第一个参数是`Screen`的标题。这里必须进行类型转换，因为要跨版本支持。
 
-不要在mod初始化过程中执行上述代码。因为`dslBackend`还没有初始化。使用按键或者`modmenu`等入口点触发这些代码。
+不要在mod初始化过程中执行上述代码。那时平台还没发布（`DslRuntime.start`之前），建不了界面。使用按键或者`modmenu`等入口点触发这些代码。
 ## 创建自己的`Page`
 只需要用自己的内容替换`TestPage()`即可。一个简单的示例：
 ```kotlin

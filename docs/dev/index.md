@@ -16,7 +16,7 @@ nav_order: 7
    dsl/ui        组件实现（Box/Row/Column/Text/…）
    dsl/decorator 行为装饰（clickable/background/…）
         ┌──────────────────────────────────────────────┐
-        │ container   树与帧循环（TopComponent/DslScreen│
+        │ container   树与帧循环（DslRoot/DslScreen      │
         │             /DslDataStore/DslChild）         │
         │ component   组件契约（事件/对齐/元数据/导航）  │
         │ prop        属性生命周期与动画                 │
@@ -33,9 +33,9 @@ nav_order: 7
 核心库不含任何 Minecraft 类型。所有平台相关能力都收敛到 `backend` 包的接口，由配套后端 mod 实现；这也是同一个 jar 能同时服务 Fabric / Forge / NeoForge 的前提。
 
 ## 一帧的完整流程
-后端每帧做两件事：把 `TopComponent.rect` 设为整屏尺寸，然后调用 `TopComponent.render()`。
+后端每帧做两件事：把 `root.rect` 设为整屏尺寸，然后调用 `root.component.render()`。
 
-`TopComponent` 是进程内**唯一**的根节点，所有 Screen 与 Overlay 都是它的子节点。它按 `asReversed()` 渲染子节点——这意味着**声明靠前的组件绘制在更上层**，与直觉相反，但让 `Box{}` 的层叠语义与事件命中顺序保持一致（两者都按声明顺序从前往后）。
+根（`DslRoot`）**不是**进程内唯一的：每个后端建自己的根，所有 Screen 与 Overlay 都是该根的子节点。它按 `asReversed()` 渲染子节点——这意味着**声明靠前的组件绘制在更上层**，与直觉相反，但让 `Box{}` 的层叠语义与事件命中顺序保持一致（两者都按声明顺序从前往后）。
 
 单个 Screen 的一帧在 `DslScreen.render()` 中展开：
 
@@ -81,7 +81,7 @@ nav_order: 7
 | `identity` | `DslId` 身份链 |
 | `prop` | 局部/稳定/静态属性作用域、动画、属性组合子 |
 | `component` | `DslComponent` 契约、对齐适配、事件契约、焦点导航 |
-| `container` | `TopComponent`、`DslScreen`、`DslDataStore`、`DslChild`、`DslScope` |
+| `container` | `DslRoot`、`DslScreen`、`DslDataStore`、`DslChild`、`DslScope` |
 | `dsl` | `DslFunction`、DSL 辅助函数与属性快捷方式 |
 | `dsl/ui` | 内置组件 |
 | `dsl/decorator` | 效果装饰器与事件装饰器 |
