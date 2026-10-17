@@ -9,7 +9,7 @@ import io.github.u2894638479.kotlinmcui.dsl.DslFunction
  *
  * @param SC The platform-specific screen type.
  */
-fun interface DslBackendScreenFactory<SC> {
+fun interface DslRootScreenFactory<SC> {
     /**
      * Create a new screen.
      * @param title The screen title (shown in the game's screen list or title bar).

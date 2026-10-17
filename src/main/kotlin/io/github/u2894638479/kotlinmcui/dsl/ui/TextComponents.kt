@@ -27,7 +27,7 @@ fun TextFlatten(
 ) = collect(
     DslText(
         newChildId(id ?: build::class), modifier, fontName,
-        ctx.dataStore.backend.getFont(fontName), ctx,
+        ctx.dataStore.requireRenderer().getFont(fontName), ctx,
         listOf(DslTextBuilderContext(ctx).apply { build() }.toChars().flatten()),
         defaultLineHeight, horizontalAligner, verticalAligner
     )
@@ -46,7 +46,7 @@ fun TextFoldable(
 ) = collect(
     DslText(
         newChildId(id ?: build::class), modifier, fontName,
-        ctx.dataStore.backend.getFont(fontName), ctx,
+        ctx.dataStore.requireRenderer().getFont(fontName), ctx,
         DslTextBuilderContext(ctx).apply { build() }.toChars(),
         defaultLineHeight, horizontalAligner, verticalAligner
     )
@@ -64,14 +64,14 @@ fun TextAutoFold(
     build: DslTextBuilderContext.()->Unit
 ) = collect(object : DslText(
     newChildId(id ?: build::class), modifier, fontName,
-    ctx.dataStore.backend.getFont(fontName), ctx,
+    ctx.dataStore.requireRenderer().getFont(fontName), ctx,
     DslTextBuilderContext(ctx).apply { build() }.toChars(),
     defaultLineHeight, horizontalAligner, verticalAligner
 ) {
     override val contentMinWidth get() = instance.modifier.contentMinWidth
 
     override fun processChars(chars: List<List<DslRenderableChar>>): List<List<DslRenderableChar>> {
-        val font = ctx.dataStore.backend.getFont(fontName)
+        val font = ctx.dataStore.requireRenderer().getFont(fontName)
         val result = mutableListOf<MutableList<DslRenderableChar>>()
         val maxWidth = instance.rect.width
         chars.forEach {

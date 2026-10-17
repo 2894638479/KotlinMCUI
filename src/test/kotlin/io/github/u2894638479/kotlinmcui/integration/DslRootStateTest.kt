@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslPlatform
-import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslRootState

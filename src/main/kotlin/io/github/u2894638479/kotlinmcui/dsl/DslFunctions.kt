@@ -16,7 +16,7 @@ import java.io.File
 typealias DslFunction = context(DslContext) ()->Unit
 
 context(ctx: DslDataStoreContext)
-fun translate(string: String,vararg args: Any) = backend.translate(string,*args) ?: string
+fun translate(string: String,vararg args: Any) = dslPlatform.utils.translate(string,*args) ?: string
 
 /**
  * [translate] for code that runs outside a DSL context, such as entry metadata.
@@ -25,7 +25,7 @@ fun translate(string: String,vararg args: Any) = backend.translate(string,*args)
 fun translateGlobal(key: String,vararg args: Any) = dslPlatform.utils.translate(key,*args) ?: key
 
 context(_: DslExecuteContext)
-fun showScreen(title:String = "DSL Screen",function: DslFunction) = dataStore.backend.create(title,function).show()
+fun showScreen(title:String = "DSL Screen",function: DslFunction) = (dataStore.provider.screenFactory ?: error("this root's provider cannot create screens")).create(title,function).show()
 
 context(ctx: DslContext)
 fun newChildId(id:Any?) = ctx.identity + id
@@ -50,7 +50,7 @@ inline fun <T> Iterable<T>.forEachWithId(block: (T) -> Unit) = forEach { withId(
 
 context(_: DslDataStoreContext, _: DslIdContext)
 fun imageFile(file: File?): ImageHolder {
-    return backend.loadLocalImage(file ?: return ImageHolder.empty)
+    return dslPlatform.utils.loadLocalImage(file ?: return ImageHolder.empty)
 }
 
 context(_: DslDataStoreContext, _: DslIdContext)

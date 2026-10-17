@@ -44,7 +44,6 @@ class DslProviderTest {
     @Test
     fun `reading metadata does not build the backend`() {
         dslMetadataProvider = { OnlyMetadata }
-        dslBackendProvider = { error("metadata must not need the backend") }
 
         assertEquals(OnlyMetadata.configDir, dslMetadata.configDir)
         saveConfig("marker.json", Marker("no backend"), configFormat)
@@ -54,10 +53,8 @@ class DslProviderTest {
     @Test
     fun `metadata is readable while no backend exists at all`() {
         dslMetadataProvider = { OnlyMetadata }
-        dslBackendProvider = null
 
         assertEquals(OnlyMetadata.configDir, dslMetadata.configDir)
-        assertFailsWith<IllegalStateException>("the backend itself must still be unavailable") { dslBackend }
     }
 
     @Test

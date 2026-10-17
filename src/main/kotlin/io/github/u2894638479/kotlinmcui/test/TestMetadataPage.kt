@@ -23,9 +23,9 @@ fun TestMetadataPage() = ScrollableColumn {
             pair.second.emit()
         }
     }
-    val backend = ctx.dataStore.backend
-    item("gameVersion" to backend.gameVersion)
-    item("gameLoader" to backend.gameLoader)
-    item("gameDir" to backend.gameDir.toString())
-    item("configDir" to backend.configDir.toString())
+    val metadata = ctx.dataStore.platform.metadata
+    item("gameVersion" to metadata.gameVersion)
+    item("gameLoader" to metadata.gameLoader)
+    item("gameDir" to metadata.gameDir.toString())
+    item("configDir" to metadata.configDir.toString())
 }

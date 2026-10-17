@@ -14,7 +14,7 @@ import io.github.u2894638479.kotlinmcui.logger.dslLogger
  * A backend calls [install] while the mod initialises — metadata is readable that
  * early, the backend itself is not — and [platformReady] once screens can be built.
  * Nothing else calls them: entry discovery and the config files that only need
- * metadata happen inside [install], and [dslBackend] starts working at [platformReady].
+ * metadata happen inside [install], and [dslPlatform] starts working at [platformReady].
  *
  * Both calls take a lock: the whole point is that they happen exactly once, and
  * "exactly once" has to hold no matter which thread the loader happens to use.
@@ -40,7 +40,7 @@ object DslRuntime {
     internal val isInstalled get() = synchronized(lock) { installed }
 
     /** Installed, but the backend has not been published yet. */
-    internal val installedButNotReady get() = synchronized(lock) { installed && dslBackendProvider == null }
+    internal val installedButNotReady get() = synchronized(lock) { installed && dslPlatformProvider == null }
 
     /**
      * The process owner root: the one root that stands for this process.
@@ -69,7 +69,7 @@ object DslRuntime {
     }
 
     /**
-     * Publish [backend]: from here on [dslBackend] works.
+     * Publish [platform]: from here on [dslPlatform] works.
      *
      * Call it when the platform can create screens — for Fabric, after
      * `Minecraft.<init>` returns. The factory arrives together with readiness, so there
@@ -222,7 +222,6 @@ object DslRuntime {
     internal fun resetForTest() = synchronized(lock) {
         installed = false
         dslMetadataProvider = null
-        dslBackendProvider = null
         dslPlatformProvider = null
         providers.clear()
         refusalLedger.clear()

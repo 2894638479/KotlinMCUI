@@ -2,7 +2,6 @@ package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.backend.DslRuntime
-import io.github.u2894638479.kotlinmcui.backend.rootProviderOf
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslChild

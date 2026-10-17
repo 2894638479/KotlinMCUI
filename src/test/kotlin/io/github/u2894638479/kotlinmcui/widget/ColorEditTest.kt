@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.widget
 
 import io.github.u2894638479.kotlinmcui.backend.DslPlatform
-import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local

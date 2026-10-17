@@ -136,7 +136,7 @@ fun EditableText(
         var alignedLines = listOf<Pair<DslTextLine, List<AlignableChar>>>()
         var mouseDown: Unit? = null
     }}
-    val font = ctx.dataStore.backend.getFont(fontName)
+    val font = ctx.dataStore.requireRenderer().getFont(fontName)
     val blink = (((ctx.dataStore.frameBeginNano - info.blinkBeginNano) / blinkCycle.inWholeNanoseconds) % 2L) == 0L
     val delegate = DslText(
         identity, modifier, fontName, font, ctx,
@@ -231,10 +231,10 @@ fun EditableText(
                     Key.HOME      -> if (!moveCursorToLineStart()) return default()
                     Key.END       -> if (!moveCursorToLineEnd()) return default()
                     Key.ENTER     -> editable.insert('\n')
-                    Key.V         -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.backend.clipboard)
-                    Key.C         -> if (eventModifier.ctrl) editable.range?.let { ctx.dataStore.backend.clipboard = editable.codePoints.substring(it) }
+                    Key.V         -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.provider.rootUtils.clipboard)
+                    Key.C         -> if (eventModifier.ctrl) editable.range?.let { ctx.dataStore.provider.rootUtils.clipboard = editable.codePoints.substring(it) }
                     Key.Z         -> if (eventModifier.ctrl) { if (eventModifier.shift) editable.redo() else editable.undo() }
-                    Key.X         -> if (eventModifier.ctrl) { editable.range?.let { ctx.dataStore.backend.clipboard = editable.codePoints.substring(it) }; editable.insert() }
+                    Key.X         -> if (eventModifier.ctrl) { editable.range?.let { ctx.dataStore.provider.rootUtils.clipboard = editable.codePoints.substring(it) }; editable.insert() }
                     Key.A         -> if (eventModifier.ctrl) { editable.cursor = editable.maxCursor; editable.cursor2 = 0 }
                     else          -> return default()
                 }

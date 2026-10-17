@@ -259,7 +259,7 @@ private abstract class Palette(
 
     /** End the drag when the button is no longer held; called once a frame while rendering. */
     protected fun reconcileDrag() {
-        if(dragging.value && instance.dataStore?.backend?.isMouseDown(MouseButton.LEFT) != true) dragging.value = false
+        if(dragging.value && instance.dataStore?.provider?.input?.isMouseDown(MouseButton.LEFT) != true) dragging.value = false
     }
 
     context(eventModifier: KeyModifiers, mouse: Position)
@@ -275,7 +275,7 @@ private abstract class Palette(
     context(mouse: Position)
     override fun mouseMove() {
         if(!dragging.value) return
-        if(instance.dataStore?.backend?.isMouseDown(MouseButton.LEFT) != true) {
+        if(instance.dataStore?.provider?.input?.isMouseDown(MouseButton.LEFT) != true) {
             dragging.value = false
             return
         }

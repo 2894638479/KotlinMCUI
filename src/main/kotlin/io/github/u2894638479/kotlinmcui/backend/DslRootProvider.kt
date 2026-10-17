@@ -10,7 +10,7 @@ import io.github.u2894638479.kotlinmcui.math.Position
  * by several roots, so everything here must be "one answer, many roots" - state that belongs to a root
  * lives on the root, not here.
  *
- * `screenFactory` keeps its current name [DslBackendScreenFactory]: the draft renames it
+ * `screenFactory` keeps its current name [DslRootScreenFactory]: the draft renames it
  * `DslRootScreenFactory`, and that rename rides with the rest of the breaking changes so the backends
  * are touched once.
  */
@@ -21,7 +21,7 @@ interface DslRootProvider<RP, SC> {
     val input: DslBackendInput
 
     /** `null` when this provider's roots are evaluation-only; creating a screen on such a root fails. */
-    val screenFactory: DslBackendScreenFactory<SC>?
+    val screenFactory: DslRootScreenFactory<SC>?
 
     val rootUtils: DslRootUtils
 
@@ -33,38 +33,4 @@ interface DslRootProvider<RP, SC> {
      * and it must happen before the render pass, which copies that rect onto every mounted screen.
      */
     fun frame(root: DslRoot, renderParam: RP)
-}
-
-/**
- * The transitional provider: the published aggregate backend, seen as a [DslRootProvider].
- *
- * Nothing is copied - the renderer and the input are the backend object itself, so identity checks
- * hold and a backend keeps working untouched. It exists only until the backends implement
- * [DslRootProvider] themselves; then this file goes away with the aggregate type.
- */
-internal fun <RP, SC> rootProviderOf(backend: DslBackend<RP, SC>): DslRootProvider<RP, SC> =
-    object : DslRootProvider<RP, SC> {
-        override val renderer: DslBackendRenderer<RP>? get() = backend
-        override val input: DslBackendInput get() = backend
-        override val screenFactory: DslBackendScreenFactory<SC>? get() = backend
-        override val rootUtils: DslRootUtils get() = rootUtilsOf(backend)
-
-        override fun frame(root: DslRoot, renderParam: RP) {
-            val renderer = renderer ?: return
-            kotlin.context(renderer, renderParam, backendMouse()) { root.component.render() }
-        }
-    }
-
-private fun DslRootProvider<*, *>.backendMouse(): Position = input.mouse
-
-private fun rootUtilsOf(backend: DslBackendUtils): DslRootUtils = object : DslRootUtils {
-    override var clipboard: String
-        get() = backend.clipboard
-        set(value) { backend.clipboard = value }
-
-    override suspend fun capture(fileName: String) = backend.capture(fileName)
-    override fun narrate(string: String) = backend.narrate(string)
-    override fun playButtonSound() = backend.playButtonSound()
-    override fun openUri(uri: String) = backend.openUri(uri)
-    override val sessionDispatcher get() = backend.mainDispatcher
 }

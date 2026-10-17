@@ -26,7 +26,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * property asks for it - photograph the result and stop.
  *
  * All of this is policy and therefore lives here; the platform only supplies the two members
- * [DslBackendUtils.capture] and [DslBackendUtils.quit] plus the render loop that ticks
+ * [DslRootUtils.capture] and [DslPlatformUtils.quit] plus the render loop that ticks
  * [DslRuntime.ownerRoot.state.frameIndex]. Keeping the timing rules in the framework means they are the same on
  * every platform, and testable without a game.
  *

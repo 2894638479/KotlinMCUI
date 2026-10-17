@@ -88,7 +88,7 @@ class DslRuntimeTest {
 
         assertEquals(TestMetadata.configDir, dslMetadata.configDir)
 
-        val failure = assertFailsWith<IllegalStateException> { dslBackend }
+        val failure = assertFailsWith<IllegalStateException> { dslPlatform }
         assertTrue(
             "not ready" in failure.message.orEmpty(),
             "the failure must say the platform is not ready yet, was: ${failure.message}"

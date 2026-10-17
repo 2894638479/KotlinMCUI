@@ -115,7 +115,7 @@ class PropertyLifeScope internal constructor(
 
     private fun coroutineScope(
         identity:DslId,
-        dispatcher: CoroutineDispatcher = dataStore.backend.mainDispatcher
+        dispatcher: CoroutineDispatcher = dataStore.provider.rootUtils.sessionDispatcher
     ): CoroutineScope {
         val identity = identity + dispatcher
         val property = map[identity] ?: return object : CoroutineScope {
@@ -163,7 +163,7 @@ class PropertyLifeScope internal constructor(
      * ```
      */
     context(ctx: DslIdContext)
-    val coroutineScope get() = coroutineScope(identity, dataStore.backend.mainDispatcher)
+    val coroutineScope get() = coroutineScope(identity, dataStore.provider.rootUtils.sessionDispatcher)
 
     /**
      * Returns a reactive property with automatic lifecycle management.

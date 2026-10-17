@@ -31,13 +31,8 @@ import java.nio.file.Paths
  * Provides a full [DslBackend] implementation so that [DslScreen.build]
  * and the complete layout/render pipeline can be exercised in tests.
  */
-internal object TestBackend : DslBackend<Unit, Unit>,
-    DslBackendRenderer<Unit> by TestRenderer,
-    DslBackendScreenFactory<Unit> by TestScreenFactory,
-    DslBackendUtils by TestUtils,
-    DslBackendMetadata by TestMetadata,
-    DslBackendInput by TestInput
-{
+internal object TestBackend : DslBackendRenderer<Unit> by TestRenderer, DslRootScreenFactory<Unit> by TestScreenFactory {
+
     /** Run a single frame of the DSL lifecycle for the given [screen]. */
     fun renderFrame(screen: DslScreen, mousePos: Position = Position(0.px, 0.px)) {
         TestInput._mouse = mousePos
@@ -130,7 +125,7 @@ private object TestRenderer : DslBackendRenderer<Unit> {
 
 // ── Screen factory ───────────────────────────────────────────────────────────
 
-private object TestScreenFactory : DslBackendScreenFactory<Unit> {
+private object TestScreenFactory : DslRootScreenFactory<Unit> {
     private var mounted: DslChild? = null
 
     /** The title the last screen was created with; a test clears it through [TestBackend.resetPreview]. */
@@ -139,7 +134,7 @@ private object TestScreenFactory : DslBackendScreenFactory<Unit> {
     override fun create(title: String, dslFunction: DslFunction): DslBackendScreenHolder<Unit> {
         lastTitle = title
         return object : DslBackendScreenHolder<Unit> {
-            private val store = DslDataStore(TestBackend, title, {}, dslFunction)
+            private val store = DslDataStore(TestPlatform, TestRootProvider, title, {}, dslFunction)
             // A real backend mounts in its own screen's lifecycle (the Minecraft Screen's added and
             // removed), which a headless fake does not have - showing is the only event it can hang
             // mounting on. A page that is never mounted is never built, and so never gets to fail.
@@ -164,7 +159,7 @@ private object TestScreenFactory : DslBackendScreenFactory<Unit> {
 
 // ── Utils ────────────────────────────────────────────────────────────────────
 
-private object TestUtils : DslBackendUtils, DslPlatformUtils, DslRootUtils {
+private object TestUtils : DslPlatformUtils, DslRootUtils {
     override var clipboard = ""
     override fun narrate(string: String) {}
     override fun translate(key: String, vararg args: Any?) = key
@@ -175,7 +170,7 @@ private object TestUtils : DslBackendUtils, DslPlatformUtils, DslRootUtils {
     override fun openUri(uri: String) {}
     // UI state is confined to the thread that builds it, so "the main thread"
     // dispatcher here must run continuations on the caller rather than a pool.
-    override val mainDispatcher: CoroutineDispatcher = Dispatchers.Unconfined
+    val mainDispatcher: CoroutineDispatcher = Dispatchers.Unconfined
 
     // The split gives the same object two hats: process-level helpers and per-output helpers.
     override val sessionDispatcher: CoroutineDispatcher get() = mainDispatcher
@@ -238,7 +233,7 @@ internal object TestPlatform : DslPlatform {
 internal object TestRootProvider : DslRootProvider<Unit, Unit> {
     override val renderer: DslBackendRenderer<Unit>? get() = TestRenderer
     override val input: DslBackendInput get() = TestInput
-    override val screenFactory: DslBackendScreenFactory<Unit>? get() = TestScreenFactory
+    override val screenFactory: DslRootScreenFactory<Unit>? get() = TestScreenFactory
     override val rootUtils: DslRootUtils get() = TestUtils
 
     override fun frame(root: DslRoot, renderParam: Unit) =

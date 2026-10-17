@@ -6,7 +6,7 @@ import java.io.File
 /**
  * The per-output helpers: things one root does for its own session.
  *
- * Early form of the draft's `DslRootUtils`; the signatures are the ones `DslBackendUtils` already has,
+ * Early form of the draft's `DslRootUtils`; the signatures are the ones the old aggregate utils already had,
  * so a backend object satisfies it as-is. The process-level half lives in [DslPlatformUtils].
  *
  * `closeOutput` is deliberately absent: nothing needs it before the draft's root lifecycle exists, and
