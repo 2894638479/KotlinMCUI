@@ -43,23 +43,32 @@ object DslRuntime {
     internal val installedButNotReady get() = synchronized(lock) { installed && dslPlatformProvider == null }
 
     /**
-     * The process owner root: the one root that stands for this process.
+     * The process owner root, owned by the first provider registered.
      *
-     * Reading it materialises the main root if it does not exist yet, so a backend can take the handle
-     * before it has mounted anything. That makes it never `null`: the "queried before the root exists"
-     * window does not arise, which removes a whole class of too-early failures from the backend side.
+     * Internal on purpose: a backend cannot name it, so "render the process root" is not something a
+     * later backend can even express. Backends ask [rootFor] instead, which answers with this root for
+     * the first registrant and with a fresh root for everybody else - the mistake stops being a
+     * discipline question and becomes unrepresentable.
      *
-     * **In a process where more than one backend is installed, only the first registrant may use it.**
-     * This root belongs to the backend that registered its provider first, and it renders *that*
-     * backend's tree; a later backend that uses it would draw someone else's UI. Every other backend
-     * must ask for its own root with [createRoot] and [ViewerLifetime.PROCESS] instead.
-     *
-     * The signal is "did I register first", and it has to be taken **before** [registerProvider]: after
-     * that call the list is no longer empty, so the answer is gone. There is deliberately no query for
-     * it - one more member would be one more thing to keep consistent - so the two lines a backend
-     * needs are: read [registeredProviders] before registering, and branch on whether it was empty.
+     * Reading it materialises the main root if it does not exist yet.
      */
-    val ownerRoot: DslRoot get() = mainRoot
+    internal val ownerRoot: DslRoot get() = mainRoot
+
+    /**
+     * The root that belongs to [provider] - ask this instead of deciding which root to use yourself.
+     *
+     * The first provider registered owns the process root, so its callers get exactly that root (the
+     * one `isOwner` marks). Any later provider gets its own root from [createRoot] with
+     * [viewerLifetime]: it renders its own tree, which is the whole point - a second backend that took
+     * the process root would silently draw the first one's UI.
+     *
+     * The ordering test lives inside this call, so a caller cannot get it wrong by checking
+     * [registeredProviders] at the wrong moment.
+     */
+    fun rootFor(provider: DslRootProvider<*, *>, viewerLifetime: ViewerLifetime): DslRoot =
+        synchronized(lock) {
+            if (providers.firstOrNull() === provider) ownerRoot else createRoot(provider, viewerLifetime)
+        }
 
     /**
      * Register the platform and do everything that is safe this early.
@@ -111,11 +120,9 @@ object DslRuntime {
      * Register a [provider] an entry point brought with it. It may be shared by several roots and
      * registered more than once; no root exists at this point.
      *
-     * **Registration order is the only signal for "may I use [ownerRoot]".** The first registrant owns
-     * the process root; every later backend must create its own with [createRoot] and
-     * [ViewerLifetime.PROCESS], because [ownerRoot] renders the first one's tree. Read
-     * [registeredProviders] *before* calling this to learn whether you are first - once this returns,
-     * the list is non-empty and the answer is gone.
+     * Registration order decides one thing only: whether [rootFor] hands this provider the process
+     * root. The first one registered owns it; every later one gets a root of its own. Callers never
+     * need to know which case they are - that is what [rootFor] is for.
      */
     fun registerProvider(provider: DslRootProvider<*, *>) = synchronized(lock) {
         providers += provider

@@ -151,28 +151,38 @@ class DslRuntimeTest {
     }
 
     /**
-     * Two backends in one process: the owner root renders the first registrant's tree, so the second
-     * one must get a root of its own instead of drawing somebody else's UI.
+     * Two backends in one process: the process root renders the first registrant's tree, so the second
+     * one must get a root of its own. `rootFor` decides that, so no caller has to know the order.
      */
     @Test
     @Order(9)
-    fun `a later registrant creates its own root instead of using the owner root`() {
+    fun `the first registrant gets the process root from rootFor`() {
         DslRuntime.install { TestMetadata }
         DslRuntime.platformReady { TestPlatform }
-
-        // The first registrant is the one the process root belongs to.
         DslRuntime.registerProvider(TestRootProvider)
-        val owner = DslRuntime.ownerRoot
+
+        val mine = DslRuntime.rootFor(TestRootProvider, ViewerLifetime.PROCESS)
+
+        assertSame(DslRuntime.ownerRoot, mine, "the first registrant gets the process root itself")
+        assertTrue(mine.isOwner, "the process root is the owner root")
+        assertSame(TestRootProvider, mine.provider)
+    }
+
+    @Test
+    @Order(10)
+    fun `a later registrant gets a root of its own from rootFor`() {
+        DslRuntime.install { TestMetadata }
+        DslRuntime.platformReady { TestPlatform }
+        DslRuntime.registerProvider(TestRootProvider)
 
         // A second backend brings its own provider object.
         val second = object : DslRootProvider<Unit, Unit> by TestRootProvider {}
         DslRuntime.registerProvider(second)
 
-        val mine = DslRuntime.createRoot(second, ViewerLifetime.PROCESS)
+        val mine = DslRuntime.rootFor(second, ViewerLifetime.PROCESS)
 
-        assertNotSame(owner, mine, "a later backend must not be handed the owner root")
-        assertFalse(mine.isOwner, "only the owner root carries isOwner")
-        assertSame(TestRootProvider, owner.provider, "the owner root stays with the first registrant")
-        assertSame(second, mine.provider, "the created root renders its registrant's tree")
+        assertNotSame(DslRuntime.ownerRoot, mine, "a later backend must not be handed the process root")
+        assertFalse(mine.isOwner, "only the process root carries isOwner")
+        assertSame(second, mine.provider, "the new root renders its registrant's tree")
     }
 }
