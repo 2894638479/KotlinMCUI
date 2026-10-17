@@ -19,9 +19,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
  *   the declaring UI code did not run; released by [dispose] when the screen closes
  * - [staticLifeScope]: persists for the lifetime of the process and is never released
  *
- * Global UI state (focus, hover, narration, IME) lives on
- * [TopComponent] rather than here, since it is shared across all screens
- * within the process.
+ * Global UI state (focus, hover, narration, IME) is reached through
+ * [TopComponent] rather than held here, since it belongs to the main root and
+ * is shared by every screen mounted on it.
  *
  * Also provides a [debugOverlay] with performance metrics referencing
  * [TopComponent] for current focus/hover state.

@@ -18,6 +18,10 @@ import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
 /**
  * The singleton root of the entire component tree.
  *
+ * The view state ([focused], [hovered], [preedit]) lives in the main root's
+ * [DslRootState] and is only projected here, so those slots are no longer
+ * process-wide.
+ *
  * ### Backend convention
  * The backend must, each frame, set [rect] to the full screen dimensions
  * and call [DslComponent.render] on this component. The render method copies
@@ -49,8 +53,20 @@ object TopComponent: DslScope {
         instance.children.f()
     }
 
-    var focused: DslId? = null
-        private set
+    /**
+     * The view state of the main root, which this object projects as [focused], [hovered]
+     * and [preedit].
+     *
+     * The state is deliberately not stored here: one instance per root is what lets a second
+     * root keep its own focus and hover. This object is the projection of the main root only.
+     */
+    private val rootState = DslRootState(
+        onFocusChanged = { newFocus, source -> globalFocusChanged(newFocus, source) },
+        onHoverChanged = { globalHoverChanged(it) }
+    )
+
+    /** The identity of the main root's focused component, or `null`. */
+    val focused: DslId? get() = rootState.focused
 
     /**
      * Move the focus to the component with this [DslId], as if the user had done it; `null`
@@ -64,14 +80,11 @@ object TopComponent: DslScope {
      * component rebuilt this frame.
      */
     fun setFocus(newFocus: DslId?, source: FocusSource = FocusSource.CODE) {
-        focused = newFocus
-        globalFocusChanged(newFocus, source)
+        rootState.setFocus(newFocus, source)
     }
-    var hovered: DslId? = null
-        internal set(value) {
-            field = value
-            globalHoverChanged(value)
-        }
+    var hovered: DslId?
+        get() = rootState.hovered
+        internal set(value) { rootState.setHovered(value) }
     var keyboardNarration: String? = null
         internal set(value) {
             if(value != field) {
@@ -89,8 +102,9 @@ object TopComponent: DslScope {
     val mouse get() = dslBackend.mouse
 
     /** The current IME preedit state. Updated by [globalPreedit]. */
-    var preedit = PreeditInfo.empty
-        internal set
+    var preedit: PreeditInfo
+        get() = rootState.preedit
+        internal set(value) { rootState.setPreedit(value) }
 
     /** Whether the currently focused component accepts IME input (has a non-null [DslComponentMetadata.preeditArea]). */
     val preeditUsing get() = testHit { it.takeIf { it !== this && it.identity == focused } }?.preeditArea != null
