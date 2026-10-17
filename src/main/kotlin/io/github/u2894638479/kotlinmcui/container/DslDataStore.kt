@@ -14,12 +14,15 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Central data store for a screen instance.
  *
- * Holds the platform and the root it is mounted on, frame timing, and three [PropertyLifeScope]
- * instances with different lifetimes:
- * - [localLifeScope]: cleared every frame (properties not accessed this frame are disposed)
- * - [stableLifeScope]: survives while the screen lives, even across frames in which
- *   the declaring UI code did not run; released by [dispose] when the screen closes
- * - [staticLifeScope]: persists for the lifetime of the process and is never released
+ * Holds the platform and the root it is mounted on, frame timing, and four [PropertyLifeScope]
+ * instances, one per boundary. Their lifetimes only ever grow:
+ *
+ * - [localLifeScope]: one **frame** - a property not read this frame is disposed at its end
+ * - [stableLifeScope]: one **screen** - survives frames in which the declaring code did not run,
+ *   released by [dispose] when the screen closes
+ * - [sessionLifeScope]: one **root** - shared by every screen mounted there, cleaned and emptied by
+ *   `root.close()`; this is the scope for state that one screen sets and another reads
+ * - [staticLifeScope]: the **process** - never released
  *
  * Global UI state (focus, hover, narration, IME) belongs to the root this screen is mounted on and is
  * reached through [rootState] rather than held here.
@@ -95,6 +98,22 @@ class DslDataStore(
 
     val stableLifeScope = PropertyLifeScope(this)
     val localLifeScope = PropertyLifeScope(this)
+    /**
+     * The process-wide scope: **kept for cross-root sharing and cross-mod contracts, not for UI state**.
+     *
+     * Its keys are bare ids, so any mod can address a slot by name - and that is also why nothing here is
+     * ever released.
+     *
+     * - **Do not** put screen-local UI state here; that is [stableLifeScope] (screen) or [localLifeScope]
+     *   (frame).
+     * - **Do not** build keys dynamically: nothing is released, so every distinct key grows the map for
+     *   the life of the process.
+     * - **Do not** use it as per-connection state; that is [sessionLifeScope], which is bounded by a root.
+     *
+     * **Contract**: one id, one type, for the whole process. A static key does not carry the declaration
+     * site, so two sites sharing an id share the slot, and reading it as the wrong type throws a
+     * `ClassCastException`.
+     */
     val staticLifeScope = PropertyLifeScope(this,true,staticPropertyMap)
     /** The root-bounded scope: shared by every screen on this root, released by oot.close(). */
     val sessionLifeScope = PropertyLifeScope(this, false, root.sessionPropertyMap, isSession = true)

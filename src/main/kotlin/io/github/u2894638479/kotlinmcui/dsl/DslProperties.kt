@@ -43,14 +43,31 @@ val stable get() = dataStore.stableLifeScope
 /**
  * Session property scope — bounded by the root, shared by every screen mounted on it.
  *
- * With a key it is a named address inside that root, so one screen can set it and another can read it;
- * without one it is private to the declaration site. Same type contract as `static`: one key, one type
- * per root. `root.close()` runs each slot's cleanup and empties the scope.
+ * - **With a key** it is a named address inside that root: another screen, another component, another
+ *   declaration site on the same root reads the same slot. `session("x") { 1 }` here, `session("x")`
+ *   there.
+ * - **Without a key** it is private to the declaration site.
+ *
+ * Same type contract as `static`: one key, one type per root; a wrong-type read throws a
+ * `ClassCastException`. `root.close()` runs each slot's cleanup and empties the scope.
+ *
+ * The `local` / `stable` key is only a sub-key of its own declaration site, so a key can never be shared
+ * through those two scopes: to share by name use [session] (per root) or [static] (per process).
  */
 context(ctx: DslDataStoreContext)
 val session get() = dataStore.sessionLifeScope
 
-/** Static property scope — persists for the entire process lifetime. */
+/**
+ * Process-wide property scope — **kept for cross-root sharing and cross-mod contracts, not UI state**.
+ *
+ * Its keys are bare ids, so any mod can address a slot by name; nothing here is ever released.
+ *
+ * - **Do not** use it for screen-local UI state - that is [stable] (screen) or [local] (frame).
+ * - **Do not** build keys dynamically: every distinct key grows the map for the life of the process.
+ * - **Do not** use it as per-connection state - that is [session], which is bounded by a root.
+ *
+ * **Contract**: one id, one type, for the whole process; a wrong-type read throws a `ClassCastException`.
+ */
 context(ctx: DslDataStoreContext)
 val static get() = dataStore.staticLifeScope
 
