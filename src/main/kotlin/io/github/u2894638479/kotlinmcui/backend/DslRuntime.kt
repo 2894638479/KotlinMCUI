@@ -64,6 +64,11 @@ object DslRuntime {
      *
      * The ordering test lives inside this call, so a caller cannot get it wrong by checking
      * [registeredProviders] at the wrong moment.
+     *
+     * **Only ask for a root after the platform is published.** An earlier call still returns an object
+     * (never `null`, never a throw), but it is a *refused* root: nothing works, and the first thing
+     * that touches its provider names the reason. The entry order is therefore "register, publish,
+     * then take roots".
      */
     fun rootFor(provider: DslRootProvider<*, *>, viewerLifetime: ViewerLifetime): DslRoot =
         synchronized(lock) {
@@ -198,20 +203,36 @@ object DslRuntime {
 
     private fun refuse(what: String, reason: DslRejectionReason): DslRoot {
         refusalLedger += DslRejection(what, reason, holder = null)
-        return buildRoot(RefusedProvider, ViewerLifetime.NONE, isOwner = false, refusal = reason)
+        return buildRoot(refusedProvider(reason), ViewerLifetime.NONE, isOwner = false, refusal = reason)
     }
 
     /**
-     * A refused root still needs a provider object; nothing reaches it, because [DslRoot.children]
-     * throws on the refusal first.
+     * The provider of a refused root: every member fails with the refusal reason.
+     *
+     * A refused root cannot report its reason from one place - the first thing a caller touches may be
+     * the root's children, its component, or the screen factory it passes on to a screen's store. So
+     * the reason travels with the object and is named by whichever path fails first, instead of each
+     * path reporting its own local symptom ("cannot create screens") and hiding the real cause.
      */
-    private object RefusedProvider : DslRootProvider<Nothing, Nothing> {
-        override val renderer get() = null
-        override val input: DslBackendInput get() = error("this root was refused")
-        override val screenFactory get() = null
-        override val rootUtils: DslRootUtils get() = error("this root was refused")
-        override fun frame(root: DslRoot, renderParam: Nothing) = error("this root was refused")
-    }
+    private fun refusedProvider(reason: DslRejectionReason): DslRootProvider<Nothing, Nothing> =
+        object : DslRootProvider<Nothing, Nothing> {
+            private fun fail(): Nothing = error(
+                "this root was never usable: it was refused with $reason. " + when(reason) {
+                    DslRejectionReason.PLATFORM_NOT_PUBLISHED ->
+                        "No platform has been published yet: publish it before taking a root, and " +
+                            "register the provider first."
+                    DslRejectionReason.PLATFORM_ALREADY_HELD ->
+                        "Another root already owns the process: every backend but the first must ask " +
+                            "rootFor for its own root."
+                }
+            )
+
+            override val renderer get() = fail()
+            override val input: DslBackendInput get() = fail()
+            override val screenFactory get() = fail()
+            override val rootUtils: DslRootUtils get() = fail()
+            override fun frame(root: DslRoot, renderParam: Nothing) = fail()
+        }
 
     private fun DslRootProvider<*, *>.describe(): String = this::class.simpleName ?: "root provider"
 

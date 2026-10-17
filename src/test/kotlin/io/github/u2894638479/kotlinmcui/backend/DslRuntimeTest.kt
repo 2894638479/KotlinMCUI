@@ -185,4 +185,25 @@ class DslRuntimeTest {
         assertFalse(mine.isOwner, "only the process root carries isOwner")
         assertSame(second, mine.provider, "the new root renders its registrant's tree")
     }
+
+    /**
+     * A root taken before the platform is published is a refused root, and its failure has to name the
+     * refusal - otherwise the caller sees a local symptom ("cannot create screens") and looks in the
+     * wrong place, which is exactly what a real backend did.
+     */
+    @Test
+    @Order(11)
+    fun `a root taken before the platform is published names the refusal when used`() {
+        DslRuntime.install { TestMetadata }
+        // Nothing published: reported separately, because `install` alone already installed us.
+        val refused = DslRuntime.createRoot(TestRootProvider, ViewerLifetime.PROCESS)
+        assertFalse(with(DslRuntime) { refused.isRegistered }, "the root must be refused")
+
+        val error = assertFailsWith<IllegalStateException> { refused.provider.screenFactory }
+
+        assertTrue(
+            "PLATFORM_NOT_PUBLISHED" in error.message.orEmpty(),
+            "the failure must name the refusal reason, was: ${error.message}",
+        )
+    }
 }
