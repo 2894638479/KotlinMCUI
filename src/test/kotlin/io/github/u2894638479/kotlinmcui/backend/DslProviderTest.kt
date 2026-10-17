@@ -73,4 +73,21 @@ class DslProviderTest {
         dslBackendProvider = { TestBackend }
         assertEquals(TestBackend.configDir, dslMetadata.configDir)
     }
+
+    /**
+     * The platform is derived, not registered: what it answers is exactly what the published backend
+     * already answers, and an installed metadata provider still wins over the backend.
+     */
+    @Test
+    fun `the platform answers from the published backend`() {
+        dslBackendProvider = { TestBackend }
+        dslMetadataProvider = null
+
+        assertEquals("a.key", dslPlatform.translate("a.key"), "translation comes from the backend")
+        assertSame(TestBackend, dslPlatform.metadata, "with no metadata provider the backend is the metadata")
+
+        dslMetadataProvider = { OnlyMetadata }
+        assertSame(OnlyMetadata, dslPlatform.metadata, "an installed metadata provider wins")
+        assertEquals("a.key", dslPlatform.translate("a.key"), "translation still comes from the backend")
+    }
 }

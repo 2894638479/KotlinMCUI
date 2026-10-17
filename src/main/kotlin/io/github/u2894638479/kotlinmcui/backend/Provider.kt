@@ -14,15 +14,6 @@ internal var dslMetadataProvider: (() -> DslBackendMetadata)? = null
 /** The current backend instance. Throws until the platform has published one. */
 val dslBackend get() = dslBackendProvider?.invoke() ?: throw dslNoBackendError()
 
-/**
- * Metadata of the current platform.
- *
- * Falls back to the backend for platforms installed without a separate metadata
- * provider, in which case reading metadata does build the backend.
- */
-val dslMetadata: DslBackendMetadata
-    get() = dslMetadataProvider?.invoke() ?: dslBackend
-
 private fun dslNoBackendError() = IllegalStateException(
     if (DslRuntime.installedButNotReady)
         "The backend is installed, but the platform is not ready to build it yet. Mod initialisation must not use the DSL; do it once screens can be created."
