@@ -2,7 +2,6 @@ package io.github.u2894638479.kotlinmcui.dsl.ui
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.backend.fillRectGradient
-import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.component.isFocused
@@ -195,7 +194,7 @@ private open class SliderImpl(
     override fun mouseDown(mouseButton: MouseButton): Boolean {
         if (delegate.mouseDown(mouseButton)) return true
         if (mouse in instance.rect) {
-            dslBackend.playButtonSound()
+            instance.dataStore?.backend?.playButtonSound()
             alreadyDown = true
             setProgress(mouse)
             return true

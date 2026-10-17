@@ -14,9 +14,12 @@ internal val mainRoot: DslRoot by lazy {
         state = DslRootState(
             onFocusChanged = { newFocus, source -> mainComponent().globalFocusChanged(newFocus, source) },
             onHoverChanged = { newHover -> mainComponent().globalHoverChanged(newHover) },
-            onNarrate = { dslBackend.narrate(it) }
+            onNarrate = { mainRoot.provider.narrate(it) }
         ),
-        geometry = DslRootGeometry()
+        geometry = DslRootGeometry(),
+        // The one place that hands the published platform to a root. Everything downstream reads it
+        // from the root, which is what lets the rest of the framework stop asking the global.
+        provider = dslBackend
     )
 }
 

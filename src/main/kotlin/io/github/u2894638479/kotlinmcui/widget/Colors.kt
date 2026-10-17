@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.widget
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
-import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.backend.fillRect
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.DslComponentImpl
@@ -260,7 +259,7 @@ private abstract class Palette(
 
     /** End the drag when the button is no longer held; called once a frame while rendering. */
     protected fun reconcileDrag() {
-        if(dragging.value && !dslBackend.isMouseDown(MouseButton.LEFT)) dragging.value = false
+        if(dragging.value && instance.dataStore?.backend?.isMouseDown(MouseButton.LEFT) != true) dragging.value = false
     }
 
     context(eventModifier: KeyModifiers, mouse: Position)
@@ -276,7 +275,7 @@ private abstract class Palette(
     context(mouse: Position)
     override fun mouseMove() {
         if(!dragging.value) return
-        if(!dslBackend.isMouseDown(MouseButton.LEFT)) {
+        if(instance.dataStore?.backend?.isMouseDown(MouseButton.LEFT) != true) {
             dragging.value = false
             return
         }

@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.container
 
-import io.github.u2894638479.kotlinmcui.backend.dslBackend
+import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
@@ -19,7 +19,18 @@ import io.github.u2894638479.kotlinmcui.math.rect.MutRect
  */
 class DslRoot internal constructor(
     internal val state: DslRootState,
-    internal val geometry: DslRootGeometry
+    internal val geometry: DslRootGeometry,
+    /**
+     * The platform pieces this root draws, reads input and creates screens with.
+     *
+     * Early form of the draft's `DslRootProvider`: ⑤-3 swaps the type for it and keeps this name.
+     *
+     * It is captured when the root is built rather than looked up globally afterwards. Note the
+     * ordering that pages depend on: [state] must be usable before any screen is built, because a
+     * screen's store is stamped with it when the screen is mounted, and a page may read focus while
+     * it builds.
+     */
+    internal val provider: DslBackend<*, *>
 ) {
     private val rootComponent = DslRootComponent(this)
 
@@ -52,7 +63,7 @@ class DslRoot internal constructor(
 
     private val rawChildren: DslChild.Group by lazy {
         DslChild.Group().also {
-            it.collect(dslBackend.create("Dsl Overlay") { DslEntryLoader.overlays() }.dslScreen)
+            it.collect(provider.create("Dsl Overlay") { DslEntryLoader.overlays() }.dslScreen)
         }
     }
 

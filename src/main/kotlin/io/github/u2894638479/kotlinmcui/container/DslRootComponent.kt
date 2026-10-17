@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.container
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
-import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.component.nextFocusable
@@ -48,7 +47,7 @@ internal class DslRootComponent(private val root: DslRoot) : DslScope {
     /** Whether the currently focused component accepts IME input (it has a [preeditArea]). */
     val preeditUsing get() = testHit { it.takeIf { it !== this && it.identity == state.focused } }?.preeditArea != null
 
-    val mouse get() = dslBackend.mouse
+    val mouse get() = root.provider.mouse
 
     context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton): Boolean {
@@ -110,7 +109,7 @@ internal class DslRootComponent(private val root: DslRoot) : DslScope {
         } else {
             val component = testHit { it.takeIf { it !== this && it.identity == state.focused } } ?: return
             component.globalPreedit(info)
-            if(component.selfRenderPreedit) component.preeditArea?.let { dslBackend.setPreeditArea(it) }
+            if(component.selfRenderPreedit) component.preeditArea?.let { root.provider.setPreeditArea(it) }
         }
     }
 }

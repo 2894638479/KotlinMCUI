@@ -92,7 +92,7 @@ internal object DslPreview {
      * produced no file.
      */
     internal suspend fun run(reference: String, capture: Boolean) {
-        val backend = dslBackend
+        val backend = DslRuntime.ownerRoot.provider
         val page = try {
             pageFor(reference)
         } catch(e: Throwable) {
@@ -143,7 +143,7 @@ internal object DslPreview {
      * line is written by the caller, because it carries the exception itself.
      */
     private suspend fun showFailure(reference: String,text: String,capture: Boolean) {
-        val backend = dslBackend
+        val backend = DslRuntime.ownerRoot.provider
         // The error screen needs the same readiness as a real page: opened any earlier it would be
         // pushed aside by the platform's own loading screen, and the screenshot would show that
         // instead of the reason.
