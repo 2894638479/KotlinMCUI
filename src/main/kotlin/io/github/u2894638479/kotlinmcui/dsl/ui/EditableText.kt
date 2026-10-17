@@ -231,10 +231,10 @@ fun EditableText(
                     Key.HOME      -> if (!moveCursorToLineStart()) return default()
                     Key.END       -> if (!moveCursorToLineEnd()) return default()
                     Key.ENTER     -> editable.insert('\n')
-                    Key.V         -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.provider.rootUtils.clipboard)
-                    Key.C         -> if (eventModifier.ctrl) editable.range?.let { ctx.dataStore.provider.rootUtils.clipboard = editable.codePoints.substring(it) }
+                    Key.V         -> if (eventModifier.ctrl) editable.insert(ctx.dataStore.root.rootUtils.clipboard)
+                    Key.C         -> if (eventModifier.ctrl) editable.range?.let { ctx.dataStore.root.rootUtils.clipboard = editable.codePoints.substring(it) }
                     Key.Z         -> if (eventModifier.ctrl) { if (eventModifier.shift) editable.redo() else editable.undo() }
-                    Key.X         -> if (eventModifier.ctrl) { editable.range?.let { ctx.dataStore.provider.rootUtils.clipboard = editable.codePoints.substring(it) }; editable.insert() }
+                    Key.X         -> if (eventModifier.ctrl) { editable.range?.let { ctx.dataStore.root.rootUtils.clipboard = editable.codePoints.substring(it) }; editable.insert() }
                     Key.A         -> if (eventModifier.ctrl) { editable.cursor = editable.maxCursor; editable.cursor2 = 0 }
                     else          -> return default()
                 }

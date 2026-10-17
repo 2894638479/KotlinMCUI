@@ -101,14 +101,6 @@ class DslRootMountTest {
     }
 
     @Test
-    fun `the runtime hands out the main root that TestRoot stands for`() {
-        val root = DslRuntime.ownerRoot
-
-        assertSame(root.children, TestRoot.children, "both hand out the same root's children")
-        assertSame(root.component, TestRoot.instance, "both hand out the same root component")
-    }
-
-    @Test
     fun `the debug overlay reports the focus of its own tree`() {
         val screen = page()
         val root = TestRoot.newRoot()

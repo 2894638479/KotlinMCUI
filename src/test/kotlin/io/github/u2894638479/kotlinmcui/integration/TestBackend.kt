@@ -89,7 +89,7 @@ internal class Triangles(val vertices: FloatArray, val colors: IntArray, val ima
 /** Every `renderTriangles` call the fake backend received, in order. */
 internal val recordedTriangles = mutableListOf<Triangles>()
 
-private object TestRenderer : DslBackendRenderer<Unit> {
+internal object TestRenderer : DslBackendRenderer<Unit> {
     override val guiScale = 1.0
     context(renderParam: Unit) override fun flush() {}
     context(renderParam: Unit) override fun renderQuad(
@@ -125,7 +125,7 @@ private object TestRenderer : DslBackendRenderer<Unit> {
 
 // ── Screen factory ───────────────────────────────────────────────────────────
 
-private object TestScreenFactory : DslRootScreenFactory<Unit> {
+internal object TestScreenFactory : DslRootScreenFactory<Unit> {
     private var mounted: DslChild? = null
 
     /** The title the last screen was created with; a test clears it through [TestBackend.resetPreview]. */
@@ -134,7 +134,7 @@ private object TestScreenFactory : DslRootScreenFactory<Unit> {
     override fun create(title: String, dslFunction: DslFunction): DslBackendScreenHolder<Unit> {
         lastTitle = title
         return object : DslBackendScreenHolder<Unit> {
-            private val store = DslDataStore(TestPlatform, TestRootProvider, title, {}, dslFunction)
+            private val store = DslDataStore(TestPlatform, TestRoot.root, title, {}, dslFunction)
             // A real backend mounts in its own screen's lifecycle (the Minecraft Screen's added and
             // removed), which a headless fake does not have - showing is the only event it can hang
             // mounting on. A page that is never mounted is never built, and so never gets to fail.
@@ -159,7 +159,7 @@ private object TestScreenFactory : DslRootScreenFactory<Unit> {
 
 // ── Utils ────────────────────────────────────────────────────────────────────
 
-private object TestUtils : DslPlatformUtils, DslRootUtils {
+internal object TestUtils : DslPlatformUtils, DslRootUtils {
     override var clipboard = ""
     override fun narrate(string: String) {}
     override fun translate(key: String, vararg args: Any?) = key
@@ -209,7 +209,7 @@ internal object TestMetadata : DslBackendMetadata {
 
 // ── Input ────────────────────────────────────────────────────────────────────
 
-private object TestInput : DslBackendInput {
+internal object TestInput : DslBackendInput {
     var _mouse = Position(0.px, 0.px)
     override val mouse: Position get() = _mouse
     override fun isKeyDown(key: Key) = false
@@ -227,15 +227,4 @@ internal object TestPlatform : DslPlatform {
     override val metadata: DslBackendMetadata get() = TestMetadata
     override val utils: DslPlatformUtils get() = TestUtils
     override val dispatcher: CoroutineDispatcher get() = TestUtils.mainDispatcher
-}
-
-/** The fixture's provider role: the per-output half of the old aggregate backend. */
-internal object TestRootProvider : DslRootProvider<Unit, Unit> {
-    override val renderer: DslBackendRenderer<Unit>? get() = TestRenderer
-    override val input: DslBackendInput get() = TestInput
-    override val screenFactory: DslRootScreenFactory<Unit>? get() = TestScreenFactory
-    override val rootUtils: DslRootUtils get() = TestUtils
-
-    override fun frame(root: DslRoot, renderParam: Unit) =
-        kotlin.context(TestRenderer, Unit, TestInput.mouse) { root.component.render() }
 }

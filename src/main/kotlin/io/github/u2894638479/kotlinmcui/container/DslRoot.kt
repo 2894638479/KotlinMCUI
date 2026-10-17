@@ -44,11 +44,6 @@ class DslRoot(
         onNarrate = { text -> rootUtils.narrate(text) },
     )
 
-    // Transitional: the runtime hands out roots for one more slice. These three go with it.
-    internal var viewerLifetime: ViewerLifetime = ViewerLifetime.NONE
-    internal var isOwner: Boolean = false
-    internal var refusal: io.github.u2894638479.kotlinmcui.backend.DslRuntime.DslRejectionReason? = null
-
     /**
      * The component that represents this root in the tree.
      *
@@ -76,7 +71,6 @@ class DslRoot(
     val rect: MutRect = MutRect()
 
     private val rawChildren: DslChild.Group by lazy {
-        refusal?.let { error("this root was refused: $it") }
         val factory = screenFactory
         require(factory != null) { "this root cannot hold screens: it was built without a screen factory" }
         DslChild.Group().also {

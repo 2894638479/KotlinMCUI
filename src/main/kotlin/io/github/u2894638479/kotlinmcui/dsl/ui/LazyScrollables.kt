@@ -141,7 +141,7 @@ private fun LazyScrollable(
         override fun mouseScrollVertical(amount: Double): Double {
             val remain = delegate.mouseScrollVertical(amount)
             // Shift+scroll on LazyRow acts as horizontal scroll
-            if (axis != Axis.Vertical && !provider.input.isKeyDown(Key.LEFT_SHIFT)) return remain
+            if (axis != Axis.Vertical && !root.input.isKeyDown(Key.LEFT_SHIFT)) return remain
             return handleScroll(remain)
         }
 

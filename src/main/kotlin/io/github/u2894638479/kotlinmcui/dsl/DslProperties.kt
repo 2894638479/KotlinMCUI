@@ -18,10 +18,10 @@ context(ctx: DslIdContext)
 val identity get() = ctx.identity
 
 /**
- * The provider of the root this page belongs to.
+ * The root this page is mounted on.
  *
- * It used to be the aggregate backend; after the split it is the root's provider, so the answer is
- * per root rather than process-wide. Reach the pieces through it:
+ * It used to be the aggregate backend, then the root's provider; now it is the root itself, so the
+ * answer is per root rather than process-wide. Reach the pieces through it:
  *
  * - `renderer` - **may be `null`** for a root that draws nothing. A page that needs drawing should
  *   fail, or degrade visibly, at the point where it asks: `provider.renderer?.getFont(...)` coming
@@ -31,7 +31,7 @@ val identity get() = ctx.identity
  * Breaking change of this round: what was `backend.xxx` is now `provider.<slice>.xxx`.
  */
 context(ctx: DslDataStoreContext)
-val provider get() = ctx.dataStore.provider
+val root get() = ctx.dataStore.root
 
 context(ctx: DslDataStoreContext)
 val screenTitle get() = dataStore.title

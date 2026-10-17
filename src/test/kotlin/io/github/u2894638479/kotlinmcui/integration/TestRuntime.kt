@@ -14,24 +14,15 @@ import io.github.u2894638479.kotlinmcui.backend.dslPlatformProvider
  */
 internal object TestRuntime {
 
-    /** Install, publish the fake platform and register its provider. Idempotent. */
+    /** Install and publish the fake platform. Idempotent. */
     fun install() {
         if (!DslRuntime.isInstalled) DslRuntime.install { TestMetadata }
-        if (dslPlatformProvider == null) DslRuntime.platformReady { TestPlatform }
-        if (DslRuntime.registeredProviders.isEmpty()) DslRuntime.registerProvider(TestRootProvider)
+        if (dslPlatformProvider == null) DslRuntime.start { TestPlatform }
     }
 
-    /**
-     * Publish the fake platform for the duration of a case, and return whatever was published before
-     * so [restore] can put it back.
-     *
-     * This is the only place the cases publish a platform, which is why the signature flip touched
-     * this object and not the 26 cases.
-     */
     fun publish(): (() -> DslPlatform)? {
         if (!DslRuntime.isInstalled) DslRuntime.install { TestMetadata }
-        if (DslRuntime.registeredProviders.isEmpty()) DslRuntime.registerProvider(TestRootProvider)
-        val previous = dslPlatformProvider
+            val previous = dslPlatformProvider
         dslPlatformProvider = { TestPlatform }
         return previous
     }

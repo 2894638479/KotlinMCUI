@@ -216,7 +216,7 @@ class DslPreviewTest {
     @Test
     fun `a session photographs the page and exits zero`() {
         runWithFrames {
-            DslPreview.run("io.github.u2894638479.kotlinmcui.test.TestColorPage",capture = true)
+            DslPreview.run(TestRoot.root, "io.github.u2894638479.kotlinmcui.test.TestColorPage",capture = true)
         }
         assertEquals(0,TestBackend.quitCode,"a page that opened and photographed is a pass")
         assertEquals(listOf("kotlinmcui-TestColorPage.png"),TestBackend.captures)
@@ -226,7 +226,7 @@ class DslPreviewTest {
     @Test
     fun `a page that throws while it renders exits non zero and still leaves the evidence`() {
         runWithFrames {
-            DslPreview.run("io.github.u2894638479.kotlinmcui.backend.ThrowingPreviewPage",capture = true)
+            DslPreview.run(TestRoot.root, "io.github.u2894638479.kotlinmcui.backend.ThrowingPreviewPage",capture = true)
         }
         assertEquals(1,TestBackend.quitCode,"a page that never finished drawing is not a pass")
         assertEquals(1,TestBackend.captures.size,"the screenshot is what a human needs to see")
@@ -236,7 +236,7 @@ class DslPreviewTest {
     fun `a platform that cannot photograph exits non zero`() {
         TestBackend.failCapture = true
         runWithFrames {
-            DslPreview.run("io.github.u2894638479.kotlinmcui.test.TestColorPage",capture = true)
+            DslPreview.run(TestRoot.root, "io.github.u2894638479.kotlinmcui.test.TestColorPage",capture = true)
         }
         assertEquals(1,TestBackend.quitCode)
         assertEquals(1,TestBackend.captures.size,"the attempt is still visible in the record")
@@ -246,7 +246,7 @@ class DslPreviewTest {
     fun `a page that threw while rendering exits non zero and still leaves the evidence`() {
         TestRoot.renderFailure = IllegalStateException("broken while rendering")
         runWithFrames {
-            DslPreview.run("io.github.u2894638479.kotlinmcui.test.TestColorPage",capture = true)
+            DslPreview.run(TestRoot.root, "io.github.u2894638479.kotlinmcui.test.TestColorPage",capture = true)
         }
         assertEquals(1,TestBackend.quitCode)
         assertEquals(1,TestBackend.captures.size,"the screenshot is what a human needs to see")
@@ -255,7 +255,7 @@ class DslPreviewTest {
     @Test
     fun `preview mode leaves the game running and takes no screenshot`() {
         runWithFrames {
-            DslPreview.run("io.github.u2894638479.kotlinmcui.test.TestColorPage",capture = false)
+            DslPreview.run(TestRoot.root, "io.github.u2894638479.kotlinmcui.test.TestColorPage",capture = false)
         }
         assertNull(TestBackend.quitCode,"nobody asked the game to stop")
         assertEquals(emptyList(),TestBackend.captures)
@@ -272,7 +272,7 @@ class DslPreviewTest {
         )
         assertTrue(page.usesDefaults,"the preview cannot pass arguments, so it uses the defaults")
         runWithFrames {
-            DslPreview.run("io.github.u2894638479.kotlinmcui.backend.DefaultedPreviewPage",capture = false)
+            DslPreview.run(TestRoot.root, "io.github.u2894638479.kotlinmcui.backend.DefaultedPreviewPage",capture = false)
         }
         assertEquals(7,DefaultedPreviewCalls.count,"the first default arrived")
         assertEquals("default",DefaultedPreviewCalls.name,"the second default arrived")
@@ -318,7 +318,7 @@ class DslPreviewTest {
         assertFalse(page.usesDefaults,"the interface's own content() takes no parameters")
         MixedContentCalls.recorded = null
         runWithFrames {
-            DslPreview.run(reference,capture = false)
+            DslPreview.run(TestRoot.root, reference,capture = false)
         }
         assertEquals("no-arg",MixedContentCalls.recorded,"the parameterless content is the page")
     }
@@ -326,7 +326,7 @@ class DslPreviewTest {
     @Test
     fun `an unresolvable reference is put on screen as an error page`() {
         runWithFrames {
-            DslPreview.run("io.github.u2894638479.kotlinmcui.test.NoSuchPage",capture = false)
+            DslPreview.run(TestRoot.root, "io.github.u2894638479.kotlinmcui.test.NoSuchPage",capture = false)
         }
         assertEquals("Preview error",TestBackend.lastScreenTitle,"the failure takes the page's place")
         assertNull(TestBackend.quitCode,"without capture the reason is read in the game")
@@ -336,7 +336,7 @@ class DslPreviewTest {
     @Test
     fun `capture mode photographs the error page and still exits non zero`() {
         runWithFrames {
-            DslPreview.run("io.github.u2894638479.kotlinmcui.test.NoSuchPage",capture = true)
+            DslPreview.run(TestRoot.root, "io.github.u2894638479.kotlinmcui.test.NoSuchPage",capture = true)
         }
         assertEquals(1,TestBackend.quitCode,"a run that never opened its page is not a pass")
         assertEquals(listOf("kotlinmcui-NoSuchPage.png"),TestBackend.captures,"the error page is the picture")
@@ -346,7 +346,7 @@ class DslPreviewTest {
     @Test
     fun `a refused parameter is put on screen as an error page too`() {
         runWithFrames {
-            DslPreview.run("io.github.u2894638479.kotlinmcui.backend.RequiredArgPreviewPage",capture = false)
+            DslPreview.run(TestRoot.root, "io.github.u2894638479.kotlinmcui.backend.RequiredArgPreviewPage",capture = false)
         }
         assertEquals("Preview error",TestBackend.lastScreenTitle)
         assertNull(TestBackend.quitCode)

@@ -159,7 +159,7 @@ class DslScreen private constructor(
                     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
                     override fun <RP> render() {
                         it.render()
-                        this@DslScreen.dataStore.provider.input.setPreeditArea(instance.rect)
+                        this@DslScreen.dataStore.root.input.setPreeditArea(instance.rect)
                     }
                 }
             }
@@ -176,7 +176,7 @@ class DslScreen private constructor(
      */
     context(ctx: DslContext)
     private fun Tooltip() {
-        val hovered = testHit(this@DslScreen.dataStore.provider.input.mouse) { it.tooltip }
+        val hovered = testHit(this@DslScreen.dataStore.root.input.mouse) { it.tooltip }
         val focusedId = dataStore.rootState?.focused
         val focused = if (focusedId == null) null else testHit { it.takeIf { it.identity == focusedId } }
         val func = hovered ?: focused?.tooltip ?: return
@@ -185,7 +185,7 @@ class DslScreen private constructor(
         } else null
         val outline: Rect = rect
         val align = focusedRect?.let { OverlayAlign.AutoToRect(it, outline) }
-            ?: OverlayAlign.AutoToPoint(this@DslScreen.dataStore.provider.input.mouse, outline)
+            ?: OverlayAlign.AutoToPoint(this@DslScreen.dataStore.root.input.mouse, outline)
         Overlay(Modifier, align) { func() }
     }
 }

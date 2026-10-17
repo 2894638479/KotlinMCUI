@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
-import io.github.u2894638479.kotlinmcui.backend.DslRuntime
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslChild
@@ -15,18 +14,15 @@ import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 
 /**
- * The process owner root, driven the way the cases used to drive the deleted `TopComponent` object.
+ * The fake backend's own root, driven the way the cases used to drive the deleted `TopComponent`.
  *
- * This is a fixture, not a framework type: each member is a one-hop delegate into
- * [DslRuntime.ownerRoot] or the root's state. Production code takes the root through
- * `DslRuntime.ownerRoot` itself; nothing in `main` refers to this object.
+ * This is the fixture's root, not the framework's: the runtime no longer hands any root out, so the
+ * fixture builds one from the fake platform's pieces and every one-hop delegate below reads it.
+ * Nothing in `main` refers to this object.
  */
 internal object TestRoot {
-    private val root: DslRoot get() = DslRuntime.ownerRoot
+    internal val root: DslRoot by lazy { DslRoot(TestInput, TestRenderer, TestScreenFactory, TestUtils) }
     private val state get() = root.state
-
-    /** The fixture backend seen as a root provider, the way production derives it from the published backend. */
-    val provider get() = TestRootProvider
 
     /**
      * A fresh root with the fake platform's pieces.
@@ -35,10 +31,10 @@ internal object TestRoot {
      * runtime for the process root.
      */
     fun newRoot(): DslRoot = DslRoot(
-        input = TestRootProvider.input,
-        renderer = TestRootProvider.renderer,
-        screenFactory = TestRootProvider.screenFactory,
-        rootUtils = TestRootProvider.rootUtils,
+        input = TestInput,
+        renderer = TestRenderer,
+        screenFactory = TestScreenFactory,
+        rootUtils = TestUtils,
     )
 
     val rect: MutRect get() = root.rect

@@ -194,7 +194,7 @@ private open class SliderImpl(
     override fun mouseDown(mouseButton: MouseButton): Boolean {
         if (delegate.mouseDown(mouseButton)) return true
         if (mouse in instance.rect) {
-            instance.dataStore?.provider?.rootUtils?.playButtonSound()
+            instance.dataStore?.root?.rootUtils?.playButtonSound()
             alreadyDown = true
             setProgress(mouse)
             return true

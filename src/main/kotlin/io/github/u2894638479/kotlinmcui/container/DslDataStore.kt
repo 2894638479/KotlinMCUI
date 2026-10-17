@@ -2,7 +2,6 @@ package io.github.u2894638479.kotlinmcui.container
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.backend.DslPlatform
-import io.github.u2894638479.kotlinmcui.backend.DslRootProvider
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
@@ -14,7 +13,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 /**
  * Central data store for a screen instance.
  *
- * Holds the platform and the root provider, frame timing, and three [PropertyLifeScope]
+ * Holds the platform and the root it is mounted on, frame timing, and three [PropertyLifeScope]
  * instances with different lifetimes:
  * - [localLifeScope]: cleared every frame (properties not accessed this frame are disposed)
  * - [stableLifeScope]: survives while the screen lives, even across frames in which
@@ -30,8 +29,8 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 class DslDataStore(
     /** The platform this screen's root runs on: process-level facts and helpers. */
     val platform: DslPlatform,
-    /** The provider of the root this screen is mounted on: drawing, input, screens, per-output helpers. */
-    val provider: DslRootProvider<*, *>,
+    /** The root this screen is mounted on: drawing, input, screens and per-output helpers all come from it. */
+    val root: DslRoot,
     val title:String,
     val onClose:()-> Unit,
     dslFunction: DslFunction
@@ -42,13 +41,13 @@ class DslDataStore(
      * Components that cannot exist without drawing (text, images) call [requireRenderer] instead, so
      * a renderer-less root fails where the impossible thing is asked for rather than drawing blank.
      */
-    val renderer get() = provider.renderer
+    val renderer get() = root.renderer
 
     /** The renderer, or a loud failure: something that has to draw is attached to a root that cannot. */
     fun requireRenderer(): DslBackendRenderer<*> =
-        provider.renderer ?: error("this screen's root has no renderer: text and images cannot be drawn on it")
+        root.renderer ?: error("this screen's root has no renderer: text and images cannot be drawn on it")
 
-    override val scale get() = provider.renderer?.guiScale ?: 1.0
+    override val scale get() = root.renderer?.guiScale ?: 1.0
 
     var frameBeginNano = 0L
         private set
@@ -108,7 +107,7 @@ class DslDataStore(
 
     val debugOverlay: DebugMetrics field = object: DebugMetrics {
         override val screenTitle get() = title
-        override val guiScale get() = provider.renderer?.guiScale ?: 1.0
+        override val guiScale get() = root.renderer?.guiScale ?: 1.0
         override val localProps get() = localLifeScope.size
         override val stableProps get() = stableLifeScope.size
         override val staticProps get() = staticLifeScope.size
@@ -151,6 +150,6 @@ class DslDataStore(
         override val hoveredDepth: Int get() {
             return 0
         }
-        override val mouse get() = provider.input.mouse
+        override val mouse get() = root.input.mouse
     }
 }

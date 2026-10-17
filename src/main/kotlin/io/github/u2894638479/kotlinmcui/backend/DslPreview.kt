@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.backend
 
+import io.github.u2894638479.kotlinmcui.container.DslRoot
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.translate
@@ -27,7 +28,7 @@ import kotlin.time.Duration.Companion.milliseconds
  *
  * All of this is policy and therefore lives here; the platform only supplies the two members
  * [DslRootUtils.capture] and [DslPlatformUtils.quit] plus the render loop that ticks
- * [DslRuntime.ownerRoot.state.frameIndex]. Keeping the timing rules in the framework means they are the same on
+ * [root.state.frameIndex]. Keeping the timing rules in the framework means they are the same on
  * every platform, and testable without a game.
  *
  * `-Dkotlinmcui.preview=<reference>` opens the page. `-Dkotlinmcui.preview.capture=true` turns the
@@ -70,10 +71,15 @@ internal object DslPreview {
     private const val READY_POLL_MS = 50L
     private const val READY_TIMEOUT_MS = 240_000L
 
-    /** Called once the backend is published; does nothing unless the platform asked for a page. */
-    fun start() {
+    /**
+     * Open the page the platform asked for on [root]; does nothing unless it asked for one.
+     *
+     * The root is the backend's own. The preview draws into the tree it is handed and reads no
+     * global, so a second backend in the same process cannot end up photographing the first one's UI.
+     */
+    fun start(root: DslRoot) {
         val request = request() ?: return
-        CoroutineScope(Dispatchers.Default).launch { run(request.first,request.second) }
+        CoroutineScope(Dispatchers.Default).launch { run(root, request.first,request.second) }
     }
 
     /**
@@ -91,34 +97,33 @@ internal object DslPreview {
      * non-zero code when the page could not be resolved, threw while it was built or rendered, or
      * produced no file.
      */
-    internal suspend fun run(reference: String, capture: Boolean) {
-        val root = DslRuntime.ownerRoot
+    internal suspend fun run(root: DslRoot, reference: String, capture: Boolean) {
         val platform = dslPlatform
         val screens = root.screenFactory ?: error("preview needs a root that can create screens")
         val page = try {
             pageFor(reference)
         } catch(e: Throwable) {
             dslLogger.error("preview: '$reference' could not be resolved",e)
-            showFailure(reference,errorText(reference,e),capture)
+            showFailure(root, reference,errorText(reference,e),capture)
             return
         }
         if(page.usesDefaults) {
             dslLogger.info("preview: ${page.describe()} takes parameters; all of them have defaults, so they are passed as zero values")
         }
         try {
-            if(!awaitFirstFrame()) {
+            if(!awaitFirstFrame(root)) {
                 dslLogger.error("preview: the platform never rendered a frame, giving up on '$reference'")
                 platform.utils.quit(1)
                 return
             }
-            val opened = DslRuntime.ownerRoot.state.frameIndex
+            val opened = root.state.frameIndex
             withContext(platform.dispatcher) { screens.create(reference) { page.draw() } }.show()
             dslLogger.info("preview: opened '$reference' as ${page.describe()}")
-            while(DslRuntime.ownerRoot.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
+            while(root.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
             if(!capture) return
             val file = withContext(platform.dispatcher) { root.rootUtils.capture(fileNameFor(reference)) }
-            if(DslRuntime.ownerRoot.state.renderFailure != null) {
-                dslLogger.error("preview: ${page.describe()} threw while rendering",DslRuntime.ownerRoot.state.renderFailure)
+            if(root.state.renderFailure != null) {
+                dslLogger.error("preview: ${page.describe()} threw while rendering",root.state.renderFailure)
                 platform.utils.quit(1)
                 return
             }
@@ -144,14 +149,13 @@ internal object DslPreview {
      * screenshot the game is left running, which is where a human wants to read the reason. The log
      * line is written by the caller, because it carries the exception itself.
      */
-    private suspend fun showFailure(reference: String,text: String,capture: Boolean) {
-        val root = DslRuntime.ownerRoot
+    private suspend fun showFailure(root: DslRoot, reference: String,text: String,capture: Boolean) {
         val platform = dslPlatform
         val screens = root.screenFactory ?: error("preview needs a root that can create screens")
         // The error screen needs the same readiness as a real page: opened any earlier it would be
         // pushed aside by the platform's own loading screen, and the screenshot would show that
         // instead of the reason.
-        if(!awaitFirstFrame()) {
+        if(!awaitFirstFrame(root)) {
             dslLogger.error("preview: the platform never rendered a frame, giving up on '$reference'")
             platform.utils.quit(1)
             return
@@ -168,8 +172,8 @@ internal object DslPreview {
             return
         }
         if(!capture) return
-        val opened = DslRuntime.ownerRoot.state.frameIndex
-        while(DslRuntime.ownerRoot.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
+        val opened = root.state.frameIndex
+        while(root.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
         val file = withContext(platform.dispatcher) { root.rootUtils.capture(fileNameFor(reference)) }
         if(file == null) dslLogger.error("preview: no screenshot was written for '$reference'")
         else dslLogger.info("preview: wrote ${file.absolutePath} for the error screen of '$reference'")
@@ -189,9 +193,9 @@ internal object DslPreview {
      * Waits until the platform has rendered one frame through the framework, which is the moment it
      * is past its own loading screen and a screen of ours can survive.
      */
-    private suspend fun awaitFirstFrame(): Boolean {
+    private suspend fun awaitFirstFrame(root: DslRoot): Boolean {
         val deadline = System.currentTimeMillis() + READY_TIMEOUT_MS
-        while(DslRuntime.ownerRoot.state.frameIndex == 0L) {
+        while(root.state.frameIndex == 0L) {
             if(System.currentTimeMillis() > deadline) return false
             delay(READY_POLL_MS.milliseconds)
         }

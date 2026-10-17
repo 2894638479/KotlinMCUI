@@ -133,7 +133,7 @@ private fun Scrollable(
             context(mouse: Position)
             override fun mouseScrollVertical(amount: Double): Double {
                 val remain = delegate.mouseScrollVertical(amount)
-                if(axis != Axis.Vertical && !provider.input.isKeyDown(Key.LEFT_SHIFT)) return remain
+                if(axis != Axis.Vertical && !root.input.isKeyDown(Key.LEFT_SHIFT)) return remain
                 return scroller.scroll(remain * -sensitivity) / -sensitivity
             }
 

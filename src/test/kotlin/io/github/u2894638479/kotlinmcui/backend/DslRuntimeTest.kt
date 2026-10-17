@@ -2,76 +2,43 @@ package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.entry.FixtureClient
 import io.github.u2894638479.kotlinmcui.entry.FixtureCommon
-import io.github.u2894638479.kotlinmcui.container.ViewerLifetime
 import io.github.u2894638479.kotlinmcui.integration.TestMetadata
 import io.github.u2894638479.kotlinmcui.integration.TestPlatform
-import io.github.u2894638479.kotlinmcui.integration.TestRootProvider
 import kotlin.test.*
+import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.MethodOrderer
 import org.junit.jupiter.api.Order
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestMethodOrder
 
 /**
- * The startup sequence is a process-wide, single-shot thing, so every case first puts the
- * runtime back into the state the process starts in ([DslRuntime.resetForTest]) and then
- * arranges the part of the sequence it is about. Nothing here depends on which class ran
- * before, so neither a class-level `@Order` nor a class-order configuration is needed.
+ * The process-wide startup sequence, case by case.
  *
- * The counters are compared as deltas for the same reason: installing runs entry
- * discovery, and discovery may already have run for any number of other cases.
+ * The runtime owns exactly two facts now: whether the platform is installed, and whether it has been
+ * published. It owns no roots - a root belongs to the backend that built it - so there is nothing here
+ * about roots, owners or refusals.
  *
- * The method `@Order` is kept only because the cases read as the sequence a real startup
- * walks; no case builds on the state a previous one left behind.
+ * `resetForTest` puts the singleton back into its initial state before each case, which is why the
+ * cases can assert on the sequence: they all start from "nothing installed", and JUnit runs the
+ * methods in the declared order so the install-once cases read like the real startup.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class DslRuntimeTest {
-
     @BeforeEach
     fun setUp() = DslRuntime.resetForTest()
 
-    /**
-     * The owner count is process-lifetime and is not reset with the runtime: the main root is a
-     * lazily built singleton, so whichever case touches it first creates it, and it is created
-     * through the only path that may set `isOwner`.
-     */
+    @AfterEach
+    fun tearDown() = DslRuntime.resetForTest()
+
     @Test
     @Order(1)
-    fun `the main root is the process owner`() {
-        DslRuntime.install { TestMetadata }
-        DslRuntime.platformReady { TestPlatform }
-        DslRuntime.registerProvider(TestRootProvider)
-
-        val root = DslRuntime.ownerRoot
-
-        assertTrue(root.isOwner, "the main root must be created through createOwner")
-        assertEquals(1, DslRuntime.ownerCreations, "exactly one owner root is built")
+    fun `publishing the platform before installing it is an error`() {
+        assertFalse(DslRuntime.isInstalled)
+        assertFailsWith<IllegalStateException> { DslRuntime.start { TestPlatform } }
     }
 
     @Test
     @Order(2)
-    fun `the owner root draws with the registered provider`() {
-        DslRuntime.install { TestMetadata }
-        DslRuntime.platformReady { TestPlatform }
-        DslRuntime.registerProvider(TestRootProvider)
-
-        assertSame(
-            TestRootProvider.input,
-            DslRuntime.ownerRoot.input,
-            "the main root must use the provider an entry point registered, not a copy",
-        )
-    }
-
-    @Test
-    @Order(3)
-    fun `publishing the platform before installing it is an error`() {
-        assertFalse(DslRuntime.isInstalled)
-        assertFailsWith<IllegalStateException> { DslRuntime.platformReady { TestPlatform } }
-    }
-
-    @Test
-    @Order(4)
     fun `installing discovers the entries and initialises them exactly once`() {
         val commonRuns = FixtureCommon.runs
         val clientRuns = FixtureClient.runs
@@ -83,8 +50,8 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(5)
-    fun `metadata works before the platform is ready while the backend does not`() {
+    @Order(3)
+    fun `metadata works before the platform is ready while the platform does not`() {
         DslRuntime.install { TestMetadata }
 
         assertEquals(TestMetadata.configDir, dslMetadata.configDir)
@@ -97,16 +64,16 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(6)
+    @Order(4)
     fun `publishing the platform makes it available`() {
         DslRuntime.install { TestMetadata }
-        DslRuntime.platformReady { TestPlatform }
+        DslRuntime.start { TestPlatform }
 
         assertSame(TestPlatform, dslPlatform)
     }
 
     @Test
-    @Order(7)
+    @Order(5)
     fun `installing a second time is an error`() {
         DslRuntime.install { TestMetadata }
 
@@ -114,49 +81,17 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(8)
+    @Order(6)
     fun `publishing a second platform is refused, not thrown`() {
         DslRuntime.install { TestMetadata }
-        val first = DslRuntime.platformReady { TestPlatform }
+        val first = DslRuntime.start { TestPlatform }
 
         // Refusing instead of throwing keeps a user's double install from becoming a crash,
         // so the caller has to learn that it lost from the return value.
-        val second = DslRuntime.platformReady { TestPlatform }
+        val second = DslRuntime.start { TestPlatform }
 
         assertTrue(first, "the first publish must report success")
         assertFalse(second, "a later publish must report that it was refused")
         assertSame(TestPlatform, dslPlatform, "the refused platform must not replace the published one")
     }
-
-    @Test
-    @Order(9)
-    fun `the first registrant gets the process root from rootFor`() {
-        DslRuntime.install { TestMetadata }
-        DslRuntime.platformReady { TestPlatform }
-        DslRuntime.registerProvider(TestRootProvider)
-
-        val mine = DslRuntime.rootFor(TestRootProvider, ViewerLifetime.PROCESS)
-
-        assertSame(DslRuntime.ownerRoot, mine, "the first registrant gets the process root itself")
-        assertTrue(mine.isOwner, "the process root is the owner root")
-        assertSame(TestRootProvider.input, mine.input)
-    }
-
-    @Test
-    @Order(10)
-    fun `a later registrant gets a root of its own from rootFor`() {
-        DslRuntime.install { TestMetadata }
-        DslRuntime.platformReady { TestPlatform }
-        DslRuntime.registerProvider(TestRootProvider)
-
-        // A second backend brings its own provider object.
-        val second = object : DslRootProvider<Unit, Unit> by TestRootProvider {}
-        DslRuntime.registerProvider(second)
-
-        val mine = DslRuntime.rootFor(second, ViewerLifetime.PROCESS)
-
-        assertNotSame(DslRuntime.ownerRoot, mine, "a later backend must not be handed the process root")
-        assertFalse(mine.isOwner, "only the process root carries isOwner")
-    }
-
 }

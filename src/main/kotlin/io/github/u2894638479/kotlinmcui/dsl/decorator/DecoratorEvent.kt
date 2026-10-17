@@ -14,7 +14,7 @@ import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
-import io.github.u2894638479.kotlinmcui.dsl.provider
+import io.github.u2894638479.kotlinmcui.dsl.root
 import io.github.u2894638479.kotlinmcui.dsl.executeContext
 import io.github.u2894638479.kotlinmcui.dsl.local
 import io.github.u2894638479.kotlinmcui.input.Key
@@ -32,7 +32,7 @@ fun DslChild.clickable(enabled:Boolean = true, block: context(DslExecuteContext)
 = change { if(!enabled) it else object : DslComponent by it {
     val coroutineScope = local.coroutineScope
     fun click() {
-        provider.rootUtils.playButtonSound()
+        root.rootUtils.playButtonSound()
         block(DslExecuteContext(),coroutineScope)
     }
 
