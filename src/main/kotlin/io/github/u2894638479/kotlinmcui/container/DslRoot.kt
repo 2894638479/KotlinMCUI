@@ -21,13 +21,25 @@ class DslRoot internal constructor(
     internal val state: DslRootState,
     internal val geometry: DslRootGeometry
 ) {
+    private val rootComponent = DslRootComponent(this)
+
     /**
      * The component that represents this root in the tree.
      *
      * Stable for the root's whole lifetime: the tree walks it, the focus broadcast enters it and the
      * backend drives it. Rebuilding it would break the `it !== this` checks and the focused identity.
      */
-    val component: DslScope = DslRootComponent(this)
+    val component: DslScope get() = rootComponent
+
+    /**
+     * Whether the component that currently holds the focus accepts IME input - that is, whether its
+     * preedit area is non-`null`.
+     *
+     * The platform asks the root this question, because it needs to know whether text input belongs
+     * to the game or to a field on screen. It lives here rather than on [DslScope] on purpose: that
+     * would ask every container the same question and every implementation would have to answer it.
+     */
+    val preeditUsing: Boolean get() = rootComponent.preeditUsing
 
     /**
      * This root's viewport.

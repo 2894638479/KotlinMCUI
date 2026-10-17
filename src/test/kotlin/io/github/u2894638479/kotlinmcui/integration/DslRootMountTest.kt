@@ -9,6 +9,7 @@ import io.github.u2894638479.kotlinmcui.container.DslRootState
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.decorator.tooltip
+import io.github.u2894638479.kotlinmcui.dsl.ui.Column
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.dsl.ui.Spacer
 import io.github.u2894638479.kotlinmcui.identity.DslId
@@ -124,6 +125,31 @@ class DslRootMountTest {
         root.state.setFocus(target)
 
         assertEquals(target, screen.dataStore.debugOverlay.focusedId, "the overlay reads its own root")
+    }
+
+    @Test
+    fun `preeditUsing reports whether the focused component accepts text input`() {
+        val screen = TestBackend.create("ime") {
+            Column {
+                EditableText(stringProp = editable("abc"), preeditSelfRendered = false, id = "editor")
+                Spacer(Modifier.size(10.px, 10.px), "plain")
+            }
+        }.dslScreen
+        val root = DslRoot(state(), DslRootGeometry())
+        root.children.collect(screen)
+        TestBackend.mouseAt(Position(500.px, 500.px))
+        render(screen)
+        val column = screen.children[0]
+        val editor = column.children[0]
+        val plain = column.children[1]
+
+        assertFalse(root.preeditUsing, "nothing is focused")
+
+        root.state.setFocus(editor.identity)
+        assertTrue(root.preeditUsing, "the focused editor accepts text input")
+
+        root.state.setFocus(plain.identity)
+        assertFalse(root.preeditUsing, "a spacer has no preedit area")
     }
 
     @Test
