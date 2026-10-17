@@ -8,9 +8,24 @@ package io.github.u2894638479.kotlinmcui.backend
 // `internal` is a Kotlin-source-level restriction only: the JVM sees these as public
 // members with unmangled names, so a hand-written Java mod can still reach them. The
 // boundary this file draws is about what the framework promises, not about bytecode.
+/**
+ * The installed metadata provider, or `null` before `install` ran.
+ *
+ * **`@Volatile` is part of the publication contract, do not remove it.** The writer sets it inside
+ * `DslRuntime`'s lock, but the readers ([dslMetadata], [publishedPlatform]) take no lock: without a
+ * happens-before edge from the write to the read, a reader may legally keep seeing `null` forever.
+ */
+@Volatile
 internal var dslMetadataProvider: (() -> DslBackendMetadata)? = null
 
-/** The published platform. `platformReady` is what fills this in. */
+/**
+ * The published platform. `platformReady` is what fills this in.
+ *
+ * **`@Volatile` is part of the publication contract, do not remove it.** Written under
+ * `DslRuntime`'s lock, read without one by [publishedPlatform]; and the three backends publish from
+ * different threads (web main, window EDT, the game thread), so this is not a hypothetical.
+ */
+@Volatile
 internal var dslPlatformProvider: (() -> DslPlatform)? = null
 
 /** The published platform, or a loud failure when nothing published one yet. */
