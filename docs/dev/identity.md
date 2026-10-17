@@ -82,6 +82,18 @@ Column {
 
 四种作用域上注册的清理动作（`dispose { }`）都会在各自被释放时执行：`local` 在帧末，`stable` 在屏关闭时，`session` 在根关闭时，`static` 不会执行。清理动作是普通 lambda，不携带额外上下文，因此可以在任何 DSL 位置注册。
 
+### 协程随属性走
+
+**属性被回收时，它在初始化块里启动的协程会被取消**——条目持有一个带 `SupervisorJob` 的 scope（兄弟协程互不连坐），条目被清时一并 cancel：
+
+```kotlin
+val ticker = local { launch { while(true) { tick(); delay(16) } } }   // 随这一帧的声明存活
+```
+
+`local { launch { … } }` 只在这个属性被读到的帧里活着；`stable { … }` 活到屏关闭；`session`/`static` 同理按各自的边界。独立访问器 `local.coroutineScope` / `stable.coroutineScope` 也是同样规则：它是普通条目，本帧不再被访问就会被清、被 cancel。
+
+**需要"不随属性死"的协程，请显式用更大的作用域**（根的、进程的），不要依赖默认作用域——协程的归属由你选的域决定，而不是默默活着。声明式属性里的协程本来就在该根的渲染线程上，不需要 `post`。
+
 `static` 的映射挂在 `DslDataStore` 伴生对象上，是全进程唯一的一份，且键不含身份前缀——这正是"不同 mod 用相同 id 会互相命中"的来源，被有意用于跨 mod 通信。
 
 `session` 的映射则挂在**根**上（`DslRoot` 持有），一个根一份，屏创建时就绑定到它所在的那个根——所以后端必须用属于该根的 Screen 工厂建屏。两份映射都是并发容器：一个进程可以有多根在不同线程渲染。

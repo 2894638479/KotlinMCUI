@@ -13,8 +13,9 @@ import io.github.u2894638479.kotlinmcui.math.animate.interpolate
 import io.github.u2894638479.kotlinmcui.math.animate.toInterpolatable
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.CoroutineScope
-import kotlin.coroutines.CoroutineContext
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -42,9 +43,19 @@ class PropertyLifeScope internal constructor(
     internal data class ReusedKey(val key: DslId, val firstSite: Any, val laterSite: Any)
 
     internal open class TimedProperty<T>(private var _value:T, var frameStamp: ULong = 0uL) : StableRW<T> {
+        /**
+         * The coroutines this property started, cancelled when the property is cleared.
+         *
+         * A property and the coroutines its initialiser started live and die together: the scope is
+         * `SupervisorJob()` + the session dispatcher, so one child failing does not take its siblings
+         * with it. A coroutine that must outlive the property belongs to a bigger scope (the root's or
+         * the process's) - that choice is the author's, never a silent default.
+         */
+        internal var scope: CoroutineScope? = null
+
         override fun getValue() = _value
         override fun setValue(value: T) { this._value = value }
-        open fun onClear() {}
+        open fun onClear() { scope?.cancel() }
     }
 
     /**
@@ -161,20 +172,20 @@ class PropertyLifeScope internal constructor(
         map.clear()
     }
 
+    /**
+     * The stand-alone scope entry of this declaration site (`local.coroutineScope`, `stable.coroutineScope`).
+     *
+     * It is an entry like any other: the scope carries a `SupervisorJob`, the entry owns it, and clearing
+     * the entry cancels it. Kept as a separate accessor because a component that needs a scope outside an
+     * initialiser has nowhere else to put it.
+     */
     private fun coroutineScope(
         identity:DslId,
         dispatcher: CoroutineDispatcher = dataStore.root.rootUtils.sessionDispatcher
     ): CoroutineScope {
-        val identity = identity + dispatcher
-        val property = map[identity] ?: return object : CoroutineScope {
-            var delegate: CoroutineScope? = null
-            override val coroutineContext: CoroutineContext
-                get() = delegate?.coroutineContext ?: CoroutineScope(dispatcher).let {
-                    delegate = it
-                    val property = TimedProperty(it,dataStore.frameIndex)
-                    map[identity] = property
-                    it.coroutineContext
-                }
+        val property = map.getOrPut(identity) {
+            val scope = CoroutineScope(SupervisorJob() + dispatcher)
+            TimedProperty(scope).also { it.scope = scope }
         }
         property.frameStamp = dataStore.frameIndex
         return property.value as CoroutineScope
@@ -186,6 +197,10 @@ class PropertyLifeScope internal constructor(
      * Accessing this property has no immediate cost — the scope is constructed lazily
      * on first use. If the scope is not accessed every frame, it may be disposed
      * depending on the lifecycle type.
+     *
+     * Like a property, this scope **owns its coroutines** and is cancelled when its entry is cleared:
+     * a scope in `local` dies with the frame that stopped reading it, one in `stable` with the screen.
+     * For a coroutine that must survive that, take a bigger scope (the root's) instead of this one.
      *
      * ### Correct usage 1: use the built-in scope
      * ```
@@ -222,6 +237,11 @@ class PropertyLifeScope internal constructor(
      * still get separate slots. Only the `static` scope keys by the bare key - that is what makes it
      * reachable across mods, and it is also why there the same key must always carry the same type.
      *
+     * **The property owns the coroutines its initialiser starts.** When the entry is cleared, its scope is
+     * cancelled, so `local { launch { … } }` stops when the property stops being declared. A coroutine that
+     * must outlive the property needs a bigger scope explicitly (the root's, the process's) - the
+     * ownership of a coroutine is the author's choice, never a silent default.
+     *
      * @param key Sub-key inside this declaration site.
      * @param init The initial value. Only called when the property does not yet exist.
      *
@@ -231,9 +251,11 @@ class PropertyLifeScope internal constructor(
     context(ctx: DslIdContext)
     fun <T> property(key:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T): StableRW<T> {
         val identity = getKey(key, init::class)
-        val coroutineScope = coroutineScope(identity)
         return map.getOrPut(identity) {
-            TimedProperty(context(DslExecuteContext(dataStore)) { coroutineScope.init() })
+            // The scope is created once, with the entry, and cancelled with it: the coroutines a page
+            // starts in its initialiser belong to the property, not to an independent slot.
+            val scope = CoroutineScope(SupervisorJob() + dataStore.root.rootUtils.sessionDispatcher)
+            TimedProperty(context(DslExecuteContext(dataStore)) { scope.init() }).also { it.scope = scope }
         }.also { it.frameStamp = dataStore.frameIndex }.stable()
     }
 
@@ -268,13 +290,19 @@ class PropertyLifeScope internal constructor(
     context(ctx: DslIdContext)
     fun <K,V> cached(cacheKey: K, key: Any? = null, init:context(DslExecuteContext) CoroutineScope.(K)->V) : StableRW<V> {
         val identity = getKey(key, init::class)
-        val coroutineScope = coroutineScope(identity)
         val previous = map[identity]
-        if(previous is CachedProperty<*,*> && previous.key == cacheKey) return previous.stable()
-        return CachedProperty(cacheKey,context(DslExecuteContext(dataStore)){ coroutineScope.init(cacheKey) }).also {
-            previous?.onClear()
-            map[identity] = it
+        if(previous is CachedProperty<*,*> && previous.key == cacheKey) {
+            previous.frameStamp = dataStore.frameIndex
+            return previous.stable()
         }
+        // Same rule as `property`: the entry owns the coroutine scope its initialiser starts.
+        val scope = CoroutineScope(SupervisorJob() + dataStore.root.rootUtils.sessionDispatcher)
+        val fresh = CachedProperty(cacheKey, context(DslExecuteContext(dataStore)) { scope.init(cacheKey) })
+        fresh.scope = scope
+        fresh.frameStamp = dataStore.frameIndex
+        previous?.onClear()
+        map[identity] = fresh
+        return fresh.stable()
     }
 
     /**
