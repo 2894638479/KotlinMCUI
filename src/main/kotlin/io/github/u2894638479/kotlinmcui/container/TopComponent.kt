@@ -5,7 +5,6 @@ import io.github.u2894638479.kotlinmcui.backend.dslBackend
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.component.nextFocusable
-import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.input.Key
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
@@ -30,20 +29,28 @@ import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
  * and will throw if accessed.
  */
 object TopComponent: DslScope {
-    /** The main root's viewport; the backend writes it in place each frame. */
-    private val geometry = DslRootGeometry()
+    /**
+     * The root this object stands for: its state, its viewport and its children.
+     *
+     * This object is the projection of the main root only - one instance per root is what lets a
+     * second root keep its own focus, hover and children.
+     */
+    private val root = DslRoot(
+        state = DslRootState(
+            onFocusChanged = { newFocus, source -> globalFocusChanged(newFocus, source) },
+            onHoverChanged = { globalHoverChanged(it) },
+            onNarrate = { dslBackend.narrate(it) }
+        ),
+        geometry = DslRootGeometry()
+    )
 
-    override val rect get() = geometry.rect
+    override val rect get() = root.geometry.rect
     override val modifier get() = error("modifier is not available on topComponent")
     override var instance: DslComponent get() = this
         set(value) {}
     override val identity get() = error("identity is not available on topComponent")
     override val scale get() = error("scale is not available on topComponent")
-    override val children by lazy {
-        DslChild.Group().also {
-            it.collect(dslBackend.create("Dsl Overlay") { DslEntryLoader.overlays() }.dslScreen)
-        }
-    }
+    override val children get() = root.children
 
     override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {
         fun DslChild.Group.f():Unit = forEach { it.children.f();it.globalFocusChanged(newFocus, source) }
@@ -58,15 +65,8 @@ object TopComponent: DslScope {
     /**
      * The state of the main root, which this object projects as [focused], [hovered], [preedit],
      * [keyboardNarration], [mouseNarration], [frameIndex] and [renderFailure].
-     *
-     * The state is deliberately not stored here: one instance per root is what lets a second
-     * root keep its own focus and hover. This object is the projection of the main root only.
      */
-    internal val rootState = DslRootState(
-        onFocusChanged = { newFocus, source -> globalFocusChanged(newFocus, source) },
-        onHoverChanged = { globalHoverChanged(it) },
-        onNarrate = { dslBackend.narrate(it) }
-    )
+    internal val rootState get() = root.state
 
     /** The identity of the main root's focused component, or `null`. */
     val focused: DslId? get() = rootState.focused
