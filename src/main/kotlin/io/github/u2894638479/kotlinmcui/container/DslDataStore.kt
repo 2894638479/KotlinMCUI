@@ -96,6 +96,8 @@ class DslDataStore(
     val stableLifeScope = PropertyLifeScope(this)
     val localLifeScope = PropertyLifeScope(this)
     val staticLifeScope = PropertyLifeScope(this,true,staticPropertyMap)
+    /** The root-bounded scope: shared by every screen on this root, released by oot.close(). */
+    val sessionLifeScope = PropertyLifeScope(this, false, root.sessionPropertyMap, isSession = true)
 
     fun frame(action:(() -> Unit) -> Unit) = try {
         inFrame = true

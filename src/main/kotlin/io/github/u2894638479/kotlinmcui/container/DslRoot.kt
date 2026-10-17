@@ -9,6 +9,7 @@ import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
+import io.github.u2894638479.kotlinmcui.prop.PropertyLifeScope
 
 /**
  * One root: the state, the viewport and the children that belong to it.
@@ -72,6 +73,15 @@ class DslRoot(
      */
     val rect: MutRect = MutRect()
 
+    /**
+     * The session slots of this root: keyed by the bare key, shared by every screen mounted here.
+     *
+     * Concurrent for the same reason the process-wide static map is: one process may render several
+     * roots on different threads, and every access is a single-key map operation. [close] runs each
+     * slot's cleanup and empties the map - that is what "released with the root" means.
+     */
+    internal val sessionPropertyMap = java.util.concurrent.ConcurrentHashMap<DslId, PropertyLifeScope.TimedProperty<*>>()
+
     private var closed = false
 
     /** Whether [close] has run. */
@@ -88,7 +98,10 @@ class DslRoot(
      * Calling it twice is fine.
      */
     fun close() {
+        if(closed) return
         closed = true
+        sessionPropertyMap.values.forEach { it.onClear() }
+        sessionPropertyMap.clear()
     }
 
     internal fun checkOpen(what: String) {

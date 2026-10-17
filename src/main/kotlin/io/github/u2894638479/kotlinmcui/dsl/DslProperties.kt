@@ -40,6 +40,16 @@ val screenTitle get() = dataStore.title
 context(ctx: DslDataStoreContext)
 val stable get() = dataStore.stableLifeScope
 
+/**
+ * Session property scope — bounded by the root, shared by every screen mounted on it.
+ *
+ * With a key it is a named address inside that root, so one screen can set it and another can read it;
+ * without one it is private to the declaration site. Same type contract as `static`: one key, one type
+ * per root. `root.close()` runs each slot's cleanup and empties the scope.
+ */
+context(ctx: DslDataStoreContext)
+val session get() = dataStore.sessionLifeScope
+
 /** Static property scope — persists for the entire process lifetime. */
 context(ctx: DslDataStoreContext)
 val static get() = dataStore.staticLifeScope

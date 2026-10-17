@@ -5,6 +5,7 @@ import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.dsl.identity
 import io.github.u2894638479.kotlinmcui.identity.DslId
+import io.github.u2894638479.kotlinmcui.logger.dslLogger
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolatable
 import io.github.u2894638479.kotlinmcui.math.animate.InterpolatableDouble
 import io.github.u2894638479.kotlinmcui.math.animate.Interpolator
@@ -20,9 +21,26 @@ import kotlin.time.Duration.Companion.seconds
 class PropertyLifeScope internal constructor(
     internal val dataStore: DslDataStore,
     internal val isStatic: Boolean = false,
-    private val map: MutableMap<DslId, TimedProperty<*>> = Object2ObjectOpenHashMap<DslId, TimedProperty<*>>()
+    private val map: MutableMap<DslId, TimedProperty<*>> = Object2ObjectOpenHashMap<DslId, TimedProperty<*>>(),
+    /** session: keyed by the bare key, bounded by the root instead of the process. */
+    internal val isSession: Boolean = false,
 ) {
     internal val size get() = map.size
+
+    private val declaredSites = Object2ObjectOpenHashMap<DslId, Any>()
+
+    /**
+     * Keys this scope saw declared by **two different declaration sites** in the same screen.
+     *
+     * A site repeating its own key is normal (a page declares it every frame); two sites reusing one
+     * key is the mistake this records. The value type is not part of the key either, so the two sites
+     * end up sharing one slot and the second reads the first one's value.
+     */
+    internal val reusedKeys = mutableListOf<ReusedKey>()
+
+    /** One recorded reuse: the key and the two declaration sites that claimed it. */
+    internal data class ReusedKey(val key: DslId, val firstSite: Any, val laterSite: Any)
+
     internal open class TimedProperty<T>(private var _value:T, var frameStamp: ULong = 0uL) : StableRW<T> {
         override fun getValue() = _value
         override fun setValue(value: T) { this._value = value }
@@ -33,19 +51,46 @@ class PropertyLifeScope internal constructor(
      * Storage key of one declaration site.
      *
      * The declaring lambda's class is part of the key in the per-screen scopes, so two
-     * different call sites that pass the same explicit [id] — possibly with different
+     * different call sites that pass the same explicit [key] — possibly with different
      * value types — get separate slots instead of silently sharing (and corrupting) one.
-     * Static keys stay the bare id: that scope is process global and is meant to be
-     * reachable across mods by id alone.
+     * Static keys stay the bare key: that scope is process global and is meant to be
+     * reachable across mods by key alone.
      */
     context(_: DslIdContext)
-    private fun getKey(id: Any?, site: Any) = when {
-        // The bare id is what makes a static slot reachable across mods.
-        isStatic -> DslId(id ?: site)
-        // Without an explicit id the declaring site alone already is the key, and this
+    private fun getKey(key: Any?, site: Any) = when {
+        // The bare key is what makes a static slot reachable across mods - and a session slot
+        // reachable from another screen on the same root.
+        isStatic || isSession -> DslId(key ?: site)
+        // Without an explicit key the declaring site alone already is the key, and this
         // is the per-frame path: do not grow the identity chain for nothing.
-        id == null -> identity + site
-        else -> identity + id + site
+        key == null -> identity + site
+        else -> identity + key + site
+    }.also { noteDeclaration(key, site) }
+
+    /**
+     * Record a key claimed by more than one declaration site in this screen.
+     *
+     * Static scopes are skipped on purpose: their key *is* the bare id (that is how they stay reachable
+     * across mods), so "two sites, one key" is their documented usage, not a mistake. With no explicit
+     * key the site itself is the slot, so there is nothing to compare.
+     */
+    private fun noteDeclaration(userKey: Any?, site: Any) {
+        if(isStatic || isSession || userKey == null) return
+        val key = DslId(userKey)
+        val first = declaredSites[key]
+        if(first == null) {
+            declaredSites[key] = site
+            return
+        }
+        if(first === site) return
+        if(reusedKeys.none { it.key == key && it.laterSite === site }) {
+            reusedKeys += ReusedKey(key, first, site)
+            dslLogger.warn(
+                "the property key '$key' is declared by two different sites in one screen. The key of " +
+                    "`local`/`stable` is only a sub-key of its declaration site and is never shared across " +
+                    "sites; to share by name use `session(\"…\")` (per root) or `static(\"…\")` (per process).",
+            )
+        }
     }
 
     /**
@@ -169,16 +214,23 @@ class PropertyLifeScope internal constructor(
     val coroutineScope get() = coroutineScope(identity, dataStore.root.rootUtils.sessionDispatcher)
 
     /**
+     * 这是本声明点内部的子键；同一个 key 在不同声明点是不同槽，不会共享。
+     *
      * Returns a reactive property with automatic lifecycle management.
      *
+     * The declaration site is part of the storage key, so two call sites may pass the same [key] and
+     * still get separate slots. Only the `static` scope keys by the bare key - that is what makes it
+     * reachable across mods, and it is also why there the same key must always carry the same type.
+     *
+     * @param key Sub-key inside this declaration site.
      * @param init The initial value. Only called when the property does not yet exist.
      *
      * When the property's lifecycle ends and it is accessed again, [init] is
      * called again to recreate the property.
      */
     context(ctx: DslIdContext)
-    fun <T> property(id:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T): StableRW<T> {
-        val identity = getKey(id, init::class)
+    fun <T> property(key:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T): StableRW<T> {
+        val identity = getKey(key, init::class)
         val coroutineScope = coroutineScope(identity)
         return map.getOrPut(identity) {
             TimedProperty(context(DslExecuteContext(dataStore)) { coroutineScope.init() })
@@ -203,23 +255,23 @@ class PropertyLifeScope internal constructor(
      * ```
      */
     context(ctx: DslIdContext)
-    operator fun <T> invoke(id:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T) = property(id,init)
+    operator fun <T> invoke(key:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T) = property(key,init)
 
     /**
      * Cache a value with an expensive computation (e.g. [String.format]).
      * For lightweight calculations, caching is not recommended.
      *
-     * @param key The cache key — when this changes, the value is recomputed.
+     * @param cacheKey The cache key — when this changes, the value is recomputed.
      * @param id Storage location ID, appended to the current [identity]. Uses `init::class` if `null`.
-     * @param init Called on first access and whenever [key] changes, to compute the cached value.
+     * @param init Called on first access and whenever [cacheKey] changes, to compute the cached value.
      */
     context(ctx: DslIdContext)
-    fun <K,V> cached(key: K,id: Any? = null, init:context(DslExecuteContext) CoroutineScope.(K)->V) : StableRW<V> {
-        val identity = getKey(id, init::class)
+    fun <K,V> cached(cacheKey: K, key: Any? = null, init:context(DslExecuteContext) CoroutineScope.(K)->V) : StableRW<V> {
+        val identity = getKey(key, init::class)
         val coroutineScope = coroutineScope(identity)
         val previous = map[identity]
-        if(previous is CachedProperty<*,*> && previous.key == key) return previous.stable()
-        return CachedProperty(key,context(DslExecuteContext(dataStore)){ coroutineScope.init(key) }).also {
+        if(previous is CachedProperty<*,*> && previous.key == cacheKey) return previous.stable()
+        return CachedProperty(cacheKey,context(DslExecuteContext(dataStore)){ coroutineScope.init(cacheKey) }).also {
             previous?.onClear()
             map[identity] = it
         }
@@ -237,10 +289,10 @@ class PropertyLifeScope internal constructor(
     fun <T : Interpolatable<T>> animatable(
         duration: Duration = 0.5.seconds,
         interpolator: Interpolator = Interpolator.default,
-        id:Any? = null,
+        key:Any? = null,
         init:context(DslExecuteContext)() -> T
     ) : StableRW<T> {
-        val id = id ?: init::class
+        val id = key ?: init::class
         val animator by property(id) {
             Animator(init(), duration.inWholeNanoseconds, interpolator)
         }
@@ -252,9 +304,9 @@ class PropertyLifeScope internal constructor(
     fun animatable(
         duration: Duration = 0.5.seconds,
         interpolator: Interpolator = Interpolator.default,
-        id:Any? = null,
+        key:Any? = null,
         value:context(DslExecuteContext)() -> Double
-    ) = animatable<InterpolatableDouble>(duration, interpolator, id ?: value::class) {
+    ) = animatable<InterpolatableDouble>(duration, interpolator, key ?: value::class) {
         InterpolatableDouble(value())
     }.remap({it.toDouble()},{InterpolatableDouble(it)})
 
@@ -278,10 +330,10 @@ class PropertyLifeScope internal constructor(
         init: T? = null,
         duration: Duration = 0.5.seconds,
         interpolator: Interpolator = Interpolator.default,
-        id:Any? = null,
+        key:Any? = null,
         value:context(DslExecuteContext)() -> T
     ) : StableRO<T> {
-        val id = id ?: value::class
+        val id = key ?: value::class
         val value = context(DslExecuteContext(dataStore), value)
         val animator by property(id) {
             Animator(init ?: value, duration.inWholeNanoseconds, interpolator)
@@ -295,9 +347,9 @@ class PropertyLifeScope internal constructor(
         init: Double? = null,
         duration: Duration = 0.5.seconds,
         interpolator: Interpolator = Interpolator.default,
-        id:Any? = null,
+        key:Any? = null,
         value:context(DslExecuteContext)() -> Double
-    ) = autoAnimate(init?.toInterpolatable(), duration, interpolator, id ?: value::class) {
+    ) = autoAnimate(init?.toInterpolatable(), duration, interpolator, key ?: value::class) {
         value().toInterpolatable()
     }.remap { it.toDouble() }
 
@@ -306,8 +358,8 @@ class PropertyLifeScope internal constructor(
      * Useful for cleanup (e.g. cancelling coroutines, releasing resources).
      */
     context(ctx: DslIdContext)
-    fun dispose(id:Any? = null, action: () -> Unit) {
-        val identity = getKey(id, action::class)
+    fun dispose(key:Any? = null, action: () -> Unit) {
+        val identity = getKey(key, action::class)
         map.getOrPut(identity) {
             object : TimedProperty<Unit>(Unit) {
                 override fun onClear() { action() }
