@@ -11,8 +11,19 @@ package io.github.u2894638479.kotlinmcui.backend
 internal var dslBackendProvider: (() -> DslBackend<*, *>)? = null
 internal var dslMetadataProvider: (() -> DslBackendMetadata)? = null
 
+/** The published platform. `platformReady` is what fills this in. */
+internal var dslPlatformProvider: (() -> DslPlatform)? = null
+
 /** The current backend instance. Throws until the platform has published one. */
 val dslBackend get() = dslBackendProvider?.invoke() ?: throw dslNoBackendError()
+
+/** The published platform, or a loud failure when nothing published one yet. */
+internal fun publishedPlatform(): DslPlatform = dslPlatformProvider?.invoke() ?: throw IllegalStateException(
+    if (DslRuntime.installedButNotReady)
+        "The platform is installed, but not ready to publish yet. Mod initialisation must not use the DSL; do it once screens can be created."
+    else
+        "DSL failed to find a platform. You should install a mod to provide it, or you are trying to use DSL before initialization."
+)
 
 private fun dslNoBackendError() = IllegalStateException(
     if (DslRuntime.installedButNotReady)

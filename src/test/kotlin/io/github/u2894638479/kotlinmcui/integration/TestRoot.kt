@@ -27,7 +27,7 @@ internal object TestRoot {
     private val state get() = root.state
 
     /** The fixture backend seen as a root provider, the way production derives it from the published backend. */
-    val provider get() = rootProviderOf(TestBackend)
+    val provider get() = TestRootProvider
 
     val rect: MutRect get() = root.rect
     val children: DslChild.Group get() = root.children

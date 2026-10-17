@@ -3,7 +3,8 @@ package io.github.u2894638479.kotlinmcui.backend
 import io.github.u2894638479.kotlinmcui.config.configFormat
 import io.github.u2894638479.kotlinmcui.config.loadConfig
 import io.github.u2894638479.kotlinmcui.config.saveConfig
-import io.github.u2894638479.kotlinmcui.integration.TestBackend
+import io.github.u2894638479.kotlinmcui.integration.TestMetadata
+import io.github.u2894638479.kotlinmcui.integration.TestPlatform
 import io.github.u2894638479.kotlinmcui.integration.TestRuntime
 import kotlinx.serialization.Serializable
 import java.nio.file.Files
@@ -68,26 +69,36 @@ class DslProviderTest {
     }
 
     @Test
-    fun `metadata falls back to the backend when no provider is installed`() {
-        dslMetadataProvider = null
-        TestRuntime.publish()
-        assertEquals(TestBackend.configDir, dslMetadata.configDir)
+    fun `metadata comes from the published platform when no provider is installed`() {
+        val previous = TestRuntime.publish()
+        try {
+            dslMetadataProvider = null
+            assertEquals(TestMetadata.configDir, dslMetadata.configDir)
+        } finally {
+            TestRuntime.restore(previous)
+        }
     }
 
     /**
-     * The platform is derived, not registered: what it answers is exactly what the published backend
-     * already answers, and an installed metadata provider still wins over the backend.
+     * The platform is published, not derived: the object that answers is the one that was published,
+     * and its own metadata and utils are what the framework reads.
      */
     @Test
-    fun `the platform answers from the published backend`() {
-        TestRuntime.publish()
-        dslMetadataProvider = null
+    fun `the published platform answers metadata and translation`() {
+        val previous = TestRuntime.publish()
+        try {
+            assertSame(TestPlatform, dslPlatform, "the published platform is the one that answers")
+            assertSame(TestMetadata, dslPlatform.metadata)
+            assertEquals("a.key", dslPlatform.utils.translate("a.key"), "translation comes from the platform's utils")
 
-        assertEquals("a.key", dslPlatform.utils.translate("a.key"), "translation comes from the backend")
-        assertSame(TestBackend, dslPlatform.metadata, "with no metadata provider the backend is the metadata")
-
-        dslMetadataProvider = { OnlyMetadata }
-        assertSame(OnlyMetadata, dslPlatform.metadata, "an installed metadata provider wins")
-        assertEquals("a.key", dslPlatform.utils.translate("a.key"), "translation still comes from the backend")
+            dslMetadataProvider = null
+            assertEquals(
+                TestMetadata.configDir,
+                dslMetadata.configDir,
+                "without an installed provider, metadata comes from the platform",
+            )
+        } finally {
+            TestRuntime.restore(previous)
+        }
     }
 }

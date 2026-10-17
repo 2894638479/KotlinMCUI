@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
+import io.github.u2894638479.kotlinmcui.backend.DslPlatform
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.backend.DslRuntime
 import io.github.u2894638479.kotlinmcui.container.DslRoot
@@ -35,7 +36,7 @@ import org.junit.jupiter.api.BeforeEach
  */
 class DslRootMountTest {
     /** Process-wide state: put back whatever provider was published before the case. */
-    private var previous: (() -> DslBackend<*, *>)? = null
+    private var previous: (() -> DslPlatform)? = null
 
     @BeforeEach
     fun setUp() {

@@ -32,6 +32,10 @@ object DslRuntime {
     /** Whether an owner root has been created; the second [createOwner] must be refused. */
     private var ownerHeld = false
 
+    /** How many owner roots were actually built. One, for the life of the process. */
+    internal var ownerCreations = 0
+        private set
+
     /** Whether [install] has run. */
     internal val isInstalled get() = synchronized(lock) { installed }
 
@@ -81,16 +85,16 @@ object DslRuntime {
      *   already published (the published one is left untouched).
      * @throws IllegalStateException when [install] has not run.
      */
-    fun platformReady(backend: () -> DslBackend<*, *>): Boolean = synchronized(lock) {
+    fun platformReady(platform: () -> DslPlatform): Boolean = synchronized(lock) {
         check(installed) { "DslRuntime.platformReady was called before DslRuntime.install" }
-        if (dslBackendProvider != null) {
+        if (dslPlatformProvider != null) {
             dslLogger.warn(
-                "DslRuntime.platformReady was already called; this backend is ignored. " +
-                    "Install only one backend in a game instance.",
+                "DslRuntime.platformReady was already called; this platform is ignored. " +
+                    "Install only one platform in a game instance.",
             )
             return@synchronized false
         }
-        dslBackendProvider = backend
+        dslPlatformProvider = platform
         // A platform that asked for a page to be shown gets it now; otherwise this does nothing.
         DslPreview.start()
         true
@@ -143,7 +147,7 @@ object DslRuntime {
     fun createRoot(provider: DslRootProvider<*, *>, viewerLifetime: ViewerLifetime): DslRoot =
         synchronized(lock) {
             check(installed) { "DslRuntime.createRoot was called before DslRuntime.install" }
-            if (dslBackendProvider == null) {
+            if (dslPlatformProvider == null) {
                 refuse("root for ${provider.describe()}", DslRejectionReason.PLATFORM_NOT_PUBLISHED)
             } else {
                 buildRoot(provider, viewerLifetime, isOwner = false, refusal = null)
@@ -160,12 +164,13 @@ object DslRuntime {
     fun createOwner(provider: DslRootProvider<*, *>): DslRoot = synchronized(lock) {
         check(installed) { "DslRuntime.createOwner was called before DslRuntime.install" }
         when {
-            dslBackendProvider == null ->
+            dslPlatformProvider == null ->
                 refuse("owner root for ${provider.describe()}", DslRejectionReason.PLATFORM_NOT_PUBLISHED)
             ownerHeld ->
                 refuse("owner root for ${provider.describe()}", DslRejectionReason.PLATFORM_ALREADY_HELD)
             else -> {
                 ownerHeld = true
+                ownerCreations++
                 buildRoot(provider, ViewerLifetime.PROCESS, isOwner = true, refusal = null)
             }
         }
@@ -218,8 +223,11 @@ object DslRuntime {
         installed = false
         dslMetadataProvider = null
         dslBackendProvider = null
+        dslPlatformProvider = null
         providers.clear()
         refusalLedger.clear()
         ownerHeld = false
+        // `ownerCreations` is deliberately not reset: it counts the process's owner roots, and the
+        // main root survives a reset (it is a lazily built singleton).
     }
 }

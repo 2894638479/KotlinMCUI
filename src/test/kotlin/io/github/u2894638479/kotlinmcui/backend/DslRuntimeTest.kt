@@ -2,8 +2,9 @@ package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.entry.FixtureClient
 import io.github.u2894638479.kotlinmcui.entry.FixtureCommon
-import io.github.u2894638479.kotlinmcui.integration.TestBackend
 import io.github.u2894638479.kotlinmcui.integration.TestMetadata
+import io.github.u2894638479.kotlinmcui.integration.TestPlatform
+import io.github.u2894638479.kotlinmcui.integration.TestRootProvider
 import kotlin.test.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.MethodOrderer
@@ -29,15 +30,47 @@ class DslRuntimeTest {
     @BeforeEach
     fun setUp() = DslRuntime.resetForTest()
 
+    /**
+     * The owner count is process-lifetime and is not reset with the runtime: the main root is a
+     * lazily built singleton, so whichever case touches it first creates it, and it is created
+     * through the only path that may set `isOwner`.
+     */
     @Test
     @Order(1)
-    fun `publishing the backend before installing the platform is an error`() {
-        assertFalse(DslRuntime.isInstalled)
-        assertFailsWith<IllegalStateException> { DslRuntime.platformReady { TestBackend } }
+    fun `the main root is the process owner`() {
+        DslRuntime.install { TestMetadata }
+        DslRuntime.platformReady { TestPlatform }
+        DslRuntime.registerProvider(TestRootProvider)
+
+        val root = DslRuntime.ownerRoot
+
+        assertTrue(root.isOwner, "the main root must be created through createOwner")
+        assertEquals(1, DslRuntime.ownerCreations, "exactly one owner root is built")
     }
 
     @Test
     @Order(2)
+    fun `the owner root draws with the registered provider`() {
+        DslRuntime.install { TestMetadata }
+        DslRuntime.platformReady { TestPlatform }
+        DslRuntime.registerProvider(TestRootProvider)
+
+        assertSame(
+            TestRootProvider,
+            DslRuntime.ownerRoot.provider,
+            "the main root must use the provider an entry point registered, not a copy",
+        )
+    }
+
+    @Test
+    @Order(2)
+    fun `publishing the platform before installing it is an error`() {
+        assertFalse(DslRuntime.isInstalled)
+        assertFailsWith<IllegalStateException> { DslRuntime.platformReady { TestPlatform } }
+    }
+
+    @Test
+    @Order(3)
     fun `installing discovers the entries and initialises them exactly once`() {
         val commonRuns = FixtureCommon.runs
         val clientRuns = FixtureClient.runs
@@ -49,7 +82,7 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     fun `metadata works before the platform is ready while the backend does not`() {
         DslRuntime.install { TestMetadata }
 
@@ -63,16 +96,16 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(4)
-    fun `publishing the backend makes it available`() {
+    @Order(5)
+    fun `publishing the platform makes it available`() {
         DslRuntime.install { TestMetadata }
-        DslRuntime.platformReady { TestBackend }
+        DslRuntime.platformReady { TestPlatform }
 
-        assertSame(TestBackend, dslBackend)
+        assertSame(TestPlatform, dslPlatform)
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     fun `installing a second time is an error`() {
         DslRuntime.install { TestMetadata }
 
@@ -80,38 +113,26 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(6)
-    fun `publishing a second backend is refused, not thrown`() {
+    @Order(7)
+    fun `publishing a second platform is refused, not thrown`() {
         DslRuntime.install { TestMetadata }
-        val first = DslRuntime.platformReady { TestBackend }
+        val first = DslRuntime.platformReady { TestPlatform }
 
         // Refusing instead of throwing keeps a user's double install from becoming a crash,
         // so the caller has to learn that it lost from the return value.
-        val second = DslRuntime.platformReady { TestBackend }
+        val second = DslRuntime.platformReady { TestPlatform }
 
         assertTrue(first, "the first publish must report success")
         assertFalse(second, "a later publish must report that it was refused")
-        assertSame(TestBackend, dslBackend, "the refused backend must not replace the published one")
-    }
-
-    @Test
-    @Order(7)
-    fun `the owner root's provider is the published backend itself`() {
-        DslRuntime.install { TestMetadata }
-        DslRuntime.platformReady { TestBackend }
-
-        val provider = DslRuntime.ownerRoot.provider
-
-        assertSame(TestBackend, provider.renderer, "the derived provider must not copy the renderer")
-        assertSame(TestBackend, provider.input, "the derived provider must not copy the input")
+        assertSame(TestPlatform, dslPlatform, "the refused platform must not replace the published one")
     }
 
     @Test
     @Order(8)
     fun `a second owner root is refused and recorded in the ledger`() {
         DslRuntime.install { TestMetadata }
-        DslRuntime.platformReady { TestBackend }
-        val provider = rootProviderOf(TestBackend)
+        DslRuntime.platformReady { TestPlatform }
+        val provider = TestRootProvider
 
         val first = DslRuntime.createOwner(provider)
         val second = DslRuntime.createOwner(provider)

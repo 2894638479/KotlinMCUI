@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
+import io.github.u2894638479.kotlinmcui.backend.DslPlatform
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslScreen
@@ -32,7 +33,7 @@ import org.junit.jupiter.api.BeforeEach
 class DslSliderTest {
 
     /** Process-wide state: put back whatever provider was published before the case. */
-    private var previousBackendProvider: (() -> DslBackend<*, *>)? = null
+    private var previousBackendProvider: (() -> DslPlatform)? = null
 
     @BeforeEach
     fun setUp() {
