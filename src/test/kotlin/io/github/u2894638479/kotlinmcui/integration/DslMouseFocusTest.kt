@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
@@ -30,8 +29,7 @@ class DslMouseFocusTest {
 
     @BeforeEach
     fun setUp() {
-        previous = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previous = TestRuntime.publish()
     }
 
     @AfterEach
@@ -40,7 +38,7 @@ class DslMouseFocusTest {
         // Move the page out of the root again: `show` mounts it, and a leftover child would be
         // navigated into by every later case in the same JVM.
         TestBackend.resetPreview()
-        dslBackendProvider = previous
+        TestRuntime.restore(previous)
     }
 
     private fun editable(initial: String): StableRW<String> {

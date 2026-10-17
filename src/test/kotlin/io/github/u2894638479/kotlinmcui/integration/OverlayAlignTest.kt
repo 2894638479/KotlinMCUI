@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
@@ -26,7 +25,7 @@ import org.junit.jupiter.api.BeforeEach
  * coordinate is pinned, so these tests stay valid while the clamps themselves are
  * being reworked.
  *
- * Publishes the process-global `dslBackendProvider` like the other integration classes,
+ * Publishes the fake platform through `TestRuntime`, like the other integration classes,
  * and puts the previous value back afterwards, so neither this class nor any other one
  * has to run first.
  */
@@ -37,12 +36,11 @@ class OverlayAlignTest {
 
     @BeforeEach
     fun setUp() {
-        previousBackendProvider = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previousBackendProvider = TestRuntime.publish()
     }
 
     @AfterEach
-    fun tearDown() { dslBackendProvider = previousBackendProvider }
+    fun tearDown() { TestRuntime.restore(previousBackendProvider) }
 
     private fun buildScreen(function: DslFunction): DslScreen {
         val screen = TestBackend.create("test", function).dslScreen

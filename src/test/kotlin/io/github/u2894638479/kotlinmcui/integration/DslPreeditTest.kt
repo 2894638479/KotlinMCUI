@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
@@ -27,15 +26,14 @@ class DslPreeditTest {
 
     @BeforeEach
     fun setUp() {
-        previousBackendProvider = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previousBackendProvider = TestRuntime.publish()
     }
 
     @AfterEach
     fun tearDown() {
         TestRoot.setFocus(null)
         TestBackend.resetPreview()
-        dslBackendProvider = previousBackendProvider
+        TestRuntime.restore(previousBackendProvider)
     }
 
     private fun buildScreen(function: DslFunction): DslScreen {

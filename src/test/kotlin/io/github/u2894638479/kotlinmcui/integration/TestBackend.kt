@@ -3,6 +3,7 @@ package io.github.u2894638479.kotlinmcui.integration
 import io.github.u2894638479.kotlinmcui.backend.*
 import io.github.u2894638479.kotlinmcui.container.DslChild
 import io.github.u2894638479.kotlinmcui.container.DslDataStore
+import io.github.u2894638479.kotlinmcui.container.DslRoot
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
@@ -163,7 +164,7 @@ private object TestScreenFactory : DslBackendScreenFactory<Unit> {
 
 // ── Utils ────────────────────────────────────────────────────────────────────
 
-private object TestUtils : DslBackendUtils {
+private object TestUtils : DslBackendUtils, DslPlatformUtils, DslRootUtils {
     override var clipboard = ""
     override fun narrate(string: String) {}
     override fun translate(key: String, vararg args: Any?) = key
@@ -175,6 +176,9 @@ private object TestUtils : DslBackendUtils {
     // UI state is confined to the thread that builds it, so "the main thread"
     // dispatcher here must run continuations on the caller rather than a pool.
     override val mainDispatcher: CoroutineDispatcher = Dispatchers.Unconfined
+
+    // The split gives the same object two hats: process-level helpers and per-output helpers.
+    override val sessionDispatcher: CoroutineDispatcher get() = mainDispatcher
 
     /** Capture requests, recorded so a test can assert what the preview session asked for. */
     val captures = mutableListOf<String>()
@@ -216,4 +220,27 @@ private object TestInput : DslBackendInput {
     override fun isKeyDown(key: Key) = false
     override fun isMouseDown(mouse: Int) = false
     override fun setPreeditArea(rect: Rect) {}
+}
+
+/**
+ * The fixture's platform role: the process-level half of the old aggregate backend.
+ *
+ * The same `TestUtils` object serves both this and [TestRootProvider] - the "one object, two
+ * interfaces" shape the real backends will use after the split.
+ */
+internal object TestPlatform : DslPlatform {
+    override val metadata: DslBackendMetadata get() = TestMetadata
+    override val utils: DslPlatformUtils get() = TestUtils
+    override val dispatcher: CoroutineDispatcher get() = TestUtils.mainDispatcher
+}
+
+/** The fixture's provider role: the per-output half of the old aggregate backend. */
+internal object TestRootProvider : DslRootProvider<Unit, Unit> {
+    override val renderer: DslBackendRenderer<Unit>? get() = TestRenderer
+    override val input: DslBackendInput get() = TestInput
+    override val screenFactory: DslBackendScreenFactory<Unit>? get() = TestScreenFactory
+    override val rootUtils: DslRootUtils get() = TestUtils
+
+    override fun frame(root: DslRoot, renderParam: Unit) =
+        kotlin.context(TestRenderer, Unit, TestInput.mouse) { root.component.render() }
 }

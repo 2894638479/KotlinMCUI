@@ -2,7 +2,6 @@ package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.backend.DslRuntime
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.container.DslRoot
 import io.github.u2894638479.kotlinmcui.container.DslRootGeometry
 import io.github.u2894638479.kotlinmcui.container.DslRootState
@@ -40,8 +39,7 @@ class DslRootMountTest {
 
     @BeforeEach
     fun setUp() {
-        previous = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previous = TestRuntime.publish()
         TestBackend.resetPreview()
     }
 
@@ -49,7 +47,7 @@ class DslRootMountTest {
     fun tearDown() {
         TestRoot.setFocus(null)
         TestBackend.resetPreview()
-        dslBackendProvider = previous
+        TestRuntime.restore(previous)
     }
 
     private fun state() = DslRootState(onFocusChanged = { _, _ -> }, onHoverChanged = {}, onNarrate = {})

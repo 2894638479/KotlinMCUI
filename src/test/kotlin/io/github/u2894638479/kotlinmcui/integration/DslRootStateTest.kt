@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslRootState
@@ -35,8 +34,7 @@ class DslRootStateTest {
 
     @BeforeEach
     fun setUp() {
-        previousBackendProvider = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previousBackendProvider = TestRuntime.publish()
     }
 
     @AfterEach
@@ -45,7 +43,7 @@ class DslRootStateTest {
         // goes away - and so the next case does not start out hovering this one's component.
         TestRoot.setFocus(null)
         TestRoot.hovered = null
-        dslBackendProvider = previousBackendProvider
+        TestRuntime.restore(previousBackendProvider)
     }
 
     private fun buildScreen(function: DslFunction): DslScreen {

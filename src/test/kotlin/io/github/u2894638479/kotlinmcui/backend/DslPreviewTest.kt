@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.integration.TestBackend
+import io.github.u2894638479.kotlinmcui.integration.TestRuntime
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.px
 import kotlinx.coroutines.delay
@@ -28,15 +29,14 @@ class DslPreviewTest {
 
     @BeforeEach
     fun setUp() {
-        previous = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previous = TestRuntime.publish()
         TestBackend.resetPreview()
         TestRoot.renderFailure = null
     }
 
     @AfterEach
     fun tearDown() {
-        dslBackendProvider = previous
+        TestRuntime.restore(previous)
         TestRoot.renderFailure = null
     }
 

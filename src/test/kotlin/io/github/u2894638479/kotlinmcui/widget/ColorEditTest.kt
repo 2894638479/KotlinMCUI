@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.widget
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local
@@ -9,6 +8,7 @@ import io.github.u2894638479.kotlinmcui.dsl.ui.Slider
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
 import io.github.u2894638479.kotlinmcui.input.MouseButton
 import io.github.u2894638479.kotlinmcui.integration.TestBackend
+import io.github.u2894638479.kotlinmcui.integration.TestRuntime
 import io.github.u2894638479.kotlinmcui.math.Axis
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
@@ -34,12 +34,11 @@ class ColorEditTest {
 
     @BeforeEach
     fun setUp() {
-        previousBackendProvider = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previousBackendProvider = TestRuntime.publish()
     }
 
     @AfterEach
-    fun tearDown() { dslBackendProvider = previousBackendProvider }
+    fun tearDown() { TestRuntime.restore(previousBackendProvider) }
 
     private fun buildScreen(function: DslFunction): DslScreen {
         val screen = TestBackend.create("test",function).dslScreen

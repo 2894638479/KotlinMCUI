@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local
@@ -31,7 +30,7 @@ import org.junit.jupiter.api.BeforeEach
  * the drag delta by `0.0` — a scroll bar that can never scroll — kept the whole
  * suite green.
  *
- * Publishes the process-global `dslBackendProvider` like the other integration classes,
+ * Publishes the fake platform through `TestRuntime`, like the other integration classes,
  * and puts the previous value back afterwards, so neither this class nor any other one
  * has to run first.
  */
@@ -42,12 +41,11 @@ class DslScrollBarTest {
 
     @BeforeEach
     fun setUp() {
-        previousBackendProvider = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previousBackendProvider = TestRuntime.publish()
     }
 
     @AfterEach
-    fun tearDown() { dslBackendProvider = previousBackendProvider }
+    fun tearDown() { TestRuntime.restore(previousBackendProvider) }
 
     /**
      * The bar sizes its three spacers from the scroller's *previous* layout, so the

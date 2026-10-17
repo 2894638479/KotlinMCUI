@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.ui.Spacer
@@ -29,15 +28,14 @@ class DslMountPathTest {
 
     @BeforeEach
     fun setUp() {
-        previous = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previous = TestRuntime.publish()
         TestBackend.resetPreview()
     }
 
     @AfterEach
     fun tearDown() {
         TestBackend.resetPreview()
-        dslBackendProvider = previous
+        TestRuntime.restore(previous)
     }
 
     @Test

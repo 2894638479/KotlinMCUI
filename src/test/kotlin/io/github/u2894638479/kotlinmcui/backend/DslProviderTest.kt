@@ -70,7 +70,7 @@ class DslProviderTest {
     @Test
     fun `metadata falls back to the backend when no provider is installed`() {
         dslMetadataProvider = null
-        dslBackendProvider = { TestBackend }
+        TestRuntime.publish()
         assertEquals(TestBackend.configDir, dslMetadata.configDir)
     }
 
@@ -80,7 +80,7 @@ class DslProviderTest {
      */
     @Test
     fun `the platform answers from the published backend`() {
-        dslBackendProvider = { TestBackend }
+        TestRuntime.publish()
         dslMetadataProvider = null
 
         assertEquals("a.key", dslPlatform.utils.translate("a.key"), "translation comes from the backend")

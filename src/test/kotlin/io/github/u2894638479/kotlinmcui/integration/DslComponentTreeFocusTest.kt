@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.component.isHovered
 import io.github.u2894638479.kotlinmcui.container.DslRootState
@@ -24,15 +23,14 @@ class DslComponentTreeFocusTest {
 
     @BeforeEach
     fun setUp() {
-        previous = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previous = TestRuntime.publish()
     }
 
     @AfterEach
     fun tearDown() {
         TestRoot.setFocus(null)
         TestBackend.resetPreview()
-        dslBackendProvider = previous
+        TestRuntime.restore(previous)
     }
 
     private fun editable(initial: String): StableRW<String> {

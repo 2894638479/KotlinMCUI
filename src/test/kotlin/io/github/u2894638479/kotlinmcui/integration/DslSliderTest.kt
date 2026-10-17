@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
-import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.integration.TestRoot
@@ -26,7 +25,7 @@ import org.junit.jupiter.api.BeforeEach
  * `setProgress` — which lets a drag write a progress outside 0..1 straight into the
  * caller's property — went unnoticed by the whole suite.
  *
- * Publishes the process-global `dslBackendProvider` like the other integration classes,
+ * Publishes the fake platform through `TestRuntime`, like the other integration classes,
  * and puts the previous value back afterwards, so neither this class nor any other one
  * has to run first.
  */
@@ -37,12 +36,11 @@ class DslSliderTest {
 
     @BeforeEach
     fun setUp() {
-        previousBackendProvider = dslBackendProvider
-        dslBackendProvider = { TestBackend }
+        previousBackendProvider = TestRuntime.publish()
     }
 
     @AfterEach
-    fun tearDown() { dslBackendProvider = previousBackendProvider }
+    fun tearDown() { TestRuntime.restore(previousBackendProvider) }
 
     /** A hand-rolled [StableRW] so the test owns the value the slider writes into. */
     private class DoubleProp(var v: Double) : StableRW<Double> {
