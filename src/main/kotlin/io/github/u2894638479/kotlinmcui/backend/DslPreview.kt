@@ -92,9 +92,9 @@ internal object DslPreview {
      * produced no file.
      */
     internal suspend fun run(reference: String, capture: Boolean) {
-        val provider = DslRuntime.ownerRoot.provider
+        val root = DslRuntime.ownerRoot
         val platform = dslPlatform
-        val screens = provider.screenFactory ?: error("preview needs a provider that can create screens")
+        val screens = root.screenFactory ?: error("preview needs a root that can create screens")
         val page = try {
             pageFor(reference)
         } catch(e: Throwable) {
@@ -116,7 +116,7 @@ internal object DslPreview {
             dslLogger.info("preview: opened '$reference' as ${page.describe()}")
             while(DslRuntime.ownerRoot.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
             if(!capture) return
-            val file = withContext(platform.dispatcher) { provider.rootUtils.capture(fileNameFor(reference)) }
+            val file = withContext(platform.dispatcher) { root.rootUtils.capture(fileNameFor(reference)) }
             if(DslRuntime.ownerRoot.state.renderFailure != null) {
                 dslLogger.error("preview: ${page.describe()} threw while rendering",DslRuntime.ownerRoot.state.renderFailure)
                 platform.utils.quit(1)
@@ -145,9 +145,9 @@ internal object DslPreview {
      * line is written by the caller, because it carries the exception itself.
      */
     private suspend fun showFailure(reference: String,text: String,capture: Boolean) {
-        val provider = DslRuntime.ownerRoot.provider
+        val root = DslRuntime.ownerRoot
         val platform = dslPlatform
-        val screens = provider.screenFactory ?: error("preview needs a provider that can create screens")
+        val screens = root.screenFactory ?: error("preview needs a root that can create screens")
         // The error screen needs the same readiness as a real page: opened any earlier it would be
         // pushed aside by the platform's own loading screen, and the screenshot would show that
         // instead of the reason.
@@ -170,7 +170,7 @@ internal object DslPreview {
         if(!capture) return
         val opened = DslRuntime.ownerRoot.state.frameIndex
         while(DslRuntime.ownerRoot.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
-        val file = withContext(platform.dispatcher) { provider.rootUtils.capture(fileNameFor(reference)) }
+        val file = withContext(platform.dispatcher) { root.rootUtils.capture(fileNameFor(reference)) }
         if(file == null) dslLogger.error("preview: no screenshot was written for '$reference'")
         else dslLogger.info("preview: wrote ${file.absolutePath} for the error screen of '$reference'")
         platform.utils.quit(1)

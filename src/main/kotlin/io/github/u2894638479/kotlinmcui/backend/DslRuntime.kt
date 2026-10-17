@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.container.DslRoot
-import io.github.u2894638479.kotlinmcui.container.DslRootGeometry
 import io.github.u2894638479.kotlinmcui.container.DslRootState
 import io.github.u2894638479.kotlinmcui.container.ViewerLifetime
 import io.github.u2894638479.kotlinmcui.container.mainRoot
@@ -241,15 +240,15 @@ object DslRuntime {
         viewerLifetime: ViewerLifetime,
         isOwner: Boolean,
         refusal: DslRejectionReason?
-    ): DslRoot {
-        lateinit var root: DslRoot
-        val state = DslRootState(
-            onFocusChanged = { newFocus, source -> root.component.globalFocusChanged(newFocus, source) },
-            onHoverChanged = { newHover -> root.component.globalHoverChanged(newHover) },
-            onNarrate = { provider.rootUtils.narrate(it) }
-        )
-        root = DslRoot(state, DslRootGeometry(), provider, viewerLifetime, isOwner, refusal)
-        return root
+    ): DslRoot = DslRoot(
+        input = provider.input,
+        renderer = provider.renderer,
+        screenFactory = provider.screenFactory,
+        rootUtils = provider.rootUtils,
+    ).also {
+        it.viewerLifetime = viewerLifetime
+        it.isOwner = isOwner
+        it.refusal = refusal
     }
 
     /**

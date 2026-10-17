@@ -28,6 +28,19 @@ internal object TestRoot {
     /** The fixture backend seen as a root provider, the way production derives it from the published backend. */
     val provider get() = TestRootProvider
 
+    /**
+     * A fresh root with the fake platform's pieces.
+     *
+     * Cases that need a second (or throwaway) tree build one of these directly instead of asking the
+     * runtime for the process root.
+     */
+    fun newRoot(): DslRoot = DslRoot(
+        input = TestRootProvider.input,
+        renderer = TestRootProvider.renderer,
+        screenFactory = TestRootProvider.screenFactory,
+        rootUtils = TestRootProvider.rootUtils,
+    )
+
     val rect: MutRect get() = root.rect
     val children: DslChild.Group get() = root.children
     val instance: DslComponent get() = root.component.instance

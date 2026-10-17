@@ -1,6 +1,9 @@
 package io.github.u2894638479.kotlinmcui.container
 
-import io.github.u2894638479.kotlinmcui.backend.DslRootProvider
+import io.github.u2894638479.kotlinmcui.backend.DslBackendInput
+import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
+import io.github.u2894638479.kotlinmcui.backend.DslRootScreenFactory
+import io.github.u2894638479.kotlinmcui.backend.DslRootUtils
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
@@ -8,39 +11,43 @@ import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 /**
  * One root: the state, the viewport and the children that belong to it.
  *
- * The process's main root is one of these, and the runtime hands it out as the owner root. Its
- * children are built on first use: the root-level overlay screen is collected first, and whatever the
- * backend mounts follows it.
+ * The backend builds it and keeps it; nothing in the runtime hands roots out. A root is self-sufficient:
+ * it takes the four platform pieces it draws with, owns its own state and its viewport, and never looks
+ * anything up globally.
  *
- * The name is deliberate: this is the early form of the `DslRoot` the design draft declares, and it
- * grows in place - `provider`, `mount`/`unmount`, `advanceFrame` and the rest are added here rather
- * than in a second type that would have to be reconciled with this one later. Only the members a
- * backend needs today are public; the rest stays internal until the draft's own shape grows here.
+ * It does not render itself. Each frame the owner writes [rect] and then, inside the render context its
+ * platform gives it, calls `component.render()` - those two calls together are "one frame of this
+ * root", and the order between them is the contract because the render pass copies [rect] onto every
+ * mounted screen.
  */
-class DslRoot internal constructor(
-    internal val state: DslRootState,
-    internal val geometry: DslRootGeometry,
-    /**
-     * The platform pieces this root draws, reads input and creates screens with.
-     *
-     * Captured when the root is built rather than looked up globally afterwards. Note the ordering that
-     * pages depend on: [state] must be usable before any screen is built, because a screen's store is
-     * stamped with it when the screen is mounted, and a page may read focus while it builds.
-     */
-    internal val provider: DslRootProvider<*, *>,
-    /** How long this root is expected to live; see [ViewerLifetime]. */
-    val viewerLifetime: ViewerLifetime = ViewerLifetime.NONE,
-    /** Whether this is the one root that owns the process. Only `createOwner` sets it. */
-    val isOwner: Boolean = false,
-    /**
-     * Why this root was refused, or `null` for a working root.
-     *
-     * A refused root is a real object on purpose: the caller gets something that fails loudly and
-     * carries its own reason, instead of a `null` it might forget to check.
-     */
-    internal val refusal: io.github.u2894638479.kotlinmcui.backend.DslRuntime.DslRejectionReason? = null
+class DslRoot(
+    /** Pointer and keyboard state, and the preedit area the platform should show. */
+    val input: DslBackendInput,
+    /** Drawing, or `null` for a root that draws nothing - in which case there is not even a font. */
+    val renderer: DslBackendRenderer<*>?,
+    /** Creates the screens mounted on this root, or `null` when this root cannot hold screens. */
+    val screenFactory: DslRootScreenFactory<*>?,
+    /** The per-output helpers: clipboard, narration, sounds, capture, quit. */
+    val rootUtils: DslRootUtils,
 ) {
     private val rootComponent = DslRootComponent(this)
+
+    /**
+     * The root's own state.
+     *
+     * Its callbacks are wired here, not by the caller: the root knows its component, so nobody outside
+     * has to break the cycle between the state and the tree it belongs to.
+     */
+    internal val state: DslRootState = DslRootState(
+        onFocusChanged = { focus, source -> rootComponent.globalFocusChanged(focus, source) },
+        onHoverChanged = { hovered -> rootComponent.globalHoverChanged(hovered) },
+        onNarrate = { text -> rootUtils.narrate(text) },
+    )
+
+    // Transitional: the runtime hands out roots for one more slice. These three go with it.
+    internal var viewerLifetime: ViewerLifetime = ViewerLifetime.NONE
+    internal var isOwner: Boolean = false
+    internal var refusal: io.github.u2894638479.kotlinmcui.backend.DslRuntime.DslRejectionReason? = null
 
     /**
      * The component that represents this root in the tree.
@@ -63,15 +70,15 @@ class DslRoot internal constructor(
     /**
      * This root's viewport.
      *
-     * The backend owns it: each frame it sets the rect to the full screen size and then renders
-     * [component]. Those two calls together are "one frame of this root"; the order between them is
-     * the contract, because the render pass copies this rect onto every mounted screen.
+     * The owner owns it: each frame it sets the rect to the full output size and then renders
+     * [component]. The render pass copies this rect onto every mounted screen.
      */
-    val rect: MutRect get() = geometry.rect
+    val rect: MutRect = MutRect()
 
     private val rawChildren: DslChild.Group by lazy {
         refusal?.let { error("this root was refused: $it") }
-        val factory = provider.screenFactory ?: error("this root's provider cannot create screens")
+        val factory = screenFactory
+        require(factory != null) { "this root cannot hold screens: it was built without a screen factory" }
         DslChild.Group().also {
             it.collect(factory.create("Dsl Overlay") { DslEntryLoader.overlays() }.dslScreen)
         }
@@ -81,7 +88,7 @@ class DslRoot internal constructor(
      * This root's children: the overlay screen first, then whatever is mounted on it.
      *
      * Mounting stamps the mounted screen's store with this root's state, so the components that screen
-     * builds find their own tree through `dataStore.rootState` rather than guessing the main root.
+     * builds find their own tree through `dataStore.rootState` rather than guessing a global root.
      * The stamp is written on **every** [DslChild.Group.collect], not only the first one: writing it
      * again is a no-op for a screen that comes back to the same root, and re-writing it is the only
      * thing that stops a screen taken off one root from answering with that root's state once it is
@@ -91,13 +98,8 @@ class DslRoot internal constructor(
      * screen this root last mounted; the stamp lives on the screen's store, so it survives the child
      * wrapper being thrown away.
      *
-     * The viewport is deliberately **not** stamped here. The root writes [geometry] every frame, and
-     * that single write is the truth for the rect - a second write at mounting time would be a second
-     * truth.
-     *
-     * Callers are the backend's screen lifecycle, which runs on the thread that renders this root, so
-     * the stamp is written on the thread this root's state and children belong to. Nothing here
-     * synchronises because that thread is the only writer.
+     * The viewport is deliberately **not** stamped here. The owner writes [rect] every frame, and that
+     * single write is the truth for the rect - a second write at mounting time would be a second truth.
      */
     val children: DslChild.Group by lazy {
         object : DslChild.Group, List<DslComponent> by rawChildren {

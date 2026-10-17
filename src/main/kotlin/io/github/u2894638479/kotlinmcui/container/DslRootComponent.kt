@@ -26,7 +26,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.copyFrom
 internal class DslRootComponent(private val root: DslRoot) : DslScope {
     private val state get() = root.state
 
-    override val rect get() = root.geometry.rect
+    override val rect get() = root.rect
     override val modifier get() = error("modifier is not available on a root component")
     override var instance: DslComponent get() = this
         set(value) {}
@@ -47,7 +47,7 @@ internal class DslRootComponent(private val root: DslRoot) : DslScope {
     /** Whether the currently focused component accepts IME input (it has a [preeditArea]). */
     val preeditUsing get() = testHit { it.takeIf { it !== this && it.identity == state.focused } }?.preeditArea != null
 
-    val mouse get() = root.provider.input.mouse
+    val mouse get() = root.input.mouse
 
     context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton): Boolean {
@@ -109,7 +109,7 @@ internal class DslRootComponent(private val root: DslRoot) : DslScope {
         } else {
             val component = testHit { it.takeIf { it !== this && it.identity == state.focused } } ?: return
             component.globalPreedit(info)
-            if(component.selfRenderPreedit) component.preeditArea?.let { root.provider.input.setPreeditArea(it) }
+            if(component.selfRenderPreedit) component.preeditArea?.let { root.input.setPreeditArea(it) }
         }
     }
 }

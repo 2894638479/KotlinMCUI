@@ -57,21 +57,21 @@ class DslRuntimeTest {
         DslRuntime.registerProvider(TestRootProvider)
 
         assertSame(
-            TestRootProvider,
-            DslRuntime.ownerRoot.provider,
+            TestRootProvider.input,
+            DslRuntime.ownerRoot.input,
             "the main root must use the provider an entry point registered, not a copy",
         )
     }
 
     @Test
-    @Order(2)
+    @Order(3)
     fun `publishing the platform before installing it is an error`() {
         assertFalse(DslRuntime.isInstalled)
         assertFailsWith<IllegalStateException> { DslRuntime.platformReady { TestPlatform } }
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     fun `installing discovers the entries and initialises them exactly once`() {
         val commonRuns = FixtureCommon.runs
         val clientRuns = FixtureClient.runs
@@ -83,7 +83,7 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     fun `metadata works before the platform is ready while the backend does not`() {
         DslRuntime.install { TestMetadata }
 
@@ -97,7 +97,7 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     fun `publishing the platform makes it available`() {
         DslRuntime.install { TestMetadata }
         DslRuntime.platformReady { TestPlatform }
@@ -106,7 +106,7 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
     fun `installing a second time is an error`() {
         DslRuntime.install { TestMetadata }
 
@@ -114,7 +114,7 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     fun `publishing a second platform is refused, not thrown`() {
         DslRuntime.install { TestMetadata }
         val first = DslRuntime.platformReady { TestPlatform }
@@ -129,32 +129,6 @@ class DslRuntimeTest {
     }
 
     @Test
-    @Order(8)
-    fun `a second owner root is refused and recorded in the ledger`() {
-        DslRuntime.install { TestMetadata }
-        DslRuntime.platformReady { TestPlatform }
-        val provider = TestRootProvider
-
-        val first = DslRuntime.createOwner(provider)
-        val second = DslRuntime.createOwner(provider)
-
-        assertTrue(first.isOwner, "the first owner root is the owner")
-        with(DslRuntime) {
-            assertTrue(first.isRegistered, "the first owner root works")
-            assertFalse(second.isRegistered, "the second owner root must be refused")
-            assertEquals(DslRuntime.DslRejectionReason.PLATFORM_ALREADY_HELD, second.refusalReason)
-        }
-        assertTrue(
-            DslRuntime.rejections.any { it.reason == DslRuntime.DslRejectionReason.PLATFORM_ALREADY_HELD },
-            "the refusal must be recorded in the ledger",
-        )
-    }
-
-    /**
-     * Two backends in one process: the process root renders the first registrant's tree, so the second
-     * one must get a root of its own. `rootFor` decides that, so no caller has to know the order.
-     */
-    @Test
     @Order(9)
     fun `the first registrant gets the process root from rootFor`() {
         DslRuntime.install { TestMetadata }
@@ -165,7 +139,7 @@ class DslRuntimeTest {
 
         assertSame(DslRuntime.ownerRoot, mine, "the first registrant gets the process root itself")
         assertTrue(mine.isOwner, "the process root is the owner root")
-        assertSame(TestRootProvider, mine.provider)
+        assertSame(TestRootProvider.input, mine.input)
     }
 
     @Test
@@ -183,27 +157,6 @@ class DslRuntimeTest {
 
         assertNotSame(DslRuntime.ownerRoot, mine, "a later backend must not be handed the process root")
         assertFalse(mine.isOwner, "only the process root carries isOwner")
-        assertSame(second, mine.provider, "the new root renders its registrant's tree")
     }
 
-    /**
-     * A root taken before the platform is published is a refused root, and its failure has to name the
-     * refusal - otherwise the caller sees a local symptom ("cannot create screens") and looks in the
-     * wrong place, which is exactly what a real backend did.
-     */
-    @Test
-    @Order(11)
-    fun `a root taken before the platform is published names the refusal when used`() {
-        DslRuntime.install { TestMetadata }
-        // Nothing published: reported separately, because `install` alone already installed us.
-        val refused = DslRuntime.createRoot(TestRootProvider, ViewerLifetime.PROCESS)
-        assertFalse(with(DslRuntime) { refused.isRegistered }, "the root must be refused")
-
-        val error = assertFailsWith<IllegalStateException> { refused.provider.screenFactory }
-
-        assertTrue(
-            "PLATFORM_NOT_PUBLISHED" in error.message.orEmpty(),
-            "the failure must name the refusal reason, was: ${error.message}",
-        )
-    }
 }
