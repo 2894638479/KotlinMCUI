@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.entry.FixtureClient
 import io.github.u2894638479.kotlinmcui.entry.FixtureCommon
+import io.github.u2894638479.kotlinmcui.container.ViewerLifetime
 import io.github.u2894638479.kotlinmcui.integration.TestMetadata
 import io.github.u2894638479.kotlinmcui.integration.TestPlatform
 import io.github.u2894638479.kotlinmcui.integration.TestRootProvider
@@ -147,5 +148,31 @@ class DslRuntimeTest {
             DslRuntime.rejections.any { it.reason == DslRuntime.DslRejectionReason.PLATFORM_ALREADY_HELD },
             "the refusal must be recorded in the ledger",
         )
+    }
+
+    /**
+     * Two backends in one process: the owner root renders the first registrant's tree, so the second
+     * one must get a root of its own instead of drawing somebody else's UI.
+     */
+    @Test
+    @Order(9)
+    fun `a later registrant creates its own root instead of using the owner root`() {
+        DslRuntime.install { TestMetadata }
+        DslRuntime.platformReady { TestPlatform }
+
+        // The first registrant is the one the process root belongs to.
+        DslRuntime.registerProvider(TestRootProvider)
+        val owner = DslRuntime.ownerRoot
+
+        // A second backend brings its own provider object.
+        val second = object : DslRootProvider<Unit, Unit> by TestRootProvider {}
+        DslRuntime.registerProvider(second)
+
+        val mine = DslRuntime.createRoot(second, ViewerLifetime.PROCESS)
+
+        assertNotSame(owner, mine, "a later backend must not be handed the owner root")
+        assertFalse(mine.isOwner, "only the owner root carries isOwner")
+        assertSame(TestRootProvider, owner.provider, "the owner root stays with the first registrant")
+        assertSame(second, mine.provider, "the created root renders its registrant's tree")
     }
 }

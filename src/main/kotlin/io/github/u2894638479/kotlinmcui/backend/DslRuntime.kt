@@ -45,12 +45,19 @@ object DslRuntime {
     /**
      * The process owner root: the one root that stands for this process.
      *
-     * Today that is the main root. When roots become multiple, this is the one that holds `isOwner` -
-     * the draft's `DslRuntime.ownerRoot` - and the type stays the same.
-     *
      * Reading it materialises the main root if it does not exist yet, so a backend can take the handle
      * before it has mounted anything. That makes it never `null`: the "queried before the root exists"
      * window does not arise, which removes a whole class of too-early failures from the backend side.
+     *
+     * **In a process where more than one backend is installed, only the first registrant may use it.**
+     * This root belongs to the backend that registered its provider first, and it renders *that*
+     * backend's tree; a later backend that uses it would draw someone else's UI. Every other backend
+     * must ask for its own root with [createRoot] and [ViewerLifetime.PROCESS] instead.
+     *
+     * The signal is "did I register first", and it has to be taken **before** [registerProvider]: after
+     * that call the list is no longer empty, so the answer is gone. There is deliberately no query for
+     * it - one more member would be one more thing to keep consistent - so the two lines a backend
+     * needs are: read [registeredProviders] before registering, and branch on whether it was empty.
      */
     val ownerRoot: DslRoot get() = mainRoot
 
@@ -103,6 +110,12 @@ object DslRuntime {
     /**
      * Register a [provider] an entry point brought with it. It may be shared by several roots and
      * registered more than once; no root exists at this point.
+     *
+     * **Registration order is the only signal for "may I use [ownerRoot]".** The first registrant owns
+     * the process root; every later backend must create its own with [createRoot] and
+     * [ViewerLifetime.PROCESS], because [ownerRoot] renders the first one's tree. Read
+     * [registeredProviders] *before* calling this to learn whether you are first - once this returns,
+     * the list is non-empty and the answer is gone.
      */
     fun registerProvider(provider: DslRootProvider<*, *>) = synchronized(lock) {
         providers += provider
