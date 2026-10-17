@@ -1,6 +1,5 @@
 package io.github.u2894638479.kotlinmcui.backend
 
-import io.github.u2894638479.kotlinmcui.container.TopComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.translate
@@ -28,7 +27,7 @@ import kotlin.time.Duration.Companion.milliseconds
  *
  * All of this is policy and therefore lives here; the platform only supplies the two members
  * [DslBackendUtils.capture] and [DslBackendUtils.quit] plus the render loop that ticks
- * [TopComponent.frameIndex]. Keeping the timing rules in the framework means they are the same on
+ * [DslRuntime.ownerRoot.state.frameIndex]. Keeping the timing rules in the framework means they are the same on
  * every platform, and testable without a game.
  *
  * `-Dkotlinmcui.preview=<reference>` opens the page. `-Dkotlinmcui.preview.capture=true` turns the
@@ -110,14 +109,14 @@ internal object DslPreview {
                 backend.quit(1)
                 return
             }
-            val opened = TopComponent.frameIndex
+            val opened = DslRuntime.ownerRoot.state.frameIndex
             withContext(backend.mainDispatcher) { backend.create(reference) { page.draw() } }.show()
             dslLogger.info("preview: opened '$reference' as ${page.describe()}")
-            while(TopComponent.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
+            while(DslRuntime.ownerRoot.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
             if(!capture) return
             val file = withContext(backend.mainDispatcher) { backend.capture(fileNameFor(reference)) }
-            if(TopComponent.renderFailure != null) {
-                dslLogger.error("preview: ${page.describe()} threw while rendering",TopComponent.renderFailure)
+            if(DslRuntime.ownerRoot.state.renderFailure != null) {
+                dslLogger.error("preview: ${page.describe()} threw while rendering",DslRuntime.ownerRoot.state.renderFailure)
                 backend.quit(1)
                 return
             }
@@ -165,8 +164,8 @@ internal object DslPreview {
             return
         }
         if(!capture) return
-        val opened = TopComponent.frameIndex
-        while(TopComponent.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
+        val opened = DslRuntime.ownerRoot.state.frameIndex
+        while(DslRuntime.ownerRoot.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
         val file = withContext(backend.mainDispatcher) { backend.capture(fileNameFor(reference)) }
         if(file == null) dslLogger.error("preview: no screenshot was written for '$reference'")
         else dslLogger.info("preview: wrote ${file.absolutePath} for the error screen of '$reference'")
@@ -188,7 +187,7 @@ internal object DslPreview {
      */
     private suspend fun awaitFirstFrame(): Boolean {
         val deadline = System.currentTimeMillis() + READY_TIMEOUT_MS
-        while(TopComponent.frameIndex == 0L) {
+        while(DslRuntime.ownerRoot.state.frameIndex == 0L) {
             if(System.currentTimeMillis() > deadline) return false
             delay(READY_POLL_MS.milliseconds)
         }

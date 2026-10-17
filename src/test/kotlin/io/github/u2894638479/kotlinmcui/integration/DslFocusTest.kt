@@ -4,7 +4,7 @@ import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.container.DslScreen
-import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.dsl.ui.Spacer
@@ -17,7 +17,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 
 /**
- * `TopComponent.setFocus` is the programmatic way to move the focus: how a screen puts the
+ * `TestRoot.setFocus` is the programmatic way to move the focus: how a screen puts the
  * caret in a field when it opens, or hands it to the next control without a mouse.
  */
 class DslFocusTest {
@@ -33,7 +33,7 @@ class DslFocusTest {
 
     @AfterEach
     fun tearDown() {
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
         dslBackendProvider = previousBackendProvider
     }
 
@@ -59,9 +59,9 @@ class DslFocusTest {
 
         // The source defaults to CODE, which is what distinguishes this from a mouse or
         // keyboard move for anything listening on globalFocusChanged.
-        TopComponent.setFocus(box.identity)
+        TestRoot.setFocus(box.identity)
 
-        assertEquals(box.identity, TopComponent.focused)
+        assertEquals(box.identity, TestRoot.focused)
         assertTrue(box.isFocused, "the target reports being focused")
     }
 
@@ -69,11 +69,11 @@ class DslFocusTest {
     fun `a null request clears the focus`() {
         val screen = buildScreen { EditableText(stringProp = editable("abc"), id = "box") }
         val box = screen.children[0]
-        TopComponent.setFocus(box.identity)
+        TestRoot.setFocus(box.identity)
 
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
 
-        assertNull(TopComponent.focused)
+        assertNull(TestRoot.focused)
         assertFalse(box.isFocused)
     }
 
@@ -85,9 +85,9 @@ class DslFocusTest {
 
         // The setter is the raw primitive and does not filter: requesting a plain area records
         // it, while isFocused still answers by the component's own focusable flag.
-        TopComponent.setFocus(plain.identity)
+        TestRoot.setFocus(plain.identity)
 
-        assertEquals(plain.identity, TopComponent.focused)
+        assertEquals(plain.identity, TestRoot.focused)
         assertFalse(plain.isFocused)
     }
 }

@@ -8,10 +8,9 @@ import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 /**
  * One root: the state, the viewport and the children that belong to it.
  *
- * [TopComponent] stands for the main root and delegates to an instance of this, so that object is a
- * projection of a root instead of the owner of the process-wide state. Its children are built on
- * first use: the root-level overlay screen is collected first, and whatever the backend mounts
- * follows it.
+ * The process's main root is one of these, and the runtime hands it out as the owner root. Its
+ * children are built on first use: the root-level overlay screen is collected first, and whatever the
+ * backend mounts follows it.
  *
  * The name is deliberate: this is the early form of the `DslRoot` the design draft declares, and it
  * grows in place - `provider`, `mount`/`unmount`, `advanceFrame` and the rest are added here rather

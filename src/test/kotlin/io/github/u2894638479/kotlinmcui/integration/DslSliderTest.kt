@@ -4,7 +4,7 @@ import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslScreen
-import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.ui.Slider
 import io.github.u2894638479.kotlinmcui.input.Key
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
@@ -150,7 +150,7 @@ class DslSliderTest {
     fun `keyboard steps a horizontal slider only on its own axis and only once key focused`() {
         val (screen, prop) = slider(Axis.Horizontal, step = 0.25, initial = 0.5)
         val bar = screen.children[0]
-        TopComponent.setFocus(bar.identity, FocusSource.KEYBOARD)
+        TestRoot.setFocus(bar.identity, FocusSource.KEYBOARD)
 
         context(KeyModifiers()) {
             assertFalse(bar.keyDown(Key.LEFT, 0), "arrows are inert until ENTER arms the slider")
@@ -182,7 +182,7 @@ class DslSliderTest {
     fun `keyboard steps a vertical slider on the vertical axis`() {
         val (screen, prop) = slider(Axis.Vertical, step = 0.25, initial = 0.5)
         val bar = screen.children[0]
-        TopComponent.setFocus(bar.identity, FocusSource.KEYBOARD)
+        TestRoot.setFocus(bar.identity, FocusSource.KEYBOARD)
 
         context(KeyModifiers()) { assertFalse(bar.keyDown(Key.DOWN, 0), "not armed yet") }
         context(KeyModifiers()) { bar.keyDown(Key.ENTER, 0) }

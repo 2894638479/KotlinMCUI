@@ -3,7 +3,6 @@ package io.github.u2894638479.kotlinmcui.component
 import io.github.u2894638479.kotlinmcui.container.DslChild
 import io.github.u2894638479.kotlinmcui.container.DslDataStore
 import io.github.u2894638479.kotlinmcui.container.DslRootState
-import io.github.u2894638479.kotlinmcui.container.TopComponent
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.math.Position
@@ -32,8 +31,8 @@ interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEv
      * The store of the tree this component belongs to, or `null` while that link is not wired.
      *
      * This is how a component finds its own tree: focus and hover are read through the store's root
-     * rather than straight from [TopComponent]. Nothing links a store to its root yet, so while that
-     * link is missing [isFocused] and [isHovered] fall back to the main root's state.
+     * rather than from a process-wide slot. A component whose store has no root is not part of a
+     * mounted tree, and reading [isFocused] or [isHovered] on it fails loudly instead of guessing.
      */
     val dataStore: DslDataStore? get() = null
 
@@ -64,16 +63,32 @@ interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEv
     override val viewSequential get() = listOf<DslComponent>()
 }
 
-/** The state of the tree this component belongs to, or the main root's while mounting is not wired. */
-private val DslComponent.treeState: DslRootState get() = dataStore?.rootState ?: TopComponent.rootState
+/**
+ * The state of the tree this component belongs to.
+ *
+ * A component that is not part of a mounted tree has no tree to answer from. Answering "not focused"
+ * would hide the mistake, so this fails loudly instead - the error names the component and the cause.
+ */
+private val DslComponent.treeState: DslRootState
+    get() = dataStore?.rootState ?: error(
+        "${this::class.simpleName ?: "this component"} is not mounted on any root: " +
+            "its screen's store has no root state. Mount the screen on a root before reading focus or hover."
+    )
 
 /**
  * Whether this component currently has keyboard focus.
+ *
+ * A component of a tree that is not mounted on any root fails loudly rather than reporting `false`:
+ * the question has no answer there, and a guess would hide the real mistake. Reading focus through
+ * its own tree is all a root can do today; components of a root that the framework did not build are
+ * served once roots can be built publicly.
  */
 val DslComponent.isFocused get() = focusable && treeState.focused == identity
 
 /**
  * Whether the mouse is currently hovering over this component.
+ *
+ * Fails loudly when the component belongs to no mounted tree, for the same reason as [isFocused].
  */
 val DslComponent.isHovered get() = treeState.hovered == identity
 

@@ -4,7 +4,7 @@ import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslScreen
-import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.input.Key
@@ -48,7 +48,7 @@ class DslEditBoxTest {
         val (prop, text) = editable("abc")
         val screen = buildScreen { EditableText(stringProp = prop, id = "box") }
         val box = screen.children[0]
-        TopComponent.setFocus(box.identity, FocusSource.KEYBOARD)
+        TestRoot.setFocus(box.identity, FocusSource.KEYBOARD)
         assertNotNull(box.preeditArea, "a focused edit box reports a caret")
 
         // Moving right from the last position used to push the cursor one past the
@@ -65,7 +65,7 @@ class DslEditBoxTest {
         val (prop, text) = editable("abcd")
         val screen = buildScreen { EditableText(stringProp = prop, id = "box") }
         val box = screen.children[0]
-        TopComponent.setFocus(box.identity, FocusSource.KEYBOARD)
+        TestRoot.setFocus(box.identity, FocusSource.KEYBOARD)
 
         // Caret starts at the end of the text, so this is the boundary case above
         // followed by a backwards extension: the selection must stay well defined.

@@ -3,7 +3,7 @@ package io.github.u2894638479.kotlinmcui.integration
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.container.DslScreen
-import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.input.PreeditInfo
@@ -33,7 +33,7 @@ class DslPreeditTest {
 
     @AfterEach
     fun tearDown() {
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
         TestBackend.resetPreview()
         dslBackendProvider = previousBackendProvider
     }
@@ -58,19 +58,19 @@ class DslPreeditTest {
     @Test
     fun `a composition reaches the focused field`() {
         val screen = buildScreen { EditableText(stringProp = editable("abc"), id = "box") }
-        TopComponent.setFocus(screen.children[0].identity)
+        TestRoot.setFocus(screen.children[0].identity)
 
-        TopComponent.globalPreedit(composing())
+        TestRoot.globalPreedit(composing())
 
-        assertFalse(TopComponent.preedit.isEmpty, "the composition is recorded")
+        assertFalse(TestRoot.preedit.isEmpty, "the composition is recorded")
     }
 
     @Test
     fun `a composition nobody is focused for is still recorded`() {
         buildScreen { EditableText(stringProp = editable("abc"), id = "box") }
 
-        TopComponent.globalPreedit(composing())
+        TestRoot.globalPreedit(composing())
 
-        assertFalse(TopComponent.preedit.isEmpty, "the composition is recorded")
+        assertFalse(TestRoot.preedit.isEmpty, "the composition is recorded")
     }
 }

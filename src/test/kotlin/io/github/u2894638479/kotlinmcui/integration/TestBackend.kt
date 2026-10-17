@@ -4,7 +4,7 @@ import io.github.u2894638479.kotlinmcui.backend.*
 import io.github.u2894638479.kotlinmcui.container.DslChild
 import io.github.u2894638479.kotlinmcui.container.DslDataStore
 import io.github.u2894638479.kotlinmcui.container.DslScreen
-import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
@@ -40,21 +40,21 @@ internal object TestBackend : DslBackend<Unit, Unit>,
     /** Run a single frame of the DSL lifecycle for the given [screen]. */
     fun renderFrame(screen: DslScreen, mousePos: Position = Position(0.px, 0.px)) {
         TestInput._mouse = mousePos
-        TopComponent.rect.apply {
+        TestRoot.rect.apply {
             left = 0.px; top = 0.px
             right = 800.px; bottom = 600.px
         }
-        val child = TopComponent.children.collect(screen)
+        val child = TestRoot.children.collect(screen)
         val backend = this
         val renderParam: Unit = Unit
         // Unmount even when the frame throws: a leftover child would be rendered by
         // every following test in the same JVM.
         try {
             kotlin.context(backend, renderParam, mousePos) {
-                TopComponent.render<Unit>()
+                TestRoot.render<Unit>()
             }
         } finally {
-            TopComponent.children.remove(child)
+            TestRoot.children.remove(child)
         }
     }
 
@@ -151,12 +151,12 @@ private object TestScreenFactory : DslBackendScreenFactory<Unit> {
 
     private fun mount(screen: DslScreen) {
         unmount()
-        mounted = TopComponent.children.collect(screen)
+        mounted = TestRoot.children.collect(screen)
     }
 
     /** Unmount whatever a case opened: a leftover child would be rendered by every later case. */
     fun unmount() {
-        mounted?.let { TopComponent.children.remove(it) }
+        mounted?.let { TestRoot.children.remove(it) }
         mounted = null
     }
 }

@@ -29,9 +29,8 @@ object DslRuntime {
     /**
      * The process owner root: the one root that stands for this process.
      *
-     * Today that is the main root, which is also what [io.github.u2894638479.kotlinmcui.container.TopComponent]
-     * projects. When roots become multiple, this is the one that holds `isOwner` - the draft's
-     * `DslRuntime.ownerRoot` - and the type stays the same.
+     * Today that is the main root. When roots become multiple, this is the one that holds `isOwner` -
+     * the draft's `DslRuntime.ownerRoot` - and the type stays the same.
      *
      * Reading it materialises the main root if it does not exist yet, so a backend can take the handle
      * before it has mounted anything. That makes it never `null`: the "queried before the root exists"

@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.backend
 
-import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.integration.TestBackend
 import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.px
@@ -31,13 +31,13 @@ class DslPreviewTest {
         previous = dslBackendProvider
         dslBackendProvider = { TestBackend }
         TestBackend.resetPreview()
-        TopComponent.renderFailure = null
+        TestRoot.renderFailure = null
     }
 
     @AfterEach
     fun tearDown() {
         dslBackendProvider = previous
-        TopComponent.renderFailure = null
+        TestRoot.renderFailure = null
     }
 
     @Test
@@ -244,7 +244,7 @@ class DslPreviewTest {
 
     @Test
     fun `a page that threw while rendering exits non zero and still leaves the evidence`() {
-        TopComponent.renderFailure = IllegalStateException("broken while rendering")
+        TestRoot.renderFailure = IllegalStateException("broken while rendering")
         runWithFrames {
             DslPreview.run("io.github.u2894638479.kotlinmcui.test.TestColorPage",capture = true)
         }
@@ -330,7 +330,7 @@ class DslPreviewTest {
         }
         assertEquals("Preview error",TestBackend.lastScreenTitle,"the failure takes the page's place")
         assertNull(TestBackend.quitCode,"without capture the reason is read in the game")
-        assertNull(TopComponent.renderFailure,"the error page itself draws")
+        assertNull(TestRoot.renderFailure,"the error page itself draws")
     }
 
     @Test
@@ -340,7 +340,7 @@ class DslPreviewTest {
         }
         assertEquals(1,TestBackend.quitCode,"a run that never opened its page is not a pass")
         assertEquals(listOf("kotlinmcui-NoSuchPage.png"),TestBackend.captures,"the error page is the picture")
-        assertNull(TopComponent.renderFailure,"the error page itself draws")
+        assertNull(TestRoot.renderFailure,"the error page itself draws")
     }
 
     @Test
@@ -363,7 +363,7 @@ class DslPreviewTest {
 
     /**
      * Runs [session] while rendering frames, because it waits on the frame clock rather than on a
-     * wall clock: without a platform ticking [TopComponent] it would sit there until its timeout.
+     * wall clock: without a platform ticking [TestRoot] it would sit there until its timeout.
      */
     private fun runWithFrames(session: suspend () -> Unit) = runBlocking {
         val running = launch { session() }
@@ -373,7 +373,7 @@ class DslPreviewTest {
                     // A page may throw while rendering; the platform reports it and the session
                     // turns it into a code, so the pump itself must survive it.
                     runCatching {
-                        kotlin.context(TestBackend,Unit,Position(0.px,0.px)) { TopComponent.render<Unit>() }
+                        kotlin.context(TestBackend,Unit,Position(0.px,0.px)) { TestRoot.render<Unit>() }
                     }
                     delay(5)
                 }

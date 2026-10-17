@@ -3,7 +3,7 @@ package io.github.u2894638479.kotlinmcui.integration
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.container.DslScreen
-import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.input.Key
@@ -33,7 +33,7 @@ class DslNavigationTest {
 
     @AfterEach
     fun tearDown() {
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
         // Move the page out of the root again: `show` mounts it, and a leftover child would be
         // navigated into by every later case in the same JVM.
         TestBackend.resetPreview()
@@ -65,28 +65,28 @@ class DslNavigationTest {
     @Test
     fun `HOME focuses the first control`() {
         val screen = oneControl()
-        context(KeyModifiers()) { TopComponent.keyDown(Key.HOME, 0) }
-        assertEquals(screen.children[0].identity, TopComponent.focused)
+        context(KeyModifiers()) { TestRoot.keyDown(Key.HOME, 0) }
+        assertEquals(screen.children[0].identity, TestRoot.focused)
     }
 
     @Test
     fun `TAB focuses the first control when nothing is focused yet`() {
         val screen = oneControl()
-        context(KeyModifiers()) { TopComponent.keyDown(Key.TAB, 0) }
-        assertEquals(screen.children[0].identity, TopComponent.focused)
+        context(KeyModifiers()) { TestRoot.keyDown(Key.TAB, 0) }
+        assertEquals(screen.children[0].identity, TestRoot.focused)
     }
 
     @Test
     fun `END focuses a control`() {
         oneControl()
-        context(KeyModifiers()) { TopComponent.keyDown(Key.END, 0) }
-        assertNotNull(TopComponent.focused, "END must land on a control")
+        context(KeyModifiers()) { TestRoot.keyDown(Key.END, 0) }
+        assertNotNull(TestRoot.focused, "END must land on a control")
     }
 
     @Test
     fun `an arrow key reaches the grid view`() {
         oneControl()
-        context(KeyModifiers()) { TopComponent.keyDown(Key.DOWN, 0) }
-        assertNotNull(TopComponent.focused, "DOWN must land on a control")
+        context(KeyModifiers()) { TestRoot.keyDown(Key.DOWN, 0) }
+        assertNotNull(TestRoot.focused, "DOWN must land on a control")
     }
 }

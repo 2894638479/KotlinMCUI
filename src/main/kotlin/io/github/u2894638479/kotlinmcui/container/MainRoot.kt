@@ -5,9 +5,9 @@ import io.github.u2894638479.kotlinmcui.backend.dslBackend
 /**
  * The process's main root, built on first use.
  *
- * It is the root [TopComponent] stands for and the one the runtime hands out as the owner root. Built
- * lazily so that creating it - which creates the overlay screen through the backend - still happens on
- * the first touch of the framework, exactly where the object used to build it.
+ * It is the one the runtime hands out as the owner root. Built lazily so that creating it - which
+ * creates the overlay screen through the backend - still happens on the first touch of the framework,
+ * which is where it has always happened.
  */
 internal val mainRoot: DslRoot by lazy {
     DslRoot(

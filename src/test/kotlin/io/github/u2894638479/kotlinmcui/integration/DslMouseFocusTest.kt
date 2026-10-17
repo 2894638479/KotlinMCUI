@@ -2,7 +2,7 @@ package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
-import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
 import io.github.u2894638479.kotlinmcui.input.MouseButton
@@ -16,12 +16,12 @@ import org.junit.jupiter.api.BeforeEach
 /**
  * The press is the input path that moves the focus, and nothing else observes it.
  *
- * The rest of the suite either injects focus with `TopComponent.setFocus(...)` or drives the
- * keyboard, so the acquisition in `TopComponent.mouseDown` can be deleted while every other case
+ * The rest of the suite either injects focus with `TestRoot.setFocus(...)` or drives the
+ * keyboard, so the acquisition in `TestRoot.mouseDown` can be deleted while every other case
  * stays green - measured: removing the `acquireFocusFromInput` call from it left all 446 cases
  * passing. This case exists to make that deletion fail.
  *
- * Falsifiable: delete the `acquireFocusFromInput(::setFocus)` line from `TopComponent.mouseDown`
+ * Falsifiable: delete the `acquireFocusFromInput(::setFocus)` line from `TestRoot.mouseDown`
  * and the last assertion below fails, because nothing is focused after the press.
  */
 class DslMouseFocusTest {
@@ -36,7 +36,7 @@ class DslMouseFocusTest {
 
     @AfterEach
     fun tearDown() {
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
         // Move the page out of the root again: `show` mounts it, and a leftover child would be
         // navigated into by every later case in the same JVM.
         TestBackend.resetPreview()
@@ -61,10 +61,10 @@ class DslMouseFocusTest {
         val target = holder.dslScreen.children[0]
         val rect = target.rect
         val at = Position(rect.left + 1.px, rect.top + 1.px)
-        assertNull(TopComponent.focused, "the press is what focuses, so nothing is focused yet")
+        assertNull(TestRoot.focused, "the press is what focuses, so nothing is focused yet")
 
-        context(KeyModifiers(), at) { TopComponent.mouseDown(MouseButton.LEFT) }
+        context(KeyModifiers(), at) { TestRoot.mouseDown(MouseButton.LEFT) }
 
-        assertEquals(target.identity, TopComponent.focused, "the press must move the focus to it")
+        assertEquals(target.identity, TestRoot.focused, "the press must move the focus to it")
     }
 }

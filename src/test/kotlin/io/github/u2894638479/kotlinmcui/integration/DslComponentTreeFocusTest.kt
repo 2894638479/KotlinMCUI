@@ -3,8 +3,8 @@ package io.github.u2894638479.kotlinmcui.integration
 import io.github.u2894638479.kotlinmcui.backend.DslBackend
 import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
 import io.github.u2894638479.kotlinmcui.component.isFocused
+import io.github.u2894638479.kotlinmcui.component.isHovered
 import io.github.u2894638479.kotlinmcui.container.DslRootState
-import io.github.u2894638479.kotlinmcui.container.TopComponent
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.prop.StableRW
 import kotlin.test.*
@@ -14,7 +14,7 @@ import org.junit.jupiter.api.BeforeEach
 /**
  * A component answers about focus from the tree it belongs to, not from the process-wide root.
  *
- * Until a screen's store carries its root's state, every component answered from `TopComponent`, so
+ * Until a screen's store carries its root's state, every component answered from `TestRoot`, so
  * two trees could not be told apart at all. This is the case that makes the difference observable:
  * each screen gets its own state and each component reports its own focus.
  */
@@ -30,7 +30,7 @@ class DslComponentTreeFocusTest {
 
     @AfterEach
     fun tearDown() {
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
         TestBackend.resetPreview()
         dslBackendProvider = previous
     }
@@ -57,14 +57,14 @@ class DslComponentTreeFocusTest {
         val stateB = DslRootState(onFocusChanged = { _, _ -> }, onHoverChanged = {}, onNarrate = {})
         holderA.dslScreen.dataStore.rootState = stateA
         holderB.dslScreen.dataStore.rootState = stateB
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
 
         stateA.setFocus(a.identity)
         assertTrue(a.isFocused, "a's own tree has it focused")
         assertFalse(b.isFocused, "b's tree must not see a's focus")
 
         // The main root is a third tree: what it focuses changes neither answer.
-        TopComponent.setFocus(b.identity)
+        TestRoot.setFocus(b.identity)
         assertTrue(a.isFocused, "a keeps answering from its own tree")
         assertFalse(b.isFocused, "b's own tree has nothing focused, whatever the main root focuses")
 
@@ -75,5 +75,29 @@ class DslComponentTreeFocusTest {
         stateA.setFocus(null)
         assertFalse(a.isFocused, "clearing a's tree unfocuses a")
         assertTrue(b.isFocused, "and leaves b's tree alone")
+    }
+
+    /**
+     * A tree nobody mounted has no focus to report, and saying "not focused" would be a lie that hides
+     * the real mistake. It fails loudly instead, and the message has to point at the cause.
+     */
+    @Test
+    fun `a component of a tree that is not mounted fails loudly`() {
+        val holder = TestBackend.create("unmounted") {
+            EditableText(stringProp = editable("abc"), id = "box")
+        }
+        // Build the tree without mounting it: building is what creates the components.
+        holder.dslScreen.build()
+        val component = holder.dslScreen.children[0]
+        assertNull(holder.dslScreen.dataStore.rootState, "nothing mounted this screen, so it has no tree")
+
+        val focused = assertFailsWith<IllegalStateException>("focus must not be answered from nowhere") {
+            component.isFocused
+        }
+        assertTrue(
+            focused.message.orEmpty().contains("not mounted"),
+            "the message must name the cause, was: ${focused.message}",
+        )
+        assertFailsWith<IllegalStateException>("hover must not be answered from nowhere") { component.isHovered }
     }
 }

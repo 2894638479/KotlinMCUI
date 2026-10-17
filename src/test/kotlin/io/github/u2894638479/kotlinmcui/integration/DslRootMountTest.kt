@@ -7,7 +7,7 @@ import io.github.u2894638479.kotlinmcui.container.DslRoot
 import io.github.u2894638479.kotlinmcui.container.DslRootGeometry
 import io.github.u2894638479.kotlinmcui.container.DslRootState
 import io.github.u2894638479.kotlinmcui.container.DslScreen
-import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.decorator.tooltip
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.dsl.ui.Spacer
@@ -46,7 +46,7 @@ class DslRootMountTest {
 
     @AfterEach
     fun tearDown() {
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
         TestBackend.resetPreview()
         dslBackendProvider = previous
     }
@@ -106,11 +106,11 @@ class DslRootMountTest {
     }
 
     @Test
-    fun `the runtime hands out the main root that TopComponent stands for`() {
+    fun `the runtime hands out the main root that TestRoot stands for`() {
         val root = DslRuntime.ownerRoot
 
-        assertSame(root.children, TopComponent.children, "both hand out the same root's children")
-        assertSame(root.component, TopComponent.instance, "both hand out the same root component")
+        assertSame(root.children, TestRoot.children, "both hand out the same root's children")
+        assertSame(root.component, TestRoot.instance, "both hand out the same root component")
     }
 
     @Test
@@ -118,7 +118,7 @@ class DslRootMountTest {
         val screen = page()
         val root = DslRoot(state(), DslRootGeometry())
         root.children.collect(screen)
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
         val target = DslId("target")
 
         root.state.setFocus(target)
@@ -133,7 +133,7 @@ class DslRootMountTest {
         }.dslScreen
         val root = DslRoot(state(), DslRootGeometry())
         root.children.collect(screen)
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
         // Keep the pointer off the component: only the focused path may build a tooltip layer here.
         TestBackend.mouseAt(Position(500.px, 500.px))
         render(screen)
@@ -154,7 +154,7 @@ class DslRootMountTest {
         }.dslScreen
         val root = DslRoot(state(), DslRootGeometry())
         root.children.collect(screen)
-        TopComponent.setFocus(null)
+        TestRoot.setFocus(null)
         TestBackend.mouseAt(Position(500.px, 500.px))
         render(screen)
         val box = screen.children[0]

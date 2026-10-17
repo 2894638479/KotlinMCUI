@@ -7,14 +7,14 @@ import io.github.u2894638479.kotlinmcui.math.Position
 /**
  * Move the focus to whatever this scope's own tree has under [mouse], the way a mouse press does.
  *
- * "Who takes the focus on a press" is not specific to [TopComponent]: any root can run the same
- * lookup against its own tree, which is why it lives here rather than inside that one implementation.
- * The press records [FocusSource.MOUSE] where the keyboard path records [FocusSource.KEYBOARD], so an
- * observer can tell a click from a TAB.
+ * "Who takes the focus on a press" is not root-specific: any root can run the same lookup against its
+ * own tree, which is why it lives here rather than inside one implementation. The press records
+ * [FocusSource.MOUSE] where the keyboard path records [FocusSource.KEYBOARD], so an observer can tell
+ * a click from a TAB.
  *
- * [setFocus] is the root's own writer: [TopComponent] passes its public `setFocus`, another root
- * passes its own. The lookup deliberately filters on nothing else, so a component that cannot take
- * focus is still recorded - it just keeps reporting itself unfocused.
+ * [setFocus] is the root's own writer: the main root passes its state's, another root passes its own.
+ * The lookup deliberately filters on nothing else, so a component that cannot take focus is still
+ * recorded - it just keeps reporting itself unfocused.
  */
 context(mouse: Position)
 fun DslScope.acquireFocusFromInput(setFocus: (DslId?, FocusSource) -> Unit) {

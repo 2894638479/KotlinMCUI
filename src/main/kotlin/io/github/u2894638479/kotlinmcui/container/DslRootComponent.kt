@@ -28,11 +28,11 @@ internal class DslRootComponent(private val root: DslRoot) : DslScope {
     private val state get() = root.state
 
     override val rect get() = root.geometry.rect
-    override val modifier get() = error("modifier is not available on topComponent")
+    override val modifier get() = error("modifier is not available on a root component")
     override var instance: DslComponent get() = this
         set(value) {}
-    override val identity get() = error("identity is not available on topComponent")
-    override val scale get() = error("scale is not available on topComponent")
+    override val identity get() = error("identity is not available on a root component")
+    override val scale get() = error("scale is not available on a root component")
     override val children get() = root.children
 
     override fun globalFocusChanged(newFocus: DslId?, source: FocusSource) {

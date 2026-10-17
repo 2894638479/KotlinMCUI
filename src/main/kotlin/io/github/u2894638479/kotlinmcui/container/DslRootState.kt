@@ -10,9 +10,8 @@ import io.github.u2894638479.kotlinmcui.input.PreeditInfo
  * render failure are doing.
  *
  * The fields are mutable, but every write goes through a method below, which is where the state
- * transition and its notification live. The state used to be stored directly on the process-wide
- * [TopComponent], which made "each output has its own focus and hover" impossible: the slots were
- * shared by every root. [TopComponent] now holds the main root's instance and projects it.
+ * transition and its notification live. The state used to live in one process-wide slot, which made
+ * "each output has its own focus and hover" impossible; every root now owns an instance of this.
  *
  * Broadcasting a change means walking the tree that owns this state, so the owner passes the
  * callbacks in: this class only knows *that* a change happened.

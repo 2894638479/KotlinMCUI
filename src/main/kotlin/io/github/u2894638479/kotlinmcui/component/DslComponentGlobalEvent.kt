@@ -8,7 +8,7 @@ import io.github.u2894638479.kotlinmcui.input.PreeditInfo
  *
  * Unlike [io.github.u2894638479.kotlinmcui.component.DslComponentEvent] methods
  * which propagate parent-to-child, global events are dispatched by
- * [io.github.u2894638479.kotlinmcui.container.TopComponent] — they may target
+ * the root's component — they may target
  * a specific component (e.g. only the focused component receives
  * [globalPreedit] when preedit is active) or be sent to the entire tree
  * (e.g. [globalPreedit] with empty text to clear state).

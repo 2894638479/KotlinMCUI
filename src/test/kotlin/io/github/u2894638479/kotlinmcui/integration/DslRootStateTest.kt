@@ -6,7 +6,7 @@ import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslRootState
 import io.github.u2894638479.kotlinmcui.container.DslScreen
-import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.ui.Spacer
 import io.github.u2894638479.kotlinmcui.identity.DslId
@@ -20,8 +20,8 @@ import org.junit.jupiter.api.BeforeEach
 /**
  * The root's view state, and the broadcast that writing it drives.
  *
- * `TopComponent` keeps no focus, hover or preedit of its own any more: it projects the main
- * root's [DslRootState]. The rest of the suite reads that state back (`TopComponent.focused`,
+ * `TestRoot` keeps no focus, hover or preedit of its own any more: it projects the main
+ * root's [DslRootState]. The rest of the suite reads that state back (`TestRoot.focused`,
  * `isFocused`), but nothing else observes the *notifications* — `globalFocusChanged` and
  * `globalHoverChanged` have no other listener under test — so a dropped callback would leave
  * every other case green while the tree silently stopped hearing about changes. These cases
@@ -43,8 +43,8 @@ class DslRootStateTest {
     fun tearDown() {
         // Both writes broadcast over whatever is mounted, so clear them before the provider
         // goes away - and so the next case does not start out hovering this one's component.
-        TopComponent.setFocus(null)
-        TopComponent.hovered = null
+        TestRoot.setFocus(null)
+        TestRoot.hovered = null
         dslBackendProvider = previousBackendProvider
     }
 
@@ -55,20 +55,20 @@ class DslRootStateTest {
     }
 
     /**
-     * A frame unmounts the screen it built, and the broadcast walks [TopComponent.children],
+     * A frame unmounts the screen it built, and the broadcast walks [TestRoot.children],
      * so the built tree has to be mounted again for the duration of the write.
      */
     private fun <T> mounted(screen: DslScreen, block: () -> T): T {
-        val child = TopComponent.children.collect(screen)
+        val child = TestRoot.children.collect(screen)
         try {
             return block()
         } finally {
-            TopComponent.children.remove(child)
+            TestRoot.children.remove(child)
         }
     }
 
     /**
-     * Falsifiable by construction: empty the `onFocusChanged` callback in `TopComponent`
+     * Falsifiable by construction: empty the `onFocusChanged` callback in `TestRoot`
      * (`{ _, _ -> }`) and this case fails, because `seen` stays empty.
      */
     @Test
@@ -85,7 +85,7 @@ class DslRootStateTest {
         }
         val target = screen.children.single().identity
 
-        mounted(screen) { TopComponent.setFocus(target, FocusSource.MOUSE) }
+        mounted(screen) { TestRoot.setFocus(target, FocusSource.MOUSE) }
 
         assertEquals(listOf<Pair<DslId?, FocusSource>>(target to FocusSource.MOUSE), seen)
     }
@@ -112,7 +112,7 @@ class DslRootStateTest {
         val target = screen.children.single().identity
 
         seen.clear()
-        mounted(screen) { TopComponent.hovered = target }
+        mounted(screen) { TestRoot.hovered = target }
 
         assertEquals(listOf<DslId?>(target), seen)
     }
