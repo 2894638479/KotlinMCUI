@@ -22,6 +22,7 @@ internal class DslScopeImpl(
     val alignerVertical: Aligner = Aligner.simplePlace,
 ) : DslScope {
     override val scale = ctx.scale
+    override val dataStore get() = ctx.dataStore
 
     /**
      * The theme colour that was in effect where this scope was declared.

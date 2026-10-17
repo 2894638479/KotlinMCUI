@@ -1,0 +1,79 @@
+package io.github.u2894638479.kotlinmcui.integration
+
+import io.github.u2894638479.kotlinmcui.backend.DslBackend
+import io.github.u2894638479.kotlinmcui.backend.dslBackendProvider
+import io.github.u2894638479.kotlinmcui.component.isFocused
+import io.github.u2894638479.kotlinmcui.container.DslRootState
+import io.github.u2894638479.kotlinmcui.container.TopComponent
+import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
+import io.github.u2894638479.kotlinmcui.prop.StableRW
+import kotlin.test.*
+import org.junit.jupiter.api.AfterEach
+import org.junit.jupiter.api.BeforeEach
+
+/**
+ * A component answers about focus from the tree it belongs to, not from the process-wide root.
+ *
+ * Until a screen's store carries its root's state, every component answered from `TopComponent`, so
+ * two trees could not be told apart at all. This is the case that makes the difference observable:
+ * each screen gets its own state and each component reports its own focus.
+ */
+class DslComponentTreeFocusTest {
+    /** Process-wide state: put back whatever provider was published before the case. */
+    private var previous: (() -> DslBackend<*, *>)? = null
+
+    @BeforeEach
+    fun setUp() {
+        previous = dslBackendProvider
+        dslBackendProvider = { TestBackend }
+    }
+
+    @AfterEach
+    fun tearDown() {
+        TopComponent.setFocus(null)
+        TestBackend.resetPreview()
+        dslBackendProvider = previous
+    }
+
+    private fun editable(initial: String): StableRW<String> {
+        var text = initial
+        return object : StableRW<String> {
+            override fun getValue() = text
+            override fun setValue(value: String) { text = value }
+        }
+    }
+
+    @Test
+    fun `each component reads the focus of its own tree`() {
+        val holderA = TestBackend.create("tree a") { EditableText(stringProp = editable("a"), id = "box") }
+        val holderB = TestBackend.create("tree b") { EditableText(stringProp = editable("b"), id = "box") }
+        // One frame each, so both trees are built and their components have rects.
+        TestBackend.renderFrame(holderA.dslScreen)
+        TestBackend.renderFrame(holderB.dslScreen)
+        val a = holderA.dslScreen.children[0]
+        val b = holderB.dslScreen.children[0]
+
+        val stateA = DslRootState(onFocusChanged = { _, _ -> }, onHoverChanged = {}, onNarrate = {})
+        val stateB = DslRootState(onFocusChanged = { _, _ -> }, onHoverChanged = {}, onNarrate = {})
+        holderA.dslScreen.dataStore.rootState = stateA
+        holderB.dslScreen.dataStore.rootState = stateB
+        TopComponent.setFocus(null)
+
+        stateA.setFocus(a.identity)
+        assertTrue(a.isFocused, "a's own tree has it focused")
+        assertFalse(b.isFocused, "b's tree must not see a's focus")
+
+        // The main root is a third tree: what it focuses changes neither answer.
+        TopComponent.setFocus(b.identity)
+        assertTrue(a.isFocused, "a keeps answering from its own tree")
+        assertFalse(b.isFocused, "b's own tree has nothing focused, whatever the main root focuses")
+
+        stateB.setFocus(b.identity)
+        assertTrue(b.isFocused, "b's own tree has it focused")
+        assertTrue(a.isFocused, "both trees hold their own focus at the same time")
+
+        stateA.setFocus(null)
+        assertFalse(a.isFocused, "clearing a's tree unfocuses a")
+        assertTrue(b.isFocused, "and leaves b's tree alone")
+    }
+}

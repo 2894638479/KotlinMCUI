@@ -1,6 +1,8 @@
 package io.github.u2894638479.kotlinmcui.component
 
 import io.github.u2894638479.kotlinmcui.container.DslChild
+import io.github.u2894638479.kotlinmcui.container.DslDataStore
+import io.github.u2894638479.kotlinmcui.container.DslRootState
 import io.github.u2894638479.kotlinmcui.container.TopComponent
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
@@ -25,6 +27,15 @@ interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEv
     DslIdContext, DslScaleContext {
     /** Child components of this component. Empty by default. */
     val children: DslChild.Group get() = DslChild.Group.empty
+
+    /**
+     * The store of the tree this component belongs to, or `null` while that link is not wired.
+     *
+     * This is how a component finds its own tree: focus and hover are read through the store's root
+     * rather than straight from [TopComponent]. Nothing links a store to its root yet, so while that
+     * link is missing [isFocused] and [isHovered] fall back to the main root's state.
+     */
+    val dataStore: DslDataStore? get() = null
 
     /** Build children and initialise state. Called once before layout. */
     fun build() {}
@@ -53,15 +64,18 @@ interface DslComponent: DslComponentNavigator, DslComponentAlign, DslComponentEv
     override val viewSequential get() = listOf<DslComponent>()
 }
 
+/** The state of the tree this component belongs to, or the main root's while mounting is not wired. */
+private val DslComponent.treeState: DslRootState get() = dataStore?.rootState ?: TopComponent.rootState
+
 /**
  * Whether this component currently has keyboard focus.
  */
-val DslComponent.isFocused get() = focusable && TopComponent.focused == identity
+val DslComponent.isFocused get() = focusable && treeState.focused == identity
 
 /**
  * Whether the mouse is currently hovering over this component.
  */
-val DslComponent.isHovered get() = TopComponent.hovered == identity
+val DslComponent.isHovered get() = treeState.hovered == identity
 
 /**
  * Whether this component is visually highlighted (focused or hovered).

@@ -18,10 +18,11 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
 internal class DslComponentImpl(
     override val identity: DslId,
     override val modifier: Modifier,
-    ctx: DslContext,
+    private val ctx: DslContext,
     override val rect: MutRect = MutRect()
 ): DslComponent {
     override val scale = ctx.scale
+    override val dataStore get() = ctx.dataStore
     private var _instance: DslComponent? = null
     override var instance: DslComponent get() = _instance ?: error("using `instance` before initialization")
         set(value) { if(_instance == null) _instance = value else error("`instance` has already been set") }

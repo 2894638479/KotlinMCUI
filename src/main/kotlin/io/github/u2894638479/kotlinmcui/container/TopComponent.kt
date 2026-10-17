@@ -62,7 +62,7 @@ object TopComponent: DslScope {
      * The state is deliberately not stored here: one instance per root is what lets a second
      * root keep its own focus and hover. This object is the projection of the main root only.
      */
-    private val rootState = DslRootState(
+    internal val rootState = DslRootState(
         onFocusChanged = { newFocus, source -> globalFocusChanged(newFocus, source) },
         onHoverChanged = { globalHoverChanged(it) },
         onNarrate = { dslBackend.narrate(it) }

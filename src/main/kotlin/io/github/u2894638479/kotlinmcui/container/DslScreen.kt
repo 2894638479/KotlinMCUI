@@ -25,7 +25,7 @@ import io.github.u2894638479.kotlinmcui.modifier.padding
  * The top-level screen component that orchestrates the build-layout-render cycle.
  */
 class DslScreen private constructor(
-    val dataStore: DslDataStore,
+    override val dataStore: DslDataStore,
     internal val dslFunction: DslFunction,
     private val delegate: DslScope
 ) : DslScope by delegate {

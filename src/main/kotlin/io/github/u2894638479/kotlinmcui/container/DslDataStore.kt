@@ -43,6 +43,16 @@ class DslDataStore(
     var inFrame = false
         private set
 
+    /**
+     * The focus and hover state of the tree this screen belongs to, or `null` while nothing has
+     * claimed it.
+     *
+     * This is the link a component follows to find its own tree. Mounting does not wire it yet, so it
+     * stays `null` and components fall back to the main root's state; once it is set, every component
+     * this screen built answers from here.
+     */
+    internal var rootState: DslRootState? = null
+
     companion object {
         private val staticPropertyMap = Object2ObjectOpenHashMap<DslId, TimedProperty<*>>()
     }
