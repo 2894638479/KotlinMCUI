@@ -5,7 +5,9 @@ import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.backend.DslRootScreenFactory
 import io.github.u2894638479.kotlinmcui.backend.DslRootUtils
 import io.github.u2894638479.kotlinmcui.component.DslComponent
+import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
+import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 
 /**
@@ -70,6 +72,28 @@ class DslRoot(
      */
     val rect: MutRect = MutRect()
 
+    private var closed = false
+
+    /** Whether [close] has run. */
+    val isClosed: Boolean get() = closed
+
+    /**
+     * Close this root: idempotent, and from here on every way of *using* it fails loudly.
+     *
+     * The order is **close first, then stop your own driving** - the frame loop, the executor, the
+     * recorder. This door deliberately does not stop those things: they belong to the backend, which is
+     * the only one that knows what it started. What the door guarantees is that a frame arriving after
+     * the close fails here, in the right place, instead of drawing into a root nobody is looking at.
+     *
+     * Calling it twice is fine.
+     */
+    fun close() {
+        closed = true
+    }
+
+    internal fun checkOpen(what: String) {
+        check(!closed) { "this root is closed: ${what} is not available after DslRoot.close()" }
+    }
     private val rawChildren: DslChild.Group by lazy {
         val factory = screenFactory
         require(factory != null) { "this root cannot hold screens: it was built without a screen factory" }
@@ -97,7 +121,7 @@ class DslRoot(
      */
     val children: DslChild.Group by lazy {
         object : DslChild.Group, List<DslComponent> by rawChildren {
-            override fun collect(child: DslComponent) = rawChildren.collect(child).also {
+            override fun collect(child: DslComponent) = checkOpen("mounting a screen").let { rawChildren.collect(child) }.also {
                 (child as? DslScreen)?.let { screen -> screen.dataStore.rootState = state }
             }
 
@@ -105,7 +129,24 @@ class DslRoot(
                 list.forEach { collect(it) }
             }
 
-            override fun remove(child: DslChild) = rawChildren.remove(child)
+            override fun remove(child: DslChild) = checkOpen("unmounting a screen").let { rawChildren.remove(child) }
         }
+    }
+
+    /**
+     * Move the focus of this root to [id], or clear it with `null`.
+     *
+     * This is the entry for code that has to put the cursor somewhere as a page opens - the mouse and
+     * the keyboard drive the same function internally. It is deliberately the *only* new public member:
+     * [state] stays internal, so `setHovered`, `setPreedit` and the frame counters are not part of the
+     * public surface just because focus had to be.
+     *
+     * It does not filter by `focusable`: a target that cannot take focus is still recorded, and its
+     * `isFocused` stays `false` - "the root knows the focus" and "the component reports it" are two
+     * different facts.
+     */
+    fun setFocus(id: DslId?, source: FocusSource = FocusSource.CODE) {
+        checkOpen("setting the focus")
+        state.setFocus(id, source)
     }
 }

@@ -79,6 +79,7 @@ internal class DslRootComponent(private val root: DslRoot) : DslScope {
 
     context(backend: DslBackendRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
+        root.checkOpen("rendering a frame")
         state.advanceFrame()
         children.forEach { it.rect copyFrom rect }
         children.asReversed().forEach { child ->

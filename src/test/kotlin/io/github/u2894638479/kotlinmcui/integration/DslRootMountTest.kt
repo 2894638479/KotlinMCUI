@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslPlatform
 import io.github.u2894638479.kotlinmcui.backend.DslRuntime
+import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.container.DslRoot
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.integration.TestRoot
@@ -177,5 +178,62 @@ class DslRootMountTest {
         render(screen)
 
         assertEquals(withoutPreedit + 1, screen.children.size, "the IME box comes from its own root")
+    }
+
+    /** The public entry for driving focus from code, and the fact that it acts on one root only. */
+    @Test
+    fun `setFocus moves the focus of its own root and leaves another root alone`() {
+        val screenA = TestBackend.create("a") {
+            EditableText(stringProp = editable("abc"), preeditSelfRendered = false, id = "field")
+        }.dslScreen
+        val screenB = TestBackend.create("b") {
+            EditableText(stringProp = editable("def"), preeditSelfRendered = false, id = "field")
+        }.dslScreen
+        val rootA = TestRoot.newRoot()
+        val rootB = TestRoot.newRoot()
+        rootA.children.collect(screenA)
+        rootB.children.collect(screenB)
+        TestBackend.mouseAt(Position(500.px, 500.px))
+        render(screenA)
+        render(screenB)
+        val fieldA = screenA.children[0]
+        val fieldB = screenB.children[0]
+
+        rootA.setFocus(fieldA.identity)
+
+        assertTrue(fieldA.isFocused, "the root's own component takes the focus")
+        assertFalse(fieldB.isFocused, "a component with the same identity on another root is untouched")
+    }
+
+    /** Closing a root is a door: after it, every way of using the root fails, and only that root. */
+    @Test
+    fun `a closed root refuses mounting, rendering and setting focus`() {
+        val root = TestRoot.newRoot()
+        val open = TestRoot.newRoot()
+        val mounted = root.children.collect(page())
+        root.close()
+
+        assertFailsWith<IllegalStateException>("mounting") { root.children.collect(page()) }
+        assertFailsWith<IllegalStateException>("unmounting") { root.children.remove(mounted) }
+        assertFailsWith<IllegalStateException>("rendering") {
+            kotlin.context(TestBackend, Unit, Position(0.px, 0.px)) { root.component.render<Unit>() }
+        }
+        assertFailsWith<IllegalStateException>("setting the focus") { root.setFocus(DslId("target")) }
+
+        // Another root is unaffected: the door closes one tree, not the process.
+        open.children.collect(page())
+        open.setFocus(DslId("target"))
+        assertFalse(open.isClosed)
+    }
+
+    @Test
+    fun `closing a root twice is fine and isClosed reports it`() {
+        val root = TestRoot.newRoot()
+        assertFalse(root.isClosed)
+
+        root.close()
+        root.close()
+
+        assertTrue(root.isClosed)
     }
 }
