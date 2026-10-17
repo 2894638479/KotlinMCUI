@@ -92,7 +92,9 @@ internal object DslPreview {
      * produced no file.
      */
     internal suspend fun run(reference: String, capture: Boolean) {
-        val backend = DslRuntime.ownerRoot.provider
+        val provider = DslRuntime.ownerRoot.provider
+        val platform = dslPlatform
+        val screens = provider.screenFactory ?: error("preview needs a provider that can create screens")
         val page = try {
             pageFor(reference)
         } catch(e: Throwable) {
@@ -106,32 +108,32 @@ internal object DslPreview {
         try {
             if(!awaitFirstFrame()) {
                 dslLogger.error("preview: the platform never rendered a frame, giving up on '$reference'")
-                backend.quit(1)
+                platform.utils.quit(1)
                 return
             }
             val opened = DslRuntime.ownerRoot.state.frameIndex
-            withContext(backend.mainDispatcher) { backend.create(reference) { page.draw() } }.show()
+            withContext(platform.dispatcher) { screens.create(reference) { page.draw() } }.show()
             dslLogger.info("preview: opened '$reference' as ${page.describe()}")
             while(DslRuntime.ownerRoot.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
             if(!capture) return
-            val file = withContext(backend.mainDispatcher) { backend.capture(fileNameFor(reference)) }
+            val file = withContext(platform.dispatcher) { provider.rootUtils.capture(fileNameFor(reference)) }
             if(DslRuntime.ownerRoot.state.renderFailure != null) {
                 dslLogger.error("preview: ${page.describe()} threw while rendering",DslRuntime.ownerRoot.state.renderFailure)
-                backend.quit(1)
+                platform.utils.quit(1)
                 return
             }
             if(file == null) {
                 dslLogger.error("preview: no screenshot was written for '$reference'")
-                backend.quit(1)
+                platform.utils.quit(1)
                 return
             }
             dslLogger.info("preview: wrote ${file.absolutePath} for ${page.describe()}")
-            backend.quit(0)
+            platform.utils.quit(0)
         } catch(e: Throwable) {
             // A page that throws while being built, or a platform that throws while capturing, has
             // to end the run with a code as well - hanging is the one outcome nobody can gate on.
             dslLogger.error("preview: '$reference' failed",e)
-            backend.quit(1)
+            platform.utils.quit(1)
         }
     }
 
@@ -143,33 +145,35 @@ internal object DslPreview {
      * line is written by the caller, because it carries the exception itself.
      */
     private suspend fun showFailure(reference: String,text: String,capture: Boolean) {
-        val backend = DslRuntime.ownerRoot.provider
+        val provider = DslRuntime.ownerRoot.provider
+        val platform = dslPlatform
+        val screens = provider.screenFactory ?: error("preview needs a provider that can create screens")
         // The error screen needs the same readiness as a real page: opened any earlier it would be
         // pushed aside by the platform's own loading screen, and the screenshot would show that
         // instead of the reason.
         if(!awaitFirstFrame()) {
             dslLogger.error("preview: the platform never rendered a frame, giving up on '$reference'")
-            backend.quit(1)
+            platform.utils.quit(1)
             return
         }
         try {
-            withContext(backend.mainDispatcher) {
-                backend.create("Preview error") { PreviewErrorPage(text) }
+            withContext(platform.dispatcher) {
+                screens.create("Preview error") { PreviewErrorPage(text) }
             }.show()
         } catch(e: Throwable) {
             // A failing error screen must not swallow the reason it was meant to show, so this path
             // stays a plain exit.
             dslLogger.error("preview: could not show the error screen for '$reference'",e)
-            backend.quit(1)
+            platform.utils.quit(1)
             return
         }
         if(!capture) return
         val opened = DslRuntime.ownerRoot.state.frameIndex
         while(DslRuntime.ownerRoot.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
-        val file = withContext(backend.mainDispatcher) { backend.capture(fileNameFor(reference)) }
+        val file = withContext(platform.dispatcher) { provider.rootUtils.capture(fileNameFor(reference)) }
         if(file == null) dslLogger.error("preview: no screenshot was written for '$reference'")
         else dslLogger.info("preview: wrote ${file.absolutePath} for the error screen of '$reference'")
-        backend.quit(1)
+        platform.utils.quit(1)
     }
 
     /**

@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.container
 
-import io.github.u2894638479.kotlinmcui.backend.DslBackend
+import io.github.u2894638479.kotlinmcui.backend.DslRootProvider
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
@@ -23,14 +23,22 @@ class DslRoot internal constructor(
     /**
      * The platform pieces this root draws, reads input and creates screens with.
      *
-     * Early form of the draft's `DslRootProvider`: ⑤-3 swaps the type for it and keeps this name.
-     *
-     * It is captured when the root is built rather than looked up globally afterwards. Note the
-     * ordering that pages depend on: [state] must be usable before any screen is built, because a
-     * screen's store is stamped with it when the screen is mounted, and a page may read focus while
-     * it builds.
+     * Captured when the root is built rather than looked up globally afterwards. Note the ordering that
+     * pages depend on: [state] must be usable before any screen is built, because a screen's store is
+     * stamped with it when the screen is mounted, and a page may read focus while it builds.
      */
-    internal val provider: DslBackend<*, *>
+    internal val provider: DslRootProvider<*, *>,
+    /** How long this root is expected to live; see [ViewerLifetime]. */
+    val viewerLifetime: ViewerLifetime = ViewerLifetime.NONE,
+    /** Whether this is the one root that owns the process. Only `createOwner` sets it. */
+    val isOwner: Boolean = false,
+    /**
+     * Why this root was refused, or `null` for a working root.
+     *
+     * A refused root is a real object on purpose: the caller gets something that fails loudly and
+     * carries its own reason, instead of a `null` it might forget to check.
+     */
+    internal val refusal: io.github.u2894638479.kotlinmcui.backend.DslRuntime.DslRejectionReason? = null
 ) {
     private val rootComponent = DslRootComponent(this)
 
@@ -62,8 +70,10 @@ class DslRoot internal constructor(
     val rect: MutRect get() = geometry.rect
 
     private val rawChildren: DslChild.Group by lazy {
+        refusal?.let { error("this root was refused: $it") }
+        val factory = provider.screenFactory ?: error("this root's provider cannot create screens")
         DslChild.Group().also {
-            it.collect(provider.create("Dsl Overlay") { DslEntryLoader.overlays() }.dslScreen)
+            it.collect(factory.create("Dsl Overlay") { DslEntryLoader.overlays() }.dslScreen)
         }
     }
 

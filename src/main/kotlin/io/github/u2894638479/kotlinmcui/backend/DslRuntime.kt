@@ -1,6 +1,9 @@
 package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.container.DslRoot
+import io.github.u2894638479.kotlinmcui.container.DslRootGeometry
+import io.github.u2894638479.kotlinmcui.container.DslRootState
+import io.github.u2894638479.kotlinmcui.container.ViewerLifetime
 import io.github.u2894638479.kotlinmcui.container.mainRoot
 import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
 import io.github.u2894638479.kotlinmcui.logger.dslLogger
@@ -19,6 +22,15 @@ import io.github.u2894638479.kotlinmcui.logger.dslLogger
 object DslRuntime {
     private val lock = Any()
     private var installed = false
+
+    /** Providers registered by entry points, in registration order. */
+    private val providers = mutableListOf<DslRootProvider<*, *>>()
+
+    /** The single refusal ledger; log lines are derived from it. */
+    private val refusalLedger = mutableListOf<DslRejection>()
+
+    /** Whether an owner root has been created; the second [createOwner] must be refused. */
+    private var ownerHeld = false
 
     /** Whether [install] has run. */
     internal val isInstalled get() = synchronized(lock) { installed }
@@ -85,6 +97,116 @@ object DslRuntime {
     }
 
     /**
+     * Register a [provider] an entry point brought with it. It may be shared by several roots and
+     * registered more than once; no root exists at this point.
+     */
+    fun registerProvider(provider: DslRootProvider<*, *>) = synchronized(lock) {
+        providers += provider
+    }
+
+    /** The providers registered so far, in registration order. */
+    val registeredProviders: List<DslRootProvider<*, *>>
+        get() = synchronized(lock) { providers.toList() }
+
+    /**
+     * Every refusal the runtime handed out. The ledger is the only record; log lines are derived from
+     * it, never written next to it.
+     */
+    val rejections: List<DslRejection>
+        get() = synchronized(lock) { refusalLedger.toList() }
+
+    data class DslRejection(val what: String, val reason: DslRejectionReason, val holder: String?)
+
+    enum class DslRejectionReason {
+        /** Nothing published a platform yet, so a root could not be given one. */
+        PLATFORM_NOT_PUBLISHED,
+
+        /** Another root already owns the process; `isOwner` must stay a structural guarantee. */
+        PLATFORM_ALREADY_HELD
+    }
+
+    /** Whether this root was built by the runtime; a refused root answers `false`. */
+    val DslRoot.isRegistered: Boolean get() = refusal == null
+
+    /** Why this root was refused, or `null` for a working one. The reason travels with the object. */
+    val DslRoot.refusalReason: DslRejectionReason? get() = refusal
+
+    /**
+     * Create a root for [provider].
+     *
+     * Never returns `null`: when the platform is not published yet the caller gets a *refused* root,
+     * which fails loudly with [refusalReason] as soon as it is used. Its screen's store is stamped
+     * with this root's state when the screen is mounted, which happens before the screen builds.
+     *
+     * @throws IllegalStateException when [install] has not run.
+     */
+    fun createRoot(provider: DslRootProvider<*, *>, viewerLifetime: ViewerLifetime): DslRoot =
+        synchronized(lock) {
+            check(installed) { "DslRuntime.createRoot was called before DslRuntime.install" }
+            if (dslBackendProvider == null) {
+                refuse("root for ${provider.describe()}", DslRejectionReason.PLATFORM_NOT_PUBLISHED)
+            } else {
+                buildRoot(provider, viewerLifetime, isOwner = false, refusal = null)
+            }
+        }
+
+    /**
+     * The one entry point that may create the process owner.
+     *
+     * A second call is refused with [DslRejectionReason.PLATFORM_ALREADY_HELD] and recorded in
+     * [rejections]: limiting *who* may set `isOwner` without limiting *how often* would stop being a
+     * structural guarantee.
+     */
+    fun createOwner(provider: DslRootProvider<*, *>): DslRoot = synchronized(lock) {
+        check(installed) { "DslRuntime.createOwner was called before DslRuntime.install" }
+        when {
+            dslBackendProvider == null ->
+                refuse("owner root for ${provider.describe()}", DslRejectionReason.PLATFORM_NOT_PUBLISHED)
+            ownerHeld ->
+                refuse("owner root for ${provider.describe()}", DslRejectionReason.PLATFORM_ALREADY_HELD)
+            else -> {
+                ownerHeld = true
+                buildRoot(provider, ViewerLifetime.PROCESS, isOwner = true, refusal = null)
+            }
+        }
+    }
+
+    private fun refuse(what: String, reason: DslRejectionReason): DslRoot {
+        refusalLedger += DslRejection(what, reason, holder = null)
+        return buildRoot(RefusedProvider, ViewerLifetime.NONE, isOwner = false, refusal = reason)
+    }
+
+    /**
+     * A refused root still needs a provider object; nothing reaches it, because [DslRoot.children]
+     * throws on the refusal first.
+     */
+    private object RefusedProvider : DslRootProvider<Nothing, Nothing> {
+        override val renderer get() = null
+        override val input: DslBackendInput get() = error("this root was refused")
+        override val screenFactory get() = null
+        override val rootUtils: DslRootUtils get() = error("this root was refused")
+        override fun frame(root: DslRoot, renderParam: Nothing) = error("this root was refused")
+    }
+
+    private fun DslRootProvider<*, *>.describe(): String = this::class.simpleName ?: "root provider"
+
+    private fun buildRoot(
+        provider: DslRootProvider<*, *>,
+        viewerLifetime: ViewerLifetime,
+        isOwner: Boolean,
+        refusal: DslRejectionReason?
+    ): DslRoot {
+        lateinit var root: DslRoot
+        val state = DslRootState(
+            onFocusChanged = { newFocus, source -> root.component.globalFocusChanged(newFocus, source) },
+            onHoverChanged = { newHover -> root.component.globalHoverChanged(newHover) },
+            onNarrate = { provider.rootUtils.narrate(it) }
+        )
+        root = DslRoot(state, DslRootGeometry(), provider, viewerLifetime, isOwner, refusal)
+        return root
+    }
+
+    /**
      * Restore the state the process starts in: nothing installed, no providers published.
      *
      * Exists for the test suite. "Exactly once" is a process-wide promise, so a case can
@@ -96,5 +218,8 @@ object DslRuntime {
         installed = false
         dslMetadataProvider = null
         dslBackendProvider = null
+        providers.clear()
+        refusalLedger.clear()
+        ownerHeld = false
     }
 }

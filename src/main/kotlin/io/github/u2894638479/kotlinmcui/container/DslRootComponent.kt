@@ -47,7 +47,7 @@ internal class DslRootComponent(private val root: DslRoot) : DslScope {
     /** Whether the currently focused component accepts IME input (it has a [preeditArea]). */
     val preeditUsing get() = testHit { it.takeIf { it !== this && it.identity == state.focused } }?.preeditArea != null
 
-    val mouse get() = root.provider.mouse
+    val mouse get() = root.provider.input.mouse
 
     context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton): Boolean {
@@ -109,7 +109,7 @@ internal class DslRootComponent(private val root: DslRoot) : DslScope {
         } else {
             val component = testHit { it.takeIf { it !== this && it.identity == state.focused } } ?: return
             component.globalPreedit(info)
-            if(component.selfRenderPreedit) component.preeditArea?.let { root.provider.setPreeditArea(it) }
+            if(component.selfRenderPreedit) component.preeditArea?.let { root.provider.input.setPreeditArea(it) }
         }
     }
 }

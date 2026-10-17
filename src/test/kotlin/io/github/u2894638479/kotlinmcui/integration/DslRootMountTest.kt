@@ -73,7 +73,7 @@ class DslRootMountTest {
         val screen = page()
         assertNull(screen.dataStore.rootState, "a screen has no tree before it is mounted")
 
-        val root = DslRoot(state(), DslRootGeometry(), TestBackend)
+        val root = DslRoot(state(), DslRootGeometry(), TestRoot.provider)
         root.children.collect(screen)
 
         assertSame(root.state, screen.dataStore.rootState, "the store now points at the root's state")
@@ -81,7 +81,7 @@ class DslRootMountTest {
 
     @Test
     fun `collectAll stamps every screen it adds`() {
-        val root = DslRoot(state(), DslRootGeometry(), TestBackend)
+        val root = DslRoot(state(), DslRootGeometry(), TestRoot.provider)
         val screen = page()
 
         root.children.collectAll(listOf(screen))
@@ -91,8 +91,8 @@ class DslRootMountTest {
 
     @Test
     fun `a screen moved to another root is stamped with the new root`() {
-        val rootA = DslRoot(state(), DslRootGeometry(), TestBackend)
-        val rootB = DslRoot(state(), DslRootGeometry(), TestBackend)
+        val rootA = DslRoot(state(), DslRootGeometry(), TestRoot.provider)
+        val rootB = DslRoot(state(), DslRootGeometry(), TestRoot.provider)
         val screen = page()
 
         val child = rootA.children.collect(screen)
@@ -117,7 +117,7 @@ class DslRootMountTest {
     @Test
     fun `the debug overlay reports the focus of its own tree`() {
         val screen = page()
-        val root = DslRoot(state(), DslRootGeometry(), TestBackend)
+        val root = DslRoot(state(), DslRootGeometry(), TestRoot.provider)
         root.children.collect(screen)
         TestRoot.setFocus(null)
         val target = DslId("target")
@@ -135,7 +135,7 @@ class DslRootMountTest {
                 Spacer(Modifier.size(10.px, 10.px), "plain")
             }
         }.dslScreen
-        val root = DslRoot(state(), DslRootGeometry(), TestBackend)
+        val root = DslRoot(state(), DslRootGeometry(), TestRoot.provider)
         root.children.collect(screen)
         TestBackend.mouseAt(Position(500.px, 500.px))
         render(screen)
@@ -157,7 +157,7 @@ class DslRootMountTest {
         val screen = TestBackend.create("tooltip") {
             Spacer(Modifier.size(10.px, 10.px), "target").tooltip { Presets.Text { "tip" } }
         }.dslScreen
-        val root = DslRoot(state(), DslRootGeometry(), TestBackend)
+        val root = DslRoot(state(), DslRootGeometry(), TestRoot.provider)
         root.children.collect(screen)
         TestRoot.setFocus(null)
         // Keep the pointer off the component: only the focused path may build a tooltip layer here.
@@ -178,7 +178,7 @@ class DslRootMountTest {
             // Let the framework draw the IME box: an editor that renders its own preedit has none.
             EditableText(stringProp = editable("abc"), preeditSelfRendered = false, id = "box")
         }.dslScreen
-        val root = DslRoot(state(), DslRootGeometry(), TestBackend)
+        val root = DslRoot(state(), DslRootGeometry(), TestRoot.provider)
         root.children.collect(screen)
         TestRoot.setFocus(null)
         TestBackend.mouseAt(Position(500.px, 500.px))

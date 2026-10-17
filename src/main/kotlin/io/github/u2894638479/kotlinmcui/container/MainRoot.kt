@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.container
 
 import io.github.u2894638479.kotlinmcui.backend.dslBackend
+import io.github.u2894638479.kotlinmcui.backend.rootProviderOf
 
 /**
  * The process's main root, built on first use.
@@ -14,12 +15,12 @@ internal val mainRoot: DslRoot by lazy {
         state = DslRootState(
             onFocusChanged = { newFocus, source -> mainComponent().globalFocusChanged(newFocus, source) },
             onHoverChanged = { newHover -> mainComponent().globalHoverChanged(newHover) },
-            onNarrate = { mainRoot.provider.narrate(it) }
+            onNarrate = { mainRoot.provider.rootUtils.narrate(it) }
         ),
         geometry = DslRootGeometry(),
         // The one place that hands the published platform to a root. Everything downstream reads it
         // from the root, which is what lets the rest of the framework stop asking the global.
-        provider = dslBackend
+        provider = rootProviderOf(dslBackend)
     )
 }
 

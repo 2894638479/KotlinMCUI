@@ -93,4 +93,38 @@ class DslRuntimeTest {
         assertFalse(second, "a later publish must report that it was refused")
         assertSame(TestBackend, dslBackend, "the refused backend must not replace the published one")
     }
+
+    @Test
+    @Order(7)
+    fun `the owner root's provider is the published backend itself`() {
+        DslRuntime.install { TestMetadata }
+        DslRuntime.platformReady { TestBackend }
+
+        val provider = DslRuntime.ownerRoot.provider
+
+        assertSame(TestBackend, provider.renderer, "the derived provider must not copy the renderer")
+        assertSame(TestBackend, provider.input, "the derived provider must not copy the input")
+    }
+
+    @Test
+    @Order(8)
+    fun `a second owner root is refused and recorded in the ledger`() {
+        DslRuntime.install { TestMetadata }
+        DslRuntime.platformReady { TestBackend }
+        val provider = rootProviderOf(TestBackend)
+
+        val first = DslRuntime.createOwner(provider)
+        val second = DslRuntime.createOwner(provider)
+
+        assertTrue(first.isOwner, "the first owner root is the owner")
+        with(DslRuntime) {
+            assertTrue(first.isRegistered, "the first owner root works")
+            assertFalse(second.isRegistered, "the second owner root must be refused")
+            assertEquals(DslRuntime.DslRejectionReason.PLATFORM_ALREADY_HELD, second.refusalReason)
+        }
+        assertTrue(
+            DslRuntime.rejections.any { it.reason == DslRuntime.DslRejectionReason.PLATFORM_ALREADY_HELD },
+            "the refusal must be recorded in the ledger",
+        )
+    }
 }

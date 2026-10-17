@@ -2,6 +2,7 @@ package io.github.u2894638479.kotlinmcui.integration
 
 import io.github.u2894638479.kotlinmcui.backend.DslBackendRenderer
 import io.github.u2894638479.kotlinmcui.backend.DslRuntime
+import io.github.u2894638479.kotlinmcui.backend.rootProviderOf
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.FocusSource
 import io.github.u2894638479.kotlinmcui.container.DslChild
@@ -24,6 +25,9 @@ import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 internal object TestRoot {
     private val root: DslRoot get() = DslRuntime.ownerRoot
     private val state get() = root.state
+
+    /** The fixture backend seen as a root provider, the way production derives it from the published backend. */
+    val provider get() = rootProviderOf(TestBackend)
 
     val rect: MutRect get() = root.rect
     val children: DslChild.Group get() = root.children
