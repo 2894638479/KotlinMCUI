@@ -57,7 +57,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * where the reason can be read, and the capture session photographs that screen instead and still
  * leaves the non-zero code and the log line.
  */
-internal object DslPreview {
+object DslPreview {
     /** The page to open: one launch property, and the only name this feature has. */
     private const val PREVIEW_PROPERTY = "kotlinmcui.preview"
 
@@ -76,6 +76,13 @@ internal object DslPreview {
      *
      * The root is the backend's own. The preview draws into the tree it is handed and reads no
      * global, so a second backend in the same process cannot end up photographing the first one's UI.
+     *
+     * This is the whole entry point a backend needs, and the only public member on purpose: the
+     * session machinery below it is an implementation detail nobody outside passes arguments to.
+     *
+     * Note on reachability: whether a backend *module* can call this is a module-boundary fact, so no
+     * test in this module can prove it - `internal` and `public` are indistinguishable from inside.
+     * Only a downstream compile does; this module's tests cover behaviour, not visibility.
      */
     fun start(root: DslRoot) {
         val request = request() ?: return
