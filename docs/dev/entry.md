@@ -66,6 +66,13 @@ com.example.WindowEntry   client,standalone
 
 自建加载器同时支持两种写法：公开无参构造器可直接构造，否则取 `INSTANCE` 静态字段——后者才是 Kotlin `object` 的常规路径，不当作"回退"来告警。构造器存在但**抛异常**时也不会被 `INSTANCE` 悄悄顶替：那会把失败藏在一个没人要的第二个实例后面，正确做法是让这一个入口出局并带上异常打日志。
 
+### 框架自带的示例入口
+核心 jar 自己的注册表声明了两条示例入口（`TestEntry$TestPage` 与 `TestEntry$DebugOverlay`，环境为 `client,server,standalone`），因此它们**在生产构建里同样会被加载**。
+
+这是有意的：入口页开箱就有内容可点，后端也拿它们当参考内容做截图验收；`DebugOverlay` 是 Overlay，默认不启用。
+
+代价也要写明白：它们随核心发布，**使用方无法移除**，只会在入口页里多出两条不是自己写的记录。如果将来这变得碍事，正确做法是把示例搬到独立产物或改成仅在开发环境声明——而不是在心里记住"那两条可以忽略"。
+
 ## 加载顺序
 ```kotlin
 DslRuntime.install { Metadata }   // 内部调用 DslEntryLoader.discover(environment)
