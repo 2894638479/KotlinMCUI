@@ -161,18 +161,27 @@ class PropertyLifeScope internal constructor(
 
     private class CachedProperty<K,V>(val key: K,value:V,frameStamp: ULong = 0uL): TimedProperty<V>(value,frameStamp)
     /**
-     * The one place an entry is inserted or refreshed.
+     * Give this entry the current frame stamp, which is what keeps it alive for the frame.
      *
-     * Both halves matter and both belong here: creating the entry, and stamping it with the frame it was
-     * read in. Four copies of these two lines is what let [dispose] lose its stamp - its entry then looked
-     * stale on the very next frame and a live screen had its cleanup run. Any new accessor goes through
-     * here rather than copying the pattern a fifth time.
+     * The refresh is a primitive of its own because not every access path inserts: cached keeps its
+     * entry when the cache key is unchanged. Every path that inserts goes through [entry], and every path
+     * that only touches an existing entry goes through this - there is no third way to write the stamp.
+     */
+    private fun <T : TimedProperty<*>> T.refreshed(): T {
+        frameStamp = dataStore.frameIndex
+        return this
+    }
+
+    /**
+     * The one place an entry is inserted; it also stamps it, so a brand-new entry is alive immediately.
+     *
+     * Four copies of "create it, then stamp it" is what let [dispose] lose its stamp: its entry looked
+     * stale on the very next frame and a live screen had its cleanup run.
      */
     private fun <T : TimedProperty<*>> entry(identity: DslId, create: () -> T): T {
         @Suppress("UNCHECKED_CAST")
         val stored = (map[identity] ?: create().also { map[identity] = it }) as T
-        stored.frameStamp = dataStore.frameIndex
-        return stored
+        return stored.refreshed()
     }
 
     internal fun clearOutdated() {
@@ -312,7 +321,7 @@ class PropertyLifeScope internal constructor(
         val previous = map[identity]
         if(previous is CachedProperty<*,*> && previous.key == cacheKey) {
             @Suppress("UNCHECKED_CAST")
-            return (previous as CachedProperty<K, V>).also { it.frameStamp = dataStore.frameIndex }.stable()
+            return (previous as CachedProperty<K, V>).refreshed().stable()
         }
         // A changed cache key replaces the entry, so let `entry` build a new one.
         if(previous != null) map.remove(identity)
