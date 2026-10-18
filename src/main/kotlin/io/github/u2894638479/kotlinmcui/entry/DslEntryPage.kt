@@ -11,6 +11,7 @@ import io.github.u2894638479.kotlinmcui.dsl.showScreen
 import io.github.u2894638479.kotlinmcui.dsl.static
 import io.github.u2894638479.kotlinmcui.dsl.translate
 import io.github.u2894638479.kotlinmcui.dsl.ui.*
+import io.github.u2894638479.kotlinmcui.backend.Environment
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.align.Align
 import io.github.u2894638479.kotlinmcui.math.align.Aligner
@@ -51,9 +52,7 @@ fun DslEntryPage() = Row {
                     TextAutoFold { it.name.emit(size = 18.scaled, style = DslCharStyle().shadowed) }
                     TextAutoFold { it.id.emit(Color(150,150,150), style = DslCharStyle().italic.shadowed) }
                     TextAutoFold {
-                        if(flags.isServer) " server ".emit(Color(200,30,30))
-                        if(flags.isClient) " client ".emit(Color(30,200,30))
-                        if(flags.isCommon) " common ".emit(Color(200,200,200))
+                        flags.environments.forEach { env -> " ${env.name.lowercase()} ".emit(environmentColor(env)) }
                         if(flags.isGui) " gui ".emit(Color(150,150,240))
                         if(flags.isOverlay) " overlay ".emit(Color(200,200,20))
                     }
@@ -74,7 +73,7 @@ fun DslEntryPage() = Row {
                 }
             }.hoverMask().highlightBox(-2.scaled,3.scaled).clickable(flags.isGui) {
                 showScreen(it.name) {
-                    (it as DslEntryGui).content()
+                    (it as DslEntryGui).gui()
                 }
             }.styledTooltip {
                 if(!showDetails.value) {
@@ -102,9 +101,7 @@ fun DslEntryPage() = Row {
                         }
                     }
                     TextAutoFold(Modifier.width(200.scaled),horizontalAligner = Aligner.close(Align.LOW)) {
-                        if(flags.isServer) enter().also { translate("kotlinmcui.entrypage.tooltip.server").emit(Color(200,30,30)) }
-                        if(flags.isClient) enter().also { translate("kotlinmcui.entrypage.tooltip.client").emit(Color(30,200,30)) }
-                        if(flags.isCommon) enter().also { translate("kotlinmcui.entrypage.tooltip.common").emit(Color(200,200,200)) }
+                        flags.environments.forEach { env -> enter().also { env.name.lowercase().emit(environmentColor(env)) } }
                         if(flags.isGui) enter().also { translate("kotlinmcui.entrypage.tooltip.gui").emit(Color(150,150,240)) }
                         if(flags.isOverlay) enter().also { translate("kotlinmcui.entrypage.tooltip.overlay").emit(Color(200,200,20)) }
                     }
@@ -137,3 +134,9 @@ fun DslEntryPage() = Row {
     ScrollBarVertical(Modifier.width(10.scaled),scrollerProp) {}
     Spacer(Modifier.width(10.scaled)) {}
 }.defaultBackground()
+/** The badge colour per environment; one colour per side, so the list reads at a glance. */
+private fun environmentColor(environment: Environment) = when(environment) {
+    Environment.CLIENT -> Color(30,200,30)
+    Environment.SERVER -> Color(200,30,30)
+    Environment.STANDALONE -> Color(200,200,200)
+}

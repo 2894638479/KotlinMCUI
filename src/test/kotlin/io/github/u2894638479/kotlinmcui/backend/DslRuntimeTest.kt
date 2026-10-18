@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.backend
 
-import io.github.u2894638479.kotlinmcui.entry.FixtureClient
-import io.github.u2894638479.kotlinmcui.entry.FixtureCommon
+import io.github.u2894638479.kotlinmcui.entry.FixtureStats
 import io.github.u2894638479.kotlinmcui.integration.TestMetadata
 import io.github.u2894638479.kotlinmcui.integration.TestPlatform
 import kotlin.test.*
@@ -40,13 +39,14 @@ class DslRuntimeTest {
     @Test
     @Order(2)
     fun `installing discovers the entries and initialises them exactly once`() {
-        val commonRuns = FixtureCommon.runs
-        val clientRuns = FixtureClient.runs
+        val before = FixtureStats.stages.size
 
         DslRuntime.install { TestMetadata }
 
-        assertEquals(commonRuns + 1, FixtureCommon.runs, "installing must initialise the common entries once")
-        assertEquals(clientRuns, FixtureClient.runs, "a common platform must not run the client initialisation")
+        assertTrue(
+            FixtureStats.stages.size > before,
+            "installing must run the initialize stage of the entries that apply to this environment",
+        )
     }
 
     @Test

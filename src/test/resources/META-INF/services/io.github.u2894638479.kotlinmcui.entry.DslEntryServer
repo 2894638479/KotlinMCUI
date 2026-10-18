@@ -1,4 +1,0 @@
-# A server entry, plus a GUI entry listed here on purpose: it does not implement
-# DslEntryServer, so it must not be registered as one.
-io.github.u2894638479.kotlinmcui.entry.FixtureServer
-io.github.u2894638479.kotlinmcui.entry.FixtureGuiClass

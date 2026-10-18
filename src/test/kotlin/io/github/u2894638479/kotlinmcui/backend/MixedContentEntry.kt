@@ -21,7 +21,7 @@ object MixedContentEntry: DslEntryGui {
     override val icon = ImageHolder.empty
 
     context(ctx: DslContext)
-    override fun content() {
+    override fun gui() {
         MixedContentCalls.recorded = "no-arg"
         Spacer(id = "no-arg")
     }

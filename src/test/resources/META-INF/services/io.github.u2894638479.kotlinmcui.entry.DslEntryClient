@@ -1,6 +1,0 @@
-# FixtureCommon does not implement DslEntryClient: it is listed here on purpose, to
-# prove that a wrong listing is skipped instead of reaching the caller's loop.
-io.github.u2894638479.kotlinmcui.entry.FixtureCommon
-io.github.u2894638479.kotlinmcui.entry.FixtureClient
-io.github.u2894638479.kotlinmcui.entry.FixtureMixed
-io.github.u2894638479.kotlinmcui.entry.FixtureSilentClient

@@ -11,91 +11,62 @@ internal object FixtureIdentity : DslEntryService {
 }
 
 /**
- * How often each fixture class was **initialised**, counted from outside the fixture:
- * reading these fields must not itself pull a fixture in, otherwise the counter could
- * never prove that a class stayed untouched.
+ * What the fixtures recorded: which stage ran on which class, in order.
+ *
+ * Counters live outside the fixtures on purpose - reading an assertion must not itself load a fixture.
  */
-internal object FixtureLaunchStats {
-    /** The order the launch hooks ran in: "common" first is the contract. */
-    val calls = mutableListOf<String>()
-    var common = 0
-    var client = 0
-    var server = 0
-}
-
-internal object FixtureLoads {
-    var client = 0
-    var server = 0
-    var mixed = 0
-    var gui = 0
-    var silentClient = 0
-}
-
-internal object FixtureCommon : DslEntryCommon, DslEntryService by FixtureIdentity {
-    var runs = 0
-    override fun initialize() { runs++ }
-    override fun launch() { FixtureLaunchStats.common++; FixtureLaunchStats.calls += "common" }
-}
-
-internal object FixtureClient : DslEntryClient, DslEntryService by FixtureIdentity {
-    init { FixtureLoads.client++ }
-
-    var runs = 0
-    override fun initializeClient() { runs++ }
-    override fun launchClient() { FixtureLaunchStats.client++; FixtureLaunchStats.calls += "client" }
-}
-
-internal object FixtureServer : DslEntryServer, DslEntryService by FixtureIdentity {
-    init { FixtureLoads.server++ }
-
-    var runs = 0
-    override fun initializeServer() { runs++ }
-    override fun launchServer() { FixtureLaunchStats.server++; FixtureLaunchStats.calls += "server" }
+internal object FixtureStats {
+    val stages = mutableListOf<String>()
+    var loads = 0
 }
 
 /**
- * A client entry that no other test touches: asserting "the client class was never
- * loaded" only works while reading the assertion does not itself load the class.
+ * A class that is declared only for standalone, so a client/server run must never load it.
+ * [FixtureStats.loads] is bumped from its static initialiser: a count above zero proves the class was
+ * loaded when it should not have been.
  */
-internal object FixtureSilentClient : DslEntryClient, DslEntryService by FixtureIdentity {
-    init { FixtureLoads.silentClient++ }
+internal class FixtureStandaloneOnly : DslEntryGui, DslEntryService by FixtureIdentity {
+    init { FixtureStats.loads++ }
 
-    var runs = 0
-    override fun initializeClient() { runs++ }
-}
-
-/**
- * The documented trap: an entry that initialises on the client *and* offers a screen.
- * The service files name it under both interfaces, so a server loads it for the screen.
- */
-internal object FixtureMixed : DslEntryClient, DslEntryGui, DslEntryService by FixtureIdentity {
-    init { FixtureLoads.mixed++ }
-
-    var clientRuns = 0
-    override fun initializeClient() { clientRuns++ }
+    override fun initialize() { FixtureStats.stages += "initialize:standalone" }
+    override fun launch() { FixtureStats.stages += "launch:standalone" }
 
     context(ctx: DslContext)
-    override fun content() {}
+    override fun gui() {}
 }
 
-internal object FixtureGuiObject : DslEntryGui, DslEntryService by FixtureIdentity {
-    init { FixtureLoads.gui++ }
+internal object FixturePage : DslEntryGui, DslEntryService by FixtureIdentity {
+    override fun initialize() { FixtureStats.stages += "initialize:page" }
+    override fun launch() { FixtureStats.stages += "launch:page" }
 
     context(ctx: DslContext)
-    override fun content() {}
+    override fun gui() {}
 }
 
-internal class FixtureGuiClass : DslEntryGui, DslEntryService by FixtureIdentity {
+internal object FixtureOverlay : DslEntryOverlay, DslEntryService by FixtureIdentity {
+    override fun initialize() { FixtureStats.stages += "initialize:overlay" }
+    override fun launch() { FixtureStats.stages += "launch:overlay" }
+
     context(ctx: DslContext)
-    override fun content() {}
+    override fun overlay() {}
 }
 
-/** A public constructor that fails: the entry must be skipped, never substituted. */
+/** Both kinds in one class: the page entry shows it as gui and overlay. */
+internal object FixtureBoth : DslEntryGui, DslEntryOverlay, DslEntryService by FixtureIdentity {
+    override val id get() = "fixture-both"
+    context(ctx: DslContext)
+    override fun gui() {}
+
+    context(ctx: DslContext)
+    override fun overlay() {}
+}
+
+/** A public constructor that throws: the entry must be skipped, never substituted. */
 internal class FixtureThrowingConstructor : DslEntryGui, DslEntryService by FixtureIdentity {
     init { error("constructor failure") }
 
     context(ctx: DslContext)
-    override fun content() {}
+    override fun gui() {}
 }
 
 /** A Kotlin object whose static initialiser fails with an [Error] rather than an exception. */
@@ -103,10 +74,36 @@ internal object FixtureBrokenStaticInit : DslEntryGui, DslEntryService by Fixtur
     init { error("static initialiser failure") }
 
     context(ctx: DslContext)
-    override fun content() {}
+    override fun gui() {}
 }
 
-internal object FixtureOverlay : DslEntryOverlay, DslEntryService by FixtureIdentity {
+/** Not a service at all: listed in the registry, must land in rokenEntries. */
+internal class FixtureNotAService
+
+internal object FixtureGuiClass : DslEntryGui, DslEntryService by FixtureIdentity {
+    context(ctx: DslContext)
+    override fun gui() {}
+}
+
+internal object FixtureOverlayTwo : DslEntryOverlay {
+    override val name get() = "fixture2"
+    override val id get() = "fixture2"
+    override val icon get() = ImageHolder.empty
+
+    context(ctx: DslContext)
+    override fun overlay() {}
+}
+
+/** No gui and no overlay: an entry with stages only. It must load and run like any other. */
+internal object FixtureNoUi : DslEntryService by FixtureIdentity {
+    override val id get() = "fixture-noui"
+
+    override fun initialize() { FixtureStats.stages += "initialize:noui" }
+    override fun launch() { FixtureStats.stages += "launch:noui" }
+}
+
+/** The same overlay id as FixtureOverlay: declared later, so it must lose and be reported. */
+internal object FixtureOverlayDup : DslEntryOverlay, DslEntryService by FixtureIdentity {
     context(ctx: DslContext)
     override fun overlay() {}
 }

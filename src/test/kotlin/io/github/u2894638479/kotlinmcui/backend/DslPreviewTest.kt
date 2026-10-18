@@ -68,8 +68,8 @@ class DslPreviewTest {
 
     @Test
     fun `an entry resolves through its content`() {
-        val page = DslPreview.pageFor("io.github.u2894638479.kotlinmcui.test.TestEntry\$TestPage#content")
-        assertEquals("io.github.u2894638479.kotlinmcui.test.TestEntry\$TestPage#content",page.describe())
+        val page = DslPreview.pageFor("io.github.u2894638479.kotlinmcui.test.TestEntry\$TestPage#gui")
+        assertEquals("io.github.u2894638479.kotlinmcui.test.TestEntry\$TestPage#gui",page.describe())
     }
 
     @Test
@@ -313,7 +313,7 @@ class DslPreviewTest {
 
     @Test
     fun `an entry with a parameterless and a parameterised content uses the parameterless one`() {
-        val reference = "io.github.u2894638479.kotlinmcui.backend.MixedContentEntry#content"
+        val reference = "io.github.u2894638479.kotlinmcui.backend.MixedContentEntry#gui"
         val page = DslPreview.pageFor(reference)
         assertFalse(page.usesDefaults,"the interface's own content() takes no parameters")
         MixedContentCalls.recorded = null

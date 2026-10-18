@@ -207,7 +207,7 @@ internal object TestMetadata : DslPlatformMetadata {
     override val gameDir = Paths.get(".")
     override val gameVersion = "test"
     override val gameLoader = "test"
-    override val environment = Environment.NONE
+    override val environment = Environment.STANDALONE
 }
 
 // ── Input ────────────────────────────────────────────────────────────────────

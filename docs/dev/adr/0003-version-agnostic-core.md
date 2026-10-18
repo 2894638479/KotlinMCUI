@@ -2,7 +2,7 @@
 
 核心库不含任何 Minecraft 类型，"支持什么"由它**不依赖什么**决定：不依赖某个游戏版本的类，就不该在元数据里写死游戏版本区间；不依赖某个加载器的 API，就不该只认一个加载器；不进客户端代码，就不该只在客户端可用。于是加载器元数据只声明**能力**：Fabric 侧 `minecraft: "*"`、`java: ">=8"`、`environment: "*"`；Forge/NeoForge 侧**不声明**游戏或加载器的依赖——核心库不依赖它们，声明出来就是一条假的依赖关系。
 
-官方后端是**硬依赖**（Fabric 侧 `depends`、Forge 侧 `mandatory = true`、NeoForge 侧 `type = "required"`，两侧都要）：核心库和它 `META-INF/services` 里的入口都是 Kotlin 编译的，运行时要由谁提供不该由核心库挑——具体用 Fabric Language Kotlin、Kotlin for Forge 还是 KotlinLangForge，由后端自己挑选并提供，核心库的元数据里因此**不出现任何语言提供者的名字**。
+官方后端是**硬依赖**（Fabric 侧 `depends`、Forge 侧 `mandatory = true`、NeoForge 侧 `type = "required"`，两侧都要）：核心库和它 `META-INF/kotlinmcui/entries` 里的入口都是 Kotlin 编译的，运行时要由谁提供不该由核心库挑——具体用 Fabric Language Kotlin、Kotlin for Forge 还是 KotlinLangForge，由后端自己挑选并提供，核心库的元数据里因此**不出现任何语言提供者的名字**。
 
 两侧都是硬依赖还有第二层原因：框架的每一行代码都要经过后端能力（绘制、输入、环境、入口），**服务端也一样**——只装核心库、不装后端，服务端连一行代码都跑不起来。官方目前只做了客户端实现；服务端实现有两条路可选：只提供入口发现（同一份 jar 也允许被客户端加载），或连同窗口管理与渲染一起提供。后者能让**一份 jar 跨多个 Minecraft 版本、只按加载器分**，这也是核心库不写死游戏版本区间的直接动机之一。
 

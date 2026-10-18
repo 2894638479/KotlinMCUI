@@ -3,31 +3,20 @@ package io.github.u2894638479.kotlinmcui.backend
 /**
  * The runtime environment in which the framework is executing.
  *
- * Determines which entry points are safe to load without causing
- * [ClassNotFoundException] or similar linkage errors.
+ * It says which game side exists in this process - client classes, server classes, or neither - and it is
+ * what the entry registry is filtered by. It does **not** mean "load no entries": a standalone process
+ * still loads every entry that declared standalone.
  */
 enum class Environment {
-    /**
-     * A game client is available.
-     * [io.github.u2894638479.kotlinmcui.entry.DslEntryClient.initializeClient] will be called.
-     */
+    /** A game client exists in this process. */
     CLIENT,
 
-    /**
-     * A game server is available.
-     * [io.github.u2894638479.kotlinmcui.entry.DslEntryServer.initializeServer] will be called.
-     */
+    /** A game server exists in this process. */
     SERVER,
 
     /**
-     * No game side at all: neither the client nor the server entry points are initialised - only
-     * common, gui and overlay run. This is the standalone shell and the tools that drive the framework
-     * without a game.
-     *
-     * The matching entry point is
-     * [io.github.u2894638479.kotlinmcui.entry.DslEntryCommon] - "common" says the code depends on no
-     * particular side, which is exactly what this environment is. There is deliberately no
-     * DslEntryNone.
+     * No game side at all: neither client nor server classes are available. The standalone shell and the
+     * tools driving the framework without a game run here.
      */
-    NONE
+    STANDALONE
 }

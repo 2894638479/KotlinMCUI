@@ -5,73 +5,98 @@ parent: Dev
 ---
 
 # 入口
-核心库需要一种方式发现"谁提供了后端""谁想往 GUI 列表里加一个界面""谁想常驻一层 Overlay"，而它自己又必须能在客户端、服务端、以及不同加载器上加载。入口机制就是回答这个问题的。
+核心库需要一种方式发现"谁想往 GUI 列表里加一个界面""谁想常驻一层 Overlay""谁想在平台就绪后开一个窗口"，而它自己又必须能在客户端、服务端、以及没有游戏的环境里加载。入口机制就是回答这个问题的。
 
-## 五个入口接口
-所有入口都实现 `DslEntryService`，提供三项身份信息：`name`（显示名）、`id`（稳定标识）、`icon`（图标引用）。
+## 一个入口接口，两个种类
+每个入口都实现 `DslEntryService`，提供三项身份信息：`name`（显示名）、`id`（稳定标识）、`icon`（图标引用），以及两个阶段的成员：
 
-在此之上按"运行环境"和"提供什么"分成两组：
-
-| 接口 | 组 | 方法 |
+| 接口 | 作用 | 成员 |
 | --- | --- | --- |
-| `DslEntryCommon` | 运行环境 | `initialize()` |
-| `DslEntryClient` | 运行环境 | `initializeClient()` |
-| `DslEntryServer` | 运行环境 | `initializeServer()` |
-| `DslEntryGui` | 扩展点 | `content()` |
-| `DslEntryOverlay` | 扩展点 | `overlay()` |
+| `DslEntryService` | 每个入口都必须实现：身份 + 两个阶段 | `name` / `id` / `icon`、`initialize()`、`launch()` |
+| `DslEntryGui` | 种类：可以作为 GUI 页面打开 | `context(DslContext) fun gui()` |
+| `DslEntryOverlay` | 种类：可以作为叠加层绘制 | `context(DslContext) fun overlay()` |
 
-一个类可以同时实现多个接口，因此"既在客户端初始化、又提供一个界面"是常见组合。
+一个类可以同时实现两个种类接口，因此"既是 GUI 页面又是叠加层"是常见组合；也可以两个都不实现——**只实现 `DslEntryService` 是合法的**，那是一个"没有界面、只做事"的入口（例如在 `launch()` 里打开一个窗口）。
 
-`content()` 与 `overlay()` 都是 `context(DslContext)` 函数——它们是 DSL 片段，不是普通回调。Overlay 的内容会被包进一个 `Box` 再渲染。
+种类由**实现了哪个接口**决定，不靠注册文件声明：判断"这个入口有没有 GUI"因此不需要实例化（`isAssignableFrom` 即可），也不会出现"列在文件里说自己有 GUI、其实没实现"这种矛盾。
 
-### 为什么区分客户端与服务端
-加载器会同时加载两侧的类。如果一个入口类引用了只在客户端存在的类型（渲染器、客户端 Screen 之类），在专用服务端加载它就会在**类加载阶段**直接抛错，连"这个入口不适用于服务端"的判断机会都没有。
+`gui()` 与 `overlay()` 都是 `context(DslContext)` 函数——它们是 DSL 片段，不是普通回调。Overlay 的内容会被包进一个 `Box` 再渲染。
 
-把客户端专属逻辑放进实现 `DslEntryClient` 的类里，服务端就不会去碰它。
+## 两个阶段
+- `initialize()`：**装载期**。元数据可读，游戏客户端不可用，所以这一阶段只读取事实、注册内容；不得开窗、起服务或建根。
+- `launch()`：**平台已发布、能建屏之后**。开窗、起服务、建根都属于这里。
 
-但这套切分**只覆盖初始化方法**：`DslEntryGui` 与 `DslEntryOverlay` 在任何环境都会被加载登记，因为它们是扩展点而不是环境相关的方法。所以一个同时实现 `DslEntryClient` 与 `DslEntryGui` 的类，在服务端**仍会被加载**，只是 `initializeClient()` 不会被调用。需要严格隔离时应当拆成两个类。
+`launch()` 由 `DslRuntime.launch()` 显式触发，**不是 `start()` 的副作用**："这个进程有平台"和"游戏已经就绪"是两件事——测试与 standalone 工具会发布平台，但那时并没有游戏可启动。
+
+阶段只有两个。若将来出现第三段的诉求，先论证它是否真的需要独立时机，而不是惯性再加一个。
+
+## 哪些入口会被加载
+由注册文件里每个入口声明的端决定，并且**在加载类之前过滤**：
+
+| 端 | 含义 |
+| --- | --- |
+| `client` | 进程里有游戏客户端 |
+| `server` | 进程里有游戏服务端 |
+| `standalone` | 没有任何游戏端（独立窗口、独立服务、测试工具） |
+
+三者互斥。声明 `server` 的入口在客户端进程里**连类都不会被加载**，因此可以安全地在类体里引用服务端专有的类型。
+
+**边界**：声明只决定"在哪些环境加载"。同一个类里混写两端专有的代码，在它被加载的那一端仍然会炸——**声明是加载许可，不是代码隔离**。
+
+框架是运行期注册表，做不到编译期的依赖检查。真正的编译期隔离要靠使用方自己的源集划分（Fabric 的 `splitEnvironmentSourceSets`、Forge/NeoForge 的独立 client 包 + `DistExecutor`）；没有源集划分时，这一层就只剩"声明 + 运行期报错"。
+
+集成服务器（单人游戏）**不在这条轴上**：它跑在客户端进程内，`Environment` 描述的是进程形态，不是"此刻在跑哪一侧的逻辑"。
 
 ## 注册方式
-在 `META-INF/services/` 下按接口全名建文件，每行写一个实现类的全限定名。例如：
+`META-INF/kotlinmcui/entries`，**一个文件**（多个 jar 的声明按 classpath 合并），每行一条：
 
 ```
-META-INF/services/io.github.u2894638479.kotlinmcui.entry.DslEntryGui
+# <全限定类名> <环境>[,<环境>...]
+com.example.MyPage        client,server,standalone
+com.example.ClientPanel   client
+com.example.WindowEntry   client,standalone
 ```
+
+- 环境必须**手写**：`client` / `server` / `standalone`，没有 `*`、没有别名；
+- 空行与 `#` 开头的行跳过；其余每行必须**恰好两列**；
+- **缺环境列、未知端名、同一类重复声明**（同文件或跨 jar）都会抛错——注册文件写错是构建错误，不该被跳过。
 
 ### 为什么不用 `java.util.ServiceLoader`
-`ServiceLoader` 要求实现类有可访问的无参构造器。Kotlin 的 `object` 声明没有公开构造器，于是最自然的写法（`object MyEntry : DslEntryGui`）会直接不可用。
+理由是**时机**：我们需要在**加载类之前**按端过滤，否则"声明为 `server` 的类在客户端不会被加载"这条保证根本不成立；而 `ServiceLoader` 只交给你已经构造好的实例。其次它的文件格式由 JDK 固定（一行一个类名），放不下"环境"这第二列。
 
-自建加载器两种写法都能注册：无参构造器**可访问**时用它构造，否则改用 `INSTANCE` 静态字段——而后者才是 Kotlin `object` 的常规路径，因此不把它当成"回退"来告警。构造器存在但**抛异常**时也不会被 `INSTANCE` 悄悄顶替：那会把失败藏在一个没人要的第二个实例后面，直接跳过这个入口并带上异常打日志才是对的。
-
-加载每个条目时会用 `Class.cast` 按**它被列在的那个接口**做一次真正的检查，不匹配就跳过并记日志（发现标志位也只在被接受之后才设置）。这一步不能省，也不能写成 `as T`：实例缓存只按类索引（同一个类经由几个接口被发现也只实例化一次），而 `as T` 对非 reified 的类型参数会被擦除成它的**上界**（编译器会给 `Unchecked cast` 警告），于是列错接口的实例会混进结果列表，真正按接口类型的检查被推迟到调用方的循环里——那里没有 `catch`，`ClassCastException` 会直接冲出整个启动流程。
-
-加载一个条目的失败被隔离在该条目内：`Exception` 与 `LinkageError`（类缺失、静态初始化块抛错等 `Error`）都只让这一个入口出局，其余照常注册——否则一个引用客户端专属类的入口就能让整套入口加载不出来。出局的条目**不会消失**：它变成一条 `brokenEntries` 记录（见[加载不出来的条目](#加载不出来的条目)）。
-
-它同时用 `Class.forName(..., initialize = false)` 只解析类而不初始化，把"是否真的使用"推迟到实例化时。
+自建加载器同时支持两种写法：公开无参构造器可直接构造，否则取 `INSTANCE` 静态字段——后者才是 Kotlin `object` 的常规路径，不当作"回退"来告警。构造器存在但**抛异常**时也不会被 `INSTANCE` 悄悄顶替：那会把失败藏在一个没人要的第二个实例后面，正确做法是让这一个入口出局并带上异常打日志。
 
 ## 加载顺序
 ```kotlin
 DslRuntime.install { Metadata }   // 内部调用 DslEntryLoader.discover(environment)
 ```
 
-首次 `discover` 的动作是：加载公共入口并调用 `initialize()` → 按环境调用 `initializeClient()` 或 `initializeServer()` → 登记 GUI 入口 → 登记 Overlay 入口。
+`discover` 的动作顺序是**刻意排的**，每一步都只在前一步通过后才发生：
 
-**`discover` 不由后端直接调用**：它由 `DslRuntime.install` 在启动时调用一次，`install` 自己保证单次（重复调用会直接报错，见[后端](backend)）。缓存里的实例不会被清空重建，所以 `enabledOverlays` 里的对象始终是当前这批实例。
+1. 读注册文件（多 jar 合并）并解析校验；
+2. **按 `metadata.environment` 过滤**——不匹配的条目到这一步就没有了；
+3. `Class.forName(name, initialize = false)` 只解析类、不初始化；
+4. 用 `isAssignableFrom` 判定 `isGui` / `isOverlay`（**不实例化**）；
+5. 最后才实例化，并调用所有通过过滤的入口的 `initialize()`。
 
-只有初始化方法会被**调用**；GUI 与 Overlay 入口只被**登记**，等到用户打开列表或 Overlay 被启用时才执行其内容。
+`launch()` 阶段同样只作用于这份过滤后的快照：先校验平台已发布（否则抛错），再幂等地调用每个入口的 `launch()`。第二次调用只打一条警告并返回。
+
+`discover` 不由后端直接调用：它由 `DslRuntime.install` 在启动时调用一次，`install` 自己保证单次。
+
+只有这两个阶段会被**调用**；GUI 与 Overlay 的内容只在用户打开列表或 Overlay 被启用时才执行。
 
 `DslEntryLoader.entries` 返回的是登记结果的**快照**，调用方（列表页每帧遍历它）可以安全持有与遍历，不会因为重新 `discover` 而看到半截状态。
 
 ### 加载不出来的条目
-服务文件里列了、但用不了的条目不会静默消失。三种情形——类找不到、没实现它被列在的那个接口、构造不出来（没有可用构造器 / 没有 `INSTANCE` / 构造器或静态初始化块抛错）——都会在 `brokenEntries` 里留下一条 `Failure`：
+注册文件里列了、但用不了的条目不会静默消失。四种情形——类找不到、没实现 `DslEntryService`、构造不出来（没有可用构造器 / 没有 `INSTANCE` / 构造器或静态初始化块抛错）、以及**两个 Overlay 声明了同一个 id**（先声明者胜，后者的整条记录进失败列表）——都会在 `brokenEntries` 里留下一条 `Failure`：
 
 ```kotlin
 class Failure(val className: String, val hookName: String, val reason: String)
 ```
 
-`reason` 是给页面看的一行话（`does not implement DslEntryGui`、`class not found`、`could not be initialised (missing dependency?)`、`constructor failed: RuntimeException` 之类），完整堆栈仍然在日志里。记录按"类名 + 接口名"去重：同一个类被列错在两个文件里就是两条记录，因为需要修的正是那个文件。`brokenEntries` 与 `entries` 一样是快照，并在每次 `discover` 开始时清空。
+`reason` 是给页面看的一行话（`class not found`、`does not implement DslEntryService`、`could not be initialised (missing dependency?)`、`overlay id 'x' is already used by …` 之类），完整堆栈在日志里。记录按"类名 + 种类"去重：同一个类在两个地方出问题就是两条记录。
 
-配置页把这些记录**追加在列表末尾**，每条一行矮行：没有图标、没有开关、也不受"显示代码入口"开关影响——一个加载失败的条目正是最该被看见的东西。它比正常入口矮，因为正常入口的高度由那个 40 scaled 的图标撑着，而它只有一个自动定高的文本行加 2 scaled 内边距。
+配置页把这些记录**追加在列表末尾**，每条一行矮行：没有图标、没有开关、也不受"显示代码入口"开关影响——一个加载失败的条目正是最该被看见的东西。
 
 这一块解决了一个真实痛点：Overlay 的启用状态是按 **id** 存在 `overlays.json` 里的，如果那个 Overlay 的入口坏了，以前会静默什么都不画；现在能在列表里看到"你启用的那个入口坏了，原因是什么"。
 
@@ -80,19 +105,19 @@ class Failure(val className: String, val hookName: String, val reason: String)
 
 | 标志 | 含义 |
 | --- | --- |
-| `isCommon` / `isClient` / `isServer` | 对应的初始化方法已经执行过 |
-| `isGui` / `isOverlay` | 该入口提供了对应的扩展点 |
+| `environments` | 注册文件里声明的端（原样显示，不推导） |
+| `isGui` / `isOverlay` | 该入口是否实现了对应的种类接口 |
 
-GUI 列表页就是靠这组标志给每个入口标注徽章，并据此决定点击是否打开界面、是否显示 Overlay 开关。同一套标志也用于在开发时确认"某个入口是否真的在当前环境被加载和调用"。
+GUI 列表页就是靠这组标志给每个入口标注徽章（端与种类），并据此决定点击是否打开界面、是否显示 Overlay 开关。同一套标志也用于在开发时确认"某个入口是否真的在当前环境被加载和调用"。
 
 ## Overlay 的启用
 Overlay 默认**不启用**。启用状态是一个**有序 id 列表**：只有列在其中的 Overlay 才会被渲染，列表顺序即层叠顺序（越靠前越上层）。GUI 列表页的开关与"置顶"分别调用 `setOverlayEnabled` / `bringOverlayToTop`，两者都会立刻写回配置。
 
-配置存放在 `<configDir>/kotlinmcui/overlays.json`，内容就是 `DslEntryService.id` 的有序数组（模型见 `OverlayConfig`），由[配置工具](config)读写。读取发生在 `DslRuntime.install` 期间——那时元数据（配置目录）已经就绪，而后端本体还不需要被构造。三点设计意图：
+配置存放在 `<configDir>/kotlinmcui/overlays.json`，内容就是 Overlay 的 `id` 有序数组（模型见 `OverlayConfig`），由[配置工具](config)读写。读取发生在 `DslRuntime.install` 期间——那时元数据（配置目录）已经就绪，而后端本体还不需要被构造。三点设计意图：
 
 - 用 **id** 而不是实例或列表下标做标识：下标会随登记顺序变，实例每次启动都会重建，只有 id 在两次启动之间稳定；
 - **未安装模组的 id 保留在文件里**：临时卸掉一个模组不会丢掉它的开关状态，装回来仍然按原来的顺序渲染；
-- 两个 Overlay 共用同一个 id 时无法区分，所以登记时对重复 id 打一条警告（框架自己的演示入口就曾共用 `TestEntry` 的 id，为此拆成了各自的 id）。
+- 两个 Overlay 共用同一个 id 时无法区分，因此**先声明者胜**，后者不注册并作为失败条目显示出来（同上节）。
 
 根节点的 Overlay 层每帧执行：
 

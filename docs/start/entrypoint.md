@@ -6,17 +6,16 @@ parent: Start
 # 入口点
 `kotlinmcui`提供一个加载器无关的入口点，并且二进制兼容。意味着你可以不再依赖`fabric/forge/neoforge`等加载器提供的入口点。
 
-入口点有很多接口，你可以根据需求进行选择。
 ## 用法
 ### 入口点类编写
-入口类继承对应的接口即可。可以同时继承多个接口。
+每个入口都实现`DslEntryService`；想提供界面就再实现`DslEntryGui`或`DslEntryOverlay`。可以同时实现多个。
 
 更推荐使用`object`而不是`class`，虽然二者都能处理。
 
-所有入口接口都继承`DslEntryService`，因此每个入口类都必须实现`name`、`id`、`icon`三个成员。没有图标时`icon`可以写`ImageHolder.empty`。
+所有入口都必须实现`name`、`id`、`icon`三个成员（没有图标时`icon`写`ImageHolder.empty`），以及可选的`initialize()`与`launch()`。
 
 ```kotlin
-object Entry : DslEntryCommon, DslEntryGui {
+object Entry : DslEntryService, DslEntryGui {
     override val name = "Example"
     override val id = "example"
     override val icon = ImageHolder.empty
@@ -24,82 +23,96 @@ object Entry : DslEntryCommon, DslEntryGui {
     override fun initialize() {}
 
     context(ctx: DslContext)
-    override fun content() {
+    override fun gui() {
         // ...
     }
 }
 ```
-### service注册
-创建`resources/META-INF/services/io.github.u2894638479.kotlinmcui.entry.DslEntryXXX`文件，向其中写入注册类的全限定名。
-其中的`XXX`替换为你需要注册的接口。
+### 注册
+在`resources/META-INF/kotlinmcui/entries`（**一个文件**）里声明，每行一条，环境必须手写：
 
-文件内容示例
 ```text
-a.b.c.Entry
-a.b.c.Entry$Client
+# <全限定类名> <环境>[,<环境>...]
+a.b.c.Entry                  client,server,standalone
+a.b.c.Entry$ClientPanel      client
+a.b.c.Entry$ServerCommands   server
 ```
-这一写法与java的标准service是相同的，但是为了兼容`kotlin object`，没有直接使用`ServiceLoader`进行加载。
-### 注册错了会怎样
-加载器对失败逐条隔离：类找不到、没实现它被列在的那个接口、构造不出来（没有可用的无参构造器也没有`INSTANCE`，或者构造器、静态初始化块抛异常），都只让**这一个**入口出局，其余照常加载，游戏不会崩。
 
-出局的条目不会静默消失：它会以一行**占位项**出现在`kotlinmcui-backend`配置页列表的**末尾**——比正常入口矮，没有图标和开关，也不受"显示代码入口"开关影响。行上写着类名、它被列在哪个接口的服务文件里，以及一句原因（如`does not implement DslEntryGui`、`class not found`、`constructor failed: RuntimeException`），完整异常仍然打在日志里。
+- 环境只能是`client`、`server`、`standalone`，**没有`*`、没有别名**；
+- 空行与`#`开头的行跳过，其余每行必须恰好两列；
+- 缺环境列、端名拼错、同一个类声明两次都会**直接抛错**（同文件或跨 jar 都算）。
+
+嵌套的`object`用`$`连接（`a.b.c.Entry$Client`）。
+
+这一格式与 java 的标准 service 文件不同：我们需要在**加载类之前**按环境过滤，而`ServiceLoader`只会给出已构造好的实例，且它的格式由 JDK 固定、放不下"环境"这一列。
+
+### 注册错了会怎样
+加载器对失败逐条隔离：类找不到、没实现`DslEntryService`、构造不出来（没有可用的无参构造器也没有`INSTANCE`，或者构造器、静态初始化块抛异常），都只让**这一个**入口出局，其余照常加载，游戏不会崩。
+
+出局的条目不会静默消失：它会以一行**占位项**出现在`kotlinmcui-backend`配置页列表的**末尾**——比正常入口矮，没有图标和开关，也不受"显示代码入口"开关影响。行上写着类名、它声明成了哪种入口，以及一句原因（如`does not implement DslEntryService`、`class not found`、`constructor failed: RuntimeException`、`overlay id 'x' is already used by …`），完整异常仍然打在日志里。
 
 这一条对 Overlay 尤其有用：Overlay 的启用状态是按`id`存在配置里的，入口坏了以前会静默什么都不画，现在能在列表里直接看到是哪个入口坏了、为什么。
-### Client与Server区分
-`forge`和`fabric`等加载器都会对环境进行区分，因为某些类只存在于Client或Server其中一侧。防止引用到不存在的类（在类加载时就直接崩溃）。
+
+## 环境
+`forge`和`fabric`等加载器都会对环境进行区分，因为某些类只存在于Client或Server其中一侧，引用到不存在的类会在**类加载时**直接崩溃。`kotlinmcui`用同一套区分，但把它做成了注册文件里的一列：
+
+| 端 | 含义 |
+| --- | --- |
+| `client` | 进程里有游戏客户端 |
+| `server` | 进程里有游戏服务端 |
+| `standalone` | 没有任何游戏端（独立窗口、独立服务、测试工具） |
+
+三者互斥，一个进程只能是其中一个。声明了哪些端，这个类就只在那些环境被加载——**过滤发生在加载类之前**，所以声明`server`的类在客户端进程里连类都不会被加载。
+
+推荐写法是**按端拆成独立的类**，而不是在一个类里写分支：
+
 ```kotlin
-object Entry : DslEntryCommon, DslEntryGui, DslEntryOverlay {
+object Entry : DslEntryService, DslEntryGui {
     override val name = "Example"
     override val id = "example"
     override val icon = ImageHolder.empty
-
     override fun initialize() {}
-    // ...
+    context(ctx: DslContext) override fun gui() { /* ... */ }
+}
 
-    // 包含对Client特有类的调用
-    object Client : DslEntryClient {
-        override val name = "Example Client"
-        override val id = "example.client"
-        override val icon = ImageHolder.empty
+// 引用客户端特有的类；注册为 client
+object Client : DslEntryService {
+    override val name = "Example Client"
+    override val id = "example.client"
+    override val icon = ImageHolder.empty
+    override fun initialize() {}
+}
 
-        override fun initializeClient() {}
-    }
-
-    // 包含对Server特有类的调用
-    object Server : DslEntryServer {
-        override val name = "Example Server"
-        override val id = "example.server"
-        override val icon = ImageHolder.empty
-
-        override fun initializeServer() {}
-    }
+// 引用服务端特有的类；注册为 server
+object Server : DslEntryService {
+    override val name = "Example Server"
+    override val id = "example.server"
+    override val icon = ImageHolder.empty
+    override fun initialize() {}
 }
 ```
-展示了一种推荐写法。你也可以把这些类完全拆开，甚至放入不同源集。注意每个类都要注册在service中。
 
-在Client环境会加载`DslEntryCommon`和`DslEntryClient`，
-在Server环境会加载`DslEntryCommon`和`DslEntryServer`。从而避免引用到不存在的类。
+**边界**：环境声明是**加载许可**，不是代码隔离。同一个类里混写两端专有的代码，在它被加载的那一端仍然会崩——框架是运行期注册表，做不到编译期检查。要真正在编译期隔离，得靠你自己的源集划分（Fabric 的`splitEnvironmentSourceSets`、Forge/NeoForge 的独立 client 包配`DistExecutor`）。
 
-注意，以上区分仅对运行环境进行区分，Server环境没有`minecraft`的渲染相关类，不表示无法显示gui。Server环境下仍可能通过其它后端实现ui渲染，因此Gui和Overlay仍然会被加载。**因此，如果一个入口类同时继承了`DslEntryClient`和`DslEntryGui`，那么在Server环境下虽然`initializeClient()`不会被执行，但是这个类会被加载。**
+注意区分的是**进程形态**，不是"此刻在跑哪一侧的逻辑"：单人游戏的集成服务器跑在客户端进程内，因此那一侧仍是`client`。
 
-## 接口
-目前有5种。分别为Client、Server、Common、Gui、Overlay。
+## 阶段
+只有两个阶段：
 
-这5种接口都继承`DslEntryService`，所以`name`、`id`、`icon`三个成员每个入口类都要实现：`name`显示在配置页的列表里，`id`用来区分入口，`icon`没有时写`ImageHolder.empty`。
+- `initialize()`：**装载期**。元数据可读，游戏客户端不可用，所以只能读事实、注册内容；**不要**在这里开窗、起服务或建根。
+- `launch()`：**平台已发布、能建屏之后**。开窗、起服务、建根都放这里。
 
-### Client
-需要实现`DslEntryClient.initializeClient()`。此为逻辑代码执行的入口点。在Client环境下会被调用一次。
-### Server
-需要实现`DslEntryServer.initializeServer()`。此为逻辑代码执行的入口点。在Server环境下会被调用一次。
-### Common
-需要实现`DslEntryCommon.initialize()`。此为逻辑代码执行的入口点。只要注册了，在任何环境下都会被调用一次。
+`launch()`由`DslRuntime.launch()`显式触发，不是发布平台时的副作用：测试与独立工具也会发布平台，但那时并没有游戏可启动。游戏内由后端在客户端/服务端初始化完成后调用一次，独立运行时由`main`自己调用。
+
+## 种类
+种类与阶段是两条独立的轴：实现哪个种类接口决定"提供什么"，注册文件里的环境决定"在哪些环境加载"。
+
 ### Gui
-需要实现`DslEntryGui.content()`。函数需要实现ui内容。
+实现`DslEntryGui.gui()`，函数内容是完整的 ui。
 
-通过此方式注册的gui会显示在`kotlinmcui-backend`的配置页面中，点击可以进入这个界面对应的`Screen`。
 ```kotlin
 context(ctx: DslContext)
-override fun content() {
+override fun gui() {
     Row {
         Column {
             // ... 
@@ -111,15 +124,10 @@ override fun content() {
     DefaultBackground {}
 }
 ```
+通过此方式注册的 gui 会显示在`kotlinmcui-backend`的配置页面中，点击可以进入这个界面对应的`Screen`。
+
 ### Overlay
-需要实现`DslEntryOverlay.overlay()`。实现内容同上。
+实现`DslEntryOverlay.overlay()`，内容同上。通过此方式注册的 overlay 会在游戏界面顶层全屏叠加渲染，并且可以处理鼠标键盘等事件；需要在`kotlinmcui-backend`的配置页面内部手动开启后才会显示，开启顺序即层叠顺序。
 
-```kotlin
-context(ctx: DslContext)
-override fun overlay() {
-    // ... 
-}
-```
-通过此方式注册的overlay会在游戏界面顶层全屏叠加渲染，并且可以处理鼠标键盘等事件。
-
-需要在`kotlinmcui-backend`的配置页面内部手动开启后才会显示。
+### 不提供界面
+两个种类接口都不实现也是合法的：那是一个"只做事"的入口（例如在`launch()`里打开一个窗口）。它不会出现在配置页的正常列表里，只在打开"显示代码入口"时可见。

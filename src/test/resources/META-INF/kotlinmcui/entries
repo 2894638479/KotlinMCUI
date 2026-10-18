@@ -1,0 +1,12 @@
+# Loader fixtures. Comments and blank lines are ignored; every other line is <class> <environment>[,<environment>...].
+io.github.u2894638479.kotlinmcui.entry.FixturePage        client,server,standalone
+io.github.u2894638479.kotlinmcui.entry.FixtureOverlay     client,server,standalone
+io.github.u2894638479.kotlinmcui.entry.FixtureBoth        client,server,standalone
+io.github.u2894638479.kotlinmcui.entry.FixtureStandaloneOnly standalone
+io.github.u2894638479.kotlinmcui.entry.FixtureThrowingConstructor client,server,standalone
+io.github.u2894638479.kotlinmcui.entry.FixtureBrokenStaticInit client,server,standalone
+io.github.u2894638479.kotlinmcui.entry.FixtureNotAService  client,server,standalone
+io.github.u2894638479.kotlinmcui.entry.FixtureGuiClass     client,server,standalone
+io.github.u2894638479.kotlinmcui.entry.FixtureOverlayTwo client,server,standalone
+io.github.u2894638479.kotlinmcui.entry.FixtureNoUi client,server,standalone
+io.github.u2894638479.kotlinmcui.entry.FixtureOverlayDup client,server,standalone

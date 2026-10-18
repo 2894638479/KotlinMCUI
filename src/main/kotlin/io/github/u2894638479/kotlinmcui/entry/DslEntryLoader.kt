@@ -3,18 +3,34 @@ package io.github.u2894638479.kotlinmcui.entry
 import io.github.u2894638479.kotlinmcui.backend.Environment
 import io.github.u2894638479.kotlinmcui.backend.dslPlatformProvider
 import io.github.u2894638479.kotlinmcui.context.DslContext
-import io.github.u2894638479.kotlinmcui.logger.dslLogger
 import io.github.u2894638479.kotlinmcui.dsl.forEachWithId
 import io.github.u2894638479.kotlinmcui.dsl.ui.Box
+import io.github.u2894638479.kotlinmcui.logger.dslLogger
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.reflect.Modifier
 
+/**
+ * Discovers the entry points declared by every mod and runs their two stages.
+ *
+ * The declaration lives in `META-INF/kotlinmcui/entries` - one line per entry, its class and the
+ * environments it runs in - not in the JDK's `META-INF/services` files: the environment column is what
+ * makes a declaration checkable before anything is loaded, and a wrong listing is a loud error rather than
+ * a class that quietly does nothing.
+ *
+ * The load order is the safety property: parse and validate the text, **filter by environment**, and only
+ * then load classes (`Class.forName(..., initialize = false)`). A class declared for another environment is
+ * never touched - not loaded, not initialised.
+ */
 object DslEntryLoader {
-    private val cache = mutableMapOf<Class<*>, Pair<DslEntryService, Flags>>()
-    private var snapshot: List<Pair<DslEntryService, Flags>> = emptyList()
-    private var environment = Environment.NONE
+    /** Every jar contributes this file; the classpath merges the lines. */
+    private const val REGISTRY = "META-INF/kotlinmcui/entries"
+
+    private var environment = Environment.STANDALONE
     private var launched = false
+
+    private val cache = mutableMapOf<Class<*>, DslEntryService>()
+    private var snapshot: List<Pair<DslEntryService, Flags>> = emptyList()
 
     private val registeredOverlays = mutableMapOf<String, DslEntryOverlay>()
     private val enabledIds = mutableListOf<String>()
@@ -26,13 +42,11 @@ object DslEntryLoader {
     /** Enabled overlays in stacking order: the first one is the topmost layer. */
     val enabledOverlays: List<DslEntryOverlay> get() = enabledSnapshot
 
-    class Flags {
-        var isClient = false
-            internal set
-        var isServer = false
-            internal set
-        var isCommon = false
-            internal set
+    /** What one entry declared, plus what its type says about it. */
+    class Flags(
+        /** The environments the registry declares it for; shown as-is on the entry page. */
+        val environments: Set<Environment>,
+    ) {
         var isGui = false
             internal set
         var isOverlay = false
@@ -41,14 +55,14 @@ object DslEntryLoader {
 
     /**
      * A listing that could not be turned into a service: the class is missing, does not implement
-     * the hook it is listed under, or cannot be constructed.
+     * [DslEntryService], is neither a gui nor an overlay, or cannot be constructed.
      *
-     * The log keeps the whole stack; this is what the config page shows as a placeholder, so
-     * [reason] stays one short line.
+     * The log keeps the whole stack; this is what the config page shows as a placeholder, so [reason]
+     * stays one short line.
      */
     class Failure internal constructor(
         val className: String,
-        /** The hook interface whose service file lists it. */
+        /** The kind the declaration expected. */
         val hookName: String,
         val reason: String,
     )
@@ -60,31 +74,97 @@ object DslEntryLoader {
     val brokenEntries: List<Failure> get() = failureSnapshot
 
     /**
-     * Discover every entry on the classpath and initialise the ones the current
-     * environment applies to, then read the stored overlay list.
+     * Discover every entry on the classpath, keep the ones declared for [environment], and run their
+     * `initialize` stage.
      *
-     * Called by [io.github.u2894638479.kotlinmcui.backend.DslRuntime.install], which
-     * runs it exactly once and guarantees that metadata (and therefore the config
-     * directory) is already available.
+     * Called by [io.github.u2894638479.kotlinmcui.backend.DslRuntime.install], which runs it exactly once
+     * and guarantees that metadata (and therefore the environment) is already available.
+     *
+     * Format errors in a registry file throw - a broken declaration is a build mistake, not something to
+     * skip. Unloadable classes do not throw: they go to [brokenEntries] and the entry page shows them.
      */
     internal fun discover(environment: Environment) {
         this.environment = environment
         launched = false
         failures.clear()
-        initCommon()
-        when(environment) {
-            Environment.CLIENT -> initClient()
-            Environment.SERVER -> initServer()
-            Environment.NONE -> {}
+        cache.clear()
+
+        val declarations = readDeclarations().filter { environment in it.environments }
+        val loaded = mutableListOf<Pair<DslEntryService, Flags>>()
+        declarations.forEach { declaration ->
+            val cls = try {
+                Class.forName(declaration.className, false, loader())
+            } catch(e: ClassNotFoundException) {
+                recordFailure(declaration.className, "DslEntryService", "class not found")
+                return@forEach
+            } catch(e: LinkageError) {
+                recordFailure(declaration.className, "DslEntryService", "could not be loaded (missing dependency?)")
+                return@forEach
+            }
+            if(!DslEntryService::class.java.isAssignableFrom(cls)) {
+                recordFailure(declaration.className, "DslEntryService", "does not implement DslEntryService")
+                return@forEach
+            }
+            val isGui = DslEntryGui::class.java.isAssignableFrom(cls)
+            val isOverlay = DslEntryOverlay::class.java.isAssignableFrom(cls)
+            // Instantiating is the last step: everything above is a decision about the class, not an
+            // effect on it.
+            val service = try {
+                cache.getOrPut(cls) { getObject(cls) }
+            } catch(e: Exception) {
+                recordFailure(declaration.className, kindName(isGui, isOverlay), reasonOf(e))
+                return@forEach
+            } catch(e: LinkageError) {
+                recordFailure(declaration.className, kindName(isGui, isOverlay), "could not be initialised (missing dependency?)")
+                return@forEach
+            }
+            loaded += service to Flags(declaration.environments).also {
+                it.isGui = isGui
+                it.isOverlay = isOverlay
+            }
         }
-        initGui()
-        initOverlay()
-        snapshot = cache.values.toList()
+
+        snapshot = loaded
         failureSnapshot = failures.values.toList()
         collectOverlays()
+        // The overlay pass can add failures (a duplicate id), so refresh the snapshot after it.
+        failureSnapshot = failures.values.toList()
         enabledIds.clear()
         enabledIds += readOverlayIds()
         refreshEnabledOverlays()
+
+        // Stage one: every entry that made it through the filter, in declaration order.
+        loaded.forEach { (service, _) -> runStage(service, "initialize") { it.initialize() } }
+    }
+
+    /**
+     * Run the second stage on every entry that passed the environment filter.
+     *
+     * Called by [io.github.u2894638479.kotlinmcui.backend.DslRuntime.launch] - explicitly, never as a side
+     * effect of publishing a platform: "there is a platform" and "the game is ready" are two facts.
+     *
+     * The registry file's order is the order. Idempotent, and an error before the platform is published.
+     */
+    internal fun launch() {
+        check(dslPlatformProvider != null) {
+            "DslEntryLoader.launch was called before the platform was published; " +
+                "game and standalone backends must call DslRuntime.start first"
+        }
+        if(launched) {
+            dslLogger.warn("DslEntryLoader.launch already ran; this call is ignored")
+            return
+        }
+        launched = true
+        snapshot.forEach { (service, _) -> runStage(service, "launch") { it.launch() } }
+    }
+
+    private inline fun runStage(service: DslEntryService, stage: String, block: (DslEntryService) -> Unit) {
+        try {
+            block(service)
+        } catch(e: Throwable) {
+            // One broken entry must not take the others (or the game) down with it.
+            dslLogger.error("entry ${service::class.java.name} threw in $stage", e)
+        }
     }
 
     /** Whether [overlay] is currently enabled. */
@@ -116,16 +196,47 @@ object DslEntryLoader {
         }
     }
 
+    private fun readDeclarations(): List<EntryDeclaration> {
+        val declarations = mutableListOf<EntryDeclaration>()
+        val resources = loader().getResources(REGISTRY)
+        while(resources.hasMoreElements()) {
+            resources.nextElement().openStream().use { stream ->
+                BufferedReader(InputStreamReader(stream, "utf-8")).use { reader ->
+                    declarations += parseEntryRegistry(reader.readText())
+                }
+            }
+        }
+        // Two jars declaring the same class for different environments is the same mistake as declaring it
+        // twice in one file; make it one rule instead of two.
+        val merged = mutableMapOf<String, Set<Environment>>()
+        declarations.forEach { declaration ->
+            val previous = merged.put(declaration.className, declaration.environments)
+            if(previous != null) {
+                throw IllegalStateException(
+                    "'${declaration.className}' is declared more than once across the entry registries"
+                )
+            }
+        }
+        return declarations
+    }
+
     private fun collectOverlays() {
         registeredOverlays.clear()
         snapshot.forEach { (service, flags) ->
             if (!flags.isOverlay) return@forEach
             val overlay = service as DslEntryOverlay
-            if (registeredOverlays.put(overlay.id,overlay) != null) {
-                // The stored list holds ids, so two overlays sharing one cannot be
-                // told apart once the config is written.
-                dslLogger.warn("two overlays share the id '${overlay.id}'; only one of them can be enabled")
+            val first = registeredOverlays[overlay.id]
+            if (first != null) {
+                // Two mods may pick the same id ("settings" is the obvious one). Declaring first wins,
+                // because the file order is deterministic; the later one is not silently dropped - it is
+                // reported on the entry page, where its author can see it without anything crashing.
+                recordFailure(
+                    service::class.java.name, "DslEntryOverlay",
+                    "overlay id '${overlay.id}' is already used by ${first::class.java.name}",
+                )
+                return@forEach
             }
+            registeredOverlays[overlay.id] = overlay
         }
     }
 
@@ -133,106 +244,25 @@ object DslEntryLoader {
         enabledSnapshot = enabledIds.mapNotNull(registeredOverlays::get)
     }
 
-    /**
-     * Run the second stage: entries that need a published platform now get their turn.
-     *
-     * Called by [io.github.u2894638479.kotlinmcui.backend.DslRuntime.start], after it published the
-     * platform - before that, opening a window or building a root is impossible, so this refuses to run
-     * instead of letting entries fail one by one.
-     *
-     * Common goes first, exactly like the initialisation stage: it is the part every environment has.
-     * A second call is ignored with a warning - start is a one-shot event, and running the hooks twice
-     * would double whatever they started.
-     */
-    internal fun launch() {
-        check(dslPlatformProvider != null) {
-            "DslEntryLoader.launch was called before the platform was published; " +
-                "game and standalone backends must call DslRuntime.start first"
-        }
-        if (launched) {
-            dslLogger.warn("DslEntryLoader.launch already ran; this call is ignored")
-            return
-        }
-        launched = true
-        load<DslEntryCommon> {}.forEach { it.launch() }
-        when (environment) {
-            Environment.CLIENT -> load<DslEntryClient> {}.forEach { it.launchClient() }
-            Environment.SERVER -> load<DslEntryServer> {}.forEach { it.launchServer() }
-            Environment.NONE -> {}
-        }
+    private fun loader(): ClassLoader = Thread.currentThread().contextClassLoader
+
+    private fun kindName(isGui: Boolean, isOverlay: Boolean): String = when {
+        isGui && isOverlay -> "DslEntryGui+DslEntryOverlay"
+        isGui -> "DslEntryGui"
+        isOverlay -> "DslEntryOverlay"
+        else -> "DslEntryService"
     }
 
-    private fun initClient() { load<DslEntryClient> { isClient = true }.forEach { it.initializeClient() } }
-    private fun initGui() { load<DslEntryGui> { isGui = true } }
-    private fun initOverlay() { load<DslEntryOverlay> { isOverlay = true } }
-    private fun initServer() { load<DslEntryServer> { isServer = true }.forEach { it.initializeServer() } }
-    private fun initCommon() { load<DslEntryCommon> { isCommon = true }.forEach { it.initialize() } }
-
-    private inline fun <reified T: DslEntryService> load(flagAction: Flags.() -> Unit) = load(T::class.java) { flagAction() }
-
-    private inline fun <T: DslEntryService> load(
-        serviceInterface: Class<T>,
-        classLoader: ClassLoader = Thread.currentThread().contextClassLoader,
-        flagAction: Flags.() -> Unit
-    ): List<T> {
-        val result = mutableListOf<T>()
-        try {
-            val configs = classLoader.getResources("META-INF/services/${serviceInterface.name}")
-            while (configs.hasMoreElements()) {
-                configs.nextElement().openStream().use { stream ->
-                    BufferedReader(InputStreamReader(stream, "utf-8")).use { reader ->
-                        var line: String?
-                        while (reader.readLine().also { line = it } != null) {
-                            val className = line!!.trim()
-                            if (className.isEmpty() || className.startsWith("#")) continue
-                            try {
-                                val clazz = Class.forName(className, false, classLoader)
-                                val item = cache.getOrPut(clazz) { getObject(clazz) to Flags() }
-                                // The cache is keyed by class alone, and `as T` would be erased
-                                // to the type parameter's bound - the JVM cannot check a type
-                                // variable - so the interface is checked here, by name. A wrong
-                                // listing has to fail inside this catch: the caller's loop over
-                                // the result has no catch, and would take the startup down.
-                                result += serviceInterface.cast(item.first)
-                                item.second.flagAction()
-                            } catch (e: Exception) {
-                                dslLogger.error("failed to load entry $className", e)
-                                recordFailure(className, serviceInterface, e)
-                            } catch (e: LinkageError) {
-                                // A missing dependency or a failed static initialiser takes
-                                // down this entry only, never the rest of the load.
-                                dslLogger.error("failed to load entry $className", e)
-                                recordFailure(className, serviceInterface, e)
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            dslLogger.error("failed to read the service files of ${serviceInterface.name}", e)
-            return emptyList()
-        }
-        return result
+    private fun recordFailure(className: String, hook: String, reason: String) {
+        failures.putIfAbsent("$className|$hook", Failure(className, hook, reason))
     }
 
-    /**
-     * Keep a short, page-readable record of a listing that could not be turned into a service.
-     * The same class listed wrongly under two hooks is two records: which file is wrong is
-     * exactly what has to be fixed.
-     */
-    private fun recordFailure(className: String, serviceInterface: Class<*>, e: Throwable) {
-        val hook = serviceInterface.simpleName
-        val reason = when {
-            e is ClassCastException -> "does not implement $hook"
-            e is ClassNotFoundException -> "class not found"
-            e is LinkageError -> "could not be initialised (missing dependency?)"
-            e is java.lang.reflect.InvocationTargetException ->
-                "constructor failed: ${e.cause?.let { cause -> cause::class.simpleName } ?: "unknown"}"
-            else -> e.message?.lineSequence()?.firstOrNull()?.trim()?.take(120)?.takeIf { it.isNotEmpty() }
-                ?: e::class.simpleName
-                ?: "failed to load"
-        }
-        failures.putIfAbsent("$className|$hook",Failure(className,hook,reason))
+    private fun reasonOf(e: Exception): String = when {
+        e is java.lang.reflect.InvocationTargetException ->
+            "constructor failed: ${e.cause?.let { cause -> cause::class.simpleName } ?: "unknown"}"
+        else -> e.message?.lineSequence()?.firstOrNull()?.trim()?.take(120)?.takeIf { it.isNotEmpty() }
+            ?: e::class.simpleName
+            ?: "failed to load"
     }
 
     private fun getObject(clazz: Class<*>): DslEntryService {
