@@ -1,0 +1,40 @@
+name: release
+
+# Pushing a tag is the only thing that publishes. A branch push builds and tests (ci.yml) and stops
+# there; the branch name never decides a release. See docs/dev/release.md.
+on:
+  push:
+    tags: ['v*']
+
+# Two tags pushed together must not publish at the same time.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - name: checkout repository
+        uses: actions/checkout@v7
+      - name: validate gradle wrapper
+        uses: gradle/actions/wrapper-validation@v6
+      - name: setup jdk
+        uses: actions/setup-java@v6
+        with:
+          java-version: '21'
+          distribution: 'microsoft'
+      - name: make gradle wrapper executable
+        run: chmod +x ./gradlew
+      # The tag is the version, and the version is in gradle.properties. Refusing to publish when
+      # they disagree keeps the two from drifting into "the jar says one thing, the tag another".
+      - name: the tag and the version must agree
+        run: ./gradlew assertReleaseTag
+      - name: publish
+        run: ./gradlew publishMods
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,11 +1,13 @@
-name: build
-on: [pull_request, push, workflow_dispatch]
+name: ci
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-24.04
-    permissions:
-      contents: write
     steps:
       - name: checkout repository
         uses: actions/checkout@v7
@@ -23,12 +25,5 @@ jobs:
       - name: capture build artifacts
         uses: actions/upload-artifact@v7
         with:
-          name: Artifacts
+          name: artifacts
           path: build/libs/
-      - name: publish
-        if: github.event_name == 'push'
-        env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: ./gradlew publishMods

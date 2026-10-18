@@ -122,21 +122,34 @@ tasks.processResources {
 }
 
 
-val tag = "v$mod_version"
+// The tag this build publishes under. A tag build takes it from the ref; a local build only needs a
+// name, because the release workflow is the only publisher now - nothing publishes from a branch push.
+val versionTag = "v$mod_version"
+val releaseTag = providers.environmentVariable("GITHUB_REF_NAME").orNull?.takeIf { it.isNotBlank() }
+    ?: versionTag
 
-val shouldPublish by lazy {
-    providers.exec {
-        commandLine("git", "ls-remote", "--tags", "origin", "refs/tags/$tag")
-    }.standardOutput.asText.get().isBlank()
+tasks.register("assertReleaseTag") {
+    group = "publishing"
+    description = "Fails unless the tag being built is the version in gradle.properties."
+    doLast {
+        val ref = providers.environmentVariable("GITHUB_REF_NAME").orNull
+            ?: error("GITHUB_REF_NAME is not set: this task runs in the release workflow, on a tag")
+        // Against the version, not against releaseTag: releaseTag is read from this same variable, so
+        // comparing the two would only prove the variable equals itself.
+        check(ref == versionTag) {
+            "the tag '$ref' does not match '$versionTag', which is the version in gradle.properties"
+        }
+    }
 }
-tasks.configureEach {
-    if(group == "publishing") enabled = shouldPublish
-}
+
+val changelogText = layout.projectDirectory.file("CHANGELOG.md").asFile
+    .takeIf { it.isFile }?.readText()?.trim().orEmpty()
+    .ifEmpty { "no changelog." }
 
 publishMods {
     file = tasks.jar.get().archiveFile
     additionalFiles.from(sourcesJar.archiveFile)
-    changelog = "no changelog."
+    changelog = changelogText
     type = when {
         mod_version.contains("SNAPSHOT",true) -> ALPHA
         mod_version.contains("alpha",true) -> ALPHA
@@ -169,7 +182,7 @@ publishMods {
     github {
         accessToken = providers.environmentVariable("GITHUB_TOKEN")
         repository = "2894638479/KotlinMCUI"
-        commitish = "master"
-        tagName = tag
+        commitish = providers.environmentVariable("GITHUB_SHA").orNull ?: "master"
+        tagName = releaseTag
     }
 }
