@@ -147,9 +147,11 @@ class DslScreen private constructor(
     context(ctx: DslContext)
     private fun ImeBox() {
         val state = dataStore.rootState ?: return
+        // No composition in progress is the common case; return before any tree walk so a frame without
+        // IME input does not pay for one.
+        if (state.preedit.isEmpty) return
         val component = testHit { it.takeIf { it.identity == state.focused } } ?: return
         val rect = component.preeditArea?.transformedMaxBound(component.relativeTransform(this) ?: return) ?: return
-        if (state.preedit.isEmpty) return
         if (component.selfRenderPreedit) return
         Overlay(Modifier, OverlayAlign.AutoToRect(rect, this.rect)) {
             Box {
