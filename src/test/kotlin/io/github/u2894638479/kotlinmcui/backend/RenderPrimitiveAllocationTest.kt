@@ -140,10 +140,11 @@ class RenderPrimitiveAllocationTest {
     fun `the ColorSquare palette triangle reuses its buffers instead of rebuilding them`() {
         assumeTrue(bean.isThreadAllocatedMemorySupported, "this JVM cannot report per-thread allocation")
 
-        // The framework's own scratch buffers for the palette triangle, not a local copy:
-        // this is the buffer `Colors.ColorSquare` hands to `renderTriangles` every frame.
-        val vertices = Colors.triangleVerticesBuffer()
-        val colors = Colors.triangleColorsBuffer()
+        // The scratch buffers of one root, which is what `Colors.ColorSquare` hands to `renderTriangles`
+        // every frame: one pair per root, never one pair for the process.
+        val root = io.github.u2894638479.kotlinmcui.integration.TestRoot.newRoot()
+        val vertices = root.triangleVertices
+        val colors = root.triangleColors
         fun drawPaletteTriangle() {
             vertices[0] = 60f; vertices[1] = 20f
             vertices[2] = 10f; vertices[3] = 60f

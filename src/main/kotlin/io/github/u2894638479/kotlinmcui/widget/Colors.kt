@@ -214,12 +214,18 @@ private fun Rect.writeTriangleVertices(out: FloatArray) {
     out[5] = bottom
 }
 
-/** Draw that triangle with the three corner colours. */
+/**
+ * Draw that triangle with the three corner colours.
+ *
+ * The scratch arrays come from the caller, which takes them from **its own root**: they must not be
+ * shared between roots, because two roots can be drawing on two threads at once.
+ */
 context(backend: DslRootRenderer<RP>, renderParam: RP)
-private fun <RP> DslRootRenderer<RP>.paletteTriangle(rect: Rect, apex: Color, left: Color, right: Color) {
+private fun <RP> DslRootRenderer<RP>.paletteTriangle(
+    rect: Rect, apex: Color, left: Color, right: Color,
+    vertices: FloatArray, colors: IntArray,
+) {
     if(rect.width <= 0.px || rect.height <= 0.px) return
-    val vertices = Colors.triangleVerticesBuffer()
-    val colors = Colors.triangleColorsBuffer()
     rect.writeTriangleVertices(vertices)
     colors[0] = apex.rgbaInt
     colors[1] = left.rgbaInt
@@ -301,24 +307,6 @@ private const val HUE_SECTORS = 6
  */
 object Colors {
 
-    /**
-     * Scratch buffers for the triangle swatch, reused instead of rebuilt on every draw.
-     *
-     * `renderTriangles` reads its arrays during the call and the framework draws on one
-     * thread, so a single instance's buffer is always consumed before the next draw
-     * overwrites it — including the nested case, where a draw triggered from inside
-     * another draw finishes first.
-     */
-    /**
-     * Scratch buffers for the triangle swatch, filled and consumed inside a single
-     * [paletteTriangle] call. The accessors keep them private while letting the top-level
-     * drawing function reach them.
-     */
-    private val vertices = FloatArray(6)
-    private val colors = IntArray(3)
-
-    internal fun triangleVerticesBuffer() = vertices
-    internal fun triangleColorsBuffer() = colors
 
     context(ctx: DslContext)
     fun ColorSquare(
@@ -380,7 +368,10 @@ object Colors {
                 val rect = instance.rect
                 val color = prop.value
                 if(color.sDouble > 0.0) hue.value = color.hDouble
-                backend.paletteTriangle(rect,Color.ofHSV(hue.value,1.0,1.0),Color.WHITE,Color.BLACK)
+                backend.paletteTriangle(
+                    rect,Color.ofHSV(hue.value,1.0,1.0),Color.WHITE,Color.BLACK,
+                    instance.dataStore!!.root.triangleVertices, instance.dataStore!!.root.triangleColors,
+                )
                 val (markerX,markerY) = triangleMarker(color)
                 backend.paletteMarker(rect,markerX,markerY,unit)
             }
@@ -484,6 +475,7 @@ object Colors {
                     Color(1.0,0.0,0.0,alpha),
                     Color(0.0,1.0,0.0,alpha),
                     Color(0.0,0.0,1.0,alpha),
+                    instance.dataStore!!.root.triangleVertices, instance.dataStore!!.root.triangleColors,
                 )
                 val (x,y) = hueTriangleMarker(prop.value)
                 backend.paletteMarker(rect,x,y,unit)
@@ -575,3 +567,4 @@ private fun channelSlider(
         channel.toString(color.value).emit()
     } else TextAutoFold { channel.name.take(1).emit() }
 }
+

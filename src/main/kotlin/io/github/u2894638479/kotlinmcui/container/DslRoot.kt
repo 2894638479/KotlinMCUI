@@ -72,6 +72,15 @@ class DslRoot(
      * [component]. The render pass copies this rect onto every mounted screen.
      */
     val rect: MutRect = MutRect()
+    /**
+     * Scratch buffers for the triangle swatches of this root's colour pickers.
+     *
+     * One pair **per root**, not one pair for the process: the arrays are filled and consumed inside a
+     * single draw call, and two roots may be rendering on two threads at the same moment. Sharing one
+     * pair would let one root's fill land between another's fill and its `renderTriangles` call.
+     */
+    internal val triangleVertices = FloatArray(6)
+    internal val triangleColors = IntArray(3)
 
     /**
      * The session slots of this root: keyed by the bare key, shared by every screen mounted here.
