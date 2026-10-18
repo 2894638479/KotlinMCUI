@@ -182,17 +182,10 @@ oot.close(). */
             fun DslComponent.components(): Int = 1 + children.sumOf { it.components() }
             return dslScreen.components()
         }
-        override val conflictId: DslId? = null
         // The overlay describes this screen's own tree. A screen that was never mounted has no root
         // state yet, so these read as "nothing focused / nothing hovered".
         override val focusedId get() = rootState?.focused
         override val hoveredId get() = rootState?.hovered
-        override val focusedDepth: Int get() {
-            return 0
-        }
-        override val hoveredDepth: Int get() {
-            return 0
-        }
         override val mouse get() = root.input.mouse
     }
 }

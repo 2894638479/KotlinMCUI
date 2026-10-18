@@ -22,7 +22,6 @@ data class ImageHolder(
     /** The image height in pixels, or a proportional value for aspect ratio. */
     val height: Measure
 ) {
-    val isEmpty get() = this === empty
     companion object {
         /** A sentinel representing no image. */
         val empty = ImageHolder("",0.px,0.px)

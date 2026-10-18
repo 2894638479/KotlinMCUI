@@ -23,10 +23,7 @@ interface DebugMetrics {
     val dslRenderTimeMs: Double
     val backendRenderTimeMs: Double
     val components: Int
-    val conflictId: DslId?
     val focusedId: DslId?
     val hoveredId: DslId?
-    val focusedDepth: Int
-    val hoveredDepth: Int
     val mouse: Position
 }

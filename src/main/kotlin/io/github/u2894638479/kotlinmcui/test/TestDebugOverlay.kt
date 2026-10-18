@@ -33,7 +33,5 @@ fun DebugMetrics.content() = ScrollableColumn {
     "components" display components
     "focused" display (focusedId != null)
     "hovered" display (hoveredId != null)
-    "focused depth" display focusedDepth
-    "hovered depth" display hoveredDepth
     "mouse" display "(${mouse.x.pixelsOrElse { 0.0 }}, ${mouse.y.pixelsOrElse { 0.0 }})"
 }
