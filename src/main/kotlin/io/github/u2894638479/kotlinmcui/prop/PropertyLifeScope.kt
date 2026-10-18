@@ -28,7 +28,7 @@ class PropertyLifeScope internal constructor(
 ) {
     internal val size get() = map.size
 
-    private val declaredSites = Object2ObjectOpenHashMap<DslId, Any>()
+    private val declaredSites = Object2ObjectOpenHashMap<Any, Any>()
 
     /**
      * Keys this scope saw declared by **two different declaration sites** in the same screen.
@@ -76,7 +76,7 @@ class PropertyLifeScope internal constructor(
         // is the per-frame path: do not grow the identity chain for nothing.
         key == null -> identity + site
         else -> identity + key + site
-    }.also { noteDeclaration(key, site) }
+    }
 
     /**
      * Record a key claimed by more than one declaration site in this screen.
@@ -87,13 +87,15 @@ class PropertyLifeScope internal constructor(
      */
     private fun noteDeclaration(userKey: Any?, site: Any) {
         if(isStatic || isSession || userKey == null) return
-        val key = DslId(userKey)
-        val first = declaredSites[key]
+        // Keyed by the raw key: no DslId is built on the normal path.
+        val first = declaredSites[userKey]
         if(first == null) {
-            declaredSites[key] = site
+            declaredSites[userKey] = site
             return
         }
         if(first === site) return
+        // Only the recorded path builds the DslId: it is the rare one.
+        val key = DslId(userKey)
         if(reusedKeys.none { it.key == key && it.laterSite === site }) {
             reusedKeys += ReusedKey(key, first, site)
             dslLogger.warn(
@@ -252,6 +254,9 @@ class PropertyLifeScope internal constructor(
     fun <T> property(key:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T): StableRW<T> {
         val identity = getKey(key, init::class)
         return map.getOrPut(identity) {
+            // Only a brand-new entry can carry new information about key reuse: the diagnostic is a
+            // creation-time check, never a per-frame one.
+            noteDeclaration(key, init::class)
             // The scope is created once, with the entry, and cancelled with it: the coroutines a page
             // starts in its initialiser belong to the property, not to an independent slot.
             val scope = CoroutineScope(SupervisorJob() + dataStore.root.rootUtils.sessionDispatcher)
@@ -295,7 +300,8 @@ class PropertyLifeScope internal constructor(
             previous.frameStamp = dataStore.frameIndex
             return previous.stable()
         }
-        // Same rule as `property`: the entry owns the coroutine scope its initialiser starts.
+        // Same rules as `property`: the entry owns its scope, and reuse is diagnosed only on creation.
+        noteDeclaration(key, init::class)
         val scope = CoroutineScope(SupervisorJob() + dataStore.root.rootUtils.sessionDispatcher)
         val fresh = CachedProperty(cacheKey, context(DslExecuteContext(dataStore)) { scope.init(cacheKey) })
         fresh.scope = scope
