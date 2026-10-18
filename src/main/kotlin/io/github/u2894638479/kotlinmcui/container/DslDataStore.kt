@@ -63,12 +63,15 @@ class DslDataStore(
         private set
 
     /**
-     * The focus and hover state of the tree this screen belongs to, or `null` while nothing has
-     * claimed it.
+     * The state of the tree this screen is mounted on, or `null` while it is not mounted anywhere.
      *
-     * This is the link a component follows to find its own tree. Mounting does not wire it yet, so it
-     * stays `null` and components fall back to the main root's state; once it is set, every component
-     * this screen built answers from here.
+     * This is the link a component follows to find its own tree: `DslRoot.children.collect` stamps it
+     * on the screen's store at mounting time, and stamps it again on every later mount, so a screen
+     * moved to another root answers from the new one. Removing a screen does not clear it - a hidden
+     * screen is not a destroyed one.
+     *
+     * `null` therefore means "never mounted", and reading focus or hover from a component in that state
+     * fails loudly rather than falling back to some other tree's state.
      */
     internal var rootState: DslRootState? = null
 

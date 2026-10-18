@@ -16,10 +16,8 @@ import io.github.u2894638479.kotlinmcui.input.PreeditInfo
  * Broadcasting a change means walking the tree that owns this state, so the owner passes the
  * callbacks in: this class only knows *that* a change happened.
  *
- * The name is deliberate. The next step publishes this as `DslRootState`, the per-root read-only
- * state view (the fields read as `val`, the mutators kept beside the root), rather than introducing
- * a second type that would have to be reconciled with this one later. Its field set is already the
- * one that view declares, which is why the root's viewport lives in [DslRootGeometry] instead.
+ * The name is deliberate: this is the per-root state, one instance per root, and the mutators below are
+ * the only way in.
  */
 internal class DslRootState(
     private val onFocusChanged: (DslId?, FocusSource) -> Unit,

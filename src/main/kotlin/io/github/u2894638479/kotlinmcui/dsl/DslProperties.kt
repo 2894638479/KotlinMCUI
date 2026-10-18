@@ -8,7 +8,7 @@ import io.github.u2894638479.kotlinmcui.context.DslIdContext
  * Convenience accessors for common DSL context properties.
  *
  * These extension properties reduce boilerplate by making [DslDataStore],
- * lifecycle scopes, and the root provider directly accessible from any DSL context.
+ * lifecycle scopes, and the root this page is mounted on directly accessible from any DSL context.
  */
 
 context(ctx: DslDataStoreContext)
@@ -24,11 +24,9 @@ val identity get() = ctx.identity
  * answer is per root rather than process-wide. Reach the pieces through it:
  *
  * - `renderer` - **may be `null`** for a root that draws nothing. A page that needs drawing should
- *   fail, or degrade visibly, at the point where it asks: `provider.renderer?.getFont(...)` coming
+ *   fail, or degrade visibly, at the point where it asks: `root.renderer?.getFont(...)` coming
  *   back as `null` is the framework saying so.
  * - `input` (pointer and preedit), `rootUtils` (clipboard, narration, sounds), `screenFactory`.
- *
- * Breaking change of this round: what was `backend.xxx` is now `provider.<slice>.xxx`.
  */
 context(ctx: DslDataStoreContext)
 val root get() = ctx.dataStore.root

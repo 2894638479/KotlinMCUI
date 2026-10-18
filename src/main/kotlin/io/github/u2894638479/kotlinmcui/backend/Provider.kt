@@ -19,7 +19,7 @@ package io.github.u2894638479.kotlinmcui.backend
 internal var dslMetadataProvider: (() -> DslPlatformMetadata)? = null
 
 /**
- * The published platform. `platformReady` is what fills this in.
+ * The published platform. [DslRuntime.start] is what fills this in.
  *
  * **`@Volatile` is part of the publication contract, do not remove it.** Written under
  * `DslRuntime`'s lock, read without one by [publishedPlatform]; and the three backends publish from

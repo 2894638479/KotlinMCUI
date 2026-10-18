@@ -33,8 +33,10 @@ interface DslRootRenderer<RP> {
     /**
      * Draw one quad, optionally textured.
      *
-     * This is the only drawing primitive a backend has to implement: everything the
-     * framework draws is a quad, and the helpers below are written in terms of it
+     * One of the two drawing primitives a backend has to implement (the other is
+     * [renderTriangles]; ADR 0004 made that mandatory, so there is no "if the backend has
+     * it" branch anywhere). Everything the framework draws is either a quad or a polygon
+     * list, and the helpers below are written in terms of this one
      * (see [fillRectGradient], [fillRect], [renderImage]). Overriding those instead
      * would fork the contract, so a backend that wants a platform fast path for solid
      * rectangles should recognise the case here — an untextured quad whose four colours
