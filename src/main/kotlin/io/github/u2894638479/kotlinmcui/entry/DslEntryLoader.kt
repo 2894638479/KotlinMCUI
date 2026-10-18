@@ -199,12 +199,23 @@ object DslEntryLoader {
     private fun readDeclarations(): List<EntryDeclaration> {
         val declarations = mutableListOf<EntryDeclaration>()
         val resources = loader().getResources(REGISTRY)
+        var found = 0
         while(resources.hasMoreElements()) {
+            found++
             resources.nextElement().openStream().use { stream ->
                 BufferedReader(InputStreamReader(stream, "utf-8")).use { reader ->
                     declarations += parseEntryRegistry(reader.readText())
                 }
             }
+        }
+        if(found == 0) {
+            // Silence here is the bad case: a jar that bundles other jars and keeps one copy of each
+            // resource drops every registry but its own, and the only symptom is an empty entry list
+            // nobody is looking at.
+            dslLogger.warn(
+                "no $REGISTRY was found on the classpath, so no entry will load; a jar that bundles " +
+                    "other jars has to merge this file, not keep one copy of it"
+            )
         }
         return mergeDeclarations(declarations)
     }
