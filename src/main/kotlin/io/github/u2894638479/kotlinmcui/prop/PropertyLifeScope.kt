@@ -160,6 +160,21 @@ class PropertyLifeScope internal constructor(
     }
 
     private class CachedProperty<K,V>(val key: K,value:V,frameStamp: ULong = 0uL): TimedProperty<V>(value,frameStamp)
+    /**
+     * The one place an entry is inserted or refreshed.
+     *
+     * Both halves matter and both belong here: creating the entry, and stamping it with the frame it was
+     * read in. Four copies of these two lines is what let [dispose] lose its stamp - its entry then looked
+     * stale on the very next frame and a live screen had its cleanup run. Any new accessor goes through
+     * here rather than copying the pattern a fifth time.
+     */
+    private fun <T : TimedProperty<*>> entry(identity: DslId, create: () -> T): T {
+        @Suppress("UNCHECKED_CAST")
+        val stored = (map[identity] ?: create().also { map[identity] = it }) as T
+        stored.frameStamp = dataStore.frameIndex
+        return stored
+    }
+
     internal fun clearOutdated() {
         val frameIndex = dataStore.frameIndex
         map.values.removeIf {
@@ -185,12 +200,11 @@ class PropertyLifeScope internal constructor(
         identity:DslId,
         dispatcher: CoroutineDispatcher = dataStore.root.rootUtils.sessionDispatcher
     ): CoroutineScope {
-        val property = map.getOrPut(identity) {
+        val property = entry(identity) {
             val scope = CoroutineScope(SupervisorJob() + dispatcher)
             TimedProperty(scope).also { it.scope = scope }
         }
-        property.frameStamp = dataStore.frameIndex
-        return property.value as CoroutineScope
+        return property.value
     }
 
     /**
@@ -253,7 +267,7 @@ class PropertyLifeScope internal constructor(
     context(ctx: DslIdContext)
     fun <T> property(key:Any? = null, init:context(DslExecuteContext) CoroutineScope.() -> T): StableRW<T> {
         val identity = getKey(key, init::class)
-        return map.getOrPut(identity) {
+        return entry(identity) {
             // Only a brand-new entry can carry new information about key reuse: the diagnostic is a
             // creation-time check, never a per-frame one.
             noteDeclaration(key, init::class)
@@ -261,7 +275,7 @@ class PropertyLifeScope internal constructor(
             // starts in its initialiser belong to the property, not to an independent slot.
             val scope = CoroutineScope(SupervisorJob() + dataStore.root.rootUtils.sessionDispatcher)
             TimedProperty(context(DslExecuteContext(dataStore)) { scope.init() }).also { it.scope = scope }
-        }.also { it.frameStamp = dataStore.frameIndex }.stable()
+        }.stable()
     }
 
     /**
@@ -297,17 +311,19 @@ class PropertyLifeScope internal constructor(
         val identity = getKey(key, init::class)
         val previous = map[identity]
         if(previous is CachedProperty<*,*> && previous.key == cacheKey) {
-            previous.frameStamp = dataStore.frameIndex
-            return previous.stable()
+            @Suppress("UNCHECKED_CAST")
+            return (previous as CachedProperty<K, V>).also { it.frameStamp = dataStore.frameIndex }.stable()
         }
+        // A changed cache key replaces the entry, so let `entry` build a new one.
+        if(previous != null) map.remove(identity)
         // Same rules as `property`: the entry owns its scope, and reuse is diagnosed only on creation.
-        noteDeclaration(key, init::class)
-        val scope = CoroutineScope(SupervisorJob() + dataStore.root.rootUtils.sessionDispatcher)
-        val fresh = CachedProperty(cacheKey, context(DslExecuteContext(dataStore)) { scope.init(cacheKey) })
-        fresh.scope = scope
-        fresh.frameStamp = dataStore.frameIndex
+        val fresh = entry(identity) {
+            noteDeclaration(key, init::class)
+            val scope = CoroutineScope(SupervisorJob() + dataStore.root.rootUtils.sessionDispatcher)
+            CachedProperty(cacheKey, context(DslExecuteContext(dataStore)) { scope.init(cacheKey) })
+                .also { it.scope = scope }
+        }
         previous?.onClear()
-        map[identity] = fresh
         return fresh.stable()
     }
 
@@ -394,7 +410,7 @@ class PropertyLifeScope internal constructor(
     context(ctx: DslIdContext)
     fun dispose(key:Any? = null, action: () -> Unit) {
         val identity = getKey(key, action::class)
-        map.getOrPut(identity) {
+        entry(identity) {
             object : TimedProperty<Unit>(Unit) {
                 override fun onClear() { action() }
             }

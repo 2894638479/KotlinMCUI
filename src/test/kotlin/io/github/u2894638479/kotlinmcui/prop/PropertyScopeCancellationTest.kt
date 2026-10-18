@@ -5,6 +5,7 @@ import io.github.u2894638479.kotlinmcui.container.DslRoot
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
 import io.github.u2894638479.kotlinmcui.dsl.local
+import kotlin.test.assertEquals
 import io.github.u2894638479.kotlinmcui.dsl.stable
 import io.github.u2894638479.kotlinmcui.dsl.ui.Spacer
 import io.github.u2894638479.kotlinmcui.integration.TestBackend
@@ -79,6 +80,27 @@ class PropertyScopeCancellationTest {
         assertNotNull(first)
         assertSame(first, second, "an initialiser runs once; re-declaring the property must not restart it")
         assertTrue(first.isActive, "and the coroutine is not cancelled on a frame that still declares it")
+    }
+
+    /**
+     * `dispose` used to forget the frame stamp every other insertion point writes, so on the second frame
+     * its entry looked stale and a cleanup ran under a live screen. Two frames are what exposes it: the
+     * first frame's stamp is 0 by coincidence of the frame counter starting at `ULong.MAX_VALUE`.
+     */
+    @Test
+    fun `a local cleanup does not run while the screen still declares it`() {
+        val root = TestRoot.newRoot()
+        var cleanups = 0
+
+        val screen = screenOn(root, "dispose") {
+            local.dispose("cleanup") { cleanups++ }
+            Spacer(Modifier.size(10.px, 10.px), "spacer")
+        }
+        root.children.collect(screen)
+        render(screen)
+        render(screen)
+
+        assertEquals(0, cleanups, "cleanup must not run while the screen is alive and still declaring it")
     }
 
     @Test
