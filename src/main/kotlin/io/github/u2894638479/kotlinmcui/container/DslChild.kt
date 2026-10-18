@@ -56,7 +56,9 @@ class DslChild internal constructor(private var component: DslComponent) {
             val empty = GroupImpl(object : AbstractMutableList<DslChild>() {
                 override fun set(index: Int, element: DslChild): DslChild { error("empty DslChild.Group") }
                 override fun removeAt(index: Int): DslChild { error("empty DslChild.Group") }
-                override fun add(index: Int, element: DslChild) {}
+                override fun add(index: Int, element: DslChild) {
+                    error("empty DslChild.Group: this component takes no children")
+                }
                 override val size get() = 0
                 override fun get(index: Int): DslChild { error("empty DslChild.Group") }
             })
