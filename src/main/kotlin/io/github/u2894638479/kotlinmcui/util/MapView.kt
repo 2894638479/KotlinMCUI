@@ -1,4 +1,4 @@
-package io.github.u2894638479.kotlinmcui.container
+package io.github.u2894638479.kotlinmcui.util
 
 /**
  * Returns a lazy view of this list with each element transformed by [map].

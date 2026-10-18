@@ -23,7 +23,7 @@ import io.github.u2894638479.kotlinmcui.math.rect.bound
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.prop.StableRW
 import io.github.u2894638479.kotlinmcui.prop.getValue
-import io.github.u2894638479.kotlinmcui.container.mapView
+import io.github.u2894638479.kotlinmcui.util.mapView
 import io.github.u2894638479.kotlinmcui.prop.setValue
 import io.github.u2894638479.kotlinmcui.scroll.AutoScroll
 import io.github.u2894638479.kotlinmcui.scroll.Scroller
