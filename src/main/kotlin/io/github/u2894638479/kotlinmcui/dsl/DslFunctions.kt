@@ -25,7 +25,10 @@ fun translate(string: String,vararg args: Any) = dslPlatform.utils.translate(str
 fun translateGlobal(key: String,vararg args: Any) = dslPlatform.utils.translate(key,*args) ?: key
 
 context(_: DslExecuteContext)
-fun showScreen(title:String = "DSL Screen",function: DslFunction) = (dataStore.root.screenFactory ?: error("this root's provider cannot create screens")).create(title,function).show()
+fun showScreen(title:String = "DSL Screen",function: DslFunction) =
+    (dataStore.root.screenFactory
+        ?: error("this root has no screen factory: screens can only be created for a root built with one"))
+        .create(title,function).show()
 
 context(ctx: DslContext)
 fun newChildId(id:Any?) = ctx.identity + id

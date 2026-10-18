@@ -13,9 +13,8 @@ import kotlin.math.sin
  * Transformations compose via `*` and can be inverted. The [empty] identity
  * matrix is the default — use [isEmpty] to detect it for optimisation.
  *
- * ### FMA optimisation
- * Matrix operations use [Math.fma] when available (detected at class load time),
- * falling back to `a * b + c` on older JVMs for consistent numerical behaviour.
+ * Multiply-add is a plain `a * b + c`: `Math.fma` would need Java 9, and the single rounding it saves
+ * is far below what a 2D UI coordinate can observe.
  */
 data class Transform(
     val m00: Num,

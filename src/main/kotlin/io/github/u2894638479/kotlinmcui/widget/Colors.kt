@@ -512,8 +512,9 @@ object Colors {
      * A full colour editor: a preview, a hexadecimal field, one of two palettes with the alpha
      * alongside, and a strip with every channel.
      *
-     * The palette is chosen with the button next to it and remembered per [id]; the triangle is only
-     * offered when the backend can draw one, because a picker nobody can see is worse than none.
+     * The palette is chosen with the button next to it and remembered per [id]. Every picker is always
+     * offered: `renderTriangles` is a mandatory primitive (see ADR 0004), so there is no backend that
+     * could not draw the triangle.
      */
     context(ctx: DslContext)
     fun ColorEdit(prop: KMutableProperty0<Color>, id: Any = prop) = ColorEdit(prop.property,ColorPicker.Square,id)

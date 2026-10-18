@@ -20,8 +20,7 @@ val identity get() = ctx.identity
 /**
  * The root this page is mounted on.
  *
- * It used to be the aggregate backend, then the root's provider; now it is the root itself, so the
- * answer is per root rather than process-wide. Reach the pieces through it:
+ * The answer is per root rather than process-wide. Reach the pieces through it:
  *
  * - `renderer` - **may be `null`** for a root that draws nothing. A page that needs drawing should
  *   fail, or degrade visibly, at the point where it asks: `root.renderer?.getFont(...)` coming
