@@ -90,6 +90,9 @@ val sourcesJar = tasks.named<org.gradle.jvm.tasks.Jar>("sourcesJar").get()
 sourcesJar.exclude("fabric.mod.json")
 sourcesJar.exclude("META-INF/mods.toml")
 sourcesJar.exclude("META-INF/neoforge.mods.toml")
+// A sources jar carries sources. Shipping the entry registry in it makes a build that puts both jars on
+// one classpath see every entry twice - a failure that looks like a code defect and is a packaging one.
+sourcesJar.exclude("META-INF/kotlinmcui/**")
 sourcesJar.from("LICENSE")
 
 tasks.jar {

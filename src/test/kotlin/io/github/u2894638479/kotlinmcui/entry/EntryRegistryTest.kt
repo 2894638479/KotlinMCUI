@@ -223,4 +223,31 @@ class EntryRegistryTest {
         // The class name is what the page shows, so the reason has to be short and specific.
         assertTrue(DslEntryLoader.brokenEntries.all { it.reason.isNotBlank() })
     }
+
+    // ---- 7: one file seen twice is not a conflict ----
+    @Test
+    fun `the same declaration seen twice is folded, not rejected`() {
+        val declaration = EntryDeclaration("com.example.Page", setOf(Environment.CLIENT))
+
+        val merged = DslEntryLoader.mergeDeclarations(listOf(declaration, declaration))
+
+        assertEquals(1, merged.size, "an agreeing repeat is one entry")
+        assertEquals(setOf(Environment.CLIENT), merged.single().environments)
+    }
+
+    @Test
+    fun `a class declared for different environments throws and names both`() {
+        val error = assertFailsWith<IllegalStateException> {
+            DslEntryLoader.mergeDeclarations(
+                listOf(
+                    EntryDeclaration("com.example.Page", setOf(Environment.CLIENT)),
+                    EntryDeclaration("com.example.Page", setOf(Environment.SERVER)),
+                )
+            )
+        }
+
+        val message = error.message.orEmpty()
+        assertTrue(message.contains("com.example.Page"), "the message names the class: $message")
+        assertTrue(message.contains("CLIENT") && message.contains("SERVER"), "the message names both sets: $message")
+    }
 }

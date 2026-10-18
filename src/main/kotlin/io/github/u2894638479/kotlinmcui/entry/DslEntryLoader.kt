@@ -206,18 +206,35 @@ object DslEntryLoader {
                 }
             }
         }
-        // Two jars declaring the same class for different environments is the same mistake as declaring it
-        // twice in one file; make it one rule instead of two.
-        val merged = mutableMapOf<String, Set<Environment>>()
+        return mergeDeclarations(declarations)
+    }
+
+    /**
+     * Fold the declarations of every registry on the classpath into one list.
+     *
+     * The same file is legitimately seen twice when a jar and its sources jar share a classpath, so a
+     * repeat that agrees is ignored instead of rejected: a false alarm at startup teaches people to
+     * ignore the check, which is a worse outcome than the duplicate itself. A repeat that disagrees
+     * about the environments is the real mistake - one class cannot load in two different sets - and
+     * still throws.
+     */
+    internal fun mergeDeclarations(declarations: List<EntryDeclaration>): List<EntryDeclaration> {
+        val merged = LinkedHashMap<String, EntryDeclaration>()
         declarations.forEach { declaration ->
-            val previous = merged.put(declaration.className, declaration.environments)
-            if(previous != null) {
-                throw IllegalStateException(
-                    "'${declaration.className}' is declared more than once across the entry registries"
+            val previous = merged[declaration.className]
+            when {
+                previous == null -> merged[declaration.className] = declaration
+                previous.environments == declaration.environments -> dslLogger.warn(
+                    "'${declaration.className}' is declared more than once with the same environments; " +
+                        "the repeat is ignored"
+                )
+                else -> throw IllegalStateException(
+                    "'${declaration.className}' is declared with different environments: " +
+                        "${previous.environments} and ${declaration.environments}"
                 )
             }
         }
-        return declarations
+        return merged.values.toList()
     }
 
     private fun collectOverlays() {
