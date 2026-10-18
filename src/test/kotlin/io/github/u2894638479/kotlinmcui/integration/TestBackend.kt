@@ -170,10 +170,10 @@ internal object TestUtils : DslPlatformUtils, DslRootUtils {
     override fun openUri(uri: String) {}
     // UI state is confined to the thread that builds it, so "the main thread"
     // dispatcher here must run continuations on the caller rather than a pool.
-    val mainDispatcher: CoroutineDispatcher = Dispatchers.Unconfined
+    val platformDispatcher: CoroutineDispatcher = Dispatchers.Unconfined
 
     // The split gives the same object two hats: process-level helpers and per-output helpers.
-    override val sessionDispatcher: CoroutineDispatcher get() = mainDispatcher
+    override val sessionDispatcher: CoroutineDispatcher get() = platformDispatcher
 
     // The fake renders on one thread, so "the session thread" is whoever calls in.
     override val isOnSessionThread: Boolean get() = true
@@ -229,5 +229,5 @@ internal object TestInput : DslRootInput {
 internal object TestPlatform : DslPlatform {
     override val metadata: DslPlatformMetadata get() = TestMetadata
     override val utils: DslPlatformUtils get() = TestUtils
-    override val dispatcher: CoroutineDispatcher get() = TestUtils.mainDispatcher
+    override val dispatcher: CoroutineDispatcher get() = TestUtils.platformDispatcher
 }

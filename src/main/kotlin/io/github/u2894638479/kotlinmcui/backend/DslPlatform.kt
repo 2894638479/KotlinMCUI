@@ -5,7 +5,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 /**
  * The process-wide facts and helpers of the platform that published itself.
  *
- * Early form of the draft's `DslPlatform`; it grows in place from here - the draft's members appear at
+ * The platform a backend publishes: the process-level facts and helpers, and the dispatcher.
+ * It grew in place from the draft's `DslPlatform` - the draft's members appeared at
  * their own names rather than in a second type that would have to be reconciled with it later.
  *
  * A platform is a first-class object the backend builds and publishes; it is not derived from the

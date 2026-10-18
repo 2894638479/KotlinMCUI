@@ -6,7 +6,7 @@ import java.io.File
 /**
  * The platform-level helpers: questions about the process, not about one output.
  *
- * Early form of the draft's `DslPlatformUtils`; the signatures are the ones the old aggregate utils already
+ * The process-level helpers one platform offers: translation, exit, image loading, world state. The signatures are the ones the old aggregate utils already
  * has, so a backend object satisfies it as-is - nothing new to implement. The per-output half lives
  * in [DslRootUtils].
  */

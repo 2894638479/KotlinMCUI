@@ -59,8 +59,7 @@ class DslDataStore(
     var frameIndex = ULong.MAX_VALUE
         private set
 
-    var inFrame = false
-        private set
+
 
     /**
      * The state of the tree this screen is mounted on, or `null` while it is not mounted anywhere.
@@ -118,11 +117,11 @@ class DslDataStore(
      * `ClassCastException`.
      */
     val staticLifeScope = PropertyLifeScope(this,true,staticPropertyMap)
-    /** The root-bounded scope: shared by every screen on this root, released by oot.close(). */
+    /** The root-bounded scope: shared by every screen on this root, released by 
+oot.close(). */
     val sessionLifeScope = PropertyLifeScope(this, false, root.sessionPropertyMap, isSession = true)
 
     fun frame(action:(() -> Unit) -> Unit) = try {
-        inFrame = true
         frameBeginNano = System.nanoTime()
         frameIndex++
         action {
@@ -130,7 +129,6 @@ class DslDataStore(
         }
     } finally {
         localLifeScope.clearOutdated()
-        inFrame = false
         debugOverlay.frameRenderTimeMs = (System.nanoTime() - frameBeginNano) / 1e6
         debugOverlay.backendRenderTimeMs = debugOverlay.frameRenderTimeMs - debugOverlay.dslRenderTimeMs
     }

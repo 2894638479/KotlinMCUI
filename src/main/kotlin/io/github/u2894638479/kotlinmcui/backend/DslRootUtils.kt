@@ -8,7 +8,8 @@ import java.io.File
 /**
  * The per-output helpers: things one root does for its own session.
  *
- * Early form of the draft's `DslRootUtils`; the signatures are the ones the old aggregate utils already had,
+ * The per-root helpers one output offers: clipboard, narration, capture, sounds, links, the session
+ * dispatcher, and the bridge to that root's thread. The signatures are the ones the old aggregate utils already had,
  * so a backend object satisfies it as-is. The process-level half lives in [DslPlatformUtils].
  *
  * **Writing `local` / `stable` slots is only allowed on this root's rendering thread.** Those stores are
