@@ -16,12 +16,12 @@ import org.junit.jupiter.api.BeforeEach
  * The press is the input path that moves the focus, and nothing else observes it.
  *
  * The rest of the suite either injects focus with `TestRoot.setFocus(...)` or drives the
- * keyboard, so the acquisition in `TestRoot.mouseDown` can be deleted while every other case
- * stays green - measured: removing the `acquireFocusFromInput` call from it left all 446 cases
+ * keyboard, so the acquisition in the root component's `mouseDown` can be deleted while every
+ * other case stays green - measured: removing the focus lookup from it left all 446 cases
  * passing. This case exists to make that deletion fail.
  *
- * Falsifiable: delete the `acquireFocusFromInput(::setFocus)` line from `TestRoot.mouseDown`
- * and the last assertion below fails, because nothing is focused after the press.
+ * Falsifiable: delete the `takeFocusUnderPointer()` call from that `mouseDown` and the last
+ * assertion below fails, because nothing is focused after the press.
  */
 class DslMouseFocusTest {
     /** Process-wide state: put back whatever provider was published before the case. */

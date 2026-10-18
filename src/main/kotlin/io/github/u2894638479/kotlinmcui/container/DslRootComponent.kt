@@ -49,9 +49,21 @@ internal class DslRootComponent(private val root: DslRoot) : DslScope {
 
     val mouse get() = root.input.mouse
 
+    /**
+     * Move the focus to whatever this root's own tree has under [mouse], the way a mouse press does.
+     *
+     * The press records [FocusSource.MOUSE] where the keyboard path records [FocusSource.KEYBOARD], so
+     * an observer can tell a click from a TAB. The lookup filters on nothing else, so a component that
+     * cannot take focus is still recorded - it just keeps reporting itself unfocused.
+     */
+    context(mouse: Position)
+    private fun takeFocusUnderPointer() {
+        state.setFocus(instance.testHit(mouse) { it.takeIf { it.focusable } }?.identity, FocusSource.MOUSE)
+    }
+
     context(eventModifier: KeyModifiers, mouse: Position)
     override fun mouseDown(mouseButton: MouseButton): Boolean {
-        acquireFocusFromInput { newFocus, source -> state.setFocus(newFocus, source) }
+        takeFocusUnderPointer()
         return super.mouseDown(mouseButton)
     }
 
