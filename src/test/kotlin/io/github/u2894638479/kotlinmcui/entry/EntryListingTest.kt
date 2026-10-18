@@ -39,7 +39,7 @@ class EntryListingTest {
         // Deliberately without DslRuntime.install: the point is the raw state a startup
         // is in after the common file has been read and before the client one is.
         dslMetadataProvider = { TestMetadata }
-        DslEntryLoader.discover(Environment.COMMON)
+        DslEntryLoader.discover(Environment.NONE)
 
         val clientRuns = FixtureSilentClient.runs
 

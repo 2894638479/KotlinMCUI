@@ -22,11 +22,26 @@ interface DslEntryGui: DslEntryService {
     fun content()
 }
 
+/*
+ * Two stages, and only two.
+ *
+ * initialize*() runs while the mod is still loading: metadata is readable, the game client is not, so
+ * this stage may read facts and register things - it must not open a window, start a service or build a
+ * root. launch*() runs once the platform is published and can create screens: opening, starting and
+ * building belong here.
+ *
+ * If a third stage ever looks necessary, argue first whether it really needs its own moment, or whether
+ * it is one of these two in disguise.
+ */
+
 /**
  * Runs on the client side only. Suitable for rendering-related initialisation.
  */
 interface DslEntryClient: DslEntryService {
     fun initializeClient()
+
+    /** Platform published, screens can be built: open the client-side part. Default: nothing to do. */
+    fun launchClient() {}
 }
 
 /**
@@ -35,12 +50,19 @@ interface DslEntryClient: DslEntryService {
  */
 interface DslEntryServer: DslEntryService {
     fun initializeServer()
+
+    /** Platform published: start the server-side part. Default: nothing to do. */
+    fun launchServer() {}
 }
 
 /**
- * Runs on both client and server. Suitable for most logic initialisation.
- * Behaves similarly to an `init {}` block.
+ * Runs on both client and server - and in [io.github.u2894638479.kotlinmcui.backend.Environment.NONE],
+ * which is the "no game side" environment. Behaves similarly to an `init {}` block at initialisation,
+ * and to a "start" hook at launch.
  */
 interface DslEntryCommon: DslEntryService {
     fun initialize()
+
+    /** Platform published, screens can be built: open the common part. Default: nothing to do. */
+    fun launch() {}
 }

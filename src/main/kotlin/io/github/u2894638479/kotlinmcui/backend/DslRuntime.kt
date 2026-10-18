@@ -65,6 +65,20 @@ object DslRuntime {
     }
 
     /**
+     * The platform's owner declares readiness: entries may now open windows, start services and build
+     * roots.
+     *
+     * Deliberately **not** a side effect of [start]. "There is a platform" and "the game is ready" are two
+     * facts: a standalone tool or a test can publish a platform without a game being ready, and running the
+     * entries' launch hooks then would be wrong. In a game the two calls sit next to each other; the game
+     * backend (headless) is what calls this after `start`.
+     *
+     * Idempotent, and an error before the platform is published - the entries cannot do anything useful
+     * without one.
+     */
+    fun launch() = DslEntryLoader.launch()
+
+    /**
      * Restore the state the process starts in: nothing installed, no platform published.
      *
      * Exists for the test suite. "Exactly once" is a process-wide promise, so a case can only

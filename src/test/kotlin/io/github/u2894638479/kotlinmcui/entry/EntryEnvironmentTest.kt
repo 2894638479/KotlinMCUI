@@ -37,7 +37,7 @@ class EntryEnvironmentTest {
         val silentClientLoads = FixtureLoads.silentClient
         val serverRuns = FixtureServer.runs
 
-        DslEntryLoader.discover(Environment.COMMON)
+        DslEntryLoader.discover(Environment.NONE)
 
         assertEquals(silentClientLoads, FixtureLoads.silentClient, "a client entry must not be loaded on a common platform")
         assertEquals(serverRuns, FixtureServer.runs, "a server entry must not be initialised on a common platform")

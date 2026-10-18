@@ -1,6 +1,7 @@
 package io.github.u2894638479.kotlinmcui.entry
 
 import io.github.u2894638479.kotlinmcui.backend.Environment
+import io.github.u2894638479.kotlinmcui.backend.dslPlatformProvider
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.logger.dslLogger
 import io.github.u2894638479.kotlinmcui.dsl.forEachWithId
@@ -12,6 +13,8 @@ import java.lang.reflect.Modifier
 object DslEntryLoader {
     private val cache = mutableMapOf<Class<*>, Pair<DslEntryService, Flags>>()
     private var snapshot: List<Pair<DslEntryService, Flags>> = emptyList()
+    private var environment = Environment.NONE
+    private var launched = false
 
     private val registeredOverlays = mutableMapOf<String, DslEntryOverlay>()
     private val enabledIds = mutableListOf<String>()
@@ -65,12 +68,14 @@ object DslEntryLoader {
      * directory) is already available.
      */
     internal fun discover(environment: Environment) {
+        this.environment = environment
+        launched = false
         failures.clear()
         initCommon()
         when(environment) {
             Environment.CLIENT -> initClient()
             Environment.SERVER -> initServer()
-            Environment.COMMON -> {}
+            Environment.NONE -> {}
         }
         initGui()
         initOverlay()
@@ -126,6 +131,35 @@ object DslEntryLoader {
 
     private fun refreshEnabledOverlays() {
         enabledSnapshot = enabledIds.mapNotNull(registeredOverlays::get)
+    }
+
+    /**
+     * Run the second stage: entries that need a published platform now get their turn.
+     *
+     * Called by [io.github.u2894638479.kotlinmcui.backend.DslRuntime.start], after it published the
+     * platform - before that, opening a window or building a root is impossible, so this refuses to run
+     * instead of letting entries fail one by one.
+     *
+     * Common goes first, exactly like the initialisation stage: it is the part every environment has.
+     * A second call is ignored with a warning - start is a one-shot event, and running the hooks twice
+     * would double whatever they started.
+     */
+    internal fun launch() {
+        check(dslPlatformProvider != null) {
+            "DslEntryLoader.launch was called before the platform was published; " +
+                "game and standalone backends must call DslRuntime.start first"
+        }
+        if (launched) {
+            dslLogger.warn("DslEntryLoader.launch already ran; this call is ignored")
+            return
+        }
+        launched = true
+        load<DslEntryCommon> {}.forEach { it.launch() }
+        when (environment) {
+            Environment.CLIENT -> load<DslEntryClient> {}.forEach { it.launchClient() }
+            Environment.SERVER -> load<DslEntryServer> {}.forEach { it.launchServer() }
+            Environment.NONE -> {}
+        }
     }
 
     private fun initClient() { load<DslEntryClient> { isClient = true }.forEach { it.initializeClient() } }

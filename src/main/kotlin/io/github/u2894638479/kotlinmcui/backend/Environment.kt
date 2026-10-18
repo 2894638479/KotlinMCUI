@@ -8,20 +8,26 @@ package io.github.u2894638479.kotlinmcui.backend
  */
 enum class Environment {
     /**
-     * Client-specific code is available.
+     * A game client is available.
      * [io.github.u2894638479.kotlinmcui.entry.DslEntryClient.initializeClient] will be called.
      */
     CLIENT,
 
     /**
-     * Server-specific code is available.
+     * A game server is available.
      * [io.github.u2894638479.kotlinmcui.entry.DslEntryServer.initializeServer] will be called.
      */
     SERVER,
 
     /**
-     * Only common code is guaranteed to be available.
-     * Only [io.github.u2894638479.kotlinmcui.entry.DslEntryCommon.initialize] will be called.
+     * No game side at all: neither the client nor the server entry points are initialised - only
+     * common, gui and overlay run. This is the standalone shell and the tools that drive the framework
+     * without a game.
+     *
+     * The matching entry point is
+     * [io.github.u2894638479.kotlinmcui.entry.DslEntryCommon] - "common" says the code depends on no
+     * particular side, which is exactly what this environment is. There is deliberately no
+     * DslEntryNone.
      */
-    COMMON
+    NONE
 }

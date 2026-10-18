@@ -15,6 +15,14 @@ internal object FixtureIdentity : DslEntryService {
  * reading these fields must not itself pull a fixture in, otherwise the counter could
  * never prove that a class stayed untouched.
  */
+internal object FixtureLaunchStats {
+    /** The order the launch hooks ran in: "common" first is the contract. */
+    val calls = mutableListOf<String>()
+    var common = 0
+    var client = 0
+    var server = 0
+}
+
 internal object FixtureLoads {
     var client = 0
     var server = 0
@@ -26,6 +34,7 @@ internal object FixtureLoads {
 internal object FixtureCommon : DslEntryCommon, DslEntryService by FixtureIdentity {
     var runs = 0
     override fun initialize() { runs++ }
+    override fun launch() { FixtureLaunchStats.common++; FixtureLaunchStats.calls += "common" }
 }
 
 internal object FixtureClient : DslEntryClient, DslEntryService by FixtureIdentity {
@@ -33,6 +42,7 @@ internal object FixtureClient : DslEntryClient, DslEntryService by FixtureIdenti
 
     var runs = 0
     override fun initializeClient() { runs++ }
+    override fun launchClient() { FixtureLaunchStats.client++; FixtureLaunchStats.calls += "client" }
 }
 
 internal object FixtureServer : DslEntryServer, DslEntryService by FixtureIdentity {
@@ -40,6 +50,7 @@ internal object FixtureServer : DslEntryServer, DslEntryService by FixtureIdenti
 
     var runs = 0
     override fun initializeServer() { runs++ }
+    override fun launchServer() { FixtureLaunchStats.server++; FixtureLaunchStats.calls += "server" }
 }
 
 /**

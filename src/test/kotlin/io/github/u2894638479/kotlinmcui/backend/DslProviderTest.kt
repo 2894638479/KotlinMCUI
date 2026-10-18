@@ -25,7 +25,7 @@ class DslProviderTest {
         override val gameDir = Paths.get("build")
         override val gameVersion = "test"
         override val gameLoader = "test"
-        override val environment = Environment.COMMON
+        override val environment = Environment.NONE
     }
 
     @BeforeEach

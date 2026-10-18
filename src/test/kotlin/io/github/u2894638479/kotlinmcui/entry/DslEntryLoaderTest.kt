@@ -155,7 +155,7 @@ class DslEntryLoaderTest {
         Files.createDirectories(configPath.parent)
         configPath.writeText("""{ "enabled": [ "$ghost" ] }""")
 
-        DslEntryLoader.discover(Environment.COMMON)
+        DslEntryLoader.discover(Environment.NONE)
         assertEquals(emptyList(), DslEntryLoader.enabledOverlays, "an id with no overlay behind it must not render")
         assertEquals(listOf(ghost), readOverlayIds(), "but the stored list keeps it")
 
