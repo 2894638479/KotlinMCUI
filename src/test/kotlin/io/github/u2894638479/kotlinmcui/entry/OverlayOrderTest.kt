@@ -15,9 +15,8 @@ import kotlin.test.assertTrue
  * The overlay list: what is enabled, in what order, and that the order survives a restart.
  *
  * These three functions (`setOverlayEnabled`, `bringOverlayToTop`, and the stored id list behind them)
- * predate the entry-model merge and were not changed by it - but a test that keeps them honest is what
- * makes a future change to the page (or to the loader) fail loudly instead of silently reordering a
- * user's overlays.
+ * are pinned by this test, so a future change to the page (or to the loader) fails loudly instead of
+ * silently reordering a user's overlays.
  */
 class OverlayOrderTest {
     private var previous: (() -> io.github.u2894638479.kotlinmcui.backend.DslPlatform)? = null

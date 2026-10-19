@@ -78,7 +78,7 @@ class DslDataStore(
         /**
          * The process-wide `static` slots: one map shared by every root and screen.
          *
-         * A **concurrent** map, not a locked one: after the split a process can render several roots
+         * A **concurrent** map, not a locked one: a process can render several roots
          * on different threads, and `static` slots are touched on every frame - a lock would serialise
          * all roots on the hottest path for no gain. Every operation below is a single-key map operation
          * (`get`, `put`, `remove`, `keys`), which is exactly the shape `ConcurrentHashMap` makes safe.
@@ -117,8 +117,7 @@ class DslDataStore(
      * `ClassCastException`.
      */
     val staticLifeScope = PropertyLifeScope(this,true,staticPropertyMap)
-    /** The root-bounded scope: shared by every screen on this root, released by 
-oot.close(). */
+    /** The root-bounded scope: shared by every screen on this root, released by `root.close()`. */
     val sessionLifeScope = PropertyLifeScope(this, false, root.sessionPropertyMap, isSession = true)
 
     fun frame(action:(() -> Unit) -> Unit) = try {

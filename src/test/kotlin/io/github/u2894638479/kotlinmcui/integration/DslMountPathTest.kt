@@ -23,7 +23,6 @@ import org.junit.jupiter.api.BeforeEach
  * assertion fails, because the root then starts out empty.
  */
 class DslMountPathTest {
-    /** Process-wide state: put back whatever provider was published before the case. */
     private var previous: (() -> DslPlatform)? = null
 
     @BeforeEach

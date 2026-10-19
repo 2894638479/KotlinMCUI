@@ -43,22 +43,17 @@ internal value class MeasureArray private constructor(internal val raw: DoubleAr
         override fun isEmpty() = this@MeasureArray.isEmpty()
     }
 
-    /** Returns a new [List] containing all elements in order. */
     fun toList(): List<Measure> = raw.map { it.px }
 
-    /** Returns the index of the first element matching [predicate], or -1 if not found. */
     inline fun indexOfFirst(predicate: (Measure) -> Boolean): Int = raw.indexOfFirst { predicate(Measure.ofRaw(it)) }
 
-    /** Returns the index of the last element matching [predicate], or -1 if not found. */
     inline fun indexOfLast(predicate: (Measure) -> Boolean): Int = raw.indexOfLast { predicate(Measure.ofRaw(it)) }
 
-    /** Returns a new [MeasureArray] containing only elements matching [predicate]. */
     fun filter(predicate: (Measure) -> Boolean): MeasureArray {
         val list = raw.filter { predicate(Measure.ofRaw(it)) }
         return MeasureArray(list.size) { i -> list[i].px }
     }
 
-    /** Returns `true` if [element] is present in this array. */
     fun contains(element: Measure): Boolean = raw.any { it == element.raw }
 }
 

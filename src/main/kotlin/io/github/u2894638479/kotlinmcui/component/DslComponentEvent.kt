@@ -11,8 +11,7 @@ import java.nio.file.Path
  * Input event handling contract for a DSL component.
  *
  * Events propagate **parent-to-child**: each component dispatches to its
- * children in order until one consumes the event (returns `true`). This is
- * the standard bubbling model for keyboard, mouse, scroll, and character input.
+ * children in order until one consumes the event (returns `true`).
  *
  * Contrast with [DslComponentGlobalEvent] which is dispatched from the root
  * and may target specific components.
@@ -20,10 +19,7 @@ import java.nio.file.Path
  * Scroll methods return the unconsumed scroll amount rather than a boolean.
  */
 interface DslComponentEvent {
-    /**
-     * Render this component.
-     * @param RP The platform-specific render parameter type.
-     */
+    /** Render this component. */
     context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     fun <RP> render() {}
 
@@ -69,11 +65,7 @@ interface DslComponentEvent {
      */
     fun charTyped(c: Char) = false
 
-    /**
-     * Hit-test: determine which component is at [mouse].
-     * @param get A selector invoked on the target component.
-     * @return The selected value, or `null` if this component does not match.
-     */
+    /** Hit-test: determine which component is at [mouse]. */
     fun <T> testHit(mouse: Position, get: (DslComponent) -> T?): T? = null
 
     /**

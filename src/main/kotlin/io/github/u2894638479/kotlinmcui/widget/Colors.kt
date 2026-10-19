@@ -217,8 +217,7 @@ private fun Rect.writeTriangleVertices(out: FloatArray) {
 /**
  * Draw that triangle with the three corner colours.
  *
- * The scratch arrays come from the caller, which takes them from **its own root**: they must not be
- * shared between roots, because two roots can be drawing on two threads at once.
+ * The scratch arrays come from the caller's own root: two roots can draw on two threads at once.
  */
 context(backend: DslRootRenderer<RP>, renderParam: RP)
 private fun <RP> DslRootRenderer<RP>.paletteTriangle(
@@ -441,8 +440,8 @@ object Colors {
      * A triangular hue palette: the corners are the pure red, green and blue hues, and a point picks
      * their mixture, so the perimeter sweeps the whole hue circle and the middle darkens.
      *
-     * Unlike the square (one quad) and the bar (six quads) this needs the optional triangle-list
-     * capability, because a rectangle is never a triangle. What is drawn is the backend's linear
+     * Unlike the square (one quad) and the bar (six quads), a triangle needs the mandatory
+     * [DslRootRenderer.renderTriangles] primitive. What is drawn is the backend's linear
      * interpolation between the three corners, which is exactly the mixture picked here — normalising
      * it to full value instead (which would keep the middle bright) cannot be drawn that way at all.
      */

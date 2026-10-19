@@ -20,6 +20,10 @@ internal object TestRuntime {
         if (dslPlatformProvider == null) DslRuntime.start { TestPlatform }
     }
 
+    /**
+     * Publish the fake platform and return whatever was published before, so the caller can restore
+     * it: the singleton is process-wide and the cases share one JVM.
+     */
     fun publish(): (() -> DslPlatform)? {
         if (!DslRuntime.isInstalled) DslRuntime.install { TestMetadata }
             val previous = dslPlatformProvider

@@ -12,9 +12,6 @@ import kotlin.math.sin
  * Supports translation, scale, and rotation via companion factory methods.
  * Transformations compose via `*` and can be inverted. The [empty] identity
  * matrix is the default — use [isEmpty] to detect it for optimisation.
- *
- * Multiply-add is a plain `a * b + c`: `Math.fma` would need Java 9, and the single rounding it saves
- * is far below what a 2D UI coordinate can observe.
  */
 data class Transform(
     val m00: Num,

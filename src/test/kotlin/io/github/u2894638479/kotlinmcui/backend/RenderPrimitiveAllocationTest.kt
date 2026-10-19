@@ -142,7 +142,7 @@ class RenderPrimitiveAllocationTest {
         assumeTrue(bean.isThreadAllocatedMemorySupported, "this JVM cannot report per-thread allocation")
 
         // The scratch buffers of one root, which is what `Colors.ColorSquare` hands to `renderTriangles`
-        // every frame: one pair per root, never one pair for the process.
+        // every frame.
         val root = io.github.u2894638479.kotlinmcui.integration.TestRoot.newRoot()
         val vertices = root.triangleVertices
         val colors = root.triangleColors

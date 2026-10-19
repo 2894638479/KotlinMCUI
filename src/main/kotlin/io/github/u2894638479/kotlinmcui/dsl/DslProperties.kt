@@ -20,12 +20,8 @@ val identity get() = ctx.identity
 /**
  * The root this page is mounted on.
  *
- * The answer is per root rather than process-wide. Reach the pieces through it:
- *
- * - `renderer` - **may be `null`** for a root that draws nothing. A page that needs drawing should
- *   fail, or degrade visibly, at the point where it asks: `root.renderer?.getFont(...)` coming
- *   back as `null` is the framework saying so.
- * - `input` (pointer and preedit), `rootUtils` (clipboard, narration, sounds), `screenFactory`.
+ * The answer is per root rather than process-wide. `renderer` may be `null` for a root that draws
+ * nothing; what a page does about that is its decision at the point of use.
  */
 context(ctx: DslDataStoreContext)
 val root get() = ctx.dataStore.root
@@ -57,13 +53,10 @@ val session get() = dataStore.sessionLifeScope
 /**
  * Process-wide property scope — **kept for cross-root sharing and cross-mod contracts, not UI state**.
  *
- * Its keys are bare ids, so any mod can address a slot by name; nothing here is ever released.
+ * Its keys are bare ids, so any mod can address a slot by name and nothing here is ever released;
+ * one id, one type, for the whole process.
  *
- * - **Do not** use it for screen-local UI state - that is [stable] (screen) or [local] (frame).
- * - **Do not** build keys dynamically: every distinct key grows the map for the life of the process.
- * - **Do not** use it as per-connection state - that is [session], which is bounded by a root.
- *
- * **Contract**: one id, one type, for the whole process; a wrong-type read throws a `ClassCastException`.
+ * @see io.github.u2894638479.kotlinmcui.container.DslDataStore.staticLifeScope
  */
 context(ctx: DslDataStoreContext)
 val static get() = dataStore.staticLifeScope

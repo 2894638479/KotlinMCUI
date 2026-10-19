@@ -29,7 +29,6 @@ import org.junit.jupiter.api.BeforeEach
  */
 class DslRootStateTest {
 
-    /** Process-wide state: put back whatever provider was published before the case. */
     private var previousBackendProvider: (() -> DslPlatform)? = null
 
     @BeforeEach

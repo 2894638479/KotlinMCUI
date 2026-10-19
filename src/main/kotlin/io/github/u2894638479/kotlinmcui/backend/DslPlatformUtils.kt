@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 private val warnedAboutRemoteImages = AtomicBoolean(false)
 
-/** One warning per process: a backend without remote images should not repeat it every frame. */
+/** Process-wide: warn once. */
 internal fun warnRemoteUnsupportedOnce() {
     if (warnedAboutRemoteImages.compareAndSet(false, true)) {
         dslLogger.warn(
@@ -18,13 +18,9 @@ internal fun warnRemoteUnsupportedOnce() {
 }
 
 /**
- * The platform-level helpers: process-wide questions and effects.
- *
- * Only what the framework itself relies on is stated here. How a backend caches images, whether a load
- * is synchronous, what it draws for an unresolvable resource - all of that is its own business, and the
- * signature is the only requirement.
- *
- * The per-output half lives in [DslRootUtils].
+ * These run on the frame thread, so none of them may wait for io: read a map, return a cached holder,
+ * hand the work to another dispatcher and answer `empty` for now - never read a file, decode an image,
+ * open a socket or wait on a lock here.
  */
 interface DslPlatformUtils {
     /** `null` when there is no translation; callers then fall back to the key. */
@@ -42,12 +38,12 @@ interface DslPlatformUtils {
         return ImageHolder.empty
     }
 
-    /** Drops the cached copy of [url]: the next [remoteImage] reads it again. */
+    /** After this call, the next [remoteImage] reflects [url] as it is now. A backend that caches nothing has nothing to do. */
     fun reloadRemoteImage(url: String) {
         warnRemoteUnsupportedOnce()
     }
 
-    /** Drops the cached copy of [file]: the next [localImage] reads it again. */
+    /** After this call, the next [localImage] reflects [file] as it is now. A backend that caches nothing has nothing to do. */
     fun reloadLocalImage(file: File)
 
     /** Leaves the process. */

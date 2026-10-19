@@ -219,9 +219,7 @@ class PropertyLifeScope internal constructor(
     /**
      * Returns a [CoroutineScope] for launching coroutines, dispatched on the render thread by default.
      *
-     * Accessing this property has no immediate cost — the scope is constructed lazily
-     * on first use. If the scope is not accessed every frame, it may be disposed
-     * depending on the lifecycle type.
+     * If the scope is not accessed every frame, it may be disposed depending on the lifecycle type.
      *
      * Like a property, this scope **owns its coroutines** and is cancelled when its entry is cleared:
      * a scope in `local` dies with the frame that stopped reading it, one in `stable` with the screen.
@@ -254,8 +252,6 @@ class PropertyLifeScope internal constructor(
     val coroutineScope get() = coroutineScope(identity, dataStore.root.rootUtils.sessionDispatcher)
 
     /**
-     * 这是本声明点内部的子键；同一个 key 在不同声明点是不同槽，不会共享。
-     *
      * Returns a reactive property with automatic lifecycle management.
      *
      * The declaration site is part of the storage key, so two call sites may pass the same [key] and

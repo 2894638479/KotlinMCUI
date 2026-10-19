@@ -14,7 +14,7 @@ import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 
 /**
- * The fake backend's own root, driven the way the cases used to drive the deleted `TopComponent`.
+ * The fake backend's own root.
  *
  * This is the fixture's root, not the framework's: the runtime no longer hands any root out, so the
  * fixture builds one from the fake platform's pieces and every one-hop delegate below reads it.

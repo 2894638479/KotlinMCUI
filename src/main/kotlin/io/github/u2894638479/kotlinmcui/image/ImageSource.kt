@@ -10,9 +10,7 @@ import java.io.File
  * `when` over this instead of parsing ids.
  *
  * The strings inside are **data**, not assertions: a location or url can come from a config file, a text
- * field or a server, so a wrong one must not throw. A backend that cannot resolve a [Resource] draws its
- * own placeholder - Minecraft shows its missing sprite - and a backend that cannot read a [LocalFile] or
- * [Remote] answers [ImageHolder.empty]. Failing to draw is the degradation; crashing is not.
+ * field or a server, so a wrong one must not throw.
  */
 sealed interface ImageSource {
     /**

@@ -18,8 +18,8 @@ import io.github.u2894638479.kotlinmcui.widget.Colors
 /**
  * Every colour widget at once: the composite editor, the two palettes, the two hue palettes and the
  * hexadecimal field, plus the core colour slider the composite edits its channels with. It doubles
- * as the `color` page of the in-game verification run, where the triangles are only drawn if the
- * backend has the triangle-list capability.
+ * as the `color` page of the in-game verification run; the triangles go through the mandatory
+ * `renderTriangles` primitive.
  */
 context(ctx: DslContext)
 fun TestColorPage() = ScrollableColumn(Modifier.padding(5.scaled)) {

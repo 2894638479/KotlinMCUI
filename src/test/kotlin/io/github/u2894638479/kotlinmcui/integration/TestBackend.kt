@@ -170,8 +170,8 @@ internal object TestUtils : DslPlatformUtils, DslRootUtils {
     override fun reloadLocalImage(file: File) {}
     override fun playButtonSound() {}
     override fun openUri(uri: String) {}
-    // UI state is confined to the thread that builds it, so "the main thread"
-    // dispatcher here must run continuations on the caller rather than a pool.
+    // UI state is confined to the thread that builds it; Unconfined keeps continuations on the caller
+    // instead of handing them to a pool.
     val platformDispatcher: CoroutineDispatcher = Dispatchers.Unconfined
 
     // The split gives the same object two hats: process-level helpers and per-output helpers.
@@ -223,10 +223,10 @@ internal object TestInput : DslRootInput {
 }
 
 /**
- * The fixture's platform role: the process-level half of the old aggregate backend.
+ * The fixture's platform role: the process-level facts and helpers, plus the dispatcher.
  *
- * The same `TestUtils` object serves both this and [TestRootProvider] - the "one object, two
- * interfaces" shape the real backends will use after the split.
+ * The same `TestUtils` object is the platform's [DslPlatformUtils] and also implements
+ * [DslRootUtils] for the fixture's roots.
  */
 internal object TestPlatform : DslPlatform {
     override val metadata: DslPlatformMetadata get() = TestMetadata

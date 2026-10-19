@@ -15,14 +15,12 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
  * Renders via the backend's [DslRootRenderer.renderItem]. Supports item icon,
  * stack count, durability bar, and enchantment glint effect.
  *
- * @param modifier The modifier controlling size, position, etc.
  * @param item The item identifier (e.g. Minecraft namespace ID like `"minecraft:diamond"`).
  * @param count Stack size displayed at the bottom-right of the icon.
  * @param damage Durability fraction (0.0 = full, 1.0 = broken), or `null` to hide.
  * @param enchanted Whether to show the enchantment glint effect. Defaults to `false`.
- * @param id Unique identifier (required, no default) for component distinction and reference.
+ * @param id Unique identifier for component distinction and reference.
  * @receiver [DslContext] The implicit DSL context.
- * @return The collected component (returned by [collect]).
  * @see DslRootRenderer
  * @see DslComponentImpl
  */

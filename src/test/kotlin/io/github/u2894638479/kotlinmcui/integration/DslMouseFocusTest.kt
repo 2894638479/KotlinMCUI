@@ -24,7 +24,6 @@ import org.junit.jupiter.api.BeforeEach
  * assertion below fails, because nothing is focused after the press.
  */
 class DslMouseFocusTest {
-    /** Process-wide state: put back whatever provider was published before the case. */
     private var previous: (() -> DslPlatform)? = null
 
     @BeforeEach

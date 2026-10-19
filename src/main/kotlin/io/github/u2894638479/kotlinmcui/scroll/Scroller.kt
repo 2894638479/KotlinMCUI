@@ -47,8 +47,7 @@ interface Scroller : DslScaleContext, Bound {
         /**
          * Create a scroller for a fully-loaded component list
          * (e.g. [io.github.u2894638479.kotlinmcui.dsl.ui.Scrollable]).
-         * All items are always available — [spaceBefore] and [spaceAfter]
-         * compute exact values by summing item sizes.
+         * All items are always available.
          */
         context(ctx: DslScaleContext, _: DslDataStoreContext, _: DslIdContext)
         fun scroller(instance: DslComponent, axis: Axis, scrollProp: StableRW<Double> = local.animatable { 0.0 }): Scroller =

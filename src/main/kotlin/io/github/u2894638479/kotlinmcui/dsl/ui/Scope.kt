@@ -20,12 +20,10 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
  *     .change { object : DslScope by it as DslScope { ... } }
  * ```
  *
- * @param modifier The modifier controlling size, padding, background, etc. Defaults to [Modifier].
- * @param id Unique identifier; if `null`, [function]'s `::class` is used as the ID.
+ * @param id Unique identifier; see [Box] for the default rule.
  * @param alignerHorizontal Distributes the children along the horizontal axis.
  * @param alignerVertical Distributes the children along the vertical axis.
  * @param function DSL builder function executed within an implicit [DslContext].
- * @return The collected component, for use with [DslChild.change].
  */
 context(ctx: DslContext)
 fun Scope(

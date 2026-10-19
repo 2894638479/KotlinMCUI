@@ -18,7 +18,6 @@ import org.junit.jupiter.api.BeforeEach
  * each screen gets its own state and each component reports its own focus.
  */
 class DslComponentTreeFocusTest {
-    /** Process-wide state: put back whatever provider was published before the case. */
     private var previous: (() -> DslPlatform)? = null
 
     @BeforeEach

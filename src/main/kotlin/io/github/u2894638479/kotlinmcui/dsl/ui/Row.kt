@@ -25,13 +25,11 @@ import io.github.u2894638479.kotlinmcui.container.DslScopeImpl
  * - `viewHorizontal`: each child forms a single-row view (for per-column measurement)
  * - `viewVertical`: all children as a single column view
  *
- * @param modifier The modifier controlling size, padding, background, etc.
  * @param alignerHorizontal The horizontal alignment strategy for distributing space.
  *                          Defaults to [Aligner.weightedStrictByMin].
- * @param id Unique identifier; if `null`, [function]'s `::class` is used as the ID.
+ * @param id Unique identifier; see [Box] for the default rule.
  * @param function DSL builder function for declaring children.
  * @receiver [DslContext] The implicit DSL context.
- * @return The collected component (returned by [collect]).
  * @see DslScopeImpl
  * @see Aligner
  */

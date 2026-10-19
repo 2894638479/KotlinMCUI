@@ -14,9 +14,7 @@ import io.github.u2894638479.kotlinmcui.modifier.Modifier
  * Spacer(modifier, id).change { object : DslComponent by it { ... } }
  * ```
  *
- * @param modifier The modifier controlling size, padding, background, etc. Defaults to [Modifier].
  * @param id Unique identifier; the caller supplies one because this function takes no lambda.
- * @return The collected component, for use with [DslChild.change].
  */
 context(ctx: DslContext)
 fun Spacer(modifier: Modifier = Modifier, id:Any) =

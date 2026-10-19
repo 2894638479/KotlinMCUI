@@ -3,14 +3,10 @@ package io.github.u2894638479.kotlinmcui.backend
 import kotlinx.coroutines.CoroutineDispatcher
 
 /**
- * The process-wide facts and helpers of the platform that published itself.
+ * The process-wide facts and helpers of the platform a backend publishes.
  *
- * The platform a backend publishes: the process-level facts and helpers, and the dispatcher.
- * It grew in place from the draft's `DslPlatform` - the draft's members appeared at
- * their own names rather than in a second type that would have to be reconciled with it later.
- *
- * A platform is a first-class object the backend builds and publishes; it is not derived from the
- * aggregate backend any more, which is what lets the core stop depending on that aggregate.
+ * A platform is a first-class object the backend builds and publishes: the process-level facts and
+ * helpers, plus the dispatcher. The core depends on this type rather than on a backend aggregate.
  */
 interface DslPlatform {
     /** Metadata of the published platform. */

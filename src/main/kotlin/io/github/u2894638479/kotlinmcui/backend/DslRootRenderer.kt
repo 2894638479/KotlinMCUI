@@ -16,9 +16,7 @@ import io.github.u2894638479.kotlinmcui.text.DslFont
  * or pose stack. Methods drawing Minecraft-styled widgets also receive
  * [DslScaleContext] to adjust for the current GUI scale.
  *
- * Implementations should batch draw calls where possible and only flush when
- * [flush] is called or when the batch must be committed (e.g. before a scissor
- * or transform change).
+ * [flush] must have committed everything drawn so far; batching is the implementation's choice.
  *
  * @param RP The platform-specific render parameter type.
  */
@@ -144,10 +142,10 @@ interface DslRootRenderer<RP> {
 /**
  * Draw a gradient-filled rectangle.
  *
- * One of the drawing helpers written in terms of [DslRootRenderer.renderQuad]. It is
- * an extension rather than an interface member so that the interface keeps a single
- * drawing primitive: a backend that wants its own solid-rectangle path does it inside
- * `renderQuad`, where every caller benefits. Allocates nothing.
+ * One of the drawing helpers written in terms of [DslRootRenderer.renderQuad]. It is an
+ * extension so every call site shares one implementation; a backend that wants its own
+ * solid-rectangle fast path does it inside `renderQuad`, where every caller benefits.
+ * Allocates nothing.
  */
 context(renderParam: RP)
 fun <RP> DslRootRenderer<RP>.fillRectGradient(rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color) =

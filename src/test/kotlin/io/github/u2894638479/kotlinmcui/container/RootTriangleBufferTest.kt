@@ -6,12 +6,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
 
 /**
- * The triangle scratch buffers belong to a root, not to the process.
- *
- * This is the structural half of the reasons the buffers moved: two roots can render on two threads at
- * the same moment, so one shared pair would let one root's fill land between another root's fill and its
- * `renderTriangles` call. Whether two threads actually interleave badly is not asserted here - a test
- * that bets on timing would be a flaky instrument; the ownership below is the guarantee.
+ * The triangle scratch buffers belong to a root, not to the process: two roots can render on two
+ * threads at once, so the test pins ownership rather than betting on timing.
  */
 class RootTriangleBufferTest {
 

@@ -79,9 +79,7 @@ private val DslComponent.treeState: DslRootState
  * Whether this component currently has keyboard focus.
  *
  * A component of a tree that is not mounted on any root fails loudly rather than reporting `false`:
- * the question has no answer there, and a guess would hide the real mistake. Reading focus through
- * its own tree is all a root can do today; components of a root that the framework did not build are
- * served once roots can be built publicly.
+ * the question has no answer there, and a guess would hide the real mistake.
  */
 val DslComponent.isFocused get() = focusable && treeState.focused == identity
 

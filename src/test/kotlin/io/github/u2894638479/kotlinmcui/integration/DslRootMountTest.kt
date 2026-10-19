@@ -33,7 +33,6 @@ import org.junit.jupiter.api.BeforeEach
  * debug overlay answer from that stamp rather than from the main root.
  */
 class DslRootMountTest {
-    /** Process-wide state: put back whatever provider was published before the case. */
     private var previous: (() -> DslPlatform)? = null
 
     @BeforeEach

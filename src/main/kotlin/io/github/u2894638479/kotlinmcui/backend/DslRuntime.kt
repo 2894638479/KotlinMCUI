@@ -40,7 +40,7 @@ object DslRuntime {
     /**
      * Publish [platform]: from here on [dslPlatform] works.
      *
-     * Call it when the platform can create screens - for Fabric, after `Minecraft.<init>` returns.
+     * Call it when the platform can create screens.
      *
      * Only the first backend wins. A second call is refused and logged rather than thrown, because
      * two backends in one instance is a user's installation mistake and must not become a client

@@ -9,22 +9,18 @@ import java.io.File
  * The per-output helpers: things one root does for its own session.
  *
  * The per-root helpers one output offers: clipboard, narration, capture, sounds, links, the session
- * dispatcher, and the bridge to that root's thread. The signatures are the ones the old aggregate utils already had,
- * so a backend object satisfies it as-is. The process-level half lives in [DslPlatformUtils].
+ * dispatcher, and the bridge to that root's thread. The process-level half lives in [DslPlatformUtils].
  *
  * **Writing `local` / `stable` slots is only allowed on this root's rendering thread.** Those stores are
  * plain maps, not concurrent containers: a write from anywhere else is a data race, not a feature. From
  * another thread (HTTP, IO, a platform event) call [post] instead - it hands the block to the root thread.
  * Declarative properties (`local { }`, `stable { }`, `cached`, `animatable`) are built while the tree
  * renders, so their coroutines are already on that thread and need no `post`.
- *
- * `closeOutput` is deliberately absent: nothing needs it before the draft's root lifecycle exists, and
- * adding an empty member now would only be filled in by guessing.
  */
 interface DslRootUtils {
     var clipboard: String
 
-    /** Capture this output. The capability is expressed by a `null` result, not by a missing type. */
+    /** Capture this output; a `null` result means it is not supported. */
     suspend fun capture(fileName: String): File?
 
     fun narrate(string: String)
@@ -34,7 +30,7 @@ interface DslRootUtils {
     /** The serial dispatcher of this session; session-scoped property scopes bind to it. */
     val sessionDispatcher: CoroutineDispatcher
 
-    /** Whether the caller is on this root's rendering thread (EDT for window, the frame thread for web, the game thread for MC). */
+    /** Whether the caller is on this root's rendering thread. */
     val isOnSessionThread: Boolean
 
     /**
