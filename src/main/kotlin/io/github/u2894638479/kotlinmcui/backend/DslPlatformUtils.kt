@@ -16,8 +16,23 @@ interface DslPlatformUtils {
     /** Whether the game world is loaded behind the UI. `false` on a headless platform is a real answer. */
     val isInWorld: Boolean
 
-    fun loadLocalImage(file: File): ImageHolder
-    fun forceLoadLocalImage(file: File): ImageHolder
+    /**
+     * The image stored in [file], or [ImageHolder.empty] while there is nothing to draw yet.
+     *
+     * It answers **immediately**: a backend that cannot produce the holder this instant returns `empty`
+     * and has the real one ready on a later call. Never store the result - a cached `empty` turns a
+     * first-frame miss into a permanent one; ask again when the image is needed.
+     */
+    fun localImage(file: File): ImageHolder
+
+    /**
+     * Forgets whatever is cached for [file] and reads it again.
+     *
+     * It returns nothing on purpose: this is a command, not a query. A return value would let a render
+     * function write `Image(..., reloadLocalImage(file))` and read the file on every frame. Read through
+     * [localImage] as usual; the reloaded holder lands in that same cache.
+     */
+    fun reloadLocalImage(file: File)
 
     /** Leave the process. Root-local teardown is [DslRootUtils]'s business, not this. */
     fun quit(exitCode: Int)

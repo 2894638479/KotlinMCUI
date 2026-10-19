@@ -164,8 +164,8 @@ internal object TestUtils : DslPlatformUtils, DslRootUtils {
     override fun narrate(string: String) {}
     override fun translate(key: String, vararg args: Any?) = key
     override val isInWorld = true
-    override fun loadLocalImage(file: File) = ImageHolder.empty
-    override fun forceLoadLocalImage(file: File) = ImageHolder.empty
+    override fun localImage(file: File) = ImageHolder.empty
+    override fun reloadLocalImage(file: File) {}
     override fun playButtonSound() {}
     override fun openUri(uri: String) {}
     // UI state is confined to the thread that builds it, so "the main thread"

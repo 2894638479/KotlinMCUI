@@ -52,9 +52,17 @@ context(ctx: DslContext)
 inline fun <T> Iterable<T>.forEachWithId(block: (T) -> Unit) = forEach { withId(it) { block(it) } }
 
 context(_: DslDataStoreContext, _: DslIdContext)
-fun imageFile(file: File?): ImageHolder {
-    return dslPlatform.utils.loadLocalImage(file ?: return ImageHolder.empty)
-}
+fun localImage(file: File?): ImageHolder = dataStore.platform.utils.localImage(file ?: return ImageHolder.empty)
+
+/**
+ * Drops the cached copy of [file] and reads it again.
+ *
+ * Taking [DslExecuteContext] is the guard, not a formality: this belongs in an event handler such as
+ * `clickable { }`, and the render context does not provide that receiver, so writing it inside a page
+ * body does not compile.
+ */
+context(ctx: DslExecuteContext)
+fun reloadLocalImage(file: File) = ctx.dataStore.platform.utils.reloadLocalImage(file)
 
 context(_: DslDataStoreContext, _: DslIdContext)
 fun imageResource(location: String, width: Measure, height: Measure) = ImageHolder(location, width, height)

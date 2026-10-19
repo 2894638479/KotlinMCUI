@@ -4,9 +4,9 @@ import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.decorator.hoverMask
 import io.github.u2894638479.kotlinmcui.dsl.decorator.onFilesDropped
-import io.github.u2894638479.kotlinmcui.dsl.imageFile
 import io.github.u2894638479.kotlinmcui.dsl.imageResource
 import io.github.u2894638479.kotlinmcui.dsl.local
+import io.github.u2894638479.kotlinmcui.dsl.localImage
 import io.github.u2894638479.kotlinmcui.dsl.ui.Image
 import io.github.u2894638479.kotlinmcui.dsl.ui.Row
 import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
@@ -37,7 +37,7 @@ fun TestImagePage() = ScrollableColumn {
     val width by widthProp
     val height by heightProp
     val localImageProp = local { "" }
-    val localImage by localImageProp.remap { imageFile(File(it)) }
+    val localImageHolder by localImageProp.remap { localImage(File(it)) }
     val resourceImageProp = local { "minecraft:textures/block/dirt.png" }
     val resourceWidthProp = local { 32.px }
     val resourceHeightProp = local { 32.px }
@@ -58,7 +58,7 @@ fun TestImagePage() = ScrollableColumn {
             Editors.String(localImageProp,"localImage") {}
             TextFlatten(Modifier.height(30.scaled)) { "drop files here".emit() }.hoverMask()
                 .onFilesDropped { localImageProp.value = it.firstOrNull()?.toString() ?: "" }
-            withColor(color) { Image(Modifier.size(width.scaled, height.scaled), localImage, strategy) {} }
+            withColor(color) { Image(Modifier.size(width.scaled, height.scaled), localImageHolder, strategy) {} }
         }
         Mode.RESOURCE -> {
             Editors.String(resourceImageProp,"resource") {}
