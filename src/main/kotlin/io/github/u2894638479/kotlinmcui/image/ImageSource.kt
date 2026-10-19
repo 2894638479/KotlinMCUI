@@ -36,9 +36,6 @@ sealed interface ImageSource {
             }
         }
     }
-
-    /** Nothing to draw. A sentinel, not a broken address. */
-    object Missing : ImageSource
 }
 
 private val RESOURCE_LOCATION = Regex("[a-z0-9_.-]+:[a-z0-9_./-]+")

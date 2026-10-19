@@ -11,18 +11,19 @@ parent: Components
 - `source`：图像**从哪来**，见下节的四种来源；
 - `width`、`height`：图像的宽高，以`1.px`为单位，渲染时用来计算纹理 uv。
 
-## 四种来源，互不混淆
+## 三种来源，互不混淆
 
 ```kotlin
 sealed interface ImageSource {
     data class Resource(val location: String)  // "minecraft:textures/block/dirt.png"
     data class LocalFile(val file: File)
     data class Remote(val url: String)         // http:// 或 https://
-    object Missing                             // 没有图像
 }
 ```
 
-它们**是四种类型而不是四种字符串前缀**，所以不可能互相冒充：一个资源定位不可能被当成本地文件，`missing` 也不可能被当成一个叫 `missing` 的资源。解析由后端做 `when(source)`，不需要猜前缀。
+它们**是三种类型而不是三种字符串前缀**，所以不可能互相冒充：一个资源定位不可能被当成本地文件。解析由后端做 `when(source)`，不需要猜前缀。
+
+"没有图像"不是来源的一种，而是 `ImageHolder.empty`（`source == null`）。本地/远程图片还没读完时也是 `empty`——**框架不区分"还没好"和"就是没有"**，两者对渲染都是"现在画不出东西"；加载失败由后端记日志，或者由后端换成一张占位**资源**再交回来。
 
 `Resource` 的 `namespace:path` 与 `Remote` 的 `http(s)://` 在**构造时**校验——写错当场抛，而不是每帧画一个空白。
 
