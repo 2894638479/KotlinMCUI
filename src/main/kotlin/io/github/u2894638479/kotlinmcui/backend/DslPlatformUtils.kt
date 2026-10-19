@@ -26,6 +26,15 @@ interface DslPlatformUtils {
     fun localImage(file: File): ImageHolder
 
     /**
+     * Downloads the image at [url] and caches it, with the same rules as [localImage]: answer
+     * immediately, `ImageHolder.empty` until the bytes have arrived, and ask again later.
+     *
+     * A backend without an http client throws [UnsupportedOperationException] rather than answering
+     * `empty` forever - "not supported" and "not loaded yet" must not look the same.
+     */
+    fun remoteImage(url: String): ImageHolder
+
+    /**
      * Forgets whatever is cached for [file] and reads it again.
      *
      * It returns nothing on purpose: this is a command, not a query. A return value would let a render

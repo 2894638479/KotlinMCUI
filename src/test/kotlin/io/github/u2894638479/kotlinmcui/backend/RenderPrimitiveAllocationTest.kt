@@ -3,6 +3,7 @@ package io.github.u2894638479.kotlinmcui.backend
 import com.sun.management.ThreadMXBean
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
+import io.github.u2894638479.kotlinmcui.image.ImageSource
 import io.github.u2894638479.kotlinmcui.image.ImageStrategy
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.px
@@ -74,7 +75,7 @@ class RenderPrimitiveAllocationTest {
 
     private val rect = Rect(10.px, 20.px, 110.px, 60.px)
     private val color = Color(255, 128, 64, 200)
-    private val image = ImageHolder("probe", 16.px, 16.px)
+    private val image = ImageHolder(ImageSource.Resource("probe:probe"), 16.px, 16.px)
     private val uv = Rect(0.px, 0.px, 16.px, 16.px)
 
     /** Leaves room for measurement noise; a returned collection costs hundreds of bytes. */

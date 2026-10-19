@@ -85,7 +85,7 @@ typealias DslFunction = context(DslContext) () -> Unit
 | `collect(component)` / `remove(child)` | 手动增删子节点 |
 | `translate(string, vararg args)` | 取翻译文本，缺失时回退为原文 |
 | `showScreen(title, function)` | 新建并展示一个 Screen |
-| `localImage(file)` / `imageResource(location, w, h)` | 构造图像引用 |
+| `localImage(file)` / `remoteImage(url)` / `imageResource(location, w, h)` | 构造图像引用 |
 
 ## 颜色作用域
 主题色是构建期概念。组件在自己的构造表达式里读取 `Color.WHITE.mixed` 把它**立刻求解成一个普通 `Color` 值**并保存；渲染阶段不再做任何颜色运算。所以颜色不是响应式的——`withColor` 换色只影响当帧新建的组件树，而树本来就每帧重建，因此实际表现仍然是即时生效。

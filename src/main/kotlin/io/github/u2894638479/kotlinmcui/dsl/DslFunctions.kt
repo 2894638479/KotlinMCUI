@@ -7,6 +7,7 @@ import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
 import io.github.u2894638479.kotlinmcui.context.DslExecuteContext
 import io.github.u2894638479.kotlinmcui.context.DslIdContext
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
+import io.github.u2894638479.kotlinmcui.image.ImageSource
 import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.math.Measure
 import io.github.u2894638479.kotlinmcui.container.DslChild
@@ -65,7 +66,10 @@ context(ctx: DslExecuteContext)
 fun reloadLocalImage(file: File) = ctx.dataStore.platform.utils.reloadLocalImage(file)
 
 context(_: DslDataStoreContext, _: DslIdContext)
-fun imageResource(location: String, width: Measure, height: Measure) = ImageHolder(location, width, height)
+fun imageResource(location: String, width: Measure, height: Measure) = ImageHolder(ImageSource.Resource(location), width, height)
+
+context(_: DslDataStoreContext, _: DslIdContext)
+fun remoteImage(url: String): ImageHolder = dataStore.platform.utils.remoteImage(url)
 
 context(ctx: DslContext)
 fun collect(component: DslComponent) = ctx.children.collect(component)

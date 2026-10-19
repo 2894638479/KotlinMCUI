@@ -10,6 +10,7 @@ import io.github.u2894638479.kotlinmcui.dsl.translateGlobal
 import io.github.u2894638479.kotlinmcui.dsl.ui.TextFlatten
 import io.github.u2894638479.kotlinmcui.entry.DslEntryGui
 import io.github.u2894638479.kotlinmcui.entry.DslEntryOverlay
+import io.github.u2894638479.kotlinmcui.image.ImageSource
 import io.github.u2894638479.kotlinmcui.entry.DslEntryService
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.logger.dslLogger
@@ -25,7 +26,7 @@ import io.github.u2894638479.kotlinmcui.math.px
 object TestEntry : DslEntryService {
     override val name get() = translateGlobal("kotlinmcui.testentry")
     override val id get() = "kotlinmcui"
-    override val icon get() = ImageHolder("kotlinmcui:icon.png",16.px,16.px)
+    override val icon get() = ImageHolder(ImageSource.Resource("kotlinmcui:icon.png"),16.px,16.px)
 
     override fun initialize() {
         dslLogger.info("TestEntry initialized")

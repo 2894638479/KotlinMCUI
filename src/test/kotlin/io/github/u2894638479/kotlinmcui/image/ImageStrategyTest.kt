@@ -53,7 +53,7 @@ class ImageStrategyTest {
         override fun getFont(name: String?): DslFont<Unit> = error("not used")
     }
 
-    private val image = ImageHolder("probe", 16.px, 16.px)
+    private val image = ImageHolder(ImageSource.Resource("probe:probe"), 16.px, 16.px)
 
     private fun record(strategy: ImageStrategy, target: Rect, img: ImageHolder = image): List<Quad> {
         Recording.quads.clear()

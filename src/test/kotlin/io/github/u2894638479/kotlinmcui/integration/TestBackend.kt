@@ -165,6 +165,7 @@ internal object TestUtils : DslPlatformUtils, DslRootUtils {
     override fun translate(key: String, vararg args: Any?) = key
     override val isInWorld = true
     override fun localImage(file: File) = ImageHolder.empty
+    override fun remoteImage(url: String) = ImageHolder.empty
     override fun reloadLocalImage(file: File) {}
     override fun playButtonSound() {}
     override fun openUri(uri: String) {}

@@ -88,10 +88,10 @@ class OverlayOrderTest {
         val first = overlay("FixtureOverlay")
         val duplicate = DslEntryLoader.brokenEntries
             .firstOrNull { it.className.endsWith("FixtureOverlayDup") }
-        assertTrue(duplicate != null, "the later declaration must be reported")
         assertTrue(
-            duplicate!!.reason.contains("FixtureOverlay"),
-            "and the reason must name the winner, was: " + '$' + "{duplicate.reason}" + "",
+            duplicate?.reason?.contains("FixtureOverlay") == true,
+            "the later declaration must be reported and name the winner, was: " +
+                (duplicate?.reason ?: "not reported at all"),
         )
         DslEntryLoader.setOverlayEnabled(first, true)
         assertEquals(listOf(first), DslEntryLoader.enabledOverlays, "only the winner can be enabled")
