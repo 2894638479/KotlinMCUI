@@ -1,7 +1,21 @@
 package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
+import io.github.u2894638479.kotlinmcui.logger.dslLogger
 import java.io.File
+import java.util.concurrent.atomic.AtomicBoolean
+
+private val warnedAboutRemoteImages = AtomicBoolean(false)
+
+/** One warning per process: a backend without remote images should not repeat it every frame. */
+internal fun warnRemoteUnsupportedOnce() {
+    if (warnedAboutRemoteImages.compareAndSet(false, true)) {
+        dslLogger.warn(
+            "this backend has no http client: remoteImage() answers empty and remote pictures are not " +
+                "drawn. Pages still render; only those images are missing.",
+        )
+    }
+}
 
 /**
  * The platform-level helpers: questions about the process, not about one output.
@@ -29,18 +43,24 @@ interface DslPlatformUtils {
      * Downloads the image at [url] and caches it, with the same rules as [localImage]: answer
      * immediately, `ImageHolder.empty` until the bytes have arrived, and ask again later.
      *
-     * A backend without an http client throws [UnsupportedOperationException] rather than answering
-     * `empty` forever - "not supported" and "not loaded yet" must not look the same.
+     * The default answers `empty` and warns once: a backend without an http client should still render
+     * pages that happen to include a remote image, so the picture is missing and the log says why. A
+     * page is user content, and a backend lacking a capability must not turn it into a crash.
      */
-    fun remoteImage(url: String): ImageHolder
+    fun remoteImage(url: String): ImageHolder {
+        warnRemoteUnsupportedOnce()
+        return ImageHolder.empty
+    }
 
     /**
      * Forgets whatever is cached for [url] and downloads it again.
      *
      * The same command shape as [reloadLocalImage], for the same reason: no return value, and it belongs
-     * in an event handler, not in a render body.
+     * in an event handler, not in a render body. The default does nothing but warn once.
      */
-    fun reloadRemoteImage(url: String)
+    fun reloadRemoteImage(url: String) {
+        warnRemoteUnsupportedOnce()
+    }
 
     /**
      * Forgets whatever is cached for [file] and reads it again.

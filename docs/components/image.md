@@ -49,7 +49,7 @@ val holder = localImage(file)          // 页面体里可以调
 ```kotlin
 val holder = remoteImage("https://example.com/icon.png")
 ```
-规则与本地图像相同：立即返回，`empty` 表示还没下载完，再调用即可。后端若没有 http 能力应当抛 `UnsupportedOperationException`，而不是永远回 `empty`——"不支持"和"还没加载好"不能长得一样。
+规则与本地图像相同：立即返回，`empty` 表示还没下载完，再调用即可。**没有 http 能力的后端默认返回 `empty` 并记一条警告**——页面照样渲染，只是网络图片不显示。缺一项能力不该让一个正常的页面崩掉。
 
 内容变了、或者上次下载失败想重试，就在**事件处理器**里调 `reloadRemoteImage(url)`：同样没有返回值，同样不能写在页面体里。
 
