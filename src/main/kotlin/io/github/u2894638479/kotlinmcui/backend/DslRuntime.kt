@@ -20,9 +20,6 @@ object DslRuntime {
     /** Whether [install] has run. */
     internal val isInstalled get() = synchronized(lock) { installed }
 
-    /** Installed, but the platform has not been published yet. */
-    internal val installedButNotReady get() = synchronized(lock) { installed && dslPlatformProvider == null }
-
     /**
      * Install the platform and do everything that is safe this early.
      *

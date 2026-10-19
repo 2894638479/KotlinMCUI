@@ -1,21 +1,7 @@
 package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
-import io.github.u2894638479.kotlinmcui.logger.dslLogger
 import java.io.File
-import java.util.concurrent.atomic.AtomicBoolean
-
-private val warnedAboutRemoteImages = AtomicBoolean(false)
-
-/** Process-wide: warn once. */
-internal fun warnRemoteUnsupportedOnce() {
-    if (warnedAboutRemoteImages.compareAndSet(false, true)) {
-        dslLogger.warn(
-            "this backend has no http client: remoteImage() answers empty and remote pictures are not " +
-                "drawn. Pages still render; only those images are missing.",
-        )
-    }
-}
 
 /**
  * These run on the frame thread, so none of them may wait for io: read a map, return a cached holder,
@@ -33,15 +19,10 @@ interface DslPlatformUtils {
     fun localImage(file: File): ImageHolder
 
     /** The image at [url]; [ImageHolder.empty] means nothing to draw. */
-    fun remoteImage(url: String): ImageHolder {
-        warnRemoteUnsupportedOnce()
-        return ImageHolder.empty
-    }
+    fun remoteImage(url: String): ImageHolder
 
     /** After this call, the next [remoteImage] reflects [url] as it is now. A backend that caches nothing has nothing to do. */
-    fun reloadRemoteImage(url: String) {
-        warnRemoteUnsupportedOnce()
-    }
+    fun reloadRemoteImage(url: String)
 
     /** After this call, the next [localImage] reflects [file] as it is now. A backend that caches nothing has nothing to do. */
     fun reloadLocalImage(file: File)

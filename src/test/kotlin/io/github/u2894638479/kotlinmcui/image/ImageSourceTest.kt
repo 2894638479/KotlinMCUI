@@ -36,9 +36,9 @@ class ImageSourceTest {
     }
 
     @Test
-    fun `a platform without http answers empty instead of throwing`() {
-        // The test platform does not override remoteImage, so this runs the interface default. A page
-        // that happens to show a remote picture must still render on a backend that cannot fetch it.
+    fun `a backend that cannot fetch a url still answers a holder`() {
+        // remoteImage has no default: every backend decides. The fake one answers empty, which is what a
+        // backend without an http client should do - it must not throw while a page is being built.
         assertTrue(TestPlatform.utils.remoteImage("https://example.invalid/icon.png").isEmpty)
         TestPlatform.utils.reloadRemoteImage("https://example.invalid/icon.png")
     }

@@ -20,15 +20,18 @@ interface DslPlatform {
 }
 
 /**
- * The published platform. Fails loudly when nothing has published one yet.
+ * The platform in force: the published one, or the placeholder that answers while none is published.
+ *
+ * The placeholder makes the benign queries usable during entry initialisation; only [DslPlatform.dispatcher]
+ * fails there, because a session thread cannot be faked.
  */
-val dslPlatform: DslPlatform get() = publishedPlatform()
+val dslPlatform: DslPlatform get() = currentPlatform()
 
 /**
  * Metadata of the current platform.
  *
  * An installed metadata provider answers before the platform is published, so mod initialisation can
- * read directories without building anything; afterwards the platform's own metadata is the answer.
+ * read directories without building anything.
  */
 val dslMetadata: DslPlatformMetadata
     get() = dslMetadataProvider?.invoke() ?: dslPlatform.metadata

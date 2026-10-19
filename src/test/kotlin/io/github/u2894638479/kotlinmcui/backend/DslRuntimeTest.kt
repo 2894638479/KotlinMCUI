@@ -51,15 +51,20 @@ class DslRuntimeTest {
 
     @Test
     @Order(3)
-    fun `metadata works before the platform is ready while the platform does not`() {
+    fun `before the platform is ready its metadata answers and only the session dispatcher fails`() {
         DslRuntime.install { TestMetadata }
 
         assertEquals(TestMetadata.configDir, dslMetadata.configDir)
+        assertSame(TestMetadata, dslMetadata)
 
-        val failure = assertFailsWith<IllegalStateException> { dslPlatform }
+        // Entry initialisation runs here, so the queries with a benign answer have to work.
+        assertEquals(null, dslPlatform.utils.translate("a.key"))
+        assertFalse(dslPlatform.utils.isInWorld)
+
+        val failure = assertFailsWith<IllegalStateException> { dslPlatform.dispatcher }
         assertTrue(
-            "not ready" in failure.message.orEmpty(),
-            "the failure must say the platform is not ready yet, was: ${failure.message}"
+            "session thread" in failure.message.orEmpty(),
+            "the failure must say there is no session thread yet, was: ${failure.message}"
         )
     }
 
