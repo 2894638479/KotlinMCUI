@@ -142,7 +142,9 @@ UI 构建状态是线程受限的：`DslContext` 记录创建它的线程，所�
 
 调度器属于根：`DslRootUtils.sessionDispatcher` 是**会话级**的主线程调度器，供属性作用域创建协程使用（`clickable { launch { } }` 就跑在它上面），预览会话也把建屏与截图派发到它。它必须是串行调度器，不能是并行池：UI 构建状态是线程受限的。
 
-**写 `local` / `stable` 只允许发生在该根的渲染线程上；从别处改，走 `post`。** 那两个存储是普通映射、不是并发容器，跨线程写就是数据竞态——`post` 只是把块交给根线程，并不把错误的写法变安全。`DslRootUtils.isOnSessionThread` 回答"我是不是已经在那个线程上"，`post(block)` 已经在则**内联执行**（否则会等自己），否则投到 `sessionDispatcher`；两条路径都**不吞异常**。声明式属性里的协程本来就活在这个线程上，不需要 `post`。
+根还持有 **`DslRoot.sessionScope`**：`SupervisorJob + sessionDispatcher`，**随 `root.close()` 取消**。要挂并发的协程用它，这样它不会活得比它操作的树更久。
+
+**写 `local` / `stable` 只允许发生在该根的渲染线程上；从别处改，走 `DslRoot.post`。** 那两个存储是普通映射、不是并发容器，跨线程写就是数据竞态——`post` 只是把块交给根线程，并不把错误的写法变安全。`DslRootUtils.isOnSessionThread` 回答"我是不是已经在那个线程上"，`post(block)` 已经在则**内联执行**（否则会等自己），否则投到 `sessionScope`；两条路径都**不吞异常**。跨线程投递除调度器队列外**没有顺序保证**，不要拿它和帧循环排顺序。`post` 与 `sessionScope` 都不是接口成员——接口只有后端必须提供的两个事实。
 
 ## 写一个最小后端
 必须实现的成员分布大致是：渲染接口十余个（缩放、`flush`、`renderQuad`、`renderTriangles`、原版风格的按钮/槽位/容器/提示底纹/物品/默认背景、裁剪、变换、取字体）、输入接口四个、元数据五个、平台工具四五个、根工具七八个、以及 Screen 工厂一个。

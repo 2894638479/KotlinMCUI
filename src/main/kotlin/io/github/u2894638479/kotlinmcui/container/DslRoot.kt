@@ -10,6 +10,10 @@ import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
 import io.github.u2894638479.kotlinmcui.identity.DslId
 import io.github.u2894638479.kotlinmcui.math.rect.MutRect
 import io.github.u2894638479.kotlinmcui.prop.PropertyLifeScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * One root: the state, the viewport and the children that belong to it.
@@ -34,6 +38,27 @@ class DslRoot(
     val rootUtils: DslRootUtils,
 ) {
     private val rootComponent = DslRootComponent(this)
+
+    /**
+     * Coroutines started here are cancelled when this root closes.
+     *
+     * One scope per root, on the root's own thread: it is the session's lifetime, which is the lifetime
+     * of the root. A concurrent coroutine that reads or writes the tree uses this scope, so it cannot
+     * outlive the tree it touches.
+     */
+    val sessionScope: CoroutineScope = CoroutineScope(SupervisorJob() + rootUtils.sessionDispatcher)
+
+    /**
+     * Run [block] on this root's thread, inline when the caller is already on it.
+     *
+     * [sessionScope] is what makes it end with the root: a block queued after `close()` never runs.
+     * Across threads the only ordering is the dispatcher's queue, so it is not a way to sequence work
+     * against the frame loop.
+     */
+    fun post(block: () -> Unit) {
+        if(rootUtils.isOnSessionThread) block()
+        else sessionScope.launch { block() }
+    }
 
     /**
      * The root's own state.
@@ -109,6 +134,7 @@ class DslRoot(
     fun close() {
         if(closed) return
         closed = true
+        sessionScope.cancel()
         sessionPropertyMap.values.forEach { it.onClear() }
         sessionPropertyMap.clear()
     }
