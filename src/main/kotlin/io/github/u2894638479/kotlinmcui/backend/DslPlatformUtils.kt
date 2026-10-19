@@ -35,6 +35,14 @@ interface DslPlatformUtils {
     fun remoteImage(url: String): ImageHolder
 
     /**
+     * Forgets whatever is cached for [url] and downloads it again.
+     *
+     * The same command shape as [reloadLocalImage], for the same reason: no return value, and it belongs
+     * in an event handler, not in a render body.
+     */
+    fun reloadRemoteImage(url: String)
+
+    /**
      * Forgets whatever is cached for [file] and reads it again.
      *
      * It returns nothing on purpose: this is a command, not a query. A return value would let a render

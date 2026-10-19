@@ -65,6 +65,10 @@ fun localImage(file: File?): ImageHolder = dataStore.platform.utils.localImage(f
 context(ctx: DslExecuteContext)
 fun reloadLocalImage(file: File) = ctx.dataStore.platform.utils.reloadLocalImage(file)
 
+/** [reloadLocalImage] for a url: drop the cached copy and download it again. */
+context(ctx: DslExecuteContext)
+fun reloadRemoteImage(url: String) = ctx.dataStore.platform.utils.reloadRemoteImage(url)
+
 context(_: DslDataStoreContext, _: DslIdContext)
 fun imageResource(location: String, width: Measure, height: Measure) = ImageHolder(ImageSource.Resource(location), width, height)
 

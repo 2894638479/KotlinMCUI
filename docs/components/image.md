@@ -51,6 +51,8 @@ val holder = remoteImage("https://example.com/icon.png")
 ```
 规则与本地图像相同：立即返回，`empty` 表示还没下载完，再调用即可。后端若没有 http 能力应当抛 `UnsupportedOperationException`，而不是永远回 `empty`——"不支持"和"还没加载好"不能长得一样。
 
+内容变了、或者上次下载失败想重试，就在**事件处理器**里调 `reloadRemoteImage(url)`：同样没有返回值，同样不能写在页面体里。
+
 ## 渲染策略
 `ImageStrategy`中有裁切、重复、拉伸等多种策略。使用时注意一些策略参数中的`uv:Rect`参数应当为相对于`ImageHolder`的矩形。例如如果我想渲染dirt的左上1/4，应该传入uv为`Rect(0.px,0.px,8.px,8.px)`。
 
