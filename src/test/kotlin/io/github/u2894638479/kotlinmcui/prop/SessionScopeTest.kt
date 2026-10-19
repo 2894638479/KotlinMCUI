@@ -13,8 +13,13 @@ import io.github.u2894638479.kotlinmcui.math.Position
 import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.size
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.launch
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 /**
@@ -104,5 +109,25 @@ class SessionScopeTest {
         assertEquals(1, cleaned, "close must run each slot's cleanup action")
         assertEquals(0, root.sessionPropertyMap.size, "and empty the scope")
         assertTrue(root.isClosed)
+    }
+
+    @Test
+    fun `closing a root cancels coroutines a session property started`() {
+        val root = TestRoot.newRoot()
+        var job: Job? = null
+
+        val screen = screenOn(root, "session") {
+            job = session("ticker") { launch { awaitCancellation() } }.value
+            Spacer(Modifier.size(10.px, 10.px), "spacer")
+        }
+        root.children.collect(screen)
+        render(screen)
+
+        val running = assertNotNull(job)
+        assertTrue(running.isActive, "the session coroutine runs while the root is open")
+
+        root.close()
+
+        assertFalse(running.isActive, "a session property's coroutines are bounded by the root")
     }
 }

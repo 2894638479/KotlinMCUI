@@ -84,16 +84,16 @@ Column {
 
 ### 协程随属性走
 
-**条目的协程跟条目的死法走**，不按作用域名字区分：
+**不变量：条目的 `scope` 非空 ⇔ 该条目拥有这个 scope。** 条目只在一种死法下拥有 scope——逐条死；一起死的条目自身不持有 scope，scope 由整条生命周期持有。
 
-- **`local`：条目逐个死。** 未被读到的条目在帧末单独清理，所以每个属性**各自持有一个**带 `SupervisorJob` 的 scope（兄弟协程互不连坐），条目被清时只 cancel 它自己的那个。
-- **`stable` / `session` / `static`：条目一起死。** 条目没有单独清理的路径，整条生命周期释放时全部清掉，所以它们**共享同一个** scope（懒创建），只由整条生命周期的释放 cancel 一次；全量清理逐条调 `onClear` 时第一个 cancel、其余是幂等 no-op。单独替换一个 `cached` 条目不会 cancel 共享 scope——否则会连坐在用同一 scope 的兄弟条目。
+- **`local`：条目逐个死。** 未被读到的条目在帧末单独清理，所以每个属性**持有自己的**带 `SupervisorJob` 的 scope（兄弟协程互不连坐），条目被清时 cancel 它自己的。
+- **`stable` / `session` / `static`：条目一起死。** 条目没有单独清理的路径，整个生命周期释放时统一 cancel 一次。scope 由生命周期持有：`stable`/`static` 懒创建（屏关闭 / 永不释放），`session` 直接用根已有的 `sessionScope`（根关闭时取消）。因此单独替换一个 `cached` 条目只会 `onClear` 该条目（共享表里是 no-op），不会 cancel 共享 scope，也就不会连坐兄弟条目。
 
 ```kotlin
 val ticker = local { launch { while(true) { tick(); delay(16) } } }   // 随这一帧的声明存活
 ```
 
-`local { launch { … } }` 只在这个属性被读到的帧里活着；`stable { … }` 活到屏关闭；`session`/`static` 同理按各自的边界。独立访问器 `local.coroutineScope` / `stable.coroutineScope` 也是普通条目：`local` 的在帧末不再被读到就被清、被 cancel；`stable` 的与同屏其它条目共享那个 scope，屏关闭时取消。
+`local { launch { … } }` 只在这个属性被读到的帧里活着；`stable { … }` 活到屏关闭；`session`/`static` 同理按各自的边界。独立访问器 `local.coroutineScope` / `stable.coroutineScope` 也是普通条目：`local` 的条目持有自己的 scope、帧末不再被读到就随条目取消；`stable`/`session`/`static` 的条目只负责"被读取才存活"的帧戳，返回的是所属生命周期的那个 scope（`session` 是根的），条目被清不影响它。
 
 **需要"不随属性死"的协程，请显式用更大的作用域**（根的、进程的），不要依赖默认作用域——协程的归属由你选的域决定，而不是默默活着。声明式属性里的协程本来就在该根的渲染线程上，不需要 `post`。
 
@@ -133,7 +133,7 @@ val ticker = local { launch { while(true) { tick(); delay(16) } } }   // 随这�
 ## 协程
 每个属性都属于一个受管理的协程作用域，作用域在属性初始化块执行前就绪。默认调度器是后端的主线程调度器，因此 `launch` 出来的代码回到渲染线程执行。
 
-作用域是**懒创建**的：第一次有属性需要时才建立。`local` 每个属性各自一个；`stable`/`session`/`static` 共用所属生命周期的唯一一个，规则见上一节。
+作用域是**懒创建**的：第一次有属性需要时才建立。`local` 每个属性各自新建并持有；`stable`/`static` 每条生命周期懒创建一个并持有；`session` 直接使用根已有的 `sessionScope`。规则见上一节。
 
 这带来一条容易踩的规则：
 

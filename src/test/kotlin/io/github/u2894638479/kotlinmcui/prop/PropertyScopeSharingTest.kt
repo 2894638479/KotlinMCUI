@@ -15,6 +15,7 @@ import io.github.u2894638479.kotlinmcui.math.px
 import io.github.u2894638479.kotlinmcui.modifier.Modifier
 import io.github.u2894638479.kotlinmcui.modifier.size
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.launch
@@ -44,22 +45,33 @@ class PropertyScopeSharingTest {
     private fun StableRW<*>.entry(): PropertyLifeScope.TimedProperty<*> =
         this as PropertyLifeScope.TimedProperty<*>
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `two stable properties of one screen share the same scope`() {
         val root = TestRoot.newRoot()
-        var first: CoroutineScope? = null
-        var second: CoroutineScope? = null
+        var first: Job? = null
+        var second: Job? = null
+        var firstEntry: PropertyLifeScope.TimedProperty<*>? = null
+        var secondEntry: PropertyLifeScope.TimedProperty<*>? = null
 
         val screen = screenOn(root, "stable") {
-            first = stable("first") { 1 }.entry().scope
-            second = stable("second") { 2 }.entry().scope
+            val a = stable("first") { launch { awaitCancellation() } }
+            val b = stable("second") { launch { awaitCancellation() } }
+            first = a.value
+            second = b.value
+            firstEntry = a.entry()
+            secondEntry = b.entry()
             Spacer(Modifier.size(10.px, 10.px), "spacer")
         }
         root.children.collect(screen)
         render(screen)
 
-        assertNotNull(first)
-        assertSame(first, second, "stable entries die together, so they share one scope")
+        // A shared table holds the scope, so its entries own none; what they share is the scope they
+        // launched in, which the jobs' common parent names.
+        val shared = assertNotNull(assertNotNull(first).parent)
+        assertSame(shared, assertNotNull(second).parent, "stable entries die together, so they share one scope")
+        assertNull(assertNotNull(firstEntry).scope, "the shared scope belongs to the table, not to an entry")
+        assertNull(assertNotNull(secondEntry).scope)
     }
 
     @Test
@@ -81,10 +93,10 @@ class PropertyScopeSharingTest {
         assertNotSame(first, second, "a local entry is cleared on its own, so it owns its scope")
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `closing the screen cancels the stable scope the entries share`() {
         val root = TestRoot.newRoot()
-        var scope: CoroutineScope? = null
         var firstEntry: PropertyLifeScope.TimedProperty<*>? = null
         var secondEntry: PropertyLifeScope.TimedProperty<*>? = null
         var first: Job? = null
@@ -93,11 +105,8 @@ class PropertyScopeSharingTest {
         val screen = screenOn(root, "close") {
             val a = stable("a") { launch { awaitCancellation() } }
             val b = stable("b") { launch { awaitCancellation() } }
-            val entryA = a.entry()
-            val entryB = b.entry()
-            firstEntry = entryA
-            secondEntry = entryB
-            scope = entryA.scope
+            firstEntry = a.entry()
+            secondEntry = b.entry()
             first = a.value
             second = b.value
             Spacer(Modifier.size(10.px, 10.px), "spacer")
@@ -105,9 +114,9 @@ class PropertyScopeSharingTest {
         root.children.collect(screen)
         render(screen)
 
-        assertNotNull(scope)
         val runningFirst = assertNotNull(first)
         val runningSecond = assertNotNull(second)
+        assertSame(runningFirst.parent, runningSecond.parent, "the entries launched in one shared scope")
         assertTrue(runningFirst.isActive, "the coroutines run while the screen is open")
         assertTrue(runningSecond.isActive)
 
@@ -115,7 +124,7 @@ class PropertyScopeSharingTest {
 
         assertFalse(runningFirst.isActive, "releasing the screen cancels the scope its entries shared")
         assertFalse(runningSecond.isActive, "the second clear only repeats the same idempotent cancel")
-        assertNull(firstEntry?.scope)
+        assertNull(firstEntry?.scope, "a cleared entry owns no scope, shared or otherwise")
         assertNull(secondEntry?.scope)
     }
 
@@ -169,7 +178,7 @@ class PropertyScopeSharingTest {
     }
 
     @Test
-    fun `retiring one cached entry does not cancel the scope its siblings share`() {
+    fun `replacing one cached entry does not cancel the scope its siblings share`() {
         val root = TestRoot.newRoot()
         var cacheKey = 1
         var job: Job? = null
@@ -185,8 +194,28 @@ class PropertyScopeSharingTest {
         assertTrue(running.isActive)
 
         cacheKey = 2
-        render(screen) // the old entry is retired alone; its siblings still use the shared scope
+        render(screen) // the old entry is cleared alone; its siblings still use the shared scope
 
-        assertTrue(running.isActive, "a single entry's retirement must not cancel the scope siblings share")
+        assertTrue(running.isActive, "clearing a single entry must not cancel the scope siblings share")
+    }
+
+    @Test
+    fun `only an entry of the per-entry life cycle holds a scope`() {
+        val root = TestRoot.newRoot()
+        var shared: PropertyLifeScope.TimedProperty<*>? = null
+        var owned: PropertyLifeScope.TimedProperty<*>? = null
+
+        val screen = screenOn(root, "invariant") {
+            shared = stable("shared") { 1 }.entry()
+            owned = local("owned") { 1 }.entry()
+            Spacer(Modifier.size(10.px, 10.px), "spacer")
+        }
+        root.children.collect(screen)
+        render(screen)
+
+        // The invariant: scope != null ⇔ the entry owns it. A together-released table holds the scope
+        // itself, so its entries own none; a per-entry table (`local`) lets each entry own its own.
+        assertNull(assertNotNull(shared).scope, "a shared table's entry owns no scope")
+        assertNotNull(assertNotNull(owned).scope, "a per-entry table's entry owns the scope it runs in")
     }
 }
