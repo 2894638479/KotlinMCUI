@@ -32,20 +32,21 @@ interface DslRootUtils {
 
     /** Whether the caller is on this root's rendering thread. */
     val isOnSessionThread: Boolean
+}
 
-    /**
-     * Run [block] on this root's rendering thread, inline when the caller is already on it.
-     *
-     * Inline matters: posting to the thread you are already on would wait for yourself. Exceptions are
-     * **not** swallowed on either path - inline they surface at the caller, dispatched they reach that
-     * thread's uncaught handler. There is deliberately no "log it somewhere" catch: a failed callback
-     * that nobody can see is worse than a loud one.
-     *
-     * This is the entry for non-suspending callbacks; a coroutine that already lives in a property scope
-     * is on the thread already.
-     */
-    fun post(block: () -> Unit) {
-        if(isOnSessionThread) block()
-        else CoroutineScope(sessionDispatcher).launch { block() }
-    }
+/**
+ * Run [block] on this root's rendering thread, inline when the caller is already on it.
+ *
+ * Inline is the only thing this adds over `CoroutineScope(sessionDispatcher).launch`: an
+ * `ExecutorCoroutineDispatcher` always says a dispatch is needed, so a launch from the session thread
+ * would still run after the current work rather than inside it, and an exception would go to the scope's
+ * handler instead of back to the caller. Posting across threads is not ordered by anything beyond the
+ * dispatcher's own queue - do not use it to sequence work against the frame loop.
+ *
+ * This is the entry for non-suspending callbacks; code that needs to suspend uses [sessionDispatcher]
+ * with `withContext` or a scope.
+ */
+fun DslRootUtils.post(block: () -> Unit) {
+    if(isOnSessionThread) block()
+    else CoroutineScope(sessionDispatcher).launch { block() }
 }
