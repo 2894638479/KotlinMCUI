@@ -99,7 +99,8 @@ class DslDataStore(
     }
 
     val stableLifeScope = PropertyLifeScope(this)
-    val localLifeScope = PropertyLifeScope(this)
+    /** The only life scope whose entries are cleared one by one, so each of its entries owns a scope. */
+    val localLifeScope = PropertyLifeScope(this, scopePerEntry = true)
     /**
      * The process-wide scope: **kept for cross-root sharing and cross-mod contracts, not for UI state**.
      *

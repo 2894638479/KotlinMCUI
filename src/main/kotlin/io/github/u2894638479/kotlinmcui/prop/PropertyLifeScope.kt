@@ -25,10 +25,22 @@ class PropertyLifeScope internal constructor(
     private val map: MutableMap<DslId, TimedProperty<*>> = Object2ObjectOpenHashMap<DslId, TimedProperty<*>>(),
     /** session: keyed by the bare key, bounded by the root instead of the process. */
     internal val isSession: Boolean = false,
+    /**
+     * Whether every entry owns a scope of its own instead of sharing this life scope's one.
+     *
+     * This is decided by how entries die, not by the life scope's name. `local` is the only one whose
+     * entries are cleared **one by one** (the frame's end clears the entries that were not read), so
+     * there an entry's coroutines must end with that entry and each entry gets its own scope. The
+     * other life scopes are released **as a whole**, so their entries share one lazily created scope.
+     */
+    internal val scopePerEntry: Boolean = false,
 ) {
     internal val size get() = map.size
 
     private val declaredSites = Object2ObjectOpenHashMap<Any, Any>()
+
+    /** The one scope the entries of a together-released life cycle share, `null` until one is needed. */
+    private var sharedScope: CoroutineScope? = null
 
     /**
      * Keys this scope saw declared by **two different declaration sites** in the same screen.
@@ -44,18 +56,43 @@ class PropertyLifeScope internal constructor(
 
     internal open class TimedProperty<T>(private var _value:T, var frameStamp: ULong = 0uL) : StableRW<T> {
         /**
-         * The coroutines this property started, cancelled when the property is cleared.
+         * The scope this property's initialiser started its coroutines in, or `null` once it is cleared.
          *
-         * A property and the coroutines its initialiser started live and die together: the scope is
-         * `SupervisorJob()` + the session dispatcher, so one child failing does not take its siblings
-         * with it. A coroutine that must outlive the property belongs to a bigger scope (the root's or
-         * the process's) - that choice is the author's, never a silent default.
+         * Whether the entry owns the scope follows the life cycle's death mode, not its name: an entry
+         * of one whose entries are cleared one by one (see [PropertyLifeScope.scopePerEntry]) owns the
+         * scope, so clearing it cancels the coroutines; an entry of one released as a whole holds the
+         * life scope's shared scope, which only the release of the whole life scope cancels.
+         *
+         * [onClear] always drops the reference, so a cleared property has no scope left to launch into.
          */
         internal var scope: CoroutineScope? = null
 
+        /** Whether [scope] belongs to this entry alone, so clearing the entry may cancel it. */
+        internal var ownsScope: Boolean = true
+
         override fun getValue() = _value
         override fun setValue(value: T) { this._value = value }
-        open fun onClear() { scope?.cancel() }
+
+        /**
+         * Release this entry when its life cycle is released.
+         *
+         * Cancellation is idempotent, so when entries share one scope the first clear cancels it and
+         * the rest are no-ops.
+         */
+        open fun onClear() {
+            scope?.cancel()
+            scope = null
+        }
+
+        /**
+         * Release this entry alone, which happens in a life cycle whose entries are cleared one by one.
+         *
+         * An entry that owns its scope cancels it; an entry holding a shared scope only drops its
+         * reference, because that scope outlives one entry and its siblings are still using it.
+         */
+        internal fun retire() {
+            if(ownsScope) onClear() else scope = null
+        }
     }
 
     /**
@@ -184,34 +221,61 @@ class PropertyLifeScope internal constructor(
         return stored.refreshed()
     }
 
+    /**
+     * The scope one entry of this life cycle should launch in.
+     *
+     * Which one follows the entries' death mode, never the life scope's name: entries cleared one by
+     * one (`local`) get a fresh scope each, so a stale entry's coroutines end with it; entries
+     * released as a whole (`stable`, `session`, `static`) share one scope, created on first use and
+     * cancelled once when the life cycle is released.
+     */
+    private fun scopeForEntry(dispatcher: CoroutineDispatcher): CoroutineScope =
+        if(scopePerEntry) CoroutineScope(SupervisorJob() + dispatcher)
+        else sharedScope ?: CoroutineScope(SupervisorJob() + dispatcher).also { sharedScope = it }
+
+    /** Attach the scope handed out for this entry and record whether this entry may cancel it alone. */
+    private fun <T : TimedProperty<*>> T.attachedTo(scope: CoroutineScope): T {
+        this.scope = scope
+        ownsScope = scope !== sharedScope
+        return this
+    }
+
     internal fun clearOutdated() {
         val frameIndex = dataStore.frameIndex
         map.values.removeIf {
             val bl = it.frameStamp != frameIndex
-            bl.apply { if(bl) it.onClear() }
+            // An entry cleared on its own must not cancel a scope its siblings still share.
+            bl.apply { if(bl) it.retire() }
         }
     }
 
-    /** Drop every entry, running [TimedProperty.onClear] on each. */
+    /** Drop every entry, running [TimedProperty.onClear] on each; a shared scope is cancelled once. */
     internal fun clear() {
         map.values.forEach { it.onClear() }
         map.clear()
+        // The entries above already cancel the shared scope; this covers a life cycle whose entries
+        // were all retired one by one before it was released. `cancel` is idempotent either way.
+        sharedScope?.cancel()
+        sharedScope = null
     }
 
     /**
      * The stand-alone scope entry of this declaration site (`local.coroutineScope`, `stable.coroutineScope`).
      *
-     * It is an entry like any other: the scope carries a `SupervisorJob`, the entry owns it, and clearing
-     * the entry cancels it. Kept as a separate accessor because a component that needs a scope outside an
-     * initialiser has nowhere else to put it.
+     * It is an entry like any other, so it follows the same death mode as the life cycle's properties:
+     * in `local` it owns its scope and clearing the entry cancels it; in `stable`/`session`/`static` it
+     * holds the one scope the life cycle shares, cancelled when the whole life cycle is released (an
+     * individual clear only drops this entry's reference, so it cannot cancel its siblings). Kept as a
+     * separate accessor because a component that needs a scope outside an initialiser has nowhere else
+     * to put it.
      */
     private fun coroutineScope(
         identity:DslId,
         dispatcher: CoroutineDispatcher = dataStore.root.rootUtils.sessionDispatcher
     ): CoroutineScope {
         val property = entry(identity) {
-            val scope = CoroutineScope(SupervisorJob() + dispatcher)
-            TimedProperty(scope).also { it.scope = scope }
+            val scope = scopeForEntry(dispatcher)
+            TimedProperty(scope).attachedTo(scope)
         }
         return property.value
     }
@@ -221,8 +285,11 @@ class PropertyLifeScope internal constructor(
      *
      * If the scope is not accessed every frame, it may be disposed depending on the lifecycle type.
      *
-     * Like a property, this scope **owns its coroutines** and is cancelled when its entry is cleared:
-     * a scope in `local` dies with the frame that stopped reading it, one in `stable` with the screen.
+     * Like a property, the scope **owns its coroutines**, and when it ends follows the life cycle's
+     * death mode: a scope in `local` dies with the frame that stopped reading it (it is the only life
+     * cycle whose entries are cleared one by one); a scope in `stable`/`session`/`static` is the one
+     * scope that life cycle shares, cancelled when the whole life cycle is released - with the screen,
+     * with the root, or never for `static`.
      * For a coroutine that must survive that, take a bigger scope (the root's) instead of this one.
      *
      * ### Correct usage 1: use the built-in scope
@@ -258,10 +325,12 @@ class PropertyLifeScope internal constructor(
      * still get separate slots. Only the `static` scope keys by the bare key - that is what makes it
      * reachable across mods, and it is also why there the same key must always carry the same type.
      *
-     * **The property owns the coroutines its initialiser starts.** When the entry is cleared, its scope is
-     * cancelled, so `local { launch { … } }` stops when the property stops being declared. A coroutine that
-     * must outlive the property needs a bigger scope explicitly (the root's, the process's) - the
-     * ownership of a coroutine is the author's choice, never a silent default.
+     * **The coroutines an initialiser starts follow this property's death mode.** A `local` entry is
+     * cleared on its own, so it owns its scope and clearing it cancels its coroutines; a `stable` /
+     * `session` / `static` entry is released with the whole life cycle, so entries share one scope
+     * that the life cycle's release cancels. A coroutine that must outlive the property needs a bigger
+     * scope explicitly (the root's, the process's) - the ownership of a coroutine is the author's
+     * choice, never a silent default.
      *
      * @param key Sub-key inside this declaration site.
      * @param init The initial value. Only called when the property does not yet exist.
@@ -276,10 +345,8 @@ class PropertyLifeScope internal constructor(
             // Only a brand-new entry can carry new information about key reuse: the diagnostic is a
             // creation-time check, never a per-frame one.
             noteDeclaration(key, init::class)
-            // The scope is created once, with the entry, and cancelled with it: the coroutines a page
-            // starts in its initialiser belong to the property, not to an independent slot.
-            val scope = CoroutineScope(SupervisorJob() + dataStore.root.rootUtils.sessionDispatcher)
-            TimedProperty(context(DslExecuteContext(dataStore)) { scope.init() }).also { it.scope = scope }
+            val scope = scopeForEntry(dataStore.root.rootUtils.sessionDispatcher)
+            TimedProperty(context(DslExecuteContext(dataStore)) { scope.init() }).attachedTo(scope)
         }.stable()
     }
 
@@ -307,6 +374,10 @@ class PropertyLifeScope internal constructor(
      * Cache a value with an expensive computation (e.g. [String.format]).
      * For lightweight calculations, caching is not recommended.
      *
+     * A changed [cacheKey] replaces the entry. The replaced entry is retired on its own, so in a
+     * together-released life cycle its coroutines end with the life cycle rather than with the entry:
+     * cancelling them would cancel the siblings that share the scope.
+     *
      * @param cacheKey The cache key — when this changes, the value is recomputed.
      * @param id Storage location ID, appended to the current [identity]. Uses `init::class` if `null`.
      * @param init Called on first access and whenever [cacheKey] changes, to compute the cached value.
@@ -321,14 +392,14 @@ class PropertyLifeScope internal constructor(
         }
         // A changed cache key replaces the entry, so let `entry` build a new one.
         if(previous != null) map.remove(identity)
-        // Same rules as `property`: the entry owns its scope, and reuse is diagnosed only on creation.
+        // Same rules as `property`: the entry joins or owns a scope, and reuse is diagnosed only on creation.
         val fresh = entry(identity) {
             noteDeclaration(key, init::class)
-            val scope = CoroutineScope(SupervisorJob() + dataStore.root.rootUtils.sessionDispatcher)
+            val scope = scopeForEntry(dataStore.root.rootUtils.sessionDispatcher)
             CachedProperty(cacheKey, context(DslExecuteContext(dataStore)) { scope.init(cacheKey) })
-                .also { it.scope = scope }
+                .attachedTo(scope)
         }
-        previous?.onClear()
+        previous?.retire()
         return fresh.stable()
     }
 
