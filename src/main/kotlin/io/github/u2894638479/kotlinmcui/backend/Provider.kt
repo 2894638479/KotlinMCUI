@@ -1,7 +1,6 @@
 package io.github.u2894638479.kotlinmcui.backend
 
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
-import kotlinx.coroutines.CoroutineDispatcher
 import java.io.File
 import kotlin.system.exitProcess
 
@@ -17,49 +16,52 @@ import kotlin.system.exitProcess
  * The installed metadata provider, or `null` before `install` ran.
  *
  * **`@Volatile` is part of the publication contract, do not remove it.** The writer sets it inside
- * `DslRuntime`'s lock, but the readers ([dslMetadata], [currentPlatform]) take no lock: without a
- * happens-before edge from the write to the read, a reader may legally keep seeing `null` forever.
+ * `DslRuntime`'s lock, but the readers ([dslMetadata]) take no lock: without a happens-before edge
+ * from the write to the read, a reader may legally keep seeing `null` forever.
  */
 @Volatile
 internal var dslMetadataProvider: (() -> DslPlatformMetadata)? = null
 
 /**
- * The published platform. [DslRuntime.start] is what fills this in.
+ * The published utils provider. [DslRuntime.start] is what fills this in.
  *
  * **`@Volatile` is part of the publication contract, do not remove it.** Written under
- * `DslRuntime`'s lock, read without one by [currentPlatform]; and the three backends publish from
+ * `DslRuntime`'s lock, read without one by [dslUtils]; and the three backends publish from
  * different threads (web main, window EDT, the game thread), so this is not a hypothetical.
  */
 @Volatile
-internal var dslPlatformProvider: (() -> DslPlatform)? = null
-
-/** The platform in force: the published one, or the placeholder below. */
-internal fun currentPlatform(): DslPlatform = dslPlatformProvider?.invoke() ?: UnpublishedPlatform
+internal var dslUtilsProvider: (() -> DslPlatformUtils)? = null
 
 /**
- * The placeholder that answers while no backend has published a platform.
+ * The process-level helpers in force: the published ones, or the placeholder below.
  *
- * Every query that has a benign answer gets it, so entries can be initialised before any backend is
- * ready: translation falls back to the key (`null`), the world is not loaded (`false`), there is no image
- * yet (`empty`). Only [DslPlatform.dispatcher] cannot be faked - dispatching onto the session thread
- * needs a thread a backend owns - so it is the single member that still fails before [DslRuntime.start].
+ * The placeholder answers while no backend has published utils, so entries can be initialised
+ * before any backend is ready. Every one of its answers is benign; a session thread belongs to a
+ * root ([DslRootUtils.sessionDispatcher]), not here.
  */
-internal object UnpublishedPlatform : DslPlatform {
-    override val metadata: DslPlatformMetadata
-        get() = dslMetadataProvider?.invoke()
-            ?: throw IllegalStateException("DslRuntime.install has not run, so there is no metadata yet")
+val dslUtils: DslPlatformUtils
+    get() = dslUtilsProvider?.invoke() ?: UnpublishedUtils
 
-    override val utils: DslPlatformUtils = UnpublishedUtils
+/**
+ * Metadata of the installed platform.
+ *
+ * An installed metadata provider answers before utils are published, so mod initialisation can
+ * read directories without building anything.
+ *
+ * @throws IllegalStateException when [DslRuntime.install] has not run.
+ */
+val dslMetadata: DslPlatformMetadata
+    get() = dslMetadataProvider?.invoke()
+        ?: error("DslRuntime.install has not run, so there is no metadata yet")
 
-    override val dispatcher: CoroutineDispatcher
-        get() = throw IllegalStateException(
-            "no platform is published yet, so there is no session thread to dispatch onto. Entry " +
-                "initialisation runs before a backend publishes one with DslRuntime.start, and this is " +
-                "the one thing it cannot do there.",
-        )
-}
-
-private object UnpublishedUtils : DslPlatformUtils {
+/**
+ * The placeholder that answers while no backend has published its utils.
+ *
+ * Every member is benign: translation falls back to the key (`null`), the world is not loaded
+ * (`false`), there is no image yet (`empty`), the reloads do nothing, and quitting leaves the
+ * process. Nothing here throws.
+ */
+internal object UnpublishedUtils : DslPlatformUtils {
     override fun translate(key: String, vararg args: Any?): String? = null
     override val isInWorld: Boolean = false
     override fun localImage(file: File): ImageHolder = ImageHolder.empty

@@ -1,7 +1,7 @@
 package io.github.u2894638479.kotlinmcui.container
 
 import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
-import io.github.u2894638479.kotlinmcui.backend.DslPlatform
+import io.github.u2894638479.kotlinmcui.backend.DslPlatformUtils
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslScaleContext
 import io.github.u2894638479.kotlinmcui.dsl.DslFunction
@@ -14,7 +14,7 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Central data store for a screen instance.
  *
- * Holds the platform and the root it is mounted on, frame timing, and four [PropertyLifeScope]
+ * Holds the platform's utils and the root it is mounted on, frame timing, and four [PropertyLifeScope]
  * instances, one per boundary. Their lifetimes only ever grow:
  *
  * - [localLifeScope]: one **frame** - a property not read this frame is disposed at its end
@@ -31,8 +31,8 @@ import java.util.concurrent.ConcurrentHashMap
  * state.
  */
 class DslDataStore(
-    /** The platform this screen's root runs on: process-level facts and helpers. */
-    val platform: DslPlatform,
+    /** The platform helpers this screen's root runs on: process-level queries and commands. */
+    val utils: DslPlatformUtils,
     /** The root this screen is mounted on: drawing, input, screens and per-output helpers all come from it. */
     val root: DslRoot,
     val title:String,

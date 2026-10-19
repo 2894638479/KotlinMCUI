@@ -25,7 +25,7 @@ import kotlin.test.assertTrue
  * a screenshot is called, and which outcomes stop the game with a non-zero code.
  */
 class DslPreviewTest {
-    private var previous: (() -> DslPlatform)? = null
+    private var previous: (() -> DslPlatformUtils)? = null
 
     @BeforeEach
     fun setUp() {

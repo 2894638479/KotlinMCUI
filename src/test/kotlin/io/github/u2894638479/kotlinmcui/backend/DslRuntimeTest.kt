@@ -13,9 +13,9 @@ import org.junit.jupiter.api.TestMethodOrder
 /**
  * The process-wide startup sequence, case by case.
  *
- * The runtime owns exactly two facts now: whether the platform is installed, and whether it has been
- * published. It owns no roots - a root belongs to the backend that built it - so there is nothing here
- * about roots, owners or refusals.
+ * The runtime owns exactly three facts: whether the metadata is installed, the metadata provider,
+ * and the utils provider. It owns no roots - a root belongs to the backend that built it - so there
+ * is nothing here about roots, owners or refusals.
  *
  * `resetForTest` puts the singleton back into its initial state before each case, which is why the
  * cases can assert on the sequence: they all start from "nothing installed", and JUnit runs the
@@ -31,7 +31,7 @@ class DslRuntimeTest {
 
     @Test
     @Order(1)
-    fun `publishing the platform before installing it is an error`() {
+    fun `publishing the utils before installing the metadata is an error`() {
         assertFalse(DslRuntime.isInstalled)
         assertFailsWith<IllegalStateException> { DslRuntime.start { TestPlatform } }
     }
@@ -51,30 +51,25 @@ class DslRuntimeTest {
 
     @Test
     @Order(3)
-    fun `before the platform is ready its metadata answers and only the session dispatcher fails`() {
+    fun `before the utils are published the metadata answers and the placeholder is benign`() {
         DslRuntime.install { TestMetadata }
 
         assertEquals(TestMetadata.configDir, dslMetadata.configDir)
         assertSame(TestMetadata, dslMetadata)
 
         // Entry initialisation runs here, so the queries with a benign answer have to work.
-        assertEquals(null, dslPlatform.utils.translate("a.key"))
-        assertFalse(dslPlatform.utils.isInWorld)
-
-        val failure = assertFailsWith<IllegalStateException> { dslPlatform.dispatcher }
-        assertTrue(
-            "session thread" in failure.message.orEmpty(),
-            "the failure must say there is no session thread yet, was: ${failure.message}"
-        )
+        assertSame(UnpublishedUtils, dslUtils, "nothing is published yet, so the placeholder answers")
+        assertEquals(null, dslUtils.translate("a.key"))
+        assertFalse(dslUtils.isInWorld)
     }
 
     @Test
     @Order(4)
-    fun `publishing the platform makes it available`() {
+    fun `publishing the utils makes them available`() {
         DslRuntime.install { TestMetadata }
         DslRuntime.start { TestPlatform }
 
-        assertSame(TestPlatform, dslPlatform)
+        assertSame(TestPlatform, dslUtils)
     }
 
     @Test
@@ -87,7 +82,7 @@ class DslRuntimeTest {
 
     @Test
     @Order(6)
-    fun `publishing a second platform is refused, not thrown`() {
+    fun `publishing a second utils provider is refused, not thrown`() {
         DslRuntime.install { TestMetadata }
         val first = DslRuntime.start { TestPlatform }
 
@@ -97,6 +92,6 @@ class DslRuntimeTest {
 
         assertTrue(first, "the first publish must report success")
         assertFalse(second, "a later publish must report that it was refused")
-        assertSame(TestPlatform, dslPlatform, "the refused platform must not replace the published one")
+        assertSame(TestPlatform, dslUtils, "the refused utils must not replace the published ones")
     }
 }

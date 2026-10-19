@@ -1,7 +1,7 @@
 package io.github.u2894638479.kotlinmcui.entry
 
 import io.github.u2894638479.kotlinmcui.backend.Environment
-import io.github.u2894638479.kotlinmcui.backend.dslPlatformProvider
+import io.github.u2894638479.kotlinmcui.backend.dslUtilsProvider
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.dsl.forEachWithId
 import io.github.u2894638479.kotlinmcui.dsl.ui.Box
@@ -146,7 +146,7 @@ object DslEntryLoader {
      * The registry file's order is the order. Idempotent, and an error before the platform is published.
      */
     internal fun launch() {
-        check(dslPlatformProvider != null) {
+        check(dslUtilsProvider != null) {
             "DslEntryLoader.launch was called before the platform was published; " +
                 "game and standalone backends must call DslRuntime.start first"
         }

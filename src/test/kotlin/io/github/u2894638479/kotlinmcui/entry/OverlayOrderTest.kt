@@ -1,7 +1,7 @@
 package io.github.u2894638479.kotlinmcui.entry
 
 import io.github.u2894638479.kotlinmcui.backend.Environment
-import io.github.u2894638479.kotlinmcui.backend.dslPlatformProvider
+import io.github.u2894638479.kotlinmcui.backend.dslUtilsProvider
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.image.ImageHolder
 import io.github.u2894638479.kotlinmcui.integration.TestRuntime
@@ -19,13 +19,13 @@ import kotlin.test.assertTrue
  * silently reordering a user's overlays.
  */
 class OverlayOrderTest {
-    private var previous: (() -> io.github.u2894638479.kotlinmcui.backend.DslPlatform)? = null
+    private var previous: (() -> io.github.u2894638479.kotlinmcui.backend.DslPlatformUtils)? = null
 
     @BeforeTest
     fun setUp() {
         TestRuntime.install()
-        previous = dslPlatformProvider
-        dslPlatformProvider = null
+        previous = dslUtilsProvider
+        dslUtilsProvider = null
         DslEntryLoader.discover(Environment.STANDALONE)
         // Start from a known stored list.
         writeOverlayIds(emptyList())
@@ -35,7 +35,7 @@ class OverlayOrderTest {
     @AfterTest
     fun tearDown() {
         writeOverlayIds(emptyList())
-        dslPlatformProvider = previous
+        dslUtilsProvider = previous
     }
 
     private fun overlay(className: String): DslEntryOverlay =

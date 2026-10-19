@@ -2,7 +2,7 @@ package io.github.u2894638479.kotlinmcui.entry
 
 import io.github.u2894638479.kotlinmcui.backend.DslRuntime
 import io.github.u2894638479.kotlinmcui.backend.Environment
-import io.github.u2894638479.kotlinmcui.backend.dslPlatformProvider
+import io.github.u2894638479.kotlinmcui.backend.dslUtilsProvider
 import io.github.u2894638479.kotlinmcui.integration.TestMetadata
 import io.github.u2894638479.kotlinmcui.integration.TestPlatform
 import io.github.u2894638479.kotlinmcui.integration.TestRuntime
@@ -22,27 +22,27 @@ import kotlin.test.assertTrue
  * client run means the filter happened too late.
  */
 class EntryRegistryTest {
-    private var previous: (() -> io.github.u2894638479.kotlinmcui.backend.DslPlatform)? = null
+    private var previous: (() -> io.github.u2894638479.kotlinmcui.backend.DslPlatformUtils)? = null
 
     @BeforeTest
     fun setUp() {
         // discover() reads the stored overlay list, which needs installed metadata; the platform itself
         // is hidden again so the "not published" checks are the real ones.
         TestRuntime.install()
-        previous = dslPlatformProvider
-        dslPlatformProvider = null
+        previous = dslUtilsProvider
+        dslUtilsProvider = null
         FixtureStats.stages.clear()
         FixtureStats.loads = 0
     }
 
     @AfterTest
     fun tearDown() {
-        dslPlatformProvider = previous
+        dslUtilsProvider = previous
         FixtureStats.stages.clear()
     }
 
     private fun publish() {
-        dslPlatformProvider = { TestPlatform }
+        dslUtilsProvider = { TestPlatform }
     }
 
     // ---- 1: the filter runs before any class is loaded ----

@@ -39,7 +39,7 @@ class ImageSourceTest {
     fun `a backend that cannot fetch a url still answers a holder`() {
         // remoteImage has no default: every backend decides. The fake one answers empty, which is what a
         // backend without an http client should do - it must not throw while a page is being built.
-        assertTrue(TestPlatform.utils.remoteImage("https://example.invalid/icon.png").isEmpty)
-        TestPlatform.utils.reloadRemoteImage("https://example.invalid/icon.png")
+        assertTrue(TestPlatform.remoteImage("https://example.invalid/icon.png").isEmpty)
+        TestPlatform.reloadRemoteImage("https://example.invalid/icon.png")
     }
 }

@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
-import io.github.u2894638479.kotlinmcui.backend.DslPlatform
+import io.github.u2894638479.kotlinmcui.backend.DslPlatformUtils
 import io.github.u2894638479.kotlinmcui.backend.DslRuntime
 import io.github.u2894638479.kotlinmcui.component.isFocused
 import io.github.u2894638479.kotlinmcui.container.DslRoot
@@ -33,7 +33,7 @@ import org.junit.jupiter.api.BeforeEach
  * debug overlay answer from that stamp rather than from the main root.
  */
 class DslRootMountTest {
-    private var previous: (() -> DslPlatform)? = null
+    private var previous: (() -> DslPlatformUtils)? = null
 
     @BeforeEach
     fun setUp() {

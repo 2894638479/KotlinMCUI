@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
-import io.github.u2894638479.kotlinmcui.backend.DslPlatform
+import io.github.u2894638479.kotlinmcui.backend.DslPlatformUtils
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.component.childrenMaxHeight
 import io.github.u2894638479.kotlinmcui.component.childrenMaxWidth
@@ -80,7 +80,7 @@ private fun WrappingColumn(
 
 class DslCustomComponentTest {
 
-    private var previousBackendProvider: (() -> DslPlatform)? = null
+    private var previousBackendProvider: (() -> DslPlatformUtils)? = null
 
     @BeforeEach
     fun setUp() {

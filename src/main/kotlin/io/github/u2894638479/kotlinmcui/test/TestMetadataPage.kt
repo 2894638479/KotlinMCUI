@@ -1,5 +1,6 @@
 package io.github.u2894638479.kotlinmcui.test
 
+import io.github.u2894638479.kotlinmcui.backend.dslMetadata
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
 import io.github.u2894638479.kotlinmcui.dsl.ui.Row
@@ -23,7 +24,7 @@ fun TestMetadataPage() = ScrollableColumn {
             pair.second.emit()
         }
     }
-    val metadata = ctx.dataStore.platform.metadata
+    val metadata = dslMetadata
     item("gameVersion" to metadata.gameVersion)
     item("gameLoader" to metadata.gameLoader)
     item("gameDir" to metadata.gameDir.toString())

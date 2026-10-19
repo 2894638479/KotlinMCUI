@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
-import io.github.u2894638479.kotlinmcui.backend.DslPlatform
+import io.github.u2894638479.kotlinmcui.backend.DslPlatformUtils
 import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.ui.EditableText
 import io.github.u2894638479.kotlinmcui.input.KeyModifiers
@@ -24,7 +24,7 @@ import org.junit.jupiter.api.BeforeEach
  * assertion below fails, because nothing is focused after the press.
  */
 class DslMouseFocusTest {
-    private var previous: (() -> DslPlatform)? = null
+    private var previous: (() -> DslPlatformUtils)? = null
 
     @BeforeEach
     fun setUp() {

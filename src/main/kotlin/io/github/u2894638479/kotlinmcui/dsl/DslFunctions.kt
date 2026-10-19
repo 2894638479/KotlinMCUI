@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.dsl
 
-import io.github.u2894638479.kotlinmcui.backend.dslPlatform
+import io.github.u2894638479.kotlinmcui.backend.dslUtils
 import io.github.u2894638479.kotlinmcui.component.DslComponent
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.DslDataStoreContext
@@ -17,13 +17,13 @@ import java.io.File
 typealias DslFunction = context(DslContext) ()->Unit
 
 context(ctx: DslDataStoreContext)
-fun translate(string: String,vararg args: Any) = dslPlatform.utils.translate(string,*args) ?: string
+fun translate(string: String,vararg args: Any) = dslUtils.translate(string,*args) ?: string
 
 /**
  * [translate] for code that runs outside a DSL context, such as entry metadata.
  * Falls back to [key] when the backend has no translation for it.
  */
-fun translateGlobal(key: String,vararg args: Any) = dslPlatform.utils.translate(key,*args) ?: key
+fun translateGlobal(key: String,vararg args: Any) = dslUtils.translate(key,*args) ?: key
 
 context(_: DslExecuteContext)
 fun showScreen(title:String = "DSL Screen",function: DslFunction) =
@@ -53,7 +53,7 @@ context(ctx: DslContext)
 inline fun <T> Iterable<T>.forEachWithId(block: (T) -> Unit) = forEach { withId(it) { block(it) } }
 
 context(_: DslDataStoreContext, _: DslIdContext)
-fun localImage(file: File?): ImageHolder = dataStore.platform.utils.localImage(file ?: return ImageHolder.empty)
+fun localImage(file: File?): ImageHolder = dataStore.utils.localImage(file ?: return ImageHolder.empty)
 
 /**
  * Drops the cached copy of [file] and reads it again.
@@ -63,17 +63,17 @@ fun localImage(file: File?): ImageHolder = dataStore.platform.utils.localImage(f
  * body does not compile.
  */
 context(ctx: DslExecuteContext)
-fun reloadLocalImage(file: File) = ctx.dataStore.platform.utils.reloadLocalImage(file)
+fun reloadLocalImage(file: File) = ctx.dataStore.utils.reloadLocalImage(file)
 
 /** [reloadLocalImage] for a url: drop the cached copy and download it again. */
 context(ctx: DslExecuteContext)
-fun reloadRemoteImage(url: String) = ctx.dataStore.platform.utils.reloadRemoteImage(url)
+fun reloadRemoteImage(url: String) = ctx.dataStore.utils.reloadRemoteImage(url)
 
 context(_: DslDataStoreContext, _: DslIdContext)
 fun imageResource(location: String, width: Measure, height: Measure) = ImageHolder(ImageSource.Resource(location), width, height)
 
 context(_: DslDataStoreContext, _: DslIdContext)
-fun remoteImage(url: String): ImageHolder = dataStore.platform.utils.remoteImage(url)
+fun remoteImage(url: String): ImageHolder = dataStore.utils.remoteImage(url)
 
 context(ctx: DslContext)
 fun collect(component: DslComponent) = ctx.children.collect(component)

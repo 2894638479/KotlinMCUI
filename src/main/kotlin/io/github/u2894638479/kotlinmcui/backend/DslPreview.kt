@@ -26,10 +26,10 @@ import kotlin.time.Duration.Companion.milliseconds
  * The in-game preview session: open the page a launch property names, and - only when a second
  * property asks for it - photograph the result and stop.
  *
- * All of this is policy and therefore lives here; the platform only supplies the two members
- * [DslRootUtils.capture] and [DslPlatformUtils.quit] plus the render loop that ticks
- * [root.state.frameIndex]. Keeping the timing rules in the framework means they are the same on
- * every platform, and testable without a game.
+ * All of this is policy and therefore lives here; the root supplies [DslRootUtils.capture] and
+ * [DslRootUtils.sessionDispatcher], the platform supplies [DslPlatformUtils.quit], and the backend
+ * supplies the render loop that ticks [root.state.frameIndex]. Keeping the timing rules in the
+ * framework means they are the same on every platform, and testable without a game.
  *
  * `-Dkotlinmcui.preview=<reference>` opens the page. `-Dkotlinmcui.preview.capture=true` turns the
  * session into the one a machine can gate on: it photographs the page and quits, with a non-zero
@@ -105,7 +105,7 @@ object DslPreview {
      * produced no file.
      */
     internal suspend fun run(root: DslRoot, reference: String, capture: Boolean) {
-        val platform = dslPlatform
+        val utils = dslUtils
         val screens = root.screenFactory ?: error("preview needs a root that can create screens")
         val page = try {
             pageFor(reference)
@@ -120,32 +120,32 @@ object DslPreview {
         try {
             if(!awaitFirstFrame(root)) {
                 dslLogger.error("preview: the platform never rendered a frame, giving up on '$reference'")
-                platform.utils.quit(1)
+                utils.quit(1)
                 return
             }
             val opened = root.state.frameIndex
-            withContext(platform.dispatcher) { screens.create(reference) { page.draw() } }.show()
+            withContext(root.rootUtils.sessionDispatcher) { screens.create(reference) { page.draw() } }.show()
             dslLogger.info("preview: opened '$reference' as ${page.describe()}")
             while(root.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
             if(!capture) return
-            val file = withContext(platform.dispatcher) { root.rootUtils.capture(fileNameFor(reference)) }
+            val file = withContext(root.rootUtils.sessionDispatcher) { root.rootUtils.capture(fileNameFor(reference)) }
             if(root.state.renderFailure != null) {
                 dslLogger.error("preview: ${page.describe()} threw while rendering",root.state.renderFailure)
-                platform.utils.quit(1)
+                utils.quit(1)
                 return
             }
             if(file == null) {
                 dslLogger.error("preview: no screenshot was written for '$reference'")
-                platform.utils.quit(1)
+                utils.quit(1)
                 return
             }
             dslLogger.info("preview: wrote ${file.absolutePath} for ${page.describe()}")
-            platform.utils.quit(0)
+            utils.quit(0)
         } catch(e: Throwable) {
             // A page that throws while being built, or a platform that throws while capturing, has
             // to end the run with a code as well - hanging is the one outcome nobody can gate on.
             dslLogger.error("preview: '$reference' failed",e)
-            platform.utils.quit(1)
+            utils.quit(1)
         }
     }
 
@@ -157,34 +157,34 @@ object DslPreview {
      * line is written by the caller, because it carries the exception itself.
      */
     private suspend fun showFailure(root: DslRoot, reference: String,text: String,capture: Boolean) {
-        val platform = dslPlatform
+        val utils = dslUtils
         val screens = root.screenFactory ?: error("preview needs a root that can create screens")
         // The error screen needs the same readiness as a real page: opened any earlier it would be
         // pushed aside by the platform's own loading screen, and the screenshot would show that
         // instead of the reason.
         if(!awaitFirstFrame(root)) {
             dslLogger.error("preview: the platform never rendered a frame, giving up on '$reference'")
-            platform.utils.quit(1)
+            utils.quit(1)
             return
         }
         try {
-            withContext(platform.dispatcher) {
+            withContext(root.rootUtils.sessionDispatcher) {
                 screens.create("Preview error") { PreviewErrorPage(text) }
             }.show()
         } catch(e: Throwable) {
             // A failing error screen must not swallow the reason it was meant to show, so this path
             // stays a plain exit.
             dslLogger.error("preview: could not show the error screen for '$reference'",e)
-            platform.utils.quit(1)
+            utils.quit(1)
             return
         }
         if(!capture) return
         val opened = root.state.frameIndex
         while(root.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
-        val file = withContext(platform.dispatcher) { root.rootUtils.capture(fileNameFor(reference)) }
+        val file = withContext(root.rootUtils.sessionDispatcher) { root.rootUtils.capture(fileNameFor(reference)) }
         if(file == null) dslLogger.error("preview: no screenshot was written for '$reference'")
         else dslLogger.info("preview: wrote ${file.absolutePath} for the error screen of '$reference'")
-        platform.utils.quit(1)
+        utils.quit(1)
     }
 
     /**

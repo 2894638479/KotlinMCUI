@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
-import io.github.u2894638479.kotlinmcui.backend.DslPlatform
+import io.github.u2894638479.kotlinmcui.backend.DslPlatformUtils
 import io.github.u2894638479.kotlinmcui.container.DslScreen
 import io.github.u2894638479.kotlinmcui.integration.TestRoot
 import io.github.u2894638479.kotlinmcui.dsl.ui.Spacer
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeEach
  * assertion fails, because the root then starts out empty.
  */
 class DslMountPathTest {
-    private var previous: (() -> DslPlatform)? = null
+    private var previous: (() -> DslPlatformUtils)? = null
 
     @BeforeEach
     fun setUp() {

@@ -16,7 +16,6 @@ parent: Dev
 
 | 接口 | 职责 | 归属 |
 | --- | --- | --- |
-| `DslPlatform` | `metadata`、`utils`、`dispatcher` | 进程级 |
 | `DslPlatformMetadata` | 目录、游戏版本、加载器、运行环境 | 进程级 |
 | `DslPlatformUtils` | 本地化、退出、本地图像加载与强制重载、世界判定 | 进程级 |
 | `DslRootUtils` | 剪贴板、朗读、按钮音效、打开链接、截图、会话调度器 | 每个根 |
@@ -31,19 +30,19 @@ parent: Dev
 抽象成员总数为三十余个：渲染接口里的绘制成员是 `renderQuad` 与 `renderTriangles` **两个**，纯色矩形、渐变矩形、贴图矩形都是 `renderQuad` 的**扩展函数**（不额外分配）。它们是扩展而不是接口成员，因此没法被覆写——后端想要平台自己的快速路径（例如原生的实心矩形填充），就在 `renderQuad` 里判断"无纹理且四角同色"，这样所有调用方一起受益。
 
 ## 启动顺序：`DslRuntime`
-进程级只有平台，分两段，框架为这两段各提供一个入口，模组与后端都不再自己拼接顺序：
+进程级只有元数据与一组平台工具，分两段，框架为这两段各提供一个入口，模组与后端都不再自己拼接顺序：
 
 ```kotlin
 DslRuntime.install { Metadata }            // 模组初始化：平台事实 + 入口发现
 // …客户端构造完成、可以建界面之后…
-DslRuntime.start { DefaultPlatform }       // 先到先得，返回 false 表示这次没生效
+DslRuntime.start { DefaultUtils }          // 先到先得，返回 false 表示这次没生效
 ```
 
 - `install` 立刻读一次元数据，并完成**入口发现**与框架自己的**配置读取**——这些只需要元数据。
-- `start` 只在第一次生效。第二个后端会被拒绝并记一条日志而**不抛错**：同一个游戏实例只应该装一个后端，而"装了两个"是用户的环境问题，不该升级成客户端崩溃。被拒的那一方从返回值和日志知道自己没有生效，**但照常建自己的根、照常服务**——是否自动驱动主循环由它自己决定，框架不代管。
-- 两个 provider 变量（元数据、平台）是 `internal`，后端（独立模块）只能走这两个入口。两者都在锁内执行：单次语义必须在任何线程上都成立。
+- `start` 交出 `DslPlatformUtils`，只在第一次生效。第二个后端会被拒绝并记一条日志而**不抛错**：同一个游戏实例只应该装一个后端，而"装了两个"是用户的环境问题，不该升级成客户端崩溃。被拒的那一方从返回值和日志知道自己没有生效，**但照常建自己的根、照常服务**——是否自动驱动主循环由它自己决定，框架不代管。
+- 两个 provider 变量（元数据、工具）是 `internal`，后端（独立模块）只能走这两个入口。两者都在锁内执行：单次语义必须在任何线程上都成立。
 - 只依赖元数据的路径（配置读写、版本与环境查询）永远走 `dslMetadata`；它只来自 `install`，没有"回退去构造后端"这条路。
-- 运行时的状态只有三件事：`installed`、元数据 provider、平台 provider。**没有任何根**——根属于建它的后端。
+- 运行时的状态只有三件事：`installed`、元数据 provider、工具 provider。**没有任何根**——根属于建它的后端。
 
 两条契约：
 
@@ -53,7 +52,7 @@ DslRuntime.start { DefaultPlatform }       // 先到先得，返回 false 表示
 | 建根与建界面只能在 `start` 之后 | 平台发布之前，界面所需的渲染器、输入、调度器都还不存在；提前建根得到的不是"稍后能用的根"，而是根本不该存在的对象 |
 
 ## 根：由后端建、由后端驱动
-框架不发根。后端拿到平台之后自己构造：
+框架不发根。后端在 `start` 之后自己构造：
 
 ```kotlin
 val root = DslRoot(input, renderer, screenFactory, rootUtils)
@@ -103,7 +102,7 @@ showScreen(title) { /* DSL */ }
 root.screenFactory.create(title) { /* DSL */ }.show()
 ```
 
-`create()` 构造 `DslDataStore(platform, root, …)`，其中又构造 `DslScreen`。**`create()` 必须无副作用**：根会惰性地调用一次 `create("Dsl Overlay") { ... }` 来建立 Overlay 层，并且**只取其中的 `dslScreen`、从不 `show()`**。如果 `create()` 顺手做了注册、着色器初始化之类的可见副作用，就会在无人察觉的情况下被执行一次。
+`create()` 构造 `DslDataStore(utils, root, …)`，其中又构造 `DslScreen`。**`create()` 必须无副作用**：根会惰性地调用一次 `create("Dsl Overlay") { ... }` 来建立 Overlay 层，并且**只取其中的 `dslScreen`、从不 `show()`**。如果 `create()` 顺手做了注册、着色器初始化之类的可见副作用，就会在无人察觉的情况下被执行一次。
 
 每帧后端要做三件事：
 
@@ -123,16 +122,16 @@ root.screenFactory.create(title) { /* DSL */ }.show()
 `dataStore.pauseGame` 默认为 `true`，是否使用由后端决定。
 
 ## 后端注册与入口
-后端通过 `DslRuntime.start` 交出平台，之后读 `dslPlatform` / `dslMetadata`：
+后端通过 `DslRuntime.start` 交出平台工具，之后读 `dslUtils` / `dslMetadata`：
 
 ```kotlin
 DslRuntime.install { Metadata }
-DslRuntime.start { DefaultPlatform }
+DslRuntime.start { DefaultUtils }
 ```
 
-两个 provider 是 `internal` 的 `var`，且带 `@Volatile`：写方在 `DslRuntime` 的锁内，读方（`dslPlatform`、`dslMetadata`）不取锁，没有 volatile 就没有 happens-before 边，读者可以合法地一直读到 `null`。**这不是可选的优化，是发布语义的一部分。**
+两个 provider 是 `internal` 的 `var`，且带 `@Volatile`：写方在 `DslRuntime` 的锁内，读方（`dslUtils`、`dslMetadata`）不取锁，没有 volatile 就没有 happens-before 边，读者可以合法地一直读到 `null`。**这不是可选的优化，是发布语义的一部分。**
 
-读口 `dslPlatform` 每次访问都会调一次 provider，所以 provider 必须返回稳定的单例。
+读口 `dslUtils` 每次访问都会调一次 provider，所以 provider 必须返回稳定的单例。
 
 加载器侧的入口发现见 [入口](entry)。
 
@@ -141,7 +140,7 @@ UI 构建状态是线程受限的：`DslContext` 记录创建它的线程，所�
 
 由于**每帧都会新建一个 `DslContext`**，而组件对象会跨帧留存（它们持有创建时的上下文引用），实际约束是：`create` / `build` / `render` / 输入转发 / 关闭回调必须全部发生在同一个线程上。
 
-调度器分两层：`DslPlatform.dispatcher` 是**进程级**的主线程调度器（给"整个进程一次"的工作用），`DslRootUtils.sessionDispatcher` 是**会话级**的调度器，供属性作用域创建协程使用（`clickable { launch { } }` 就跑在它上面）。两者都必须是串行调度器，不能是并行池：UI 构建状态是线程受限的。
+调度器属于根：`DslRootUtils.sessionDispatcher` 是**会话级**的主线程调度器，供属性作用域创建协程使用（`clickable { launch { } }` 就跑在它上面），预览会话也把建屏与截图派发到它。它必须是串行调度器，不能是并行池：UI 构建状态是线程受限的。
 
 **写 `local` / `stable` 只允许发生在该根的渲染线程上；从别处改，走 `post`。** 那两个存储是普通映射、不是并发容器，跨线程写就是数据竞态——`post` 只是把块交给根线程，并不把错误的写法变安全。`DslRootUtils.isOnSessionThread` 回答"我是不是已经在那个线程上"，`post(block)` 已经在则**内联执行**（否则会等自己），否则投到 `sessionDispatcher`；两条路径都**不吞异常**。声明式属性里的协程本来就活在这个线程上，不需要 `post`。
 
@@ -165,7 +164,7 @@ UI 构建状态是线程受限的：`DslContext` 记录创建它的线程，所�
 - `reloadLocalImage` **不是死成员**：它是公开的用户 API，`docs/components/image.md` 明确教用户在本地文件变化后刷新缓存。DSL 层有一个同名的、要求 `DslExecuteContext` 的包装，就是给用户的事件处理器用的入口；平台层的这个方法没有框架内部调用点，但框架不调用不等于没有消费者。
 - `localImage` / `remoteImage` / `translate` 在**帧线程**上调用，**不允许等待 io**（读文件、解码、开 socket、等待被这类工作持有的锁）。非 suspend 的函数本来就隐含这个承诺，而 window / web 两个实现都做成了同步 `ImageIO.read`——所以这条写进了接口注释。正确做法是先把工作丢给别的 dispatcher，这一帧返回 `empty`。
 - `remoteImage` / `reloadRemoteImage` **没有默认实现**：没有 http 能力的后端也要给出实现——返回 `empty` / 空操作即可（页面照常渲染，网络图片不显示），**不要抛**。加一个默认实现会让"所有后端都必须有 http"或"所有后端都可以不管网络图片"这两种隐含契约二选一，所以交给实现方决定。
-- **`start` 之前框架用占位平台回答**：`translate` 返回 `null`（调用方回退到 key）、`isInWorld` 为 `false`、图片一律 `empty`、`quit` 直接退出进程；**唯一会失败的是 `dispatcher`**——它需要一个后端拥有的会话线程，伪造不出来。所以入口的 `initialize()` 可以安全地翻译文本、读元数据，但**不能往会话线程上派发**。
+- **`start` 之前框架用 `UnpublishedUtils` 回答**：`translate` 返回 `null`（调用方回退到 key）、`isInWorld` 为 `false`、图片一律 `empty`、两个 reload 都是空操作、`quit` 直接退出进程。**全部良性，没有任何会抛异常的成员**；调度器不在这里——它属于根（`DslRootUtils.sessionDispatcher`），所以入口的 `initialize()` 可以安全地翻译文本、读元数据。
 - **图片缓存淘汰是可选项**：后端可以永不淘汰。若要做，一种可行做法是——命中即刷新 `lastUsed`、每帧 `sweep`、按墙钟 TTL 淘汰、淘汰时释放纹理（mc 的 `TextureManager.release`），否则 `reloadLocalImage` 会不断留下 `minecraft:dynamic/dslimageid_N` 这类永不释放的纹理。这是**建议**，不是接口约束。
 - `isInWorld` **确无消费者**：跨四个仓库的 `src` 都没有调用点，也没有任何文档使用它。而且它与下面的约定重复——"是否就绪"是平台知识、由后端在自己的每帧入口把关，框架再暴露一个世界判定没有额外信息。
 - `openUri` **确无消费者**：同样跨四仓零调用，文档里也没有会出现链接的组件。要用它，得先有一个真的会打开链接的组件。

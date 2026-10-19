@@ -18,10 +18,10 @@ parent: Advanced
 
 ## 需要实现的事
 - 在模组初始化时调用`DslRuntime.install { 你的元数据 }`：元数据（配置目录、游戏版本、加载器、运行环境）必须在那一刻就可读，所以它的实现只能读加载器/进程信息，不能碰窗口、渲染器、语言数据
-- 平台可以创建界面之后调用一次`DslRuntime.start { 你的平台 }`（Fabric 上就是`Minecraft.<init>`返回时）；**先到先得**，第二次返回`false`而不抛错——它只意味着这次没生效（会记一条日志），你的后端照常建自己的根、照常服务。从此`dslPlatform`/`dslMetadata`可用
+- 平台可以创建界面之后调用一次`DslRuntime.start { 你的平台工具 }`（Fabric 上就是`Minecraft.<init>`返回时）；**先到先得**，第二次返回`false`而不抛错——它只意味着这次没生效（会记一条日志），你的后端照常建自己的根、照常服务。从此`dslUtils`/`dslMetadata`可用
 - 后端不再是一个"聚合对象"，而是分别实现下面几个接口：
-  - `DslPlatform`：`metadata`、`utils`、`dispatcher`
-  - `DslPlatformUtils`：翻译、退出、加载图片、后台调度
+  - `DslPlatformMetadata`：配置目录、游戏版本、加载器、运行环境（`install` 时提供）
+  - `DslPlatformUtils`：翻译、退出、加载图片与重载、世界判定（`start` 时提供）
   - `DslRootUtils`：剪贴板、旁白、音效、跳转链接、截图、会话调度
   - `DslRootRenderer`、`DslRootInput`、`DslRootScreenFactory`
   - 一个对象可以同时实现多个（例如 `DslPlatformUtils` 与 `DslRootUtils` 用同一个实现）

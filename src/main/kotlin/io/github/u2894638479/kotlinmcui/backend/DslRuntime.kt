@@ -4,7 +4,7 @@ import io.github.u2894638479.kotlinmcui.entry.DslEntryLoader
 import io.github.u2894638479.kotlinmcui.logger.dslLogger
 
 /**
- * Process-wide startup: install the platform once, publish it when screens can be built.
+ * Process-wide startup: install the platform's metadata once, publish its utils when screens can be built.
  *
  * This object deliberately knows nothing about roots. A root belongs to the backend that built it,
  * which is the whole shape of the framework now: the runtime hands out no roots, so "who owns the
@@ -21,7 +21,7 @@ object DslRuntime {
     internal val isInstalled get() = synchronized(lock) { installed }
 
     /**
-     * Install the platform and do everything that is safe this early.
+     * Install the platform's metadata and do everything that is safe this early.
      *
      * @param metadata platform facts, read immediately: it must be side-effect free,
      *   because the platform cannot build anything yet.
@@ -35,7 +35,7 @@ object DslRuntime {
     }
 
     /**
-     * Publish [platform]: from here on [dslPlatform] works.
+     * Publish [utils]: from here on [dslUtils] works.
      *
      * Call it when the platform can create screens.
      *
@@ -44,20 +44,20 @@ object DslRuntime {
      * crash - but the caller has to be able to see that it lost. **Check the return value before
      * doing anything visible.**
      *
-     * @return `true` when this call published the platform, `false` when another one was already
+     * @return `true` when this call published the utils, `false` when another one was already
      *   published (the published one is left untouched).
      * @throws IllegalStateException when [install] has not run.
      */
-    fun start(platform: () -> DslPlatform): Boolean = synchronized(lock) {
+    fun start(utils: () -> DslPlatformUtils): Boolean = synchronized(lock) {
         check(installed) { "DslRuntime.start was called before DslRuntime.install" }
-        if (dslPlatformProvider != null) {
+        if (dslUtilsProvider != null) {
             dslLogger.warn(
-                "DslRuntime.start was already called; this platform is ignored. " +
+                "DslRuntime.start was already called; these utils are ignored. " +
                     "Install only one platform in a game instance.",
             )
             return@synchronized false
         }
-        dslPlatformProvider = platform
+        dslUtilsProvider = utils
         true
     }
 
@@ -86,6 +86,6 @@ object DslRuntime {
     internal fun resetForTest() = synchronized(lock) {
         installed = false
         dslMetadataProvider = null
-        dslPlatformProvider = null
+        dslUtilsProvider = null
     }
 }

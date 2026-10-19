@@ -1,6 +1,6 @@
 package io.github.u2894638479.kotlinmcui.integration
 
-import io.github.u2894638479.kotlinmcui.backend.DslPlatform
+import io.github.u2894638479.kotlinmcui.backend.DslPlatformUtils
 import io.github.u2894638479.kotlinmcui.backend.DslRootRenderer
 import io.github.u2894638479.kotlinmcui.component.*
 import io.github.u2894638479.kotlinmcui.container.DslScreen
@@ -23,7 +23,7 @@ import org.junit.jupiter.api.BeforeEach
 
 class DslDecoratorTest {
 
-    private var previousBackendProvider: (() -> DslPlatform)? = null
+    private var previousBackendProvider: (() -> DslPlatformUtils)? = null
 
     @BeforeEach
     fun setUp() {

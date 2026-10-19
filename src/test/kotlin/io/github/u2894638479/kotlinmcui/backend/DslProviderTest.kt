@@ -28,16 +28,20 @@ class DslProviderTest {
         override val environment = Environment.STANDALONE
     }
 
+    private var previousMetadata: (() -> DslPlatformMetadata)? = null
+
     @BeforeEach
     fun setUp() {
+        TestRuntime.install()
+        previousMetadata = dslMetadataProvider
         Files.createDirectories(OnlyMetadata.configDir)
     }
 
     @AfterEach
     fun tearDown() {
-        dslMetadataProvider = null
+        dslMetadataProvider = previousMetadata
         Files.walk(OnlyMetadata.configDir).sorted(Comparator.reverseOrder()).forEach { Files.deleteIfExists(it) }
-        // Leave the shared platform the way the other cases expect to find it.
+        // Leave the shared runtime the way the other cases expect to find it.
         TestRuntime.install()
     }
 
@@ -65,35 +69,32 @@ class DslProviderTest {
         assertTrue(OnlyMetadata.configDir.resolve("nested/marker.json").exists())
     }
 
+    /**
+     * Metadata is installed, not derived: publishing the utils does not make metadata readable, so
+     * the only source is the provider `DslRuntime.install` registered.
+     */
     @Test
-    fun `metadata comes from the published platform when no provider is installed`() {
+    fun `metadata comes only from install, never from the published utils`() {
         val previous = TestRuntime.publish()
         try {
             dslMetadataProvider = null
-            assertEquals(TestMetadata.configDir, dslMetadata.configDir)
+            val failure = assertFailsWith<IllegalStateException> { dslMetadata }
+            assertTrue(
+                failure.message.orEmpty().contains("install"),
+                "the message must say install has not run, was: ${failure.message}",
+            )
         } finally {
             TestRuntime.restore(previous)
         }
     }
 
-    /**
-     * The platform is published, not derived: the object that answers is the one that was published,
-     * and its own metadata and utils are what the framework reads.
-     */
+    /** The published object is the one that answers, and it answers as the process-level helpers. */
     @Test
-    fun `the published platform answers metadata and translation`() {
+    fun `the published utils answer translation`() {
         val previous = TestRuntime.publish()
         try {
-            assertSame(TestPlatform, dslPlatform, "the published platform is the one that answers")
-            assertSame(TestMetadata, dslPlatform.metadata)
-            assertEquals("a.key", dslPlatform.utils.translate("a.key"), "translation comes from the platform's utils")
-
-            dslMetadataProvider = null
-            assertEquals(
-                TestMetadata.configDir,
-                dslMetadata.configDir,
-                "without an installed provider, metadata comes from the platform",
-            )
+            assertSame(TestPlatform, dslUtils, "the published utils are the ones that answer")
+            assertEquals("a.key", dslUtils.translate("a.key"), "translation comes from the published utils")
         } finally {
             TestRuntime.restore(previous)
         }
