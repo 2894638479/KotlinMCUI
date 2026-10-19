@@ -163,9 +163,8 @@ UI 构建状态是线程受限的：`DslContext` 记录创建它的线程，所�
 
 - `isMouseDown` 的裸索引入口**不是死成员**：`isMouseDown(button: MouseButton)` 的默认实现就委托给它，而枚举重载被框架每帧调用做拖动对账（见[颜色](color)）。
 - `reloadLocalImage` **不是死成员**：它是公开的用户 API，`docs/components/image.md` 明确教用户在本地文件变化后刷新缓存。DSL 层有一个同名的、要求 `DslExecuteContext` 的包装，就是给用户的事件处理器用的入口；平台层的这个方法没有框架内部调用点，但框架不调用不等于没有消费者。
-- `localImage` **必须立即返回**：可以异步加载、先把 `ImageHolder.empty` 交出去，**不允许在调用线程上读盘**。window / web 现在的实现是同步 `ImageIO.read`，违反这条契约（待改）。
-- `remoteImage` / `reloadRemoteImage` **有默认实现**：返回 `empty` / 什么都不做，并**一次性 warn**。没有 http 能力的后端什么都不用写——**页面是用户内容，缺一项能力不该让它崩**；有能力时再覆盖它们。
-- **缓存与淘汰是后端内部实现**，core 不提供任何缓存接口。可行做法：每次 `localImage` / `remoteImage` 命中就刷新 `lastUsed`；在每帧入口里 `sweep`，按**墙钟** TTL 淘汰（不要按帧数，FPS 会变、暂停时帧不前进）；全程只在平台线程改，因此不需要并发容器。淘汰时**必须真正释放资源**（mc 要 `TextureManager.release` / `texture.close()`），否则 `reloadLocalImage` 会不断留下 `minecraft:dynamic/dslimageid_N` 这类永不释放的纹理。
+- `localImage` / `remoteImage`：**接口只要求"返回一个这个后端能画的 holder，`empty` 表示没东西可画"**。是否异步、怎么缓存、多久淘汰，全是后端自由；同步读文件也合法，代价只是掉帧。`remoteImage` / `reloadRemoteImage` 有默认实现（返回 `empty` / 空操作 + 一次 warn），所以没有 http 能力的后端什么都不用写。
+- **图片缓存淘汰是可选项**：后端可以永不淘汰。若要做，一种可行做法是——命中即刷新 `lastUsed`、每帧 `sweep`、按墙钟 TTL 淘汰、淘汰时释放纹理（mc 的 `TextureManager.release`），否则 `reloadLocalImage` 会不断留下 `minecraft:dynamic/dslimageid_N` 这类永不释放的纹理。这是**建议**，不是接口约束。
 - `isInWorld` **确无消费者**：跨四个仓库的 `src` 都没有调用点，也没有任何文档使用它。而且它与下面的约定重复——"是否就绪"是平台知识、由后端在自己的每帧入口把关，框架再暴露一个世界判定没有额外信息。
 - `openUri` **确无消费者**：同样跨四仓零调用，文档里也没有会出现链接的组件。要用它，得先有一个真的会打开链接的组件。
 

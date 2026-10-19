@@ -18,59 +18,38 @@ internal fun warnRemoteUnsupportedOnce() {
 }
 
 /**
- * The platform-level helpers: questions about the process, not about one output.
+ * The platform-level helpers: process-wide questions and effects.
  *
- * The process-level helpers one platform offers: translation, exit, image loading, world state. The signatures are the ones the old aggregate utils already
- * has, so a backend object satisfies it as-is - nothing new to implement. The per-output half lives
- * in [DslRootUtils].
+ * Only what the framework itself relies on is stated here. How a backend caches images, whether a load
+ * is synchronous, what it draws for an unresolvable resource - all of that is its own business, and the
+ * signature is the only requirement.
+ *
+ * The per-output half lives in [DslRootUtils].
  */
 interface DslPlatformUtils {
+    /** `null` when there is no translation; callers then fall back to the key. */
     fun translate(key: String, vararg args: Any?): String?
 
-    /** Whether the game world is loaded behind the UI. `false` on a headless platform is a real answer. */
+    /** Whether the game world is loaded behind the UI. */
     val isInWorld: Boolean
 
-    /**
-     * The image stored in [file], or [ImageHolder.empty] while there is nothing to draw yet.
-     *
-     * It answers **immediately**: a backend that cannot produce the holder this instant returns `empty`
-     * and has the real one ready on a later call. Never store the result - a cached `empty` turns a
-     * first-frame miss into a permanent one; ask again when the image is needed.
-     */
+    /** The image stored in [file]; [ImageHolder.empty] means nothing to draw. */
     fun localImage(file: File): ImageHolder
 
-    /**
-     * Downloads the image at [url] and caches it, with the same rules as [localImage]: answer
-     * immediately, `ImageHolder.empty` until the bytes have arrived, and ask again later.
-     *
-     * The default answers `empty` and warns once: a backend without an http client should still render
-     * pages that happen to include a remote image, so the picture is missing and the log says why. A
-     * page is user content, and a backend lacking a capability must not turn it into a crash.
-     */
+    /** The image at [url]; [ImageHolder.empty] means nothing to draw. */
     fun remoteImage(url: String): ImageHolder {
         warnRemoteUnsupportedOnce()
         return ImageHolder.empty
     }
 
-    /**
-     * Forgets whatever is cached for [url] and downloads it again.
-     *
-     * The same command shape as [reloadLocalImage], for the same reason: no return value, and it belongs
-     * in an event handler, not in a render body. The default does nothing but warn once.
-     */
+    /** Drops the cached copy of [url]: the next [remoteImage] reads it again. */
     fun reloadRemoteImage(url: String) {
         warnRemoteUnsupportedOnce()
     }
 
-    /**
-     * Forgets whatever is cached for [file] and reads it again.
-     *
-     * It returns nothing on purpose: this is a command, not a query. A return value would let a render
-     * function write `Image(..., reloadLocalImage(file))` and read the file on every frame. Read through
-     * [localImage] as usual; the reloaded holder lands in that same cache.
-     */
+    /** Drops the cached copy of [file]: the next [localImage] reads it again. */
     fun reloadLocalImage(file: File)
 
-    /** Leave the process. Root-local teardown is [DslRootUtils]'s business, not this. */
+    /** Leaves the process. */
     fun quit(exitCode: Int)
 }
