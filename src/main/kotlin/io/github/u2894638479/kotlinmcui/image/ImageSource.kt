@@ -5,37 +5,27 @@ import java.io.File
 /**
  * Where an [ImageHolder]'s pixels come from.
  *
- * The four sources are four types rather than four prefixes of one string, so they cannot be mistaken
- * for one another: a resource location can never be read as a local file, and a missing image can never
- * be read as a resource called "missing". Backends answer a `when` over this instead of parsing ids.
+ * The three sources are three types rather than three prefixes of one string, so they cannot be
+ * mistaken for one another: a resource location can never be read as a local file. Backends answer a
+ * `when` over this instead of parsing ids.
+ *
+ * The strings inside are **data**, not assertions: a location or url can come from a config file, a text
+ * field or a server, so a wrong one must not throw. A backend that cannot resolve a [Resource] draws its
+ * own placeholder - Minecraft shows its missing sprite - and a backend that cannot read a [LocalFile] or
+ * [Remote] answers [ImageHolder.empty]. Failing to draw is the degradation; crashing is not.
  */
 sealed interface ImageSource {
     /**
      * An image from a resource pack, written `namespace:path`.
      *
-     * Both halves are checked here, when the holder is built: a typo is a programming error and should
-     * fail immediately instead of drawing nothing every frame.
+     * Not validated here: the string may be typed by a user. Built by code, `imageResource` keeps the old
+     * habit of showing the missing sprite rather than throwing.
      */
-    data class Resource(val location: String) : ImageSource {
-        init {
-            require(RESOURCE_LOCATION.matches(location)) {
-                "an image resource is 'namespace:path' (lowercase letters, digits, '_', '-', '.'; '/' in " +
-                    "the path), was '$location'"
-            }
-        }
-    }
+    data class Resource(val location: String) : ImageSource
 
     /** A file on this machine. Its size is known only after it has been read. */
     data class LocalFile(val file: File) : ImageSource
 
     /** An image behind an http(s) url. Its size is known only after it has been downloaded. */
-    data class Remote(val url: String) : ImageSource {
-        init {
-            require(url.startsWith("http://") || url.startsWith("https://")) {
-                "a remote image url starts with http:// or https://, was '$url'"
-            }
-        }
-    }
+    data class Remote(val url: String) : ImageSource
 }
-
-private val RESOURCE_LOCATION = Regex("[a-z0-9_.-]+:[a-z0-9_./-]+")

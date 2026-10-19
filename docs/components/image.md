@@ -25,7 +25,9 @@ sealed interface ImageSource {
 
 "没有图像"不是来源的一种，而是 `ImageHolder.empty`（`source == null`）。本地/远程图片还没读完时也是 `empty`——**框架不区分"还没好"和"就是没有"**，两者对渲染都是"现在画不出东西"；加载失败由后端记日志，或者由后端换成一张占位**资源**再交回来。
 
-`Resource` 的 `namespace:path` 与 `Remote` 的 `http(s)://` 在**构造时**校验——写错当场抛，而不是每帧画一个空白。
+`Resource` 的 `namespace:path` 与 `Remote` 的 `http(s)://` **不在构造时校验**：这些字符串可能来自配置文件、输入框或服务器，**写错不该抛异常**。解析不出来的资源由后端显示它自己的占位——Minecraft 显示紫黑方块；读不到的本地文件/网络图片则返回 `ImageHolder.empty`，什么都不画。
+
+**画不出来是降级，不是崩溃。**
 
 ## 资源图像
 ```kotlin
