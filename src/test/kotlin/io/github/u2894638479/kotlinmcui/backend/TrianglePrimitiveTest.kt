@@ -102,7 +102,6 @@ class TrianglePrimitiveTest {
     /** A renderer that draws nothing; the recording subclass overrides what it needs. */
     private object Plain : DslRootRenderer<Unit> {
         override val guiScale = 1.0
-        context(renderParam: Unit) override fun flush() {}
         context(renderParam: Unit) override fun renderQuad(
             rect: Rect, lt: Color, rt: Color, lb: Color, rb: Color, image: ImageHolder?, uv: Rect?
         ) {}

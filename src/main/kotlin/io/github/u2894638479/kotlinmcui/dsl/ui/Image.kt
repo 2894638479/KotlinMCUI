@@ -28,10 +28,8 @@ fun Image(
     context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         strategy.render(instance.rect, image, color)
-        backend.flush()
         if (instance.isHighlighted) {
             backend.fillRect(instance.rect, Color.WHITE.change(a = 50))
-            backend.flush()
         }
     }
 })

@@ -178,15 +178,12 @@ fun EditableText(
                             index++
                         }
                     }
-                    backend.flush()
                     forEach { (line, chars) -> line.renderChars(font, chars) }
-                    backend.flush()
                 }
 
                 if (!instance.isFocused) return
                 if (blink) {
                     backend.fillRect(cursorRect() ?: return, cursorColor)
-                    backend.flush()
                 }
             }
 

@@ -37,7 +37,6 @@ class RenderPrimitiveAllocationTest {
         var lastVertices: FloatArray? = null
         var lastColors: IntArray? = null
         override val guiScale = 1.0
-        context(renderParam: Unit) override fun flush() {}
         context(renderParam: Unit) override fun renderTriangles(vertices: FloatArray, colors: IntArray, image: ImageHolder?) {
         lastVertices = vertices
         lastColors = colors

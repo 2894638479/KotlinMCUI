@@ -232,7 +232,6 @@ private fun GradientBox() = Spacer(Modifier.size(50.scaled,24.scaled),"gradient"
                 instance.rect,
                 Color(255,80,80),Color(80,255,80),Color(80,80,255),Color(255,255,80)
             )
-            backend.flush()
         }
     }
 }
@@ -252,7 +251,6 @@ private fun PolygonBox() = Spacer(Modifier.size(80.scaled,24.scaled),"triangles"
                 ),
                 listOf(Color(255,120,60),Color(60,255,120),Color(120,120,255))
             )
-            backend.flush()
         }
     }
 }
@@ -272,7 +270,6 @@ private fun RenderButtonProbe(highlighted: Boolean,active: Boolean,label: String
             context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
                 backend.renderButton(instance.rect,highlighted,active,color)
-                backend.flush()
                 it.render()
             }
         }

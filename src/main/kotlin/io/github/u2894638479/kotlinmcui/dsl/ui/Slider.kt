@@ -88,7 +88,6 @@ fun Slider(
             val rect = instance.rect
             backend.renderButton(rect, keyFocused, false, backgroundColor)
             drawGradient(axis, rect.expand(-(3.px * instance.scale)), gradientStops(color.value, prop))
-            backend.flush()
         }
 
         context(eventModifier: KeyModifiers)
@@ -164,14 +163,12 @@ private open class SliderImpl(
             )
         }
         backend.renderButton(buttonRect, instance.isHighlighted, true, knobColor)
-        backend.flush()
     }
 
     context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     open fun <RP> renderBackground() {
         val rect = instance.rect
         backend.renderButton(rect, keyFocused, false, buttonColor)
-        backend.flush()
     }
 
     context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)

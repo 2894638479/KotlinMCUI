@@ -36,6 +36,5 @@ fun Item(
     context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         backend.renderItem(instance.rect,item,count,damage,enchanted)
-        backend.flush()
     }
 })

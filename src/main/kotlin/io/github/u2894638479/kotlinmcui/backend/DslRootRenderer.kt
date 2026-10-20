@@ -16,17 +16,17 @@ import io.github.u2894638479.kotlinmcui.text.DslFont
  * or pose stack. Methods drawing Minecraft-styled widgets also receive
  * [DslScaleContext] to adjust for the current GUI scale.
  *
- * [flush] must have committed everything drawn so far; batching is the implementation's choice.
+ * **Every draw reaches the screen in the order the calls were made.** A backend may batch, defer or
+ * reorder freely, as long as the order it produces draws each pixel the same way the call order would:
+ * draws whose pixels are disjoint may swap, and nothing else may. The framework states its layering by
+ * calling in order - a container renders its children last-to-first, so the first declared child is on
+ * top - and relies on this one property to keep it.
  *
  * @param RP The platform-specific render parameter type.
  */
 interface DslRootRenderer<RP> {
     /** The current GUI scale factor (e.g. 2.0 for doubled resolution). */
     val guiScale: Double
-
-    /** Flush any pending batched draw calls to the render target. */
-    context(renderParam: RP)
-    fun flush()
 
     /**
      * Draw one quad, optionally textured.

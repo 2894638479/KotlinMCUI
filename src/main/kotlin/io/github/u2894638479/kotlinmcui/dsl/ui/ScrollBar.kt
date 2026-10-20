@@ -76,7 +76,6 @@ fun ScrollBar(
             context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
             override fun <RP> render() {
                 backend.renderButton(instance.rect, instance.isHighlighted,instance.highlightable)
-                backend.flush()
                 it.render()
             }
         } }

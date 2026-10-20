@@ -45,7 +45,6 @@ fun DslChild.mask(color: Color) = change { object: DslComponent by it {
     override fun <RP> render() {
         it.render()
         backend.fillRect(instance.rect,color)
-        backend.flush()
     }
 }}
 
@@ -54,7 +53,6 @@ fun DslChild.background(color: Color? = null) = change { val c = color ?: Color.
     context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         backend.fillRect(instance.rect,c)
-        backend.flush()
         it.render()
     }
 } }
@@ -68,7 +66,6 @@ fun DslChild.backgroundImage(
     context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         strategy.render(instance.rect,image,c)
-        backend.flush()
         it.render()
     }
 }}
@@ -79,7 +76,6 @@ private fun <RP> renderOutline(rect: Rect, widthIn: Measure, widthOut: Measure, 
     backend.fillRect(Rect(rect.right - widthIn, rect.top - widthOut, rect.right + widthOut, rect.bottom + widthOut),color)
     backend.fillRect(Rect(rect.left + widthIn, rect.top - widthOut, rect.right - widthIn, rect.top + widthIn),color)
     backend.fillRect(Rect(rect.left + widthIn, rect.bottom - widthIn, rect.right - widthIn, rect.bottom + widthOut),color)
-    backend.flush()
 }
 
 context(ctx: DslContext)
@@ -113,7 +109,6 @@ fun DslChild.hoverMask(highlightColor: Color = Color(255, 255, 255, 80)) = chang
         it.render()
         if(mouse in instance.rect) {
             backend.fillRect(instance.rect,highlightColor)
-            backend.flush()
         }
     }
 }}
@@ -160,7 +155,6 @@ fun DslChild.containerBackground(padding: Measure = 3.scaled)
     context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         backend.renderContainer(rect.expand(padding))
-        backend.flush()
         it.render()
     }
 
@@ -173,7 +167,6 @@ fun DslChild.slotBackground(padding: Measure = 1.scaled)
     context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
     override fun <RP> render() {
         backend.renderSlot(rect.expand(padding))
-        backend.flush()
         it.render()
     }
 
@@ -196,7 +189,6 @@ fun DslChild.tooltipBackground(padding: Measure = 3.px) = change {
         context(backend: DslRootRenderer<RP>, renderParam: RP, mouse: Position)
         override fun <RP> render() {
             backend.renderTooltip(instance.rect.expand(padding))
-            backend.flush()
             it.render()
         }
 
