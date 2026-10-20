@@ -3,12 +3,14 @@ package io.github.u2894638479.kotlinmcui.backend
 import io.github.u2894638479.kotlinmcui.container.DslRoot
 import io.github.u2894638479.kotlinmcui.context.DslContext
 import io.github.u2894638479.kotlinmcui.context.scaled
+import io.github.u2894638479.kotlinmcui.dsl.decorator.background
 import io.github.u2894638479.kotlinmcui.dsl.translate
 import io.github.u2894638479.kotlinmcui.dsl.ui.Column
 import io.github.u2894638479.kotlinmcui.dsl.ui.ScrollableColumn
 import io.github.u2894638479.kotlinmcui.dsl.ui.TextAutoFold
 import io.github.u2894638479.kotlinmcui.dsl.ui.defaultBackground
 import io.github.u2894638479.kotlinmcui.logger.dslLogger
+import io.github.u2894638479.kotlinmcui.math.Color
 import io.github.u2894638479.kotlinmcui.modifier.Modifier as DslModifier
 import io.github.u2894638479.kotlinmcui.modifier.padding
 import kotlinx.coroutines.CoroutineScope
@@ -123,8 +125,13 @@ object DslPreview {
                 utils.quit(1)
                 return
             }
+            withContext(root.rootUtils.sessionDispatcher) {
+                screens.create(reference) { Column { page.draw() }.background(Color.BLACK) }
+            }.show()
+            // Count the frames from the moment the page is on screen, not from before its creation: a
+            // slow build would otherwise eat the whole budget, and the capture would photograph whatever
+            // screen was there before the page.
             val opened = root.state.frameIndex
-            withContext(root.rootUtils.sessionDispatcher) { screens.create(reference) { page.draw() } }.show()
             dslLogger.info("preview: opened '$reference' as ${page.describe()}")
             while(root.state.frameIndex < opened + FRAMES) delay(FRAME_POLL_MS.milliseconds)
             if(!capture) return
